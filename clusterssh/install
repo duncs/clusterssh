@@ -35,6 +35,9 @@
 #
 ############################################################################
 # $Log$
+# Revision 1.3  2004/04/06 11:42:13  duncan_ferguson
+# Remove setuid stuff for version 2.0
+#
 # Revision 1.2  2004/01/28 13:40:31  duncan_ferguson
 # also create cssh man in plain text for web site upload
 #
@@ -58,8 +61,6 @@ chmod +x make_package
 
 cp -rp EGGcssh ~/pkgs/EGGcssh
 
-chown root:bin cssh
-
 # now create sourceforge tarball
 # for security, remove sticky bit in the tar file
 VERSION=$(./cssh -v | sed -e 's/ (.*//' -e 's/.*: //')
@@ -67,12 +68,9 @@ VERSION=$(./cssh -v | sed -e 's/ (.*//' -e 's/.*: //')
 rm -f crsh
 ln -s cssh crsh
 
-chmod u-t ./cssh
 tar cvf $SFDIR/clusterssh_$VERSION.tar cssh crsh LICENSE
 gzip -f $SFDIR/clusterssh_$VERSION.tar
 echo "Tar file created as: $SFDIR/clusterssh_$VERSION.tar"
-# now replace the sticky bit
-chmod 4775 ./cssh
 
 # now create the tar file for the package maker
 VERSION=$(./make_package -v | sed -e 's/ (.*//' -e 's/.*: //')
