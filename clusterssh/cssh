@@ -274,7 +274,7 @@ sub open_windows
 		my $serv_name;
 
 		# untaint parameter
-		if(/^([-\@\w.]+)$/)
+		if(/^([-:\@\w.]+)$/)
 		{
 			# use a random number to uniquely id host in hash so we can then
 			# open a cx to the same host more than once.  use the __ as a marker
@@ -750,7 +750,7 @@ sub setup_OS()
 	use Config;
 
 	# predefined for linux
-	if($Config{archname}=~/i\d86-linux/)
+	if($Config{archname}=~/-linux/)
 	{
 		$TIOCSTI=0x5412;
 		return;
@@ -1025,9 +1025,14 @@ is used on the command line it is checked to see if it is a tag in
 /etc/clusters.  If it is a tag, then the tag is replaced with the list 
 of servers from the file.  The file is formated as follows:
 
-<tag> [user@]<server> [user@]<server> [...]
+  <tag> [user@]<server> [user@]<server> [...]
 
-All comments and blank lines are ignored.
+i.e. 
+
+  # List of servers in live
+  live admin1@server1 admin2@server2 server3 server4
+
+All standard comments and blank lines are ignored.
 
 =item /etc/csshrc $HOME/.csshrc
 
@@ -1189,6 +1194,13 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 1.51  2004/02/20 09:36:35  duncan_ferguson
+# Include Jason Hollands patches:
+# - includes :'s in hostnames
+# - include TIOCSTI for linux ia64 systems.
+# Modified patch slight to assume all linux systems have same TIOCSTI value
+# Also modified section of docs on the /etc/cluster file
+#
 # Revision 1.50  2004/02/02 10:26:45  duncan_ferguson
 # allow spaces in -T "" string for window title
 # increase size of window from 20 chars to 25 chars
