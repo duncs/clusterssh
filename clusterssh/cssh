@@ -137,6 +137,14 @@ Config::Simple->import_from('/etc/csshrc', \%user_config);
 # Now overwrite that with any user defined ones
 Config::Simple->import_from($ENV{HOME}."/.csshrc", \%user_config);
 
+# Check to make sure we can access xterm
+if(system("type $user_config{'default.terminal'} 1>/dev/null 2>&1") > 0)
+{
+	print system("type $user_config{'default.terminal'}"),$/;
+	die("Cannot access $user_config{'default.terminal'} - please define ".
+		" \"terminal\" in configuration file\n");
+}
+
 # Ensure we know where cchp is....
 if( ! -f $user_config{'default.cchp_path'}."/cchp" )
 {
@@ -169,6 +177,13 @@ if($method !~ /^[rs]sh$/)
 }
 
 my $path_method=$user_config{'default.cx_path'}."/".$method;
+
+# Check to make sure we can use ssh correctly
+if(! -x $path_method)
+{
+	die("FATAL: Cannot find ssh in $user_config{'default.cx_path'} - please define \"cx_path\" in ".
+		"configuration file\n");
+}
 
 # disable X11 forwarding if using ssh - fixes problem with redhat machines
 $path_method.=" -x " if($path_method =~ /ssh$/);
@@ -1103,7 +1118,7 @@ user file.
 
 =over 
 
-=item terminal = xterm
+=item terminal = 
 
 Terminal to use for the connection
 
@@ -1312,6 +1327,9 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.20  2004/05/20 14:57:37  duncan_ferguson
+# Improve checks for ssh and xterm, with meaningful errors reported if required
+#
 # Revision 2.19  2004/05/12 11:34:13  duncan_ferguson
 # correct check for cchp and die if it cannot be found
 #
