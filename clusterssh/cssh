@@ -889,7 +889,7 @@ my $wm_mb_help_about=$mw->Dialog(
 		[ -family => "interface system",
 			-size   => 10 ],
 	-text => "Cluster Administrator Console using SSH\n\nVersion: $VERSION.\n\n" .
-	"Bug/Suggestions to duncan_ferguson\@users.sourceforge.net",
+	"Bug/Suggestions to http://clusterssh.sourceforge.net/",
 );
 ###
 
@@ -1362,6 +1362,9 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.26  2004/08/04 12:08:39  duncan_ferguson
+# Changes contact location in help->about
+#
 # Revision 2.25  2004/08/03 15:34:50  duncan_ferguson
 # CTRL-D in console window didnt always work
 #
