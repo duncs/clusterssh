@@ -96,11 +96,6 @@ Config::Simple->import_from('/etc/csshrc', \%user_config);
 # Now overwrite that with any user defined ones
 Config::Simple->import_from($ENV{HOME}."/.csshrc", \%user_config);
 
-#for (keys(%user_config))
-#{
-#	print "$_ = $user_config{$_}\n";
-#}
-
 my $TIOCSTI = "";
 
 # predfine funcs as necessary
@@ -392,7 +387,6 @@ sub open_windows
 					if($child eq "dead")
 					{
 						# we have a dead session - remove it from the servers hash
-						#print "Found a dead session\n";
 						# don't delete it totally else we cannot error on it shortly, 
 						# but make sure the filedescriptor field is empty
 						delete($servers{$serv_name}[3]);
@@ -436,7 +430,6 @@ sub open_windows
 				if($options{s})
 				{
 					sleep 1;
-					#print "send client vars to client\n";
 					for (split(//, "CSSH_CLIENT=".$serv.chr(13)))
 					{
 						send_character_to_server($serv_name,$_);
@@ -452,7 +445,6 @@ sub open_windows
 				} elsif($options{c})
 				{
 					sleep 1;
-					#print "send client vars to client\n";
 					for (split(//, "setenv CSSH_CLIENT=".$serv.chr(13)))
 					{
 						send_character_to_server($serv_name,$_);
@@ -728,8 +720,8 @@ sub mw_mb_file_items
 {
 	[
 			#[ 'command', "Exit", -command => \&exit ],
-			[ 'command', "Exit", -command => \&exit_prog, -accelerator => "Ctrl-x" ],
-			[ 'command', "printhash", -command => \&printhash ],
+			[ 'command', "Exit", -command => \&exit_prog, -accelerator => "$user_config{'default.key_quit'}" ],
+			#[ 'command', "printhash", -command => \&printhash ],
 	]
 }
 ###
@@ -741,7 +733,7 @@ sub mw_mb_file_items
 # First, button to allow more hosts to be added in later on
 $hosts_menu->command(
 	-label => "Add Host",
-	-accelerator => "Ctrl-A",
+	-accelerator => "$user_config{'default.key_addhost'}",
 	-command => \&add_host_win_entry,
 );
 $hosts_menu->separator;
@@ -1032,8 +1024,8 @@ cssh - Cluster administration tool
 
 =head1 SYNOPSIS
 
-S<< cssh [-hv] [-T "title"] [-t "term opts"] [[user@]<server>|<tag>] [...] >>
-S<< crsh [-hv] [-T "title"] [-t "term opts"] [[user@]<server>|<tag>] [...] >>
+S<< cssh [-hvncs] [-T "title"] [-t "term opts"] [[user@]<server>|<tag>] [...] >>
+S<< crsh [-hvncs] [-T "title"] [-t "term opts"] [[user@]<server>|<tag>] [...] >>
 
 =head1 DESCRIPTION
 
@@ -1113,6 +1105,29 @@ NOTE: options that include any of the following ; / | are excluded by
 default as this could otherwise be a backdoor into the system.  If you want
 to define colours you have to use names, i.e. -bg LightGrey1.  Names on Solaris
 can be found in /usr/openwin/lib/rgb.txt
+
+=back
+
+=head1 KEY SHORTCUTS
+
+The following key shortcuts are available within the console window, and all 
+of them may be changed via the configuration files.
+
+=over
+
+=item Alt-x
+
+Quit the program and close all connections and windows
+
+=item Alt-a
+
+Open the Add Host dialogue box
+
+=item Alt-n
+
+Paste in the correct client name to all clients, i.e. 
+ scp /etc/hosts <server>:files/<client>.hosts 
+would replace the <client> with the correct client name
 
 =back
 
@@ -1321,12 +1336,23 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 1.56  2004/03/26 11:38:23  duncan_ferguson
+# Removed debug menu option "printhash"
+# Corrected menu accelorator keys (Tony Mancill)
+# Updated man/pod page with usage and key shortcuts info
+# Added key shortcut to send client name to client (Hans-Joachim Hoetger)
+#
 # Revision 1.55  2004/03/25 12:27:46  duncan_ferguson
 # Added in configurable shortcut to send client names to client
 #
 # Revision 1.54  2004/03/25 10:49:19  duncan_ferguson
 # Remove debug message for number of cx's in title window
 # Finally fixed bug for sorting the Add Hosts menu
+#
+# Revision 1.53  2004/03/25 10:23:57  duncan_ferguson
+# Include option for displaying total number of connections in console title 
+#    bar (David Gardner)
+# Work on bug for failed connection messages not always showing (David Gardner)
 #
 # Revision 1.52  2004/03/24 12:29:14  duncan_ferguson
 # Added in client side variables (i.e. CSSH_CLIENT and CSSH_SERVER) with -s|c
