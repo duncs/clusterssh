@@ -1,4 +1,3 @@
-#!/usr/bin/perl -w
 # $Id$
 #
 # Script:
@@ -25,6 +24,10 @@
 # Limitations:
 #
 # Enhancements:
+#
+# Note:
+#   This script does not have the perl interpreter defined at line 1 as
+#   it called using it from cssh, i.e. "perl /path/to/cchp"
 #
 # License:
 #   This code is distributed under the terms of the GPL (GNU General Pulic
@@ -70,7 +73,9 @@ getopts('vx:y:z:d', \%options);
 
 if($options{v})
 {
-	print("Version: $VERSION\n");
+	my $name=$0;
+	$name =~ s!.*/!!;
+	print("$name: $VERSION\n");
 	exit;
 }
 
@@ -176,6 +181,10 @@ if($options{x})
 
 ############################################################################
 # $Log$
+# Revision 1.7  2004/05/10 12:32:15  duncan_ferguson
+# Remove perl interpreter from line 1
+# Correct -v output to use program name, not "Version:"
+#
 # Revision 1.6  2004/05/04 15:04:33  duncan_ferguson
 # Swap around code order when detecting a removed pipe
 # Add in sleep for .25 of a second during read to be nicer to the system
