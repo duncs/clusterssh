@@ -129,6 +129,8 @@ $user_config{'default.key_clientname'}="Alt-n";
 $user_config{'default.variables'}="no";
 $user_config{'default.title_number'}="no";
 $user_config{'default.titlebar_size'}=30;
+$user_config{'default.decoration_width'}=8;
+$user_config{'default.decoration_height'}=10;
 $user_config{'default.term_size'}="80x24";
 $user_config{'default.term_font'}="6x13";
 $user_config{'default.always_tile'}="yes";
@@ -412,8 +414,8 @@ if(!$options{G})
 	$screen_height -= $user_config{'default.titlebar_size'} + $user_config{'default.reserve_bottom'};
 	$screen_width -= $user_config{'default.reserve_right'};
 
-	my $xlsfonts_path=$user_config{'default.terminal'};
-	$xlsfonts_path =~ s/xterm/xlsfonts/;
+	my $xlsfonts_path=`which xlsfonts`;
+	chomp($xlsfonts_path);
 	my $finfo = `$xlsfonts_path -ll -fn $user_config{'default.term_font'}`;
 	my $fwidth = ($finfo =~ /^\s*max\s+(\d+)/m)[0];
 	my $fheight = ($finfo =~ /^\s*PIXEL_SIZE\s*(\d+)/m)[0];
@@ -426,7 +428,7 @@ if(!$options{G})
 	my $term_cols=$max_term_cols;
 
 	# Get the term width and height
-	$term_width = ( $term_cols * $fwidth ) + 8 ; # convert loosly to pixels
+	$term_width = ( $term_cols * $fwidth ) + $user_config{'default.decoration_width'} ; # convert loosly to pixels
 
 	my $total=@cmdargs;
 
@@ -438,7 +440,7 @@ if(!$options{G})
 	# make sure we have no more rows than the max specified
 	$term_rows= $term_rows > $max_term_rows ? $max_term_rows : $term_rows;
 
-	$term_height = $term_rows * $fheight + 10;
+	$term_height = $term_rows * $fheight + $user_config{'default.decoration_height'};
 	print "term_rows=$term_rows\n" if($options{d});
 	$user_config{'default.term_size'} = "${term_cols}x${term_rows}";
 
@@ -451,7 +453,8 @@ if(!$options{G})
 	warn "default.term_size=$user_config{'default.term_size'}\n" if($options{d});
 }
 
-open_windows(@cmdargs);
+# because we tile from bottom left, let's be nice and reverse it...
+open_windows(reverse @cmdargs);
 
 sub change_title_number {
 	return unless $options{n};
@@ -1303,9 +1306,20 @@ Show the number of open connections in control window title
 
 =item titlebar_size = 30
 
-Default height of title bars on windows when tiling.  Can be set to 0 if your 
+Default height of the spacing at the top of the screen, should you have a
+menu bar across there. Sets the top of the "tiles" down this many pixels.
+
+=item decoration_width = 8
+
+Default width of handles on windows when tiling.  Can be set to 0 if your 
 window manager does not use them - allows correct spacing of windows when
 tiling
+
+=item decoration_height = 10
+
+Default height of title bars and handles on windows when tiling.  Can be set
+to 0 if your window manager does not use them - allows correct spacing of
+windows when tiling
 
 =item reserve_bottom = 0 
 
@@ -1519,6 +1533,22 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.35  2005/04/04 12:16:20  duncan_ferguson
+# Search for xlsfonts instead of assume it is in same place as the terminal
+# By Rob Dawson:
+# - change the "fudge" values for width and height to variables on lines
+# 	429 and 441
+# - change the default variables to include those two new variables
+# - reverse the sequence of hosts provided (as it tiles in reverse
+# 	order, this means it has the first host in the top left corner,
+# 	rather than bottom right)
+# - add to help page at the bottom to match these two
+# - adjust help page at the bottom for titlebar_size
+# 	This because the previous description was for each window, whereas
+# 	on my setup, it uses this for the single menubar spacing at the top,
+# 	*not* for each window (I tested :-) - I'm not sure if this behaves
+# 	differently on different OS/arch, though.
+#
 # Revision 2.34  2005/01/31 09:01:59  duncan_ferguson
 # Fix tiling issue after initial tiling is completed (T.Mancill)
 # Do not use port when using rsh (T.Mancill)
