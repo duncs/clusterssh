@@ -176,7 +176,7 @@ mv $TMP/Prototype $TMP/Prototype.old
 	-e "/^d/s/ [0-9]... / 0555 /" \
 	-e "/^f/s/ [0-9]... / 0444 /" \
 	-e "/^[df]/s/ [a-zA-Z0-9]* [a-zA-Z0-9]*$/ bin bin/" \
-	-e "s!bin/cssh [0-9]... .*!bin/cssh 4555 root bin!" \
+	-e "s!bin/cssh [0-9]... .*!bin/cssh 0555 bin bin!" \
 	> $TMP/Prototype
 
 rm $TMP/Prototype.old
@@ -239,6 +239,9 @@ rm -rf $TMP
 # 1.6    27/01/04 D Ferguson      Moved to sf.net cvs repository
 #
 # $Log$
+# Revision 1.8  2004/04/06 11:42:40  duncan_ferguson
+# Remove setuid stuff for cssh version 2.0
+#
 # Revision 1.7  2004/01/28 11:28:37  duncan_ferguson
 # fix bugs introduced by cvs move
 #
