@@ -120,6 +120,7 @@ $user_config{'default.terminal'}="xterm";
 $user_config{'default.user'}=$ENV{LOGNAME};
 $user_config{'default.terminal_options'}="-ls -sb -sl 1024";
 $user_config{'default.cx_path'}="/usr/bin";
+$user_config{'default.cx_args'}="-C";
 $user_config{'default.key_quit'}="Control-q";
 $user_config{'default.key_addhost'}="Control-plus";
 $user_config{'default.key_clientname'}="Alt-n";
@@ -533,7 +534,7 @@ sub open_windows
 		# Start up the terminal ourselves so the pipes are in place
 		# NOTE - ssh -x to disable forwarding of X11 sessions due to problem
 		# on redhat systems
-		system("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $place -title '$method:$serv' -e $^X $user_config{'default.cchp_path'}/cchp $debug -x $servers{$serv_name}[2] -y $TIOCSTI -z $KILLOFF $path_method -p $port $serv &") or warn("Could not exec session to $serv: $! ");
+		system("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $place -title '$method:$serv' -e $^X $user_config{'default.cchp_path'}/cchp $debug -x $servers{$serv_name}[2] -y $TIOCSTI -z $KILLOFF $path_method -p $port $user_config{'default.cx_args'} $serv &") or warn("Could not exec session to $serv: $! ");
 
 		if(!sysopen($servers{$serv_name}[3], $servers{$serv_name}[2], O_WRONLY))
 		{
@@ -1151,6 +1152,13 @@ Options to pass to the terminal used
 Path to binary used for the connection if it hasn't been found by default
 (i.e. the path to ssh when using cssh, or the path to rsh when using crsh)
 
+=item cx_args = 
+
+Extra arguments to pass to ssh, for example for routing via a gateway or 
+enabling compression, i.e.
+
+  cx_args = "proxy -t ssh -C"
+
 =item cchp_path = <same location as cssh>
 
 Path to cchp script provided with cssh if it is not located in same directory.
@@ -1347,6 +1355,9 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.23  2004/08/02 15:58:09  duncan_ferguson
+# Apply patch from Cyril Bouthors for passing ssh arguments via cx_args
+#
 # Revision 2.22  2004/07/09 13:58:12  duncan_ferguson
 # Applied patch from Rob Petty (cx to specific ports, i.e. for terminal servers)
 # Applied patch from Jason (jklap) (bug fix & resolve cluster tags within tags)
