@@ -411,7 +411,7 @@ my $mw=MainWindow->new(-title=>$control_title);
 
 # work out how many windows we are opening if setting geometry
 # vars we need when we open windows
-my ($term_height, $term_width, $rows, $cols) = 0;
+my ($term_height, $term_width, $rows, $cols) = (0,0,0,0);
 
 if($options{g})
 {
@@ -496,35 +496,38 @@ sub open_windows
 	return if($#_ == -1);
 
 	my $total=@cmdargs;
-	my $slots=$cols*$rows;
-
-	#warn "total:$total,slots:$slots",$/;
 	#warn "cols:$cols, rows:$rows\n";
 
-	my $cur_col = $total % $cols;
-	my $cur_row = ($total - ($total % $cols)) / $cols;
+	my $cur_col = 0;
+	my $cur_row = 0;
 
-	#warn "cur_col=$cur_col\n";
-	#warn "cur_row=$cur_row\n";
-
-	# we want the first ones to be from 0 not 1, so take 1 off 
-	$cols-=1 if($cols > 0);
-	$rows-=1 if($rows > 0);
-	
-	$cur_col-=1;
-	if($cur_col<0)
+	if($options{g})
 	{
-		$cur_row-=1 ;
-		$cur_col=$cols;
+		$cur_col = $total % $cols;
+		$cur_row = ($total - ($total % $cols)) / $cols;
+
+		#warn "cur_col=$cur_col\n";
+		#warn "cur_row=$cur_row\n";
+
+		# we want the first ones to be from 0 not 1, so take 1 off 
+		$cols-=1 if($cols > 0);
+		$rows-=1 if($rows > 0);
+		
+		$cur_col-=1;
+		if($cur_col<0)
+		{
+			$cur_row-=1 ;
+			$cur_col=$cols;
+		}
+
+		# If we are tiling, reverse the array we work on, else we get the windows
+		# out backwards
+		@_ = reverse(@_);
+
+		#warn "start cols:$cols, rows:$rows\n";
+		#warn "start cur_col=$cur_col\n";
+		#warn "start cur_row=$cur_row\n";
 	}
-
-	# If we are tiling, reverse the array we work on, else we get the windows
-	# out backwards
-	@_ = reverse(@_) if($options{g});
-
-	#warn "start cols:$cols, rows:$rows\n";
-	#warn "start cur_col=$cur_col\n";
-	#warn "start cur_row=$cur_row\n";
 
 	foreach (@_)
 	{
@@ -1391,6 +1394,9 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.9  2004/04/20 15:51:50  duncan_ferguson
+# Fix bug better for when not using -g
+#
 # Revision 2.8  2004/04/20 12:43:52  duncan_ferguson
 # When tiling, correct order of windows so they are alphabetically forwards,
 #   not backwards
