@@ -138,9 +138,14 @@ Config::Simple->import_from('/etc/csshrc', \%user_config);
 Config::Simple->import_from($ENV{HOME}."/.csshrc", \%user_config);
 
 # Ensure we know where cchp is....
-if( ! -f $user_config{'default.cchp_path'} )
+if( ! -f $user_config{'default.cchp_path'}."/cchp" )
 {
-	$user_config{'default.cchp_path'}="/usr/lib" if ( -f "/usr/lib/cchp");
+	if ( -f "/usr/lib/cchp")
+	{
+		$user_config{'default.cchp_path'}="/usr/lib";
+	} else {
+		die ("Fatal: cannot find cchp - please define cchp_path in csshrc\n");
+	}
 }
 
 # We can do something funky here - if we are called using a name other than
@@ -1307,6 +1312,9 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.19  2004/05/12 11:34:13  duncan_ferguson
+# correct check for cchp and die if it cannot be found
+#
 # Revision 2.18  2004/05/12 10:16:27  duncan_ferguson
 # Code tidy
 # Added in csshrc option cchp_path to allow for cchp to be moved somewhere else
