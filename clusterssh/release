@@ -40,6 +40,8 @@ SCRIPT=${0}
 SCRIPTDIR=$(cd ${SCRIPT%/*} 1>/dev/null ; pwd)
 SCRIPTNM=${0##*/}
 
+STATE=$1
+
 # source in the tag version file
 . $SCRIPTDIR/version
 
@@ -50,18 +52,28 @@ cd $SCRIPTDIR
 # Now, get the tag info from the previous public version
 # Have to do it this way as bash read doesnt work under cygwin
 set -- $TAG_VERSION 
-TAG=$1 ; MAJOR=$2 ; MINOR=$3 ; BETA=$4
+TAG=$1 ; MAJOR=$2 ; MINOR=$3 ;
 #echo TAG=$TAG
 #echo MAJOR=$MAJOR
 #echo MINOR=$MINOR
-#echo BETA=$BETA
+#echo STATE=$STATE
 #export MINOR
+
+echo "Releasing as $TAG-$MAJOR-$MINOR${STATE:+-$STATE}"
+echo "Is this correct?"
+read YORN
+case $YORN in
+	y*|Y*) : ;;
+	*) exit;;
+esac
+
+exit
 
 MINOR=$(awk "BEGIN {print $MINOR + 1}" < /dev/null)
 
 VERDATE=$(perl -e 'print scalar localtime((stat("version"))[9]),$/')
 
-TAG_VERSION="$(echo $TAG-$MAJOR-$MINOR${BETA:+-$BETA})"
+TAG_VERSION="$(echo $TAG-$MAJOR-$MINOR${STATE:+-$STATE})"
 
 #echo TAG_VERSION=$TAG_VERSION
 
@@ -69,15 +81,15 @@ TAG_VERSION="$(echo $TAG-$MAJOR-$MINOR${BETA:+-$BETA})"
 
 UPDATEMADE=
 
-echo ClusterSSH $MAJOR.$MINOR $BETA is now available
+echo ClusterSSH $MAJOR.$MINOR $STATE is now available
 echo
 echo A new release of ClusterSSH is now available.  
 echo 
-echo Release Name: $MAJOR.$MINOR $BETA
-echo Release File: ${TAG}_${MAJOR}.${MINOR}${BETA:+_$BETA}.tar.gz
+echo Release Name: $MAJOR.$MINOR $STATE
+echo Release File: ${TAG}_${MAJOR}.${MINOR}${STATE:+_$STATE}.tar.gz
 echo
 echo Please download it from:
-echo "  http://prdownloads.sf.net/clusterssh/${TAG}_${MAJOR}.${MINOR}${BETA:+_$BETA}.tar.gz?download"
+echo "  http://prdownloads.sf.net/clusterssh/${TAG}_${MAJOR}.${MINOR}${STATE:+_$STATE}.tar.gz?download"
 echo
 echo -e "  Duncs"
 echo
@@ -99,7 +111,12 @@ for F in $FILES ; do
 done
 rm -f /tmp/$$.cvs
 
-SFG="../../../sourceforge"
+SFG="../../sourceforge"
+
+# make sure crsh exists
+if [ ! -L crsh ]; then
+	ln -s cssh crsh
+fi
 
 # Only make this udpate if files have changed
 if [ -n "$UPDATEMADE"  ]; then
@@ -107,16 +124,16 @@ if [ -n "$UPDATEMADE"  ]; then
 	# create the distribution tar file
 	# NOTE: files are stored in the version file
 	TARDIR=$SFG
-	TARFILE="${TAG}_${MAJOR}.${MINOR}${BETA:+_$BETA}.tar.gz"
+	TARFILE="${TAG}_${MAJOR}.${MINOR}${STATE:+_$STATE}.tar.gz"
 	tar czvf ${TARDIR}/$TARFILE $FILES 1>/dev/null
 
 	# Now recreate version file
-	sed "s/^TAG_VERSION=.*/TAG_VERSION='$TAG $MAJOR $MINOR $BETA'/" version > version.new
+	sed "s/^TAG_VERSION=.*/TAG_VERSION='$TAG $MAJOR $MINOR $STATE'/" version > version.new
 
 	echo "============================"
 	mv version.new version
 	cvs commit -m "New release cut `date`" version
-	cvs tag ${TAG}-${MAJOR}-${MINOR}${BETA:+-$BETA}
+	cvs tag ${TAG}-${MAJOR}-${MINOR}${STATE:+-$STATE}
 
 	# Now upload to sf.net
 	# first, send it to the shell
@@ -138,6 +155,9 @@ rm -rf pod2htm*
 
 ############################################################################
 # $Log$
+# Revision 1.6  2005/01/26 13:46:58  duncan_ferguson
+# Change BETA to STATE and allow STATE from , also change dirs
+#
 # Revision 1.5  2004/08/04 12:09:14  duncan_ferguson
 # route via shell-ssh & path tidy
 #
