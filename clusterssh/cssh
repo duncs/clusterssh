@@ -161,6 +161,9 @@ if($method !~ /^[rs]sh$/)
 
 my $path_method=$user_config{'default.cx_path'}."/".$method;
 
+# disable X11 forwarding if using ssh - fixes problem with redhat machines
+$path_method.=" -x " if($path_method =~ /ssh$/);
+
 if($options{v})
 {
 	print("$my_name: $VERSION\n");
@@ -480,7 +483,7 @@ sub open_windows
 		# Start up the terminal ourselves so the pipes are in place
 		# NOTE - ssh -x to disable forwarding of X11 sessions due to problem
 		# on redhat systems
-		system("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $place -title '$method:$serv' -e $FindBin::Bin/cchp $debug -x $servers{$serv_name}[2] -y $TIOCSTI -z $KILLOFF $path_method -x $serv &") or warn("Could not exec session to $serv: $! ");
+		system("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $place -title '$method:$serv' -e $FindBin::Bin/cchp $debug -x $servers{$serv_name}[2] -y $TIOCSTI -z $KILLOFF $path_method $serv &") or warn("Could not exec session to $serv: $! ");
 
 		if(!sysopen($servers{$serv_name}[3], $servers{$serv_name}[2], O_WRONLY))
 		{
@@ -1106,6 +1109,12 @@ bourne shell or c shell syntax
 
 Show the number of open connections in control window title
 
+=item titlebar_size = 30
+
+Default height of title bars on windows when tiling.  Can be set to 0 if your 
+window manager does not use them - allows correct spacing of windows on 
+screen when using -g
+
 =item always_tile = never
 
 If set to anything other than "never" always sets -g switch (to tile windows)
@@ -1282,6 +1291,10 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.15  2004/05/05 08:12:23  duncan_ferguson
+# Ensure rsh does not have -x flag but ssh does to disable X11 forwarding
+# Include cfg file "titlebar_size" in man page
+#
 # Revision 2.14  2004/05/04 16:10:25  duncan_ferguson
 # Rework of man page to include new functionality
 # Removal of redundant/unused code
