@@ -1118,9 +1118,9 @@ necessary):
 
 =head1 SEE ALSO
 
-L<http://www.sourceforge.net/projects/clusterssh/>
-L<ssh>
-L<Tk::overview>
+L<http://www.sourceforge.net/projects/clusterssh/>,
+L<ssh>,
+L<Tk::overview>,
 L<Config::Simple>
 
 =cut
@@ -1184,6 +1184,9 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 1.49  2004/01/28 13:41:28  duncan_ferguson
+# man page corrections
+#
 # Revision 1.48  2004/01/28 12:34:03  duncan_ferguson
 # fix bugs introduced by cvs move
 #
