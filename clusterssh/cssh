@@ -1,63 +1,54 @@
-#!/usr/bin/perl -w 
-#
+#!/usr/bin/perl
 # $Id$
 #
 # Script:
 #   $RCSfile$
 #
 # Usage:
-#   cluster administrator console
+#   cssh [options] [hostnames] [...]
 #
 # Options:
-#  See help text below
+#   see pod documentation
 #
 # Parameters:
-#   servers names to open cx's to
+#   hosts to open connection to
 #
 # Purpose:
-#   To allow for administration of a cluster of xterms onto machines
-#   via a sigle console window
-#
-# Processing:
-#
-#   Note: we "xterm->start ssh host" rather than "ssh host->start xterm"
-#   because this allows us to easily use ssh to a number of different unices.
-#   Otherwise, we have to work out target host type and work out where xterm is
+#   Concurrently administer multiple remote servers
 #
 # Dependencies:
-#   perl
-#   Tk
-#   Config::Simple
+#   Perl 5.6.0
+#   Tk 800.022
 #
 # Limitations:
 #
 # Enhancements:
 #
+# Notes:
+#
 # License:
-#   This code is distributed under the terms of the GPL (GNU General Pulic 
-#   License).  
+#   This code is distributed under the terms of the GPL (GNU General Pulic
+#   License).
 #
 #   Copyright (C)
 #
-#   This program is free software; you can redistribute it and/or modify it 
-#   under the terms of the GNU General Public License as published by the 
+#   This program is free software; you can redistribute it and/or modify it
+#   under the terms of the GNU General Public License as published by the
 #   Free Software Foundation; either version 2 of the License, or any later
 #   version.
 #
-#   This program is distributed in the hope that it will be useful, but 
-#   WITHOUT ANY WARRANTY; without even the implied warranty of 
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General 
+#   This program is distributed in the hope that it will be useful, but
+#   WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
 #   Public License for more details.
 #
-#   You should have received a copy of the GNU General Public License along 
-#   with this program; if not, write to the Free Software Foundation, Inc., 
+#   You should have received a copy of the GNU General Public License along
+#   with this program; if not, write to the Free Software Foundation, Inc.,
 #   59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 #   Please see the full text of the licenses is in the file LICENSE and also at
 #     http://www.opensource.org/licenses/gpl-license.php
 #
-############################################################################
-# History moved to bottom of file
 ############################################################################
 my $VERSION='$Revision$ ($Date$)';
 # Now tidy it up, but in such as way cvs doesn't kill the tidy up stuff
@@ -65,1047 +56,819 @@ $VERSION=~s/\$Revision: //;
 $VERSION=~s/\$Date: //;
 $VERSION=~s/ \$//g;
 
+### all use statements ###
 use strict;
 use warnings;
 
 use 5.006_000;
-use Tk 800.022;
-use Tk ':variables';
-use Config::Simple 4.55;
-require Tk::Dialog; # for the about box
-require Tk::LabEntry; # for the add host widget
-use File::Basename; # for cmdline version and help output
-use Sys::Hostname;
-use File::Temp qw/:POSIX/;
-use POSIX qw/ mkfifo /;
-use Fcntl;
-use FindBin;
-use Term::Cap;
-
-# set autoflush so we print to client correctly
-$|=1;
-
-# autoreap our zombies
-#
-# 20040603 <tmancill@debian.org> - this is causing problems for
-# the system() call, which returns -1 if this signal is masked
-#$SIG{CHLD}='IGNORE';
-
-# This section "up top" so unnecessary code isn't run if starting xterms
-use Getopt::Std; # command line parsing, incase someone uses -v or -h
-my %options;
-
-getopts('l:h?HdvuncgGsk:t:T:', \%options);
-
 use Pod::Usage;
-pod2usage(-verbose => 1) if($options{h} || $options{'?'});
-pod2usage(-verbose => 2) if($options{H});
+use Getopt::Std;
+use POSIX qw/strftime mkfifo :sys_wait_h/;
+use File::Temp qw/:POSIX/;
+use Fcntl;
+use Tk 800.022;
+use Tk::Xlib;
+require Tk::Dialog;
+require Tk::LabEntry;
+use X11::Protocol;
+use vars qw/ %keysymtocode /;
+use X11::Keysyms '%keysymtocode';
+#use FindBin; # used to get full path to this script
+use File::Basename;
 
-my %user_config;
+### all global variables ###
+my $scriptname=$0; $scriptname=~ s!.*/!!; # get the script name, minus the path
 
-sub KILLOFF { return 0xEE }; # quit signal to send to xterm clients 
+my $options='dDv?hHut:'; # Command line options list
+my %options;
+my %config;
+my $debug=0;
+my %clusters; # hash for resolving cluster names
+my %windows; # hash for all window definitions
+my %menus; # hash for all menu definitions
+my @servers; # array of servers provided on cmdline
+my %servers; # hash of server cx info
+my $helper_script;
+my $xdisplay=X11::Protocol->new();
+my %keycodes;
 
-# Load Term::Cap entries (Assuming children are same type as parent)
-my $termios = new POSIX::Termios;
-$termios->getattr;
+my %chartokeysym = (
+	'!' => 'exclam',
+	'"' => 'quotedbl',
+	'\uffff' => 'sterling',
+	'$' => 'dollar',
+	'%' => 'percent',
+	'^' => 'asciicircum',
+	'&' => 'ampersand',
+	'*' => 'asterisk',
+	'(' => 'parenleft',
+	')' => 'parenright',
+	'_' => 'underscore',
+	'+' => 'plus',
+	'-' => 'minus',
+	'=' => 'equal',
+	'{' => 'braceleft',
+	'}' => 'braceright',
+	'[' => 'bracketleft',
+	']' => 'bracketright',
+	':' => 'colon',
+	'@' => 'at',
+	'~' => 'asciitilde',
+	';' => 'semicolon',
+	"\'" => 'apostrophe',
+	'#' => 'numbersign',
+	'<' => 'less',
+	'>' => 'greater',
+	'?' => 'question',
+	',' => 'comma',
+	'.' => 'period',
+	'/' => 'slash',
+	"\\" => 'backslash',
+	'|' => 'bar',
+	'`' => 'grave',
+	' ' => 'space',
+);
 
-# 20040413 <tmancill@debian.org> - if TERM isn't set assume xterm
-unless ($ENV{TERM}) {
-	$ENV{TERM} = 'xterm';
-}
+### all sub-routines ###
 
-my $ospeed = $termios->getospeed;
-my $terminal = Tgetent Term::Cap { TERM => undef, OSPEED => $ospeed };
-
-# Set up some defaults
-$user_config{'default.terminal'}="xterm";
-$user_config{'default.user'}=$ENV{LOGNAME};
-$user_config{'default.terminal_options'}="";
-$user_config{'default.cx_path'}="/usr/bin";
-$user_config{'default.cx_args'}="-C";
-$user_config{'default.key_quit'}="Control-q";
-$user_config{'default.key_addhost'}="Control-plus";
-$user_config{'default.key_clientname'}="Alt-n";
-$user_config{'default.variables'}="no";
-$user_config{'default.title_number'}="no";
-$user_config{'default.titlebar_size'}=30;
-$user_config{'default.decoration_width'}=8;
-$user_config{'default.decoration_height'}=10;
-$user_config{'default.term_size'}="80x24";
-$user_config{'default.term_font'}="6x13";
-$user_config{'default.always_tile'}="yes";
-$user_config{'default.cchp_path'}="$FindBin::Bin";
-$user_config{'default.cchp_sleep'}="0.1";
-#$user_config{'default.reserve_top'}="0";
-$user_config{'default.reserve_bottom'}="0";
-#$user_config{'default.reserve_left'}="0";
-$user_config{'default.reserve_right'}="0";
-$user_config{'default.keep_open'}=0;
-
-# Now read in the system config file
-Config::Simple->import_from('/etc/csshrc', \%user_config);
-
-# Now overwrite that with any user defined ones
-Config::Simple->import_from($ENV{HOME}."/.csshrc", \%user_config);
-
-# Set up TIOCSTI 
-sub setup_OS(); # make sure func is defined so we can use it straight away
-setup_OS(); # and now call it
-
-# Check to make sure we can access xterm
-if(system("type $user_config{'default.terminal'} 1>/dev/null 2>&1") > 0)
+# catch_all exit routine that should always be used
+sub exit_prog()
 {
-	die("Cannot access $user_config{'default.terminal'} - add ".
-		"\"terminal = /path/to/xterm\" to \$HOME/.csshrc,\nand see \"cssh -H\"\n");
-}
+	logmsg(3, "Exiting via normal routine");
+	# for each of the client windows, send a kill
 
-# Ensure we know where cchp is....
-if( ! -f $user_config{'default.cchp_path'}."/cchp" )
-{
-	if ( -f "/usr/lib/cchp")
+	# to make sure we catch all children, even when they havnt
+	# finished starting or received teh kill signal, do it like this
+	while (%servers)
 	{
-		$user_config{'default.cchp_path'}="/usr/lib";
-	} else {
-		die ("Fatal: cannot find cchp - please define cchp_path in csshrc\n");
-	}
-}
-
-# We can do something funky here - if we are called using a name other than
-# 'cssh', drop the first letter and then use that instead, i.e. crsh uses
-# rsh not ssh...
-my $my_name=$FindBin::Script;
-
-# now, untaint it 
-if($my_name =~ /^([-\@\w.]+)$/) {
-	$my_name=$1;
-} else {
-	die "FATAL: program name used is insecure ($my_name)\n";
-}
-
-my $method=$my_name;
-$method =~ s/^.//;
-
-if($method !~ /^[rs]sh$/) 
-{
-	die "FATAL: Only ssh and rsh protocols are currently supported (method=$method)\n";
-}
-
-my $path_method=$user_config{'default.cx_path'}."/".$method;
-
-# Check to make sure we can use ssh correctly
-if(! -x $path_method)
-{
-	die("FATAL: Cannot find ssh in $user_config{'default.cx_path'} - please define \"cx_path\" in ".
-		"configuration file\n");
-}
-
-# disable X11 forwarding if using ssh - fixes problem with redhat machines
-$path_method.=" -x " if($path_method =~ /ssh$/);
-
-if($options{v} || $options{d})
-{
-	print("$my_name: $VERSION\n");
-	system("$^X $user_config{'default.cchp_path'}/cchp -v");
-	exit if(!$options{d});
-}
-
-if($user_config{'default.variables'} eq "sh")
-{
-	$options{s}="yes";
-} elsif($user_config{'default.variables'} eq "csh") {
-	$options{c}="yes";
-}
-
-if($options{l})
-{
-	$user_config{'default.user'}=$options{l};
-}
-
-if($options{k})
-{
-	if($options{k} =~ /\d/)
-	{
-		$user_config{'default.keep_open'}=$options{k};
-	} else {
-		warn "Option to -k must be a number\n";
-	}
-}
-
-$user_config{'default.keep_open'}=25 if($options{d});
-
-if($user_config{'default.title_number'} ne "no")
-{
-	$options{n}="yes";
-}
-
-if($user_config{'default.always_tile'} eq "never")
-{
-	$options{G}="no";
-}
-
-if($options{g})
-{
-	print "Default action is to tile windows; '-g' is no longer required\n";
-	print "Use '-G' to disable tiling, or use .csshrc file.\n";
-}
-
-if($options{t})
-{
-	$user_config{'default.terminal_options'}.=" $options{t} ";
-	# untaint parameters
-	if($user_config{'default.terminal_options'} =~/^([-\@\w. :]+)$/)
-	{
-		$user_config{'default.terminal_options'}=$1;
-	} else {
-		die "FATAL: options given with -t are insecure (no ; / or | allowed)\n";
-	}
-	print "Starting terminals with: $user_config{'default.terminal_options'}\n";
-}
-
-my $control_title="$my_name";
-if($options{T})
-{
-	$control_title="$options{T} - $my_name";
-}
-
-# now, untaint it 
-if($control_title =~ /^([-\@\w. ]+)$/) {
-	$control_title=$1;
-} else {
-	die "FATAL: title used is insecure ($options{T})\n";
-}
-
-# remove 'bareword' errors for menu creation items
-use subs qw/mw_mb_file_items mw_mb_help_items wm_mb_help_about mw_mb_send_items/;
-
-# because we are running setuid (i.e. in taint mode), clean up the 
-# environment we are running in
-$ENV{PATH}='/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin:/usr/openwin/bin:/usr/X11R6/bin';
-delete @ENV{qw(IFS CDPATH ENV BASH_ENV)};
-
-# Read in all cluster aliases if /etc/clusters exists for nice & quick
-# alias translations
-my %clusters;
-
-if ( -r "/etc/clusters" )
-{
-	open(CLUSTERS,"<", "/etc/clusters");
-
-	while(<CLUSTERS>)
-	{
-		next if(/^#/); # ignore all comment lines
-		next if(/^\s*$/); # ignore all blank lines
-
-		chomp;
-
-		s/^([\w-]+)\s*//; # remote first work and stick into $1
-		$clusters{$1} = $_ ; # Now bung in rest of line
-	}
-
-	close(CLUSTERS);
-}
-
-{ 
-	my $clstr = $user_config{'default.clusters'};
-	if(defined($clstr))
-	{
-		my(@clarray)=split(/\s+/,$clstr);
-		foreach (@clarray)
+		foreach my $svr (keys(%servers))
 		{
-			my $c=$user_config{'default.'.$_};
-			$clusters{$_} = $c if $c;
+			kill(9, $servers{$svr}{pid}) if kill(0, $servers{$svr}{pid});
+			delete($servers{$svr});
 		}
-	}
-}
-
-# dump out config file
-if($options{u})
-{
-	foreach (sort(keys(%user_config)))
-	{
-		my $key=$_;
-		$key =~ s/default.//;
-		print "$key = $user_config{$_}\n";
 	}
 	exit 0;
 }
 
-# loop over ARGV and expand any cluster aliases
-my @cmdargs=@ARGV;
-
-# function to take a name, check /etc/clusters for it, and return a correct
-# list as appropriate
-sub resolve_name($)
+# output function according to debug level
+# $1 = log level (0 to 3)
+# $2 .. $n = list to pass to print
+sub logmsg($@)
 {
-	my $alias = shift;
+	my $level=shift;
 
-	# no point in doing anything if the alias file doesn't exist...
-	return $clusters{$alias} if defined($clusters{$alias});
-
-	return "";
+	if($level <= $debug)
+	{
+		print @_,$/;
+	}
 }
 
-sub resolve_names
+# set some application defaults
+sub load_config_defaults()
 {
-	my @list = @_;
+	$config{terminal}="xterm";
+	$config{terminal_args}="";
+	$config{terminal_title_opt}="-T";
+	$config{terminal_allow_send_events}="-xrm 'XTerm.VT100.allowSendEvents:true'";
+	$config{user}=$ENV{LOGNAME};
+	$config{use_hotkeys}="yes";
+	$config{key_quit}="Control-q";
+	$config{key_addhost}="Control-plus";
+	$config{key_clientname}="Alt-n";
+	$config{reserve_top}=50;
+	$config{reserve_bottom}=0;
+	$config{reserve_left}=0;
+	$config{reserve_right}=0;
 
-	foreach (@list)
+	($config{comms}=basename($0)) =~ s/^.//;
+	$config{$config{comms}}=$config{comms};
+
+	$config{comms_args}.="-x" if ($config{$config{comms}} =~ /ssh$/);
+
+	$config{title}="CSSH";
+}
+
+# load in config file settings
+sub load_configfile($)
+{
+	my $config_file=shift;
+	logmsg(1,"Reading in from config file $config_file");
+	return if (! -f $config_file);
+
+	open(CFG, $config_file) or die("Couldnt open $config_file: $!");;
+	while(<CFG>)
 	{
-		my @hosts = split(/ /, $_);
-		my $xit = 0;
+		next if(/^\s*$/ || /^#/); # ignore blank lines & commented lines
+		s/#.*//; # remove comments from remaining lines
+		chomp();
+		my ($key, $value) = split(/[ 	]*=[ 	]*/);
+		$config{$key} = $value;
+		logmsg(3,"$key=$value");
+	}
+	close(CFG);
+}
 
-		foreach(@hosts) 
+sub find_binary($)
+{
+	my $binary=shift;
+
+	logmsg(3,"Looking for $binary");
+	my $path=`which $binary 2>/dev/null`;
+	if(!$path)
+	{
+		die("$binary not found - please amend \$PATH or the cssh config file\n");
+	} 
+	chomp($path);
+	return $path;
+}
+
+# make sure our config is sane (i.e. binaries found)
+sub check_config()
+{
+	# check we have xterm on our path
+	logmsg(2, "Checking path to xterm");
+	$config{terminal}=find_binary($config{terminal});
+
+	# check we have comms method on our path
+	logmsg(2, "Checking path to $config{comms}");
+	$config{$config{comms}}=find_binary($config{comms});
+
+	# make sure comms in an accepted value
+	die "FATAL: Only ssh and rsh protocols are currently supported (comms=$config{comms})\n" if($config{comms} !~ /^[rs]sh$/);
+
+	# Set any extra config options given on command line
+	$config{title}=$options{t} if($options{t});
+}
+
+# dump out the config to STDOUT
+sub dump_config()
+{
+	logmsg(3, "Dumping config to STDOUT");
+
+	print("# Configuration dump produced by 'cssh -u'\n");
+
+	foreach (sort(keys(%config)))
+	{
+		print "$_=$config{$_}\n";
+	}
+	exit_prog;
+}
+
+sub load_keyboard_map()
+{
+	# load up the keyboard map to convert keysyms to keycodes
+	my $min=$xdisplay->{min_keycode};
+	my $count=$xdisplay->{max_keycode} - $min;
+	my @keyboard=$xdisplay->GetKeyboardMapping($min, $count);
+
+	foreach (0 .. $#keyboard)
+	{
+		$keycodes{$keyboard[$_][0]}=$_+$min;
+		$keycodes{$keyboard[$_][1]}=$_+$min;
+	}
+}
+
+# read in all cluster definitions
+sub get_clusters()
+{
+	# first, read in global file
+	my $cluster_file='/etc/clusters';
+
+	logmsg(3, "Looging for $cluster_file");
+
+	if(-f $cluster_file)
+	{
+		logmsg(1,"Loading clusters in from $cluster_file");
+		open(CLUSTERS, $cluster_file) || die("Couldnt read $cluster_file");
+		while(<CLUSTERS>)
 		{
-			my $host = resolve_name($_);
-
-			if ( ! $host eq "" )
-			{
-				push(@list, split(/ /, $host));
-				# now remove the alias
-				$_="";
-				$xit = 1;
-			}
+			next if(/^\s*$/ || /^#/); # ignore blank lines & commented lines
+			chomp();
+			s/^([\w-]+)\s*//; # remote first word and stick into $1
+			logmsg(3,"cluster $1 = $_");
+			$clusters{$1} = $_ ; # Now bung in rest of line
 		}
-		if ( $xit == 1 ) {
+		close(CLUSTERS);
+	}
+
+	# Now get any definitions out of %config
+	logmsg(2,"Looking for user space clusters");
+	if($config{clusters})
+	{
+		logmsg(1,"Loading clusters in from user space");
+
+		foreach (split(/\s+/, $config{clusters}))
+		{
+			logmsg(3,"cluster $_ = $config{$_}");
+			$clusters{$_} = $config{$_};
+		}
+	}
+}
+
+sub resolve_names(@)
+{
+	my @servers=@_;
+
+	foreach (@servers)
+	{
+		logmsg(3, "Found server $_");
+
+		if($clusters{$_})
+		{
+			push(@servers, split(/ /, $clusters{$_}));
 			$_="";
 		}
 	}
 
-	# Now, tidy the array up and remove any blank entries
 	my @cleanarray;
 
-	foreach (@list)
+	# now clean the array up
+	foreach (@servers)
 	{
-		push(@cleanarray, $_) if($_ && $_ !~ /^$/);
+		push(@cleanarray, $_) if($_ !~ /^$/);
 	}
 
-	return @cleanarray;
+	foreach (@cleanarray)
+	{
+		logmsg(3, "leaving with $_");
+	}
+	return(@cleanarray);
 }
 
-# check all command line hosts for aliases and resolve
-@cmdargs = resolve_names(@cmdargs);
-
-# hash to contain all required info about windows used
-# format of %servers is:
-# [0] active
-# [1] process id # no longer required
-# [2] pipe file name
-# [3] pipe file handle
-my %servers;
-
-# handle for main window
-my $mw=MainWindow->new(-title=>$control_title);
-
-# work out how many windows we are opening if setting geometry
-# vars we need when we open windows
-my ($term_height, $term_width, $rows, $cols) = (0,0,0,0);
-
-# Make sure we have some clients to open up, else we error when
-# trying to tile and no client
-$options{G}="never" if(@cmdargs < 1);
-
-if(!$options{G})
+sub change_main_window_title()
 {
-	# Now get the screen height for tiling windows later
-	my $screen_height=$mw->screenheight;
-	my $screen_width=$mw->screenwidth;
-
-	# carve up the screen a bit based on how much to reserve
-	$screen_height -= $user_config{'default.titlebar_size'} + $user_config{'default.reserve_bottom'};
-	$screen_width -= $user_config{'default.reserve_right'};
-
-	my $xlsfonts_path=`which xlsfonts`;
-	chomp($xlsfonts_path);
-	my $finfo = `$xlsfonts_path -ll -fn $user_config{'default.term_font'}`;
-	my $fwidth = ($finfo =~ /^\s*max\s+(\d+)/m)[0];
-	my $fheight = ($finfo =~ /^\s*PIXEL_SIZE\s*(\d+)/m)[0];
-
-	my $max_term_cols = $user_config{'default.term_size'};
-	my $max_term_rows = $user_config{'default.term_size'};
-	$max_term_cols =~ s/x.*//;
-	$max_term_rows =~ s/.*x//;
-	
-	my $term_cols=$max_term_cols;
-
-	# Get the term width and height
-	$term_width = ( $term_cols * $fwidth ) + $user_config{'default.decoration_width'} ; # convert loosly to pixels
-
-	my $total=@cmdargs;
-
-	$cols = int($screen_width / $term_width);
-	$rows = int($total/$cols + 0.99999);
-
-	my $term_rows = int(($screen_height - 10 * $rows) / $fheight / $rows);
-
-	# make sure we have no more rows than the max specified
-	$term_rows= $term_rows > $max_term_rows ? $max_term_rows : $term_rows;
-
-	$term_height = $term_rows * $fheight + $user_config{'default.decoration_height'};
-	print "term_rows=$term_rows\n" if($options{d});
-	$user_config{'default.term_size'} = "${term_cols}x${term_rows}";
-
-
-	warn "total=$total\n" if($options{d});
-	warn "term_height=$term_height\n" if($options{d});
-	warn "term_width=$term_width\n" if($options{d});
-	warn "cols=$cols\n" if($options{d});
-	warn "rows=$rows\n" if($options{d});
-	warn "default.term_size=$user_config{'default.term_size'}\n" if($options{d});
-}
-
-# because we tile from bottom left, let's be nice and reverse it...
-open_windows(reverse @cmdargs);
-
-sub change_title_number {
-	return unless $options{n};
-
 	my $number=keys(%servers);
-
-	$mw->title($control_title." [$number]");
+	$windows{main_window}->title($config{title}." [$number]");
 }
 
-change_title_number;
-
-sub open_windows
+sub send_text($@)
 {
-	# Only need carry on if we have been passed some args
-	return if($#_ == -1);
+	my $svr=shift;
+	my $text=join("", @_);
 
-	my $total=@_;
+	logmsg(2, "Sending to $svr text:$text:");
 
-	my $cur_col = 0;
-	my $cur_row = 0;
+	logmsg(2, "servers{$svr}{wid}=$servers{$svr}{wid}");
 
-	my $port=22;
+	# work out whether or nto we also need to send a newline, which isnt
+	# in the keysym hash
+	my $newline=chomp($text);
 
-	if(!$options{G})
+#	if($newline =~ /\\x{a}$/)
+#	{
+#		$newline=1;
+#		$newline =~ s/\\x{a}$//;
+#	}
+
+	foreach my $char (split(//, $text) , ($newline ? "Return" : ""))
 	{
-		if ($cols > 0) {
-			$cur_col = $total % $cols;
-			$cur_row = ($total - ($total % $cols)) / $cols;
+		my $code;
+		if(exists($chartokeysym{$char}))
+		{
+			$code=$chartokeysym{$char};
 		} else {
-			$cur_col = 1;
-			$cur_row = 1;
+			$code=$char;
 		}
 
-		# we want the first ones to be from 0 not 1, so take 1 off 
-		$cols-=1 if($cols > 0);
-		$rows-=1 if($rows > 0);
-		
-		$cur_col-=1;
-		if($cur_col<0)
+		#if ($chartokeysym{$char})
+		#{
+			#$code=$chartokeysym{$char};
+		#} else {
+			#$code=$keycodes{$keysymtocode{$char}};
+		#}
+
+		logmsg(2, "char=:$char: code=:$code: number=:$keycodes{$keysymtocode{$code}}:");
+		#logmsg(2, "char=:$char:");
+
+		for my $event (qw/KeyPress KeyRelease/)
 		{
-			$cur_row-=1 ;
-			$cur_col=$cols;
+			logmsg(2, "event=$event");
+			$xdisplay->SendEvent($servers{$svr}{wid}, 0,
+				$xdisplay->pack_event_mask($event),
+				$xdisplay->pack_event(
+					'name' => $event,
+					'detail' => $keycodes{$keysymtocode{$code}},
+					'state' => 0,
+					'time' => time(),
+					'event' => $servers{$svr}{wid},
+					'root' => $xdisplay->root(),
+					'same_screen' => 1,
+				),
+			);
 		}
 	}
+	$xdisplay->flush();
+}
 
+sub send_clientname()
+{
+	foreach my $svr (keys(%servers))
+	{
+		send_text($svr, $svr."\n");
+#		foreach my $char (split(//, $servers{$svr}{realname}), "Return")
+#		{
+#			$xdisplay->SendEvent($servers{$svr}{wid}, 0, 
+#				$xdisplay->pack_event_mask("KeyPress"),
+#				$xdisplay->pack_event(
+#					'name' => "KeyPress",
+#					'detail' => $keycodes{$keysymtocode{$char}},
+#					'state' => 0,
+#					'time' => time(),
+#					'event' => $servers{$svr}{wid}, 
+#					'root' => $xdisplay->root(), 
+#					'same_screen' => 1,
+#				)
+#			);
+#			$xdisplay->flush();
+#
+#			$xdisplay->SendEvent($servers{$svr}{wid}, 0, 
+#				$xdisplay->pack_event_mask("KeyRelease"),
+#				$xdisplay->pack_event(
+#					'name' => "KeyRelease",
+#					'detail' => $keycodes{$keysymtocode{$char}},
+#					'state' => 0,
+#					'time' => time(),
+#					'event' => $servers{$svr}{wid}, 
+#					'root' => $xdisplay->root(), 
+#					'same_screen' => 1,
+#				)
+#			);
+#			$xdisplay->flush();
+#		}
+	}
+}
+
+sub setup_helper_script()
+{
+	$helper_script=<<"	HERE";
+		my \$pipe=shift;
+		my \$svr=shift;
+		open(PIPE, ">", \$pipe);
+		print PIPE "\$ENV{WINDOWID}";
+		close(PIPE);
+		exec("$config{$config{comms}} $config{comms_args} \$svr");
+	HERE
+}
+
+sub open_client_windows(@)
+{
 	foreach (@_)
 	{
-		my $serv;
-		my $serv_name;
+		next unless($_);
 
-		# untaint parameter
-		if(/^([-:\@\w.]+)$/)
+		my $count = 1;
+		my $server=$_;
+
+		while(defined($servers{$server}))
 		{
-			# use a random number to uniquely id host in hash so we can then
-			# open a cx to the same host more than once.  use the __ as a marker
-			# to remove all text after that point when we want to use the var
-			$serv_name="$1__".rand();
-			$serv_name=$user_config{'default.user'}."@".$serv_name if($serv_name !~ /@/);
-			$serv=$serv_name;
-			$serv=~ s/__.*//;
-		} else {
-			warn "FATAL: server name given is insecure ($serv)\n";
-			exit_prog();
+			$server=$_." ".$count++;
 		}
 
-		$serv=~s/.*@// if($serv =~ /$ENV{LOGNAME}@/);
-		($serv,$port)=split(/::/,$serv) if($serv =~ /::/);
+		$servers{$server}{realname}=$_;
 
-		$servers{$serv_name}[0]=1; # mark terminal child process as active
-		$servers{$serv_name}[1]="unused"; #mark unused var
+		#print "Finished with $server for $_\n";
 
-		# Sort out a unique temp name for our pipe - do before fork so both
-		# client and parent have access to it
-		$servers{$serv_name}[2]=tmpnam();
+		$servers{$server}{pipenm}=tmpnam();
+		#print "tmpnam=$servers{$server}{pipenm}\n";
+		mkfifo($servers{$server}{pipenm}, 0600) or die("Cannot create pipe: $!");
 
-		# Now we create the fifo pipe file
-		mkfifo($servers{$serv_name}[2], 0600) or die("Cannot create pipe: $!");
+		#print "fifo made\n";
+		#print "Helper: $helper_script\n";
 
-		my $size= !$options{G} ? "-font $user_config{'default.term_font'} -geometry $user_config{'default.term_size'}" : "";
-		my $place=$size;
-
-		# If tiling, start at the bottom right and work backwards to ensure the 
-		# correct overlaps
-		if(!$options{G})
+		$servers{$server}{pid}=fork();
+		if(!defined($servers{$server}{pid}))
 		{
-			warn "in cur_col=$cur_col\n" if($options{d});
-			warn "in cur_row=$cur_row\n" if($options{d});
-
-			my $x = $cur_col * $term_width;
-			my $y = ($cur_row*$term_height) + $user_config{'default.titlebar_size'};
-			$place="$size+$x+$y";
-
-			print "place=$place\n" if($options{d});
-
-			$cur_col -= 1;
-
-			if($cur_col<0)
-			{
-				$cur_col = $cols;
-				$cur_row-=1;
-			}
+			die("Could not fork: $!");
 		}
 
-		my $KILLOFF=KILLOFF();
 
-		my $debug="";
-		$debug="-d" if($options{d});
-
-		# Start up the terminal ourselves so the pipes are in place
-		# NOTE - ssh -x to disable forwarding of X11 sessions due to problem
-		# on redhat systems
-
-		my $portarg = "-p $port";
-		if ($method eq "rsh") {
-			$portarg = "";
-		}
-		system("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $place -title '$method:$serv' -e $^X $user_config{'default.cchp_path'}/cchp $debug -s $user_config{'default.cchp_sleep'} -k $user_config{'default.keep_open'} -x $servers{$serv_name}[2] -y $user_config{'default.tiocsti'} -z $KILLOFF $path_method $portarg $user_config{'default.cx_args'} $serv &") == 0 or warn("Could not create session to $serv: $! ");
-
-		if(!sysopen($servers{$serv_name}[3], $servers{$serv_name}[2], O_WRONLY))
+		if($servers{$server}{pid}==0)
 		{
-			unlink($servers{$serv_name}[2]);
+			my $exec="$config{terminal} $config{terminal_args} $config{terminal_allow_send_events} $config{terminal_title_opt} '$config{title}:$server' -e $^X -e '$helper_script' $servers{$server}{pipenm} $servers{$server}{realname}";
+			# this is the child
+			logmsg(2,"$exec\n");
+			exec($exec) == 0 or warn("Failed: $!");;
+			#exec("$config{terminal} $config{terminal_args} -xrm 'XTerm.VT100.allowSendEvents:true' $config{terminal_title_opt} '$config{title}:$server' -e $^X -e '$helper_script' $servers{$server}{pipenm} $servers{$server}{realname}") ==0 or warn("Failed: $!");;
+		}
+
+		# block on open so we get the text when it comes in
+		if(!sysopen($servers{$server}{pipehl}, $servers{$server}{pipenm}, O_RDONLY))
+		{
+			unlink($servers{$server}{pipenm});
 			die ("Cannot open pipe for writing: $!");
 		}
 
-		# strip off any username@ if included in the connection string
-		$serv=~ s/.*@// if ($serv =~ /@/);
-		if($options{s})
-		{
-			syswrite($servers{$serv_name}[3], "CSSH_CLIENT=".$serv.chr(13));
-			syswrite($servers{$serv_name}[3], "CSSH_SERVER=".hostname.chr(13));
-			syswrite($servers{$serv_name}[3], "export CSSH_CLIENT CSSH_SERVER".chr(13));
-		} elsif($options{c}) {
-			syswrite($servers{$serv_name}[3], "setenv CSSH_CLIENT=".$serv.chr(13));
-			syswrite($servers{$serv_name}[3], "setenv CSSH_SERVER=".hostname.chr(13));
-		}
+		sysread($servers{$server}{pipehl}, $servers{$server}{wid}, 100);
+		close($servers{$server}{pipehl});
+		delete($servers{$server}{pipehl});
+
+		unlink($servers{$server}{pipenm});
+		delete($servers{$server}{pipenm});
+
+		$servers{$server}{active}=1; # mark as active
 	}
 }
 
-if($options{d})
+sub add_host_by_name()
 {
-	foreach (keys(%servers))
+	print "Adding host to menu here\n";
+
+	$windows{host_entry}->focus();
+	my $answer=$windows{addhost}->Show();
+
+	if($answer ne "Add")
 	{
-		foreach my $i (0..3)
-		{
-			print "servers{$_}[$i]=$servers{$_}[$i]\n";
-		}
+		$menus{host_entry}="";
+		return;
 	}
+
+	print "host=$menus{host_entry}\n";
+
+	open_client_windows( $menus{host_entry} );
+	build_hosts_menu();
+	$menus{host_entry}="";
+	select(undef,undef,undef,0.25); #sleep for a mo
+	$windows{main_window}->withdraw;
+	$windows{main_window}->deiconify;
+	$windows{main_window}->raise;
+	$windows{main_window}->focus;
+	$windows{text_entry}->focus();
 }
 
-change_title_number();
-
-$mw->configure(-menu=>my $mw_mb=$mw->Menu);
-my $file_menu = $mw_mb->cascade(
-	-label     => 'File', 
-	-menuitems => mw_mb_file_items,
-	-tearoff   => 0,
-);
-my $hosts_menu = $mw_mb->cascade(
-	-label     => 'Hosts', 
-	-tearoff   => 1,
-);
-my $send_menu = $mw_mb->cascade(
-	-label     => 'Send',
-	-menuitems => mw_mb_send_items,
-	-tearoff   => 1,
-);
-my $help_menu = $mw_mb->cascade(
-	-label     => 'Help', 
-	-menuitems => mw_mb_help_items,
-	-tearoff   => 0,
-);
-
-my $entrytext="";
-
-my $mw_entry=$mw->Entry(
-	-textvariable           => \$entrytext,
-	-insertborderwidth            => 4,
-	-width => 25, # width of cluster control window
-)->pack( -fill => "x",
-	-expand => 1,
-);
-
-my $add_host_win=$mw->DialogBox(
-	-popover => $mw,
-	-popanchor => 'n',
-	-title 				=> "Add Host",
-	-buttons => [ 'Add', 'Cancel' ],
-	-default_button => 'Add',
-);
-
-my $newhosts="";
-
-my $add_host_entry = $add_host_win->add('LabEntry', 
-	-textvariable => \$newhosts,
-	-width        => 20,
-	-label        => "Host",
-	-labelPack    => [-side => 'left'],
-)->pack(-side=>'left');
-
-# Set up key shortcuts
-
-# exit program key shortcut
-$mw->bind($mw, "<$user_config{'default.key_quit'}>" => \&exit_prog);
-$mw_entry->bind("Tk::Text", "<$user_config{'default.key_quit'}>" => \&exit_prog);
-
-# add host key shortcut
-$mw->bind($mw, "<$user_config{'default.key_addhost'}>" => \&add_host_win_entry);
-$mw_entry->bind("Tk::Text", "<$user_config{'default.key_addhost'}>" => \&add_host_win_entry);
-
-sub add_host_win_entry {
-	$add_host_entry->focus();
-	my $answer=$add_host_win->Show();
-
-	return if($answer eq "Cancel");
-	return if(!$newhosts);
-
-	my @new_hosts=split(/ /, $newhosts);
-	@new_hosts = resolve_names(@new_hosts);
-	open_windows(@new_hosts);
-
-	# Only way it seems we can to the hosts menu is to delete all and recreate
-	# name and ensure it has an entry on "Add Hosts" menu.  Start at 2 so
-	# we don't delete the "Add Host" item
-	my $menu=$mw_mb->entrycget('Hosts', -menu);
+sub build_hosts_menu()
+{
+	# first, emtpy the hosts menu from the 2nd entry on
+	my $menu=$menus{bar}->entrycget('Hosts', -menu);
 	$menu->delete(2,'end');
 
-	# add back in the seperator
-	$hosts_menu->separator;
+	# add back the seperator
+	$menus{hosts}->separator;
 
-	for my $serv_name (sort(keys(%servers)))
+	foreach my $svr (sort(keys(%servers)))
 	{
-		my $serv=$serv_name;
-		$serv=~s/__.*//;
-
-		$serv=~s/.*@// if($serv =~ /$ENV{LOGNAME}@/);
-
-		$hosts_menu->checkbutton(
-			-label=>$serv,
-			-variable=>\$servers{$serv_name}[0],
+		$menus{hosts}->checkbutton(
+			-label=>$svr,
+			-variable=>\$servers{$svr}{active},
 		);
 	}
-
-	$newhosts="";
-
-	$mw->withdraw;
-	$mw->deiconify;
-	$mw->raise;
-	$mw->focus;
-	$mw_entry->focus;
+	change_main_window_title();
 }
 
-sub send_clientname {
-	foreach my $serv_name (keys(%servers))
-	{
-		my $serv=$serv_name;
-		$serv=~ s/__.*//;
-		$serv=~ s/.*@// if ($serv =~ /@/);
-		for (split(//, $serv))
+sub setup_repeat()
+{
+	$windows{main_window}->repeat(500, sub {
+		my $build_menu=0;
+		foreach my $svr (keys(%servers))
 		{
-			send_character_to_server($serv_name,$_);
-		}
-	}
-}
-
-# key binding to send client name 
-$mw->bind($mw, "<$user_config{'default.key_clientname'}>" => \&send_clientname);
-$mw_entry->bind("Tk::Text", "<$user_config{'default.key_quit'}>" => \&send_clientname);
-
-$mw_entry->eventAdd('<<Paste>>' => '<Control-v>');
-$mw_entry->eventAdd('<<Paste>>' => '<Button-2>');
-
-$mw_entry->bind('<<Paste>>' => sub {
-	my $paste_text = '';
-	Tk::catch { $paste_text=$mw_entry->SelectionGet }; # SelectionGet is fatal if no sel
-
-	# grab everything within the text entry variable and output it to children
-	for (split(//, $paste_text))
-	{
-		send_character($_);
-	}
-});
-
-# we currently can only deal with ASCII codes, so any unusual
-# keys must be converted, i.e. arrow keys.  
-$mw->bind('<Key>' => sub { 
-	my $char=$Tk::event->A;
-	my $ascii=ord($Tk::event->A);
-
-	if(!$ascii)
-	{
-		my $keysym=$Tk::event->K;
-		if (my $termsym = {
-			'Up'    => 'ku',
-			'Right' => 'kr',
-			'Down'  => 'kd',
-			'Left'  => 'kl',
-		}->{$keysym}) {
-			for (split(//, $terminal->Tputs($termsym)))
+			if(! kill(0, $servers{$svr}{pid}) )
 			{
-				send_character($_);
+				$build_menu=1;
+				delete($servers{$svr});
 			}
-		} else {
-			print "Ignoring :$keysym:\n" if($options{d});
-			return; # catch all for unhandled control keys
 		}
-	}
-
-	if (!(keys(%servers)))
-	{
-		#no servers within hash array
-		print "Exit without servers in hash\n" if($options{d});
-		exit_prog() if ord($Tk::event->A) == 4; # <CTRL>-D pressed, so exit (solaris)
-	}
-
-	send_character($char);
-	$entrytext="";
-});
-
-sub delete_host
-{
-	my $serv_name=shift;
-	my $serv=$serv_name;
-	$serv=~ s/__.*//;
-
-	# grab a link to the hosts menu so we can work on it
-	my $menu=$mw_mb->entrycget('Hosts', -menu);
-
-	$serv=~ s/.*@// if ($serv =~ /$ENV{LOGNAME}@/);
-
-	# now remove the menu entry
-	
-	Tk::catch { $menu->delete($serv) }; # Sometimes the menu is not yet created
-
-	if($servers{$serv_name})
-	{
-		unlink($servers{$serv_name}[2]);
-		delete($servers{$serv_name});
-	}
-	change_title_number();
+		build_hosts_menu() if($build_menu);
+		$menus{entrytext}="";
+	});
 }
 
+### Window and menu definitions ###
 
-sub send_character_to_server
+sub create_windows()
 {
-	#[0]=server name
-	#[1]=character
-	my $serv_name=$_[0];
-	my $char=$_[1];
+	$windows{main_window}=MainWindow->new(-title=>"ClusterSSH");
 
-	if($servers{$serv_name}[0])
-	{
-		if(-p $servers{$serv_name}[2])
+	$menus{entrytext}="";
+	$windows{text_entry}=$windows{main_window}->Entry(
+		-textvariable  =>  \$menus{entrytext},
+		-insertborderwidth            => 4,
+		-width => 25,
+	)->pack( 
+		-fill => "x",
+		-expand => 1,
+	);
+
+	# grab paste events into the text entry
+	$windows{main_window}->eventAdd('<<Paste>>' => '<Control-v>');
+	$windows{main_window}->eventAdd('<<Paste>>' => '<Button-2>');
+
+	$windows{main_window}->bind('<<Paste>>' => sub {
+		$menus{entrytext}="";
+		my $paste_text = '';
+		# SelectionGet is fatal if no selection is given
+		Tk::catch { $paste_text=$windows{main_window}->SelectionGet };
+
+		# now sent it on
+		foreach my $svr (keys(%servers))
 		{
-			# send the characters unbuffered via pipe
+			send_text($svr, $paste_text);
+		}
+	});
+
+	$windows{help}=$windows{main_window}->Dialog(
+		-popover      => $windows{main_window},
+		-overanchor   => "c",
+		-popanchor    => "c",
+		-font         => [
+			-family => "interface system",
+			-size   => 10,
+		],
+		-text => "Cluster Administrator Console using SSH\n\nVersion: $VERSION.\n\n" .
+		"Bug/Suggestions to http://clusterssh.sf.net/",
+	);
+
+	$windows{manpage}=$windows{main_window}->DialogBox(
+		-popanchor    => "c",
+		-overanchor   => "c",
+		-title        => "Cssh Documentation",
+		-buttons      => [ 'Close' ],
+	);
+
+	my $manpage=`pod2text -l -q=\"\" $0`;
+	$windows{mantext}=$windows{manpage}->Scrolled("Text",)->pack(-fill=>'both');
+	$windows{mantext}->insert('end', $manpage);
+	$windows{mantext}->configure(-state=>'disabled');
+
+	$windows{addhost}= $windows{main_window}->DialogBox(
+		-popover        => $windows{main_window},
+		-popanchor      => 'n',
+		-title          => "Add Host",
+		-buttons        => [ 'Add', 'Cancel' ],
+		-default_button => 'Add',
+	);
+
+	$windows{host_entry} = $windows{addhost} -> add('LabEntry',
+		-textvariable    => \$menus{host_entry},
+		-width           => 20,
+		-label           => 'Host',
+		-labelPack       => [ -side => 'left', ],
+	)->pack(-side=>'left');
+}
+
+# for all key event, event hotkeys so there is only 1 key binding
+sub key_event {
+	my $event=$Tk::event->T;
+	my $keycode=$Tk::event->k;
+	my $keynum=$Tk::event->N;
+	my $keysym=$Tk::event->K;
+	my $state=$Tk::event->s;
+	$menus{entrytext}="";
+
+	logmsg(2, "event=$event");
+	logmsg(2, "sym=$keysym (state=$state)");
+	if($config{use_hotkeys} eq "yes")
+	{
+		my $combo=$Tk::event->s."-".$Tk::event->K;
+
+		foreach my $hotkey (grep(/key_/, keys(%config)))
+		{
+			#print "Checking hotkey $hotkey ($config{$hotkey})\n";
+			my $key=$config{$hotkey};
+			$key =~ s/-/.*/g;
+			#print "key=$key\n";
+			#print "combo=$combo\n";
+			if($combo =~ /$key/)
 			{
-				local $SIG{PIPE} = 'IGNORE';
-				syswrite($servers{$serv_name}[3], $char);
-			}
-		} else {
-			delete_host($serv_name);
-		}
-	}
-}
-
-sub send_character {
-	my $char=$_[0];
-
-	foreach (keys(%servers))
-	{
-		print "Sending :$char: to $_\n" if($options{d});
-		send_character_to_server($_,$char);
-	}
-	$entrytext="";
-}
-
-# every so many milliseconds, check to see if all our children are around.
-# If not, remove them from the hash and the hosts menu
-$mw->repeat(500, sub{
-	foreach (keys(%servers))
-	{
-		if(! -p $servers{$_}[2])
-		{
-			print "Looking at $servers{$_}[2]\n" if($options{d});
-			print "Removing $_ from hosts menu\n" if($options{d});
-			delete_host($_);
-		}
-	}
-
-	# pasting into the control window sometimes leaves the text behind.
-	# Take advantage of the repeat to keep the entry text widget clean
-	$entrytext="";
-});
-
-# Do this neatly...
-sub exit_prog()
-{
-	print "Exiting the program neatly\n" if($options{d});
-	foreach (keys(%servers))
-	{
-		if($servers{$_}[0])
-		{
-			if(-p $servers{$_}[2])
-			{
-				# send the children die signal - unused ASCII char
-				syswrite($servers{$_}[3], chr(KILLOFF));
-				unlink($servers{$_}[2]);
+				if($event eq "KeyRelease")
+				{
+					#print "FOUND for $hotkey!\n";
+					send_clientname() if($hotkey eq "key_clientname");
+					add_host_by_name() if($hotkey eq "key_addhost");
+					exit_prog() if($hotkey eq "key_quit");
+				}
+				return;
 			}
 		}
 	}
 
-	# and formally exit the program
+	# look for a <Control>-d and no hosts, so quit
+	exit_prog() if($state =~ /Control/ && $keysym eq "d" and !%servers);
+
+	# for all servers
+	foreach (keys(%servers))
+	{
+		# if active
+		if($servers{$_}{active} == 1)
+		{
+			print "Sending event $event with code $keycode to window $servers{$_}{wid}\n";
+			print "event:",$event, $/;
+			print "root:",$servers{$_}{wid}, $/;
+			print "detail:",$keycode, $/;
+
+			$xdisplay->SendEvent($servers{$_}{wid}, 0, 
+				$xdisplay->pack_event_mask($event),
+				$xdisplay->pack_event(
+					'name' => $event,
+					'detail' => $keycode,
+					'state' => $state,
+					'time' => time(),
+					'event' => $servers{$_}{wid}, 
+					'root' => $xdisplay->root(), 
+					'same_screen' => 1,
+				)
+			);
+		}
+	}
+	$xdisplay->flush();
+}
+
+sub create_menubar()
+{
+	$menus{bar}=$windows{main_window}->Menu;
+	$windows{main_window}->configure(-menu=>$menus{bar}); 
+
+	$menus{file}=$menus{bar}->cascade(
+		-label     => '~File',
+		-menuitems => [
+			[ 
+				"command", 
+				"Exit", 
+				-command => \&exit_prog, 
+				-accelerator => $config{key_quit},
+			]
+		],
+		-tearoff   => 0,
+	);
+
+	$menus{hosts}=$menus{bar}->cascade(
+		-label     => 'H~osts',
+		-tearoff   => 1,
+		-menuitems => [
+			[
+				 "command",
+				 "Add Host",
+				 -command     => \&add_host_by_name,
+				 -accelerator => $config{key_addhost},
+			],
+			'',
+		],
+	);
+
+	$menus{send}=$menus{bar}->cascade(
+		-label     => '~Send',
+		-menuitems => [
+			[
+				"command", 
+				"Hostname",
+				-command     => \&send_clientname,
+				-accelerator => $config{key_clientname},
+			],
+		],
+		-tearoff   => 1,
+	);
+
+	$menus{help}=$menus{bar}->cascade(
+		-label     => '~Help',
+		-menuitems => [
+			[
+				'command',
+				"About",
+				-command=> sub { $windows{help}->Show } 
+			],[
+				'command',
+				"Documentation",
+				-command=> sub { $windows{manpage}->Show}
+			],
+		],
+		-tearoff   => 0,
+	);
+
+	#$windows{main_window}->bind(
+		#'<Key>' => \&key_event,
+	#);
+	$windows{main_window}->bind(
+		'<KeyPress>' => \&key_event,
+	);
+	$windows{main_window}->bind(
+		'<KeyRelease>' => \&key_event,
+	);
+}
+
+### main ###
+
+# Note: getopts returned "" if it finds any options it doesnt recognise
+# so use this to print out basic help
+pod2usage(-verbose => 1) unless(getopts($options, \%options));
+pod2usage(-verbose => 1) if($options{'?'} || $options{h});
+pod2usage(-verbose => 2) if($options{H});
+
+if($options{v}) {
+	print "Version: $VERSION\n";
 	exit 0;
 }
 
-###
-# File menu items
-###
-sub mw_mb_file_items
-{
-	[
-			[ 'command', "Exit", -command => \&exit_prog, -accelerator => "$user_config{'default.key_quit'}" ],
-			# [ 'command', "printhash", -command => \&printhash ],
-	]
-}
-###
+# catch and reap any zombies
+sub REAPER { 1 until waitpid(-1, WNOHANG) == -1 }
+$SIG{CHLD} = \&REAPER;
 
-###
-# Hosts menu item - list of hosts fomr command line in hash 
-###
-# Grab the menu and add in all the hosts by hand
-# First, button to allow more hosts to be added in later on
-$hosts_menu->command(
-	-label => "Add Host",
-	-accelerator => "$user_config{'default.key_addhost'}",
-	-command => \&add_host_win_entry,
-);
-$hosts_menu->separator;
+$debug+=1 if($options{d});
+$debug+=2 if($options{D});
 
-# Now add in all the hosts we know about from command line
-for (sort(keys(%servers)))
-{
-	my $serv=$_;
-	$serv=~s/__.*//;
+load_config_defaults();
+load_configfile('/etc/csshrc');
+load_configfile($ENV{HOME}.'/.csshrc');
+check_config();
+dump_config() if($options{u});
 
-	# Remove any user@ if it is the current user
-	$serv=~s/.*@// if($serv =~ /$ENV{LOGNAME}@/);
+load_keyboard_map();
 
-	#if(checkProcID($servers{$_}[1]))
-	print "Checking add in $_ with $servers{$_}[2]\n" if($options{d});
-	if(-p $servers{$_}[2])
-	{
-		print "Adding in $_ to hosts menu\n" if($options{d});
-		$hosts_menu->checkbutton(
-			-label=>"$serv",
-			-variable=>\$servers{$_}[0],
-		);
-	} else {
-		print "pipe file gone: $servers{$_}[2] on $_\n" if($options{d});
-	}
-}
-###
+get_clusters();
 
-###
-# Send=>menu to send some kind of text to all client
-###
-#$mw_mb_send_items->command(
-	#-label => "Hostname",
-	#-accelerator => "$user_config{'default.key_clientname'}",
-	#-command => \&send_clientname,
-#);
-sub mw_mb_send_items
-{
-	[
-		[ 'command', "Hostname", 
-			-command=> \&send_clientname,
-			-accelerator => "$user_config{'default.key_clientname'}",
-		]
-	]
-}
-###
-# Help=>About dialogue box
-###
-my $wm_mb_help_about=$mw->Dialog(
-	-popover      => $mw,
-	-overanchor   => "c",
-	-popanchor    => "c",
-	-font         => 
-		[ -family => "interface system",
-			-size   => 10 ],
-	-text => "Cluster Administrator Console using SSH\n\nVersion: $VERSION.\n\n" .
-	"Bug/Suggestions to http://clusterssh.sourceforge.net/",
-);
-###
+@servers = resolve_names(@ARGV);
 
-###
-# Help menu items
-###
-sub mw_mb_help_items
-{
-	[
-		[ 'command', "About", -command=> sub { $wm_mb_help_about->Show } ],
-	]
-}
-###
+create_windows();
+create_menubar();
 
-sub printhash
-{
-	# format of %servers is:
-	# [0] active
-	# [1] process id
-	# [2] device
-	# [3] file descriptor
+change_main_window_title();
 
-	foreach (keys(%servers))
-	{
-		print "$_ [0] is $servers{$_}[0]\n" if (defined($servers{$_}[0]));
-		print "$_ [1] is $servers{$_}[1]\n" if (defined($servers{$_}[1]));
-		print "$_ [2] is $servers{$_}[2]\n" if (defined($servers{$_}[2]));
-		print "$_ [3] is $servers{$_}[3]\n" if (defined($servers{$_}[3]));
-	}
-	print "----\n";
-}
+setup_helper_script();
+open_client_windows(@servers);
 
-$mw_entry->focus;
+build_hosts_menu();
+
+setup_repeat();
+
+#print "$_ = $keysymtocode{$_}\n" foreach (keys(%keysymtocode));
+
+#exit;
+
+select(undef,undef,undef,0.25); #sleep for a mo
+$windows{text_entry}->focus();
+# Start even loop & open windows
 MainLoop();
 
-# Make sure our exit routine gets called
-# NOTE: this func calls an explicit exit
-exit_prog();
-
-sub setup_OS()
-{
-	if($user_config{'default.tiocsti'})
-	{
-		# assume if defined in config file, it is correct
-		print "TIOCSTI fonud on config file - not working out\n" if($options{d});
-		return;
-	}
-
-	# to attempt to find out plateform value for setting TIOCSTI
-	# and other such dependencies
-	use Config;
-
-	# predefined for linux
-	if($Config{archname}=~/linux/)
-	{
-		$user_config{'default.tiocsti'}=0x5412;
-		return;
-	}
-
-	# predefined for FreeBSD
-	if($Config{archname}=~/FreeBSD/i)
-	{
-		$user_config{'default.tiocsti'}=0x80017472;
-		return;
-	}
-
-	# predefined for Sun Solaris
-	if($Config{archname}=~/solaris/)
-	{
-		$user_config{'default.tiocsti'}=0x007417;
-		return;
-	}
-
-	# predefined for OpenBSD
-	if($Config{archname}=~/^OpenBSD.i\d86-openbsd$/)
-	{
-		$user_config{'default.tiocsti'}=0x80017472;
-		return;
-	}
-
-	# predefined for HP-UX 11i rp7410
-	if($Config{archname}=~/^PA-RISC2.0-.*LP64$/)
-	{
-		$user_config{'default.tiocsti'}=0x80017472;
-		return;
-	}
-
-	# predefined for Mac OS X
-	if($Config{archname}=~/darwin-thread/)
-	{
-		$user_config{'default.tiocsti'}=0x80007472;
-		return;
-	}
-
-	# not predefined, so attempt to work it out from the "normal" source
-	if(! eval { require "sys/ioctl.ph" } )
-	{
-		print "Archname: $Config{archname}\n";
-		die "FATAL ERROR: Please run \"cd /usr/include ; h2ph sys/ioctl.h\" or on whichever header file contains the TIOCSTI definition (as root)\n";
-	}
-
-	my $tiocsti=eval{&TIOCSTI};
-
-	if(defined($tiocsti))
-	{
-		print "Please email duncan_ferguson\@users.sourceforge.net with the following:\n";
-		print "Archname: $Config{archname}\n";
-		printf "TIOCSTI: %#08x\n", $tiocsti;
-		print "This value can be defined within \$HOME/.csshrc as \"tiocsti = <number\"\nto stop this error message\n";
-		print "See also 'cssh -o'\n";
-		$user_config{'default.tiocsti'}=$tiocsti;
-		return;
-	}
-
-	print "An error has occured; your architecture is unknown.  ".
-		"Please email\n\tduncan_ferguson\@users.sourceforge.net\nfor further ".
-		"support with the following information:\n";
-	print "\tArchname: $Config{archname}\n";
-	print "Please also look in the BUGS section of the man page and run the ".
-		"C code provided\n";
-
-	exit 1;
-}
-
+# make sure we leave program in an expected way
+exit_prog;
 
 __END__
+# man/perldoc/pod page
 
 =head1 NAME
 
-cssh - Cluster administration tool
+cssh (crsh) - Cluster administration tool
 
 =head1 SYNOPSIS
 
- cssh [-hHvu]
- cssh [-ngcs] [-k n] [-T"xxx"] [-t"opts"] [-l usr]
- cssh [[usr@]<svr>|<tag>] [...]
-
- crsh [-hHvu]
- crsh [-ngcs] [-k n] [-T"xxx"] [-t"opts"] [-l usr]
- crsh [[usr@]<svr>|<tag>] [...]
+S<< cssh [-?hHvdDu] [[user@]<server>|<tag>] [...] >>
+S<< crsh [-?hHvdDu] [[user@]<server>|<tag>] [...] >>
 
 =head1 DESCRIPTION
 
-The above command opens multiple connections to the specified hosts and an
-administration console.  Any text typed into the administration console
-is replicated to all other connected and active windows.  All 
-windows may be typed into directly as well.
+The command opens an administration console and an xterm to all specified 
+hosts.  Any text typed into the administration console is replicated to 
+all windows.  All windows may also be typed into directly.
 
-This tool is intended for (but not limited to) cluster administration where 
-the same configuration or commands must be run on each node within the 
-cluster.  Performing these commands all at once via this tool ensures all 
+This tool is intended for (but not limited to) cluster administration where
+the same configuration or commands must be run on each node within the
+cluster.  Performing these commands all at once via this tool ensures all
 nodes are kept in sync.
 
-Connections are opened via ssh so a correctly installed and configured 
+Connections are opened via ssh so a correctly installed and configured
 ssh installation is required.  If, however, the program is called by "crsh"
 then the rsh protocol is used (and the communcations channel is insecure).
 
-Extra caution should be taken when editing system files such as 
+Extra caution should be taken when editing system files such as
 /etc/inet/hosts as lines may not necessarily be in the same order.  Assuming
-line 5 is the same across all servers and modifying that is dangerous.  
+line 5 is the same across all servers and modifying that is dangerous.
 Better to search for the specific line to be changed and double-check before
 changes are committed.
 
@@ -1115,110 +878,78 @@ changes are committed.
 
 =item *
 
-The dotted line on any sub-menu is a tear-off, i.e. click on it 
+The dotted line on any sub-menu is a tear-off, i.e. click on it
 and the sub-menu is turned into its own window.
 
 =item *
 
 Unchecking a hostname on the Hosts sub-menu will unplug the host from the
-cluster control window, so any text typed into the console is not sent to 
+cluster control window, so any text typed into the console is not sent to
 that host.  Re-selecting it will plug it back in.
 
 =item *
 
-If the code is called as crsh instead of cssh (i.e. a symlink called 
-crsh points to the cssh file or the file is renamed) rsh is used as the 
+If the code is called as crsh instead of cssh (i.e. a symlink called
+crsh points to the cssh file or the file is renamed) rsh is used as the
 communcations protocol instead of ssh.
-
-=item *
-
-When using cssh on a large number of systems to connect back to a single
-system (e.g. you issue a command to the cluster to scp a file from a given
-location) and when these connections require authentication (i.e. you are
-going to authenticate with a password), the sshd daemon at that location 
-may refuse connects after the number specified by MaxStartups in 
-sshd_config is exceeded.  (If this value is not set, it defaults to 10.)
-This is expected behavior; sshd uses this mechanism to prevent DoS attacks
-from unauthenticated sources.  Please tune sshd_config and reload the SSH
-daemon, or consider using the ~/.ssh/authorized_keys mechanism for 
-authentication if you encounter this problem.
-
-=item *
-
-cssh uses quite a number of file descriptors, and doesn't behave very well
-(at least on Debian systems when it runs out).  If you see errors like:
-
-      sh: /usr/X11R6/bin/xterm: Too many open files in system
-
-when trying to open a large number of windows, you'll need to kill
-(or CTRL-C) the cssh process and try again with a smaller number of
-connections.
 
 =back
 
 =head1 OPTIONS
 
-The following options are supported (some of these may also be defined 
+The following options are supported (some of these may also be defined
 within the configuration files detailed below; the command line options take
 precedence):
 
 =over
 
-=item -h
+=item -h|-?
 
-Display basic help text
+Show basic help text, and exit
 
 =item -H
 
-Display the full man page
+Show full help test (the man page), and exit
 
 =item -v
 
-Show version information
+Show version information and exit
+
+=item -d 
+
+Enable basic debugging mode (can be combined with -D)
+
+=item -D 
+
+Enable extended debugging mode (can be combined with -d)
 
 =item -u
 
-Output configuration options in config file format (i.e. you could use it
-to generate your default .csshrc file for amending)
+Output configuration in the format used by the F<$HOME/.csshrc> file
 
-=item -G
+=back
 
-Do not attempt to tile the client windows
+=head1 ARGUMENTS
 
-=item -k <time>
+The following arguments are support:
 
-Length of time (in seconds) to keep child terminal windows open after the 
-connection has been closed or lost (i.e. to view connection error messages).
+=over
 
-=item -T "title"
+=item [usr@]<hostname> ...
 
-Changes the title from "cssh" to "title - cssh" to help 
-distinguish between different invocations of the program.
+Open an xterm to the given hostname and connect to the administration
+console.
 
-=item -l userid
+=item <tag> ...
 
-Changes the default user for the ssh connection from the current user for
-all connection where not otherwise specified, i.e. 
-
-  cssh -l user1 server1 server2 server3 user2@server4
-
-will connect as user1 on server1, server2 and server3, and user2 on server4
-
-=item -t "terminal options"
-
-Pass all the text between the quotes directly to the xterms that are started.
-Quotes must be used and all options must be accepted by xterm else the 
-program stops.  
-
-NOTE: options that include any of the following ; / | are excluded.  If you want
-to define colours you have to use names, i.e. -bg LightGrey1.  Names on Solaris
-can be found in /usr/openwin/lib/rgb.txt
+Open a series of xterms defined by <tag> within either /etc/clusters or
+F<$HOME/.csshrc> (see FILES).
 
 =back
 
 =head1 KEY SHORTCUTS
 
-The following key shortcuts are available within the console window, and all 
+The following key shortcuts are available within the console window, and all
 of them may be changed via the configuration files.
 
 =over
@@ -1233,169 +964,123 @@ Open the Add Host dialogue box
 
 =item Alt-n
 
-Paste in the correct client name to all clients, i.e. 
+Paste in the correct client name to all clients, i.e.
 
-  scp /etc/hosts server:files/<Alt-n>.hosts 
+C<< scp /etc/hosts server:files/<Alt-n>.hosts >>
 
-would replace the <Alt-n> with the correct client name in all the client windows
+would replace the <Alt-n> with the client's name in all the client windows
 
 =back
 
-=head1 CONFIGURATION FILES
+=head1 FILES
 
 =over
 
 =item /etc/clusters
 
 This file contains a list of tags to server names mappings.  When any name
-is used on the command line it is checked to see if it is a tag in 
-/etc/clusters.  If it is a tag, then the tag is replaced with the list 
+is used on the command line it is checked to see if it is a tag in
+/etc/clusters.  If it is a tag, then the tag is replaced with the list
 of servers from the file.  The file is formated as follows:
 
-  <tag> [user@]<server> [user@]<server> [...]
+S<< <tag> [user@]<server> [user@]<server> [...] >>
 
-i.e. 
+i.e.
 
-  # List of servers in live
-  live admin1@server1 admin2@server2 server3 server4
+S<< # List of servers in live >>
+S<< live admin1@server1 admin2@server2 server3 server4 >>
 
-All standard comments and blank lines are ignored.
+All standard comments and blank lines are ignored.  Tags may be nested, but
+be aware of recursive tags.
 
-=item /etc/csshrc & $HOME/.csshrc
+=item F</etc/csshrc> & F<$HOME/.csshrc>
 
-This file contains configuration overrides - the defaults are as marked.  
-Default options are overwritten first by the global file, and then by the 
+This file contains configuration overrides - the defaults are as marked.
+Default options are overwritten first by the global file, and then by the
 user file.
 
-=over 
-
-=item terminal = xterm
-
-Terminal to use for the connection
-
-=item terminal_options = -ls -sb -sl 1024
-
-Options to pass to the terminal used
-
-=item cx_path = /usr/bin/
-
-Path to binary used for the connection if it hasn't been found by default
-(i.e. the path to ssh when using cssh, or the path to rsh when using crsh)
-
-=item cx_args = <unset>
-
-Extra arguments to pass to ssh, for example for routing via a gateway or 
-enabling compression, i.e.
-
-  cx_args = "proxy -t ssh -C"
-
-=item cchp_path = <same location as cssh>
-
-Path to cchp script provided with cssh if it is not located in same directory.
-/usr/lib is searched by default.
-
-=item variables = none
-
-Can be "sh" or "csh".  Sets up environment variables on the client using
-bourne shell or c shell syntax.  However, in most cases using <ALT>-n
-can achieve similar goals far more easily.
-
-=item title_number = no
-
-Show the number of open connections in control window title
-
-=item titlebar_size = 30
-
-Default height of the spacing at the top of the screen, should you have a
-menu bar across there. Sets the top of the "tiles" down this many pixels.
-
-=item decoration_width = 8
-
-Default width of handles on windows when tiling.  Can be set to 0 if your 
-window manager does not use them - allows correct spacing of windows when
-tiling
-
-=item decoration_height = 10
-
-Default height of title bars and handles on windows when tiling.  Can be set
-to 0 if your window manager does not use them - allows correct spacing of
-windows when tiling
-
-=item reserve_bottom = 0 
-
-Number of pixels from the bottom of the screen to reserve when calculating
-screen geometry for tiling.  Setting this to something like 50 will 
-help keep cssh from positioning windows over your window manager's menu bar
-if it draws one at the bottom of the screen.
-
-=item reserve_right = 0 
-
-Same as "reserve_bottom," but for the right-hand side of the screen.
+=over
 
 =item always_tile = yes
 
-If set to "never" sets -G switch (to not tile windows)
+Setting to anything other than C<yes> does not perform window tiling (see also -G).
 
-=item keep_open = 0
+=item comms = ssh
 
-Default time to keep child terminals open after the connection has been
-closed (i.e. to view any error messages that may have been returned)
+Sets the default communication method (initially taken from the name of 
+program, but can be overridden here).
 
-=item term_size = 80x24
+=item comms_args = -x
 
-Sets the maximum size of a terminal window.  When using tiling the width
-remains constant (at 80 in this case) and rows are decreased until all 
-windows fit into the available screen space.
+Sets any arguments to be used with the communication method (defaults to ssh
+arguments).
 
-=item term_font = 6x13
+=item key_addhost = Control-plus
 
-Sets the default font used within terminal windows.  Available fonts can be 
-obtained from
-
-  xlsfonts -l
-
-The following commands may give more specific results on system fonts
-
-  xlsfonts -l -fn ?x*
-  xlsfonts -l -fn ??x*
-
-=item clusters
-
-List of defined clusters held within the file (see also section on 
-/etc/clusters above), i.e.
-
-  clusters = list1 list2
-  list1 = server1 user@server2
-  list2 = server4 user@server5
-
-=item key_quit = Control-q
-
-Default key sequence to quit the program (will terminate all open windows).
-See below note.
-
-=item key_addhost = Control-+
-
-Default key sequence to open AddHost menu.  See below note.
+Default key sequence to open AddHost menu.  See below notes on shortcuts.
 
 =item key_clientname = Alt-n
 
-Default key sequence to send cssh client names to client
+Default key sequence to send cssh client names to client.  See below notes 
+on shortcuts.
+
+=item key_quit = Control-q
+
+Default key sequence to quit the program (will terminate all open windows).  
+See below notes on shortcuts.
+
+=item reserve_top = 50
+
+=item reserve_bottom = 0
+
+=item reserve_left = 0
+
+=item reserve_right = 0
+
+Number of pixels from the screen side to reserve when calculating screen 
+geometry for tiling.  Setting this to something like 50 will help keep cssh 
+from positioning windows over your window manager's menu bar if it draws one 
+at that side of the screen.
+
+=item ssh = /path/to/ssh
+
+=item rsh = /path/to/rsh
+
+Depending on the value of comms, set the path of the communication binary.
+
+=item terminal = /path/to/terminal
+
+Path to the x-windows terminal used for the client.
+
+=item terminal_args = <blank>
+
+Arguments to use when opening terminal windows.  Otherwise takes defaults
+from F<$HOME/.Xdefaults> or $<$HOME/.Xresources> file.
+
+=item terminal_title_opt = -T
+
+Option used with C<terminal> to set the title of the window
+
+=item terminal_allow_send_events = -xrm 'XTerm.VT100.allowSendEvents:true'
+
+Option required by the terminal to allow XSendEvents to be received
+
+=item title = cssh
+
+Title of windows to use for both the console and terminals.
+
+=item use_hotkeys = yes
+
+Setting to anything other than C<yes> will disable all hotkeys.
+
+=item user = $LOGNAME
+
+Sets the default user for running commands on clients.
+
+=back
 
 NOTE: The key shortcut modifiers must be in the form "Control", "Alt", or 
 "Shift", i.e. with the first letter capitalised and the rest lower case.
-
-=item cchp_sleep = 0.1
-
-Value (in seconds) that cchp should sleep in its select() loop.  Decimal
-values are allowed.  The default is 0.1 seconds.
-
-Smaller values will increase responsiveness at the cost of additional CPU
-utilization on the system running cssh.  Increase this parameter - for example
-to something like 0.25 - if you are invoking large numbers of windows and 
-notice a general performance degredation on your workstation.  Decrease this
-value to prevent choppiness in sending keystrokes to the target cssh windows.
-
-=back
 
 =back
 
@@ -1405,23 +1090,15 @@ Duncan Ferguson
 
 =head1 CREDITS
 
-clusterssh is distributed under the GNU public license.  See the file 
-LICENSE for details.
+clusterssh is distributed under the GNU public license.  See the file
+F<LICENSE> for details.
 
-A web site for comments, requests, bug reports and bug fixes/patches is 
-available at http://clusterssh.sourceforge.net/
+A web site for comments, requests, bug reports and bug fixes/patches is
+available at L<http://clusterssh.sourceforge.net/>
 
-=head1 BUGS
+=head1 KNOWN BUGS
 
-=over 2
-
-=item *
-
-Only ASCII codes can be sent to child terminals, so arrow keys and such 
-have to be converted.  The arrow keys should work - please post to the
-web site for any others that are required and do not work.
-
-=back
+None are known at this time
 
 =head1 REPORTING BUGS
 
@@ -1432,36 +1109,18 @@ web site for any others that are required and do not work.
 If you require support, please run the following commands
 and post it on the web site in the support/problems forum:
 
-  $ perl -V
+C<< perl -V >>
 
-  $ perl -MTk -e 'print $Tk::VERSION,$/'
+C<< perl -MTk -e 'print $Tk::VERSION,$/' >>
 
-  $ perl -MConfig::Simple -e 'print $Config::Simple::VERSION,$/'
-
-=item *
-
-I have tried to include values of TIOCSTI for those OS's I can, but not
-all will currently work.  If cssh does not work for you due to a TIOCSTI 
-error, please do the following (as well as the above) and send the output 
-to the author, or report it on the web site (note: change the gcc and the 
-files to include as necessary):
-
-  $ cat > tio.c <<EOF && gcc tio.c && ./a.out && rm ./a.out
-  #include <sys/termio.h>
-  #include <sys/ioctl.h>
-  main() {
-  printf("TIOCSTI:%#08x\n", TIOCSTI);
-  }
-  EOF
-
-You can also add "tiocsti = <number>" into a .csshrc file until support is
-fully added by the author.
+C<< perl -MX11::Protocol -e 'print $X11::Protocol::VERSION,$/' >>
 
 =item *
 
-Using a "hidden" -d switch will turn on debugging output.  However, please only
-use this option with one host at a time, i.e. "cssh -d <host>" due to the 
-amount of output produced (in both main and child windows).
+Use the debug switches (-d, -D, or -dD) will turn on debugging output.  
+However, please only use this option with one host at a time, 
+i.e. "cssh -d <host>" due to the amount of output produced (in both main 
+and child windows).
 
 =back
 
@@ -1470,274 +1129,7 @@ amount of output produced (in both main and child windows).
 L<http://clusterssh.sourceforge.net/>,
 L<ssh>,
 L<Tk::overview>,
-L<Config::Simple>
+L<X11::Protocol>,
+L<perl>
 
 =cut
-
-############################################################################
-#
-#               M A I N T E N A N C E     H I S T O R Y
-#
-# Rf/Vs  Date      Author         Purpose
-# -----  --------  -------------  -------------------------------------------
-# 1.00   ??/12/02  D Ferguson     Initial Version
-# 1.01   12/02/03  D Ferguson     Add in /etc/cluster aliasing
-# ...
-# 1.2    25/02/03  D Ferguson     Added: key-shortcuts, addition hosts,
-#                                 removal of dead hosts, error control,
-#                                 paste into text box
-# 1.21   25/02/03  D Ferguson     cater for duff hosts that do not exist
-#                                 properly by checking menu entries
-# 1.22   26/02/03  D Ferguson     minor bug array fix
-# 1.23   08/04/03  D Ferguson     Further bug fixes
-# 1.3    30/05/03  D Ferguson     FOUND IT - bug that stopped console window
-#                                 opening when more than 10 or so windows 
-#                                 being opened stamped on - the repeat
-#                                 was grabing too much process time due to 
-#                                 slow sub function. Fix was a bit of profiling
-# 1.31   02/06/03  D Ferguson     Remove introduced paste bug and added -v, -h
-# 1.32   01/09/03  D Ferguson     Update to docs only (pod file)
-# 1.33   03/09/03  D Ferguson     Include pod in this file, not seperatly
-# 1.34   04/09/03  D Ferguson     Allow for xterm opts and docs update
-# 1.35   05/09/03  D Ferguson     Tidied up taint error throughout for security
-#                                 Also, if called as crsh uses rsh instead
-# 1.36   08/09/03  D Ferguson     Found potentially serious bug with UID stuff
-#                                 Also added a cancel button to Add Host box
-# 1.37   12/09/03  D Ferguson     Amend how VERSION is defined so works with
-#                                 make_package better.  Also finally installed
-#                                 into my own SCCS
-# 1.38   12/09/03  D Ferguson     Correct man page version and date and tidy up
-# 1.39   22/09/03  D Ferguson     Change of email address
-#                                 First bash at arch-independant TIOCSTI
-#                                 Removed focus error msg from rocky_codehead
-#                                 Fix to allow multiple cx's to same host
-#                                 Mods to bugs section of man page
-#                                 Speeded up startup when no hosts given
-# 1.40   03/09/03  D Ferguson     Non-connecting client does not force
-#                                 cssh to die
-# 1.41   06/09/03  D Ferguson     Starting to fix linux issues
-#                                   account for arch dependant stuff better
-#                                     i.e. binary locations
-#                                   in-script ptree  - ptree is solaris only
-# 1.42   07/10/03  D Ferguson     Remove arbitary sleep and instead wait for
-#                                   connections
-#                                 Fix bugs in the new "ptree" in-house code
-#                                 Include a number of linux bug fixes by clink
-# 1.43   09/10/03  D Ferguson     Fix bug with unknown hosts not erroring
-# 1.44   15/12/03  D Ferguson     Make sure the GPL license was included
-# 1.45   06/01/04  D Ferguson     Modified to work on Solaris x86
-# 1.46   12/01/04  D Ferguson     Use Config::Simple for config files
-#                                 Allow -T "..." to set control window title
-# 1.47   28/01/04  D Ferguson     Untaint -T correctly.  
-#                                 Remove specific default path to xterm
-#                                 Moved to sf.net cvs
-#
-# $Log$
-# Revision 2.35  2005/04/04 12:16:20  duncan_ferguson
-# Search for xlsfonts instead of assume it is in same place as the terminal
-# By Rob Dawson:
-# - change the "fudge" values for width and height to variables on lines
-# 	429 and 441
-# - change the default variables to include those two new variables
-# - reverse the sequence of hosts provided (as it tiles in reverse
-# 	order, this means it has the first host in the top left corner,
-# 	rather than bottom right)
-# - add to help page at the bottom to match these two
-# - adjust help page at the bottom for titlebar_size
-# 	This because the previous description was for each window, whereas
-# 	on my setup, it uses this for the single menubar spacing at the top,
-# 	*not* for each window (I tested :-) - I'm not sure if this behaves
-# 	differently on different OS/arch, though.
-#
-# Revision 2.34  2005/01/31 09:01:59  duncan_ferguson
-# Fix tiling issue after initial tiling is completed (T.Mancill)
-# Do not use port when using rsh (T.Mancill)
-# Add usage notes relating to sshd configuration (T.Mancill)
-#
-# Revision 2.33  2005/01/26 14:25:07  duncan_ferguson
-# Added -u option to dump out configuration
-# Moved TIOCSTI settings to config file option
-# Use Pod::Usage instead of manually updated help text
-# Removed default terminal options to use .Xdefaults correctly, but may still be used from .csshrc or cmdline (Olivier Beyssac)
-# Amended some error messages for clarity
-# Corrected path used for xlsfonts
-# Put in error text about unknown/ignored keysyms
-# Corrected some platform TIOCSTI settings and added FreeBSD
-# Updates and corrections to POD text
-#
-# Revision 2.32  2004/09/24 09:47:19  duncan_ferguson
-# Amended wording of man page about menu seperators
-#
-# Revision 2.31  2004/09/24 09:44:54  duncan_ferguson
-# Add menu item send to send info to al conencted clients, i.e. menu item for <ALT>-n
-#
-# Revision 2.30  2004/09/07 12:20:35  duncan_ferguson
-# Updates and tidy of man/perldoc page
-# Set window tiling on by default (use -G to turn off)
-# Add in "-k n" to keep child windows open for x seconds (to view ssh errors)
-#
-# Revision 2.29  2004/08/26 07:49:57  duncan_ferguson
-# Add reserve_bottom, reserve_right and cchp_sleep options
-#
-# Revision 2.28  2004/08/19 07:57:47  duncan_ferguson
-# Added TIOCSTI for Mac OS X (Chris Trahman)
-#
-# Revision 2.27  2004/08/13 15:13:29  duncan_ferguson
-# Fix bug introduced with syswrite fix in 2.24 that stopped arrow keys working
-#
-# Revision 2.26  2004/08/04 12:08:39  duncan_ferguson
-# Changes contact location in help->about
-#
-# Revision 2.25  2004/08/03 15:34:50  duncan_ferguson
-# CTRL-D in console window didnt always work
-#
-# Revision 2.24  2004/08/03 13:38:59  duncan_ferguson
-# Found long-standing problem with uncaught error on syswrite
-#
-# Revision 2.23  2004/08/02 15:58:09  duncan_ferguson
-# Apply patch from Cyril Bouthors for passing ssh arguments via cx_args
-#
-# Revision 2.22  2004/07/09 13:58:12  duncan_ferguson
-# Applied patch from Rob Petty (cx to specific ports, i.e. for terminal servers)
-# Applied patch from Jason (jklap) (bug fix & resolve cluster tags within tags)
-#
-# Revision 2.21  2004/05/20 15:38:36  duncan_ferguson
-# Tidy out output of cssh -h
-#
-# Revision 2.20  2004/05/20 14:57:37  duncan_ferguson
-# Improve checks for ssh and xterm, with meaningful errors reported if required
-#
-# Revision 2.19  2004/05/12 11:34:13  duncan_ferguson
-# correct check for cchp and die if it cannot be found
-#
-# Revision 2.18  2004/05/12 10:16:27  duncan_ferguson
-# Code tidy
-# Added in csshrc option cchp_path to allow for cchp to be moved somewhere else
-#   - also looks in /usr/lib by default if cchp not in same dir as cssh
-# Man page update
-#
-# Revision 2.17  2004/05/10 12:34:00  duncan_ferguson
-# Call cchp using perl interpreter $^X
-# Also call cchp -v when printing -v for cssh
-#
-# Revision 2.16  2004/05/07 11:02:18  duncan_ferguson
-# Disable tiling if no hosts given on command line
-# Correct terminal height to ensure no greater than max size provided
-#
-# Revision 2.15  2004/05/05 08:12:23  duncan_ferguson
-# Ensure rsh does not have -x flag but ssh does to disable X11 forwarding
-# Include cfg file "titlebar_size" in man page
-#
-# Revision 2.14  2004/05/04 16:10:25  duncan_ferguson
-# Rework of man page to include new functionality
-# Removal of redundant/unused code
-# Removal of comments out code no longer required
-# Added more debug code
-# General code tidyup
-#
-# Revision 2.12  2004/05/04 09:32:18  duncan_ferguson
-# Use -x in ssh connection string to disabled X forwarding
-#
-# Revision 2.11  2004/04/29 14:59:53  duncan_ferguson
-# ensure debug info stays debug
-#
-# Revision 2.10  2004/04/28 08:28:14  duncan_ferguson
-# added -d debug option for some small debug output
-#
-# Revision 2.9  2004/04/20 15:51:50  duncan_ferguson
-# Fix bug better for when not using -g
-#
-# Revision 2.8  2004/04/20 12:43:52  duncan_ferguson
-# When tiling, correct order of windows so they are alphabetically forwards,
-#   not backwards
-# Move some code into a sub-app (cchp) and amend cssh as required to called
-#   in attempt to speed up connections
-# Add in HP-UX TIOCSTI value
-# Modify man page BUG section in tio.c to remove a.out when completed
-#
-# Revision 2.7  2004/04/20 08:08:11  duncan_ferguson
-# Add option "always_tile" to .csshrc
-# Remove error message if not tiling windows
-# Update docs to include new options
-#
-# Revision 2.6  2004/04/19 13:51:20  duncan_ferguson
-# First cut at "-g" - window tiling
-# Reapply Bren Viren's lost code for clusters in .csshrc (no idea where that went)
-#
-# Revision 2.5  2004/04/15 09:35:28  duncan_ferguson
-# Applied patch for missing env vars when run from window manager not cmd line
-#   - Tony Mancill
-# Apply patch for the "Add Host" window not accepting <RETURN> correctly and
-#   not grabbing the focus correctly.  Also remove some taint checks
-#   - Gavin Brock
-#
-# Revision 2.4  2004/04/13 12:19:50  duncan_ferguson
-# Apply patch from Tony Mancill for "-l <user>" errors when closing terminals.
-# Apply patch from Gavin Brock fix the arrow keys bug
-# Amend docs accordingly
-#
-# Revision 2.3  2004/04/06 15:33:45  duncan_ferguson
-# fix use of user@server in /etc/clusters
-#
-# Revision 2.2  2004/04/06 14:10:21  duncan_ferguson
-# Reinsert lost "cssh -l user" code - no idea where that went...
-#
-# Revision 2.1  2004/04/06 11:41:08  duncan_ferguson
-# Strip off user@ in "Alt-N" and -s/-c options
-# Remove some unnecessary setuid stuff now no longer setuid
-#
-# Revision 2.0  2004/04/02 13:27:03  duncan_ferguson
-# MAJOR CHANGE - removal of setuid requirement and references
-# Reset key shortcuts to CTRL-q, CTRL-+ and ALT-n
-# Reorg of reused code into funcs
-# Change of main hash format
-# Removal all ps listing stuff as no longer required
-# Update man page
-#
-# Revision 1.56  2004/03/26 11:38:23  duncan_ferguson
-# Removed debug menu option "printhash"
-# Corrected menu accelorator keys (Tony Mancill)
-# Updated man/pod page with usage and key shortcuts info
-# Added key shortcut to send client name to client (Hans-Joachim Hoetger)
-#
-# Revision 1.55  2004/03/25 12:27:46  duncan_ferguson
-# Added in configurable shortcut to send client names to client
-#
-# Revision 1.54  2004/03/25 10:49:19  duncan_ferguson
-# Remove debug message for number of cx's in title window
-# Finally fixed bug for sorting the Add Hosts menu
-#
-# Revision 1.53  2004/03/25 10:23:57  duncan_ferguson
-# Include option for displaying total number of connections in console title 
-#    bar (David Gardner)
-# Work on bug for failed connection messages not always showing (David Gardner)
-#
-# Revision 1.52  2004/03/24 12:29:14  duncan_ferguson
-# Added in client side variables (i.e. CSSH_CLIENT and CSSH_SERVER) with -s|c
-# Changed key shortcuts to be user configurable
-# Changed key shortcut quit from Control-X to Alt-X (for EMACS users)
-# Changed key shortcut Add Host from Control-A to Alt-A (for consistency)
-#
-# Revision 1.51  2004/02/20 09:36:35  duncan_ferguson
-# Include Jason Hollands patches:
-# - includes :'s in hostnames
-# - include TIOCSTI for linux ia64 systems.
-# Modified patch slight to assume all linux systems have same TIOCSTI value
-# Also modified section of docs on the /etc/cluster file
-#
-# Revision 1.50  2004/02/02 10:26:45  duncan_ferguson
-# allow spaces in -T "" string for window title
-# increase size of window from 20 chars to 25 chars
-# change default title from "Cluster Control by SSH" to program name
-#
-# Revision 1.49  2004/01/28 13:41:28  duncan_ferguson
-# man page corrections
-#
-# Revision 1.48  2004/01/28 12:34:03  duncan_ferguson
-# fix bugs introduced by cvs move
-#
-# Revision 1.47  2004/01/28 10:38:03  duncan_ferguson
-# Moved to sf.net cvs
-#
-#
-############################################################################
