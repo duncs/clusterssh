@@ -702,7 +702,6 @@ $mw->bind('<Key>' => sub {
 	my $char=$Tk::event->A;
 	my $ascii=ord($Tk::event->A);
 
-
 	if(!$ascii)
 	{
 		my $keysym=$Tk::event->K;
@@ -721,12 +720,11 @@ $mw->bind('<Key>' => sub {
 		}
 	}
 
-
 	if (!(keys(%servers)))
 	{
 		#no servers within hash array
 		print "Exit without servers in hash\n" if($options{d});
-		exit if $Tk::event->k == 39; # <CTRL>-D pressed, so exit
+		exit_prog() if ord($Tk::event->A) == 4; # <CTRL>-D pressed, so exit (solaris)
 	}
 
 	send_character($char);
@@ -1364,6 +1362,9 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.25  2004/08/03 15:34:50  duncan_ferguson
+# CTRL-D in console window didnt always work
+#
 # Revision 2.24  2004/08/03 13:38:59  duncan_ferguson
 # Found long-standing problem with uncaught error on syswrite
 #
