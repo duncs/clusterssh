@@ -296,7 +296,7 @@ if($control_title =~ /^([-\@\w. ]+)$/) {
 }
 
 # remove 'bareword' errors for menu creation items
-use subs qw/mw_mb_file_items mw_mb_help_items wm_mb_help_about/;
+use subs qw/mw_mb_file_items mw_mb_help_items wm_mb_help_about mw_mb_send_items/;
 
 # because we are running setuid (i.e. in taint mode), clean up the 
 # environment we are running in
@@ -611,6 +611,11 @@ my $hosts_menu = $mw_mb->cascade(
 	-label     => 'Hosts', 
 	-tearoff   => 1,
 );
+my $send_menu = $mw_mb->cascade(
+	-label     => 'Send',
+	-menuitems => mw_mb_send_items,
+	-tearoff   => 1,
+);
 my $help_menu = $mw_mb->cascade(
 	-label     => 'Help', 
 	-menuitems => mw_mb_help_items,
@@ -906,6 +911,23 @@ for (sort(keys(%servers)))
 }
 ###
 
+###
+# Send=>menu to send some kind of text to all client
+###
+#$mw_mb_send_items->command(
+	#-label => "Hostname",
+	#-accelerator => "$user_config{'default.key_clientname'}",
+	#-command => \&send_clientname,
+#);
+sub mw_mb_send_items
+{
+	[
+		[ 'command', "Hostname", 
+			-command=> \&send_clientname,
+			-accelerator => "$user_config{'default.key_clientname'}",
+		]
+	]
+}
 ###
 # Help=>About dialogue box
 ###
@@ -1442,6 +1464,9 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.31  2004/09/24 09:44:54  duncan_ferguson
+# Add menu item send to send info to al conencted clients, i.e. menu item for <ALT>-n
+#
 # Revision 2.30  2004/09/07 12:20:35  duncan_ferguson
 # Updates and tidy of man/perldoc page
 # Set window tiling on by default (use -G to turn off)
