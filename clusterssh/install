@@ -35,6 +35,9 @@
 #
 ############################################################################
 # $Log$
+# Revision 1.6  2004/06/02 08:54:20  duncan_ferguson
+# remove unncessary rm of pod temp files
+#
 # Revision 1.5  2004/05/04 15:02:27  duncan_ferguson
 # Remove tar file creation for sf.net in leiu of 'release'
 #
@@ -63,5 +66,3 @@ chmod +x make_package
 ./make_package -n EGGcssh
 
 cp -rp EGGcssh ~/pkgs/EGGcssh
-
-rm -rf pod2htm*
