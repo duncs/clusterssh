@@ -171,15 +171,17 @@ if($options{t})
 	print "Starting terminals with: $user_config{'default.terminal_options'}\n";
 }
 
-my $control_title="Cluster Control By SSH";
+my $control_title="$my_name";
 if($options{T})
 {
-	# now, untaint it 
-	if($options{T} =~ /^([-\@\w.]+)$/) {
-		$control_title=$1." - cssh";
-	} else {
-		die "FATAL: title used is insecure ($options{T})\n";
-	}
+	$control_title="$options{T} - $my_name";
+}
+
+# now, untaint it 
+if($control_title =~ /^([-\@\w. ]+)$/) {
+	$control_title=$1;
+} else {
+	die "FATAL: title used is insecure ($options{T})\n";
 }
 
 # remove 'bareword' errors for menu creation items
@@ -413,7 +415,10 @@ my $entrytext="";
 my $mw_entry=$mw->Entry(
 	-textvariable           => \$entrytext,
 	-insertborderwidth            => 4,
-)->pack();
+	-width => 25, # width of cluster control window
+)->pack( -fill => "x",
+	-expand => 1,
+);
 
 my $add_host_win=$mw->DialogBox(
 	-popover => $mw,
@@ -1184,6 +1189,11 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 1.50  2004/02/02 10:26:45  duncan_ferguson
+# allow spaces in -T "" string for window title
+# increase size of window from 20 chars to 25 chars
+# change default title from "Cluster Control by SSH" to program name
+#
 # Revision 1.49  2004/01/28 13:41:28  duncan_ferguson
 # man page corrections
 #
