@@ -1,0 +1,48 @@
+# $Id$
+#
+# Script:
+#   $RCSfile$
+#
+# Usage:
+#   CVS version record
+#
+# Options:
+#   N/A
+#
+# Parameters:
+#   N/A
+#
+# Purpose:
+#   Automate tag versioning of clusterssh sf.net project
+#
+# Processing:
+#   N/A
+#
+# Dependencies:
+#   N/A
+#
+# Limitations:
+#   N/A
+#
+# Enhancements:
+#   N/A
+#
+############################################################################
+# Change log located at file end
+############################################################################
+
+# Version release information
+TAG_VERSION='clusterssh 2 12 Beta'
+
+# Files to be included within any releases made
+FILES="cssh crsh cchp LICENSE"
+
+############################################################################
+# $Log$
+# Revision 1.1  2004/05/04 11:53:51  duncan_ferguson
+# New release cut Tue May  4 12:52:28 GMTST 2004
+#
+# Revision 1.1.1.1  2004/04/21 12:44:51  fergusod
+# Imported, initial version
+#
+############################################################################
