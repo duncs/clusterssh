@@ -338,6 +338,10 @@ my $mw=MainWindow->new(-title=>$control_title);
 # vars we need when we open windows
 my ($term_height, $term_width, $rows, $cols) = (0,0,0,0);
 
+# Make sure we have some clients to open up, else we error when
+# trying to tile and no client
+delete $options{g} if(@cmdargs < 1);
+
 if($options{g})
 {
 	# Now get the screen height for tiling windows later
@@ -364,12 +368,14 @@ if($options{g})
 	$rows = int($total/$cols + 0.99999);
 
 	my $term_rows = int(($screen_height - 10 * $rows) / $fheight / $rows);
-	$term_height = $term_rows * $fheight + 10;
-	print "term_rows=$term_rows\n" if($options{d});
+
 	# make sure we have no more rows than the max specified
 	$term_rows= $term_rows > $max_term_rows ? $max_term_rows : $term_rows;
 
+	$term_height = $term_rows * $fheight + 10;
+	print "term_rows=$term_rows\n" if($options{d});
 	$user_config{'default.term_size'} = "${term_cols}x${term_rows}";
+
 
 	warn "total=$total\n" if($options{d});
 	warn "term_height=$term_height\n" if($options{d});
@@ -1291,6 +1297,10 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.16  2004/05/07 11:02:18  duncan_ferguson
+# Disable tiling if no hosts given on command line
+# Correct terminal height to ensure no greater than max size provided
+#
 # Revision 2.15  2004/05/05 08:12:23  duncan_ferguson
 # Ensure rsh does not have -x flag but ssh does to disable X11 forwarding
 # Include cfg file "titlebar_size" in man page
