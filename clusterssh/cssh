@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl -w 
+#!/usr/bin/perl -w 
 #
 # $Id$
 #
@@ -201,12 +201,10 @@ Config::Simple->import_from($ENV{HOME}."/.csshrc", \%user_config);
 # predfine funcs as necessary
 sub send_character_to_server;
 
-$0=$ENV{'_'}; # correct program name
-
 # We can do something funky here - if we are called using a name other than
 # 'cssh', drop the first letter and then use that instead, i.e. crsh uses
 # rsh not ssh...
-my $my_name=basename($0);
+my $my_name=$FindBin::Script;
 
 # now, untaint it 
 if($my_name =~ /^([-\@\w.]+)$/) {
@@ -437,6 +435,8 @@ sub open_windows
 				die ("Cannot open pipe for writing: $!");
 			}
 
+			# strip off any username@ if included in the connection string
+			$serv=~ s/.*@// if ($serv =~ /@/);
 			if($options{s})
 			{
 				syswrite($servers{$serv_name}[3], "CSSH_CLIENT=".$serv.chr(13));
@@ -549,6 +549,7 @@ sub send_clientname {
 	{
 		my $serv=$serv_name;
 		$serv=~ s/__.*//;
+		$serv=~ s/.*@// if ($serv =~ /@/);
 		for (split(//, $serv))
 		{
 			send_character_to_server($serv_name,$_);
@@ -1178,6 +1179,10 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.1  2004/04/06 11:41:08  duncan_ferguson
+# Strip off user@ in "Alt-N" and -s/-c options
+# Remove some unnecessary setuid stuff now no longer setuid
+#
 # Revision 2.0  2004/04/02 13:27:03  duncan_ferguson
 # MAJOR CHANGE - removal of setuid requirement and references
 # Reset key shortcuts to CTRL-q, CTRL-+ and ALT-n
