@@ -200,17 +200,17 @@ if($options{h})
 	print(<<EOL);
 usage: $my_name [-hve] [-T "title"] [-t "term opts"] [[user@]<server>|<tag>] ...
 
-where:
+Where:
   -h             - this text
   -v             - version and date information
-	-s             - set client-side environment variables (sh style)
-	-c             - set client-side environment variables (csh style)
+  -s             - set client-side environment variables (sh style)
+  -c             - set client-side environment variables (csh style)
   -T "title"     - Additional test for control window title
-	-n             - Show number of connection in control window title
-	-l             - default login ID for ssh connections
+  -n             - Show number of connection in control window title
+  -l             - default login ID for ssh connections
   -t "termopts"  - start terminals with options in addition to 
                    "-ls -sb -sl 1024"
-	-g             - attempts to tile terminal windows on the screen
+  -g             - attempts to tile terminal windows on the screen
   <server name>  - list of servers to connect to
   <tag name>     - list of servers from /etc/clusters using name as a tag 
 
@@ -1327,6 +1327,9 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.21  2004/05/20 15:38:36  duncan_ferguson
+# Tidy out output of cssh -h
+#
 # Revision 2.20  2004/05/20 14:57:37  duncan_ferguson
 # Improve checks for ssh and xterm, with meaningful errors reported if required
 #
