@@ -299,8 +299,6 @@ sub change_title_number {
 
 	my $number=keys(%servers);
 
-	print "number=$number\n";
-
 	$mw->title($control_title." [$number]");
 }
 
@@ -535,7 +533,7 @@ sub add_host_win_entry {
 
 	# Only way it seems we can to the hosts menu is to delete all and recreate
 	# name and ensure it has an entry on "Add Hosts" menu.  Start at 2 so
-	# we don't delete the "Add Host" item or seperator
+	# we don't delete the "Add Host" item
 	my $menu=$mw_mb->entrycget('Hosts', -menu);
 	$menu->delete(2,'end');
 
@@ -547,7 +545,6 @@ sub add_host_win_entry {
 		my $serv=$serv_name;
 		$serv=~s/__.*//;
 
-		# entry not found for this server, so add it in
 		$hosts_menu->checkbutton(
 			-label=>$serv,
 			-variable=>\$servers{$serv_name}[0],
@@ -748,7 +745,7 @@ $hosts_menu->command(
 $hosts_menu->separator;
 
 # Now add in all the hosts we know about from command line
-for (keys(%servers))
+for (sort(keys(%servers)))
 {
 	my $serv=$_;
 	$serv=~s/__.*//;
@@ -1318,9 +1315,9 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
-# Revision 1.53  2004/03/25 10:23:57  duncan_ferguson
-# Include option for displaying total number of connections in console title bar [Daivd Gardner]
-# Work on bug for failed connection messages not always showing [Daivd Gardner]
+# Revision 1.54  2004/03/25 10:49:19  duncan_ferguson
+# Remove debug message for number of cx's in title window
+# Finally fixed bug for sorting the Add Hosts menu
 #
 # Revision 1.52  2004/03/24 12:29:14  duncan_ferguson
 # Added in client side variables (i.e. CSSH_CLIENT and CSSH_SERVER) with -s|c
