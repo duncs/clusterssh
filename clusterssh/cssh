@@ -1,0 +1,1183 @@
+#!/usr/local/bin/perl -w
+# #!/usr/bin/suidperl -w # USE IF ON LINUX
+#
+# $Id$
+#
+# Script:
+#   $RCSfile$
+#
+# Usage:
+#   cluster administrator console
+#
+# Options:
+#
+# Parameters:
+#   servers names to open cx's to
+#
+# Purpose:
+#   To allow for administration of a cluster of xterms onto machines
+#   via a sigle console window
+#
+# Processing:
+#
+#   Note: current we "xterm->start ssh host" rather than "ssh host->start xterm"
+#   because this allows us to easily use ssh to a number of different unices.
+#   Otherwise, we have to work out target host type and work out where xterm is
+#
+# Dependencies:
+#   perl
+#   Tk
+#
+# Limitations:
+#
+# Enhancements:
+#
+# License:
+#   This code is distributed under the terms of the GPL (GNU General Pulic 
+#   License).  
+#
+#   Copyright (C)
+#
+#   This program is free software; you can redistribute it and/or modify it 
+#   under the terms of the GNU General Public License as published by the 
+#   Free Software Foundation; either version 2 of the License, or (at your 
+#   option) any later version.
+#
+#   This program is distributed in the hope that it will be useful, but 
+#   WITHOUT ANY WARRANTY; without even the implied warranty of 
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General 
+#   Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License along 
+#   with this program; if not, write to the Free Software Foundation, Inc., 
+#   59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+#   Please see the full text of the licenses is in the file LICENSE and also at
+#     http://www.opensource.org/licenses/gpl-license.php
+#
+############################################################################
+# History moved to bottom of file
+############################################################################
+### NOTE; also change text within the pod at the bottom of this document
+my $VERSION='$Revision$ ($Date$)';
+# Now tidy it up, but in such as way cvs doesn't kill the tidy up stuff
+$VERSION=~s/^\$Revision: //;
+$VERSION=~s/^\$Date: //;
+$VERSION=~s/ \$//g;
+
+use strict;
+use warnings;
+
+use 5.006_001;
+use Tk 800.022;
+use Tk ':variables';
+use Config::Simple 4.55;
+use English; # so we can use $UID and $EUID instead of $< and $>
+require Tk::Dialog; # for the about box
+require Tk::LabEntry; # for the add host widget
+use IO::Handle; # for untaint on the ps listing
+use File::Basename; # for cmdline version and help output
+
+# Set up some defaults
+my %user_config;
+$user_config{'default.terminal'}="xterm";
+$user_config{'default.terminal_options'}="-ls -sb -sl 1024";
+$user_config{'default.cx_path'}="/usr/bin";
+$user_config{'default.timeout'}=20;
+
+# Now read in the system config file
+Config::Simple->import_from('/etc/csshrc', \%user_config);
+
+# Now overwrite that with any user defined ones
+Config::Simple->import_from($ENV{HOME}."/.csshrc", \%user_config);
+
+my $TIOCSTI = "";
+
+# Now set up all of those vars
+sub setup_OS(); # make sure func is defined so we can use it straight away
+setup_OS(); # and now call it
+
+# if we do not have any privs, don't bother doing anything after this point
+if ($UID == $EUID && $UID != 0)
+{
+	die("FATAL: lost setuid priviliges.\n",
+	    "Please run 'chown root:bin $0 ; chmod 4755 $0' as root to fix\n");
+}
+
+# has to contain process tree listing
+my %processes;
+
+$0=$ENV{'_'}; # correct program name, required as we are SUID script
+
+# We can do something funky here - if we are called using a name other than
+# 'cssh', drop the first letter and then use that instead, i.e. crsh uses
+# rsh not ssh...
+my $my_name=basename($0);
+my $method=$my_name;
+$method =~ s/^.//;
+
+# now, untaint it 
+if($method =~ /^([-\@\w.]+)$/) {
+	$method=$1;
+} else {
+	die "FATAL: program name used is insecure ($method)\n";
+}
+
+if($method !~ /^[rs]sh$/) 
+{
+	die "FATAL: Only ssh and rsh protocols are currently supported (method=$method)\n";
+}
+
+my $path_method=$user_config{'default.cx_path'}."/".$method;
+
+use Getopt::Std; # command line parsing, incase someone uses -v or -h
+my %options;
+getopts('hvt:T:', \%options);
+
+if($options{v})
+{
+	print("$my_name: version $::VERSION\n");
+	exit;
+}
+
+if($options{h})
+{
+	print(<<EOL);
+usage: $my_name [-hv] [-T "title"] [-t "term opts"] [[user@]<server>|<tag>] ...
+
+where:
+  -h             - this text
+  -v             - version and date information
+  -T  "title"    - Additional test for control window title
+  -t "termopts"  - start terminals with options in addition to 
+                   "-ls -sb -sl 1024"
+  <server name>  - list of servers to connect to
+  <tag name>     - list of servers from /etc/clusters using name as a tag 
+
+See the man pages for more information ("perldoc cssh" or "man cssh").
+EOL
+	exit;
+}
+
+if($options{t})
+{
+	$user_config{'default.terminal_options'}.=" $options{t} ";
+	# untaint parameters
+	if($user_config{'default.terminal_options'} =~/^([-\@\w. :]+)$/)
+	{
+		$user_config{'default.terminal_options'}=$1;
+	} else {
+		die "FATAL: options given with -t are insecure (no ; / or | allowed)\n";
+	}
+	print "Starting terminals with: $user_config{'default.terminal_options'}\n";
+}
+
+my $control_title="Cluster Control By SSH";
+if($options{T})
+{
+	# now, untaint it 
+	if($options{T} =~ /^([-\@\w.]+)$/) {
+		$control_title=$1." - cssh";
+	} else {
+		die "FATAL: title used is insecure ($options{T})\n";
+	}
+}
+
+# remove 'bareword' errors for menu creation items
+use subs qw/mw_mb_items mw_mb_file_items mw_mb_hosts_items mw_mb_options_items mw_mb_help_items wm_mb_help_about/;
+sub grab_process_list();
+
+# because we are running setuid (i.e. in taint mode), clean up the 
+# environment we are running in
+$ENV{PATH}='/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin:/usr/openwin/bin:/usr/X11R6/bin';
+delete @ENV{qw(IFS CDPATH ENV BASH_ENV)};
+
+# Read in all cluster aliases if /etc/clusters exists for nice & quick
+# alias translations
+my %clusters;
+
+if ( -r "/etc/clusters" )
+{
+	open(CLUSTERS,"<", "/etc/clusters");
+
+	while(<CLUSTERS>)
+	{
+		next if(/^#/); # ignore all comment lines
+		next if(/^\s*$/); # ignore all blank lines
+
+		chomp;
+
+		s/^([\w-]+)\s*//; # remote first work and stick into $1
+		$clusters{$1} = $_ ; # Now bung in rest of line
+	}
+
+	close(CLUSTERS);
+}
+
+# loop over ARGV and expand any cluster aliases
+my @cmdargs=@ARGV;
+
+# function to take a name, check /etc/clusters for it, and return a correct
+# list as appropriate
+sub resolve_name($)
+{
+	my $alias = shift;
+
+	# no point in doing anything if the alias file doesn't exist...
+	return $clusters{$alias} if defined($clusters{$alias});
+
+	return $alias;
+}
+
+# check all command line hosts for aliases and resolve
+# - reverse it so we don't cover what we add onto the end and get into
+# an infinite loop
+foreach (reverse(@cmdargs))
+{
+	push (@cmdargs, split(/ /, resolve_name($_)));
+
+	# now remove the alias from @cmdargs
+	$_="";
+}
+
+# Now, tidy the array up and remove any blank entries
+{
+	my @cleanarray;
+
+	foreach (@cmdargs)
+	{
+		push(@cleanarray, $_) if($_ && $_ !~ /^$/);
+	}
+
+	@cmdargs=@cleanarray;
+}
+
+# hash to contain all required info about windows used
+# format of %servers is:
+# [0] active
+# [1] process id
+# [2] device
+# [3] file handle
+my %servers;
+
+open_windows(@cmdargs);
+
+sub open_windows
+{
+	# Only need carry on if we have been passed some args
+	return if($#_ == -1);
+
+	foreach (@_)
+	{
+		my $serv;
+		my $serv_name;
+
+		# untaint parameter
+		if(/^([-\@\w.]+)$/)
+		{
+			# use a random number to uniquely id host in hash so we can then
+			# open a cx to the same host more than once.  use the __ as a marker
+			# to remove all text after that point when we want to use the var
+			$serv_name="$1__".rand();
+			$serv=$1;
+		} else {
+			warn "FATAL: server name given is insecure ($serv)\n";
+			exit_prog();
+		}
+
+		$servers{$serv_name}[0]=1; # mark terminal child process as active
+
+		$servers{$serv_name}[1]=fork();
+
+		if(!defined($servers{$serv_name}[1]))
+		{
+			# unset => exec failed for whatever reason
+			warn "Cannot fork: $!";
+			exit_prog();
+		} elsif($servers{$serv_name}[1] == 0) {
+			# child => fork returned 0
+			# make sure we drop UID/EUID privs here for the child
+			$EUID=$UID;
+			$EGID=$GID;
+			exec("$user_config{'default.terminal'} $user_config{'default.terminal_options'} -title '$method:$serv' -e $path_method $serv") or warn("Could not exec session to $serv: $! ");
+		} else {
+			# parent => fork return process id of child
+			# nothing required here
+		}
+	}
+
+	# now we have all the terminals open, get all the correct process id's.
+	# Try to watch the process tree and continue when all sessions have
+	# connected
+
+#	my $sleep= (int $#_ / 2) + 1;
+
+	{
+		my $total=$#_+1;
+		my $count=0;
+		my $end_time=time()+ $user_config{'default.timeout'}; # now plus length of timeout value (seconds)
+
+		print "Waiting for terminal session connections\n";
+
+		# set autoflush so we can correctly overwrite the status line
+		$|=1;
+
+		# while we havnt connected to everything AND we havnt timed out
+		while($count < $total && time() < $end_time)
+		{
+			my $timeout=$end_time-time();
+			print "Connection status: $count/$total (timeout:$timeout seconds)    \r";
+			sleep 1; # sleep long enough for connection status' to change
+
+			# get current process table
+			grab_process_list();
+
+			# now, for each unconnection session
+			foreach my $serv_name (keys(%servers))
+			{
+				next if($servers{$serv_name}[3]); # next server if FD open
+
+				my $serv;
+				# strip off the random element of the key
+				($serv=$serv_name)=~s/__.*//;
+
+				# get the descendant of the forked process
+				my ($child,$tty)=get_descendant_tty($serv, $servers{$serv_name}[1]);
+
+				# if we have a tty returned, open it up
+				if($child)
+				{
+					if($child eq "dead")
+					{
+						# we have a dead session - remove it from the servers hash
+						#print "Found a dead session\n";
+						# don't delete it totally else we cannot error on it shortly, 
+						# but make sure the filedescriptor field is empty
+						delete($servers{$serv_name}[3]);
+					} else {
+						$servers{$serv_name}[1]=$child;
+						$servers{$serv_name}[2]=$tty;
+
+						if(!open($servers{$serv_name}[3], '>', "/dev/$servers{$serv_name}[2]"))
+						{
+							warn "failed to open /dev/$servers{$serv_name}[2]: $!";
+							exit_prog();
+						}
+					}
+					$count++;
+				}
+				# no tty, continue the loop
+			}
+		}
+
+		#reset autoflush
+		$|=0;
+
+		# produce a clean line after the \r stuff and clean up line
+		print "Finished connecting                                              \n";
+
+		# if anything is left unconnected, flag the problem and continue
+		foreach my $serv_name (keys(%servers))
+		{
+			my $serv;
+			# strip off the random element of the key
+			($serv=$serv_name)=~s/__.*//;
+
+			if(!$servers{$serv_name}[3])
+			{
+				warn "WARNING: Failed to connect to $serv\n";
+				delete($servers{$serv_name});
+			}
+		}
+	}
+}
+
+my $mw=MainWindow->new(-title=>$control_title);
+$mw->configure(-menu=>my $mw_mb=$mw->Menu);
+my $file_menu = $mw_mb->cascade(
+	-label     => 'File', 
+	-menuitems => mw_mb_file_items,
+	-tearoff   => 0,
+);
+my $hosts_menu = $mw_mb->cascade(
+	-label     => 'Hosts', 
+	-tearoff   => 1,
+);
+my $help_menu = $mw_mb->cascade(
+	-label     => 'Help', 
+	-menuitems => mw_mb_help_items,
+	-tearoff   => 0,
+);
+
+my $entrytext="";
+
+my $mw_entry=$mw->Entry(
+	-textvariable           => \$entrytext,
+	-insertborderwidth            => 4,
+)->pack();
+
+my $add_host_win=$mw->DialogBox(
+	-popover => $mw,
+	-popanchor => 'n',
+	-title 				=> "Add Host",
+	-buttons => [ 'Add', 'Cancel' ],
+	-default_button => 'Add',
+);
+
+my $newhosts="";
+
+$add_host_win->add('LabEntry', 
+	-textvariable => \$newhosts,
+	-width        => 20,
+	-label        => "Host",
+	-labelPack    => [-side => 'left'],
+)->pack(-side=>'left');
+
+# Set up key shortcuts
+
+# exit program - Ctrl-x
+$mw->bind($mw, "<Control-x>" => \&exit_prog);
+$mw_entry->bind("Tk::Text", "<Control-x>" => \&exit_prog);
+
+# add host - Ctrl-a
+$mw->bind($mw, "<Control-a>" => \&add_host_win_entry);
+$mw_entry->bind("Tk::Text", "<Control-a>" => \&add_host_win_entry);
+
+sub add_host_win_entry {
+#	$add_host_win->Subwidget('entry')->focus;
+	my $answer=$add_host_win->Show();
+
+	return if($answer eq "Cancel");
+	return if(!$newhosts);
+
+	my @new_hosts=split(/ /, $newhosts);
+	open_windows(@new_hosts);
+
+	# Only way it seems we can to the hosts menu is to delete all and recreate
+	# name and ensure it has an entry on "Add Hosts" menu.  Start at 2 so
+	# we don't delete the "Add Host" item or seperator
+	my $menu=$mw_mb->entrycget('Hosts', -menu);
+	$menu->delete(2,'end');
+
+	# add back in the seperator
+	$hosts_menu->separator;
+
+	for my $serv_name (sort(keys(%servers)))
+	{
+		my $serv=$serv_name;
+		$serv=~s/__.*//;
+
+		# entry not found for this server, so add it in
+		$hosts_menu->checkbutton(
+			-label=>$serv,
+			-variable=>\$servers{$serv_name}[0],
+		);
+	}
+
+	$newhosts="";
+
+	$mw->withdraw;
+	$mw->deiconify;
+	$mw->raise;
+	$mw->focus;
+	$mw_entry->focus;
+}
+
+$mw_entry->eventAdd('<<Paste>>' => '<Control-v>');
+$mw_entry->eventAdd('<<Paste>>' => '<Button-2>');
+
+$mw_entry->bind('<<Paste>>' => sub {
+	my $paste_text=$mw_entry->SelectionGet;
+
+	# grab everything within the text entry variable and output it to children
+	for (split(//, $paste_text))
+	{
+		send_character($_);
+	}
+});
+
+# we currently can only deal with ASCII codes, and i cannot find a way to 
+# convert keysyms to control codes to send those the terminals, so arrow
+# keys and other such ones are out
+$mw->bind('<Key>' => sub { 
+	my $char=$Tk::event->A;
+	my $ascii=ord($Tk::event->A);
+
+	#my $deckeysym=$Tk::event->N;
+	#my $keysym=$Tk::event->K;
+	#my $keycode=$Tk::event->k;
+
+	#$char=sprintf("%c", $deckeysym);
+
+	#print "char:$char: ascii:$ascii: deckeysym:$deckeysym keysym:$keysym: keycode:$keycode:\n";
+
+	return if ($ascii eq 0); # catch all for control keys
+	#$char=chr($Tk::event->N) if ($ascii eq 0); # catch all for control keys
+
+	if (!(keys(%servers)))
+	{
+		#no servers within hash array
+		exit if $Tk::event->k == 39; # <CTRL>-D pressed, so exit
+	}
+
+	send_character($char);
+	$entrytext="";
+});
+
+sub send_character {
+	my $char=$_[0];
+
+	foreach (keys(%servers))
+	{
+		if($servers{$_}[0])
+		{
+			# attempt to write; if fails remove from hash
+			unless(ioctl($servers{$_}[3], $TIOCSTI, $char))
+			{
+				warn("ioctl failed on",$servers{$_}[3],"\n");
+				# grab a link to the hosts menu so we can work on it
+				my $menu=$mw_mb->entrycget('Hosts', -menu);
+				# now remove the menu entry
+				$menu->delete($_);
+
+				# delete from hash
+				delete($servers{$_});
+			}
+		}
+	}
+	$entrytext="";
+}
+
+# every so many milliseconds, check to see if all our children are around.
+# If not, remove them from the hash and the hosts menu
+$mw->repeat(500, sub{
+	foreach (keys(%servers))
+	{
+		unless (checkProcID($servers{$_}[1]))
+		{
+			my $serv=$_;
+			$serv=~ s/__.*//;
+			# grab a link to the hosts menu so we can work on it
+			my $menu=$mw_mb->entrycget('Hosts', -menu);
+			# now remove the menu entry - stick in an eval to catch
+			# and ignore errors if menu entry wasnt created already
+			eval {
+				$menu->delete($serv) if ($menu->index($serv));
+			};
+			# delete from hash
+			delete($servers{$_});
+		}
+	}
+
+	# pasting into the control window sometimes leaves the text behind.
+	# Take advantage of the repeat to keep the entry text widget clean
+	$entrytext="";
+});
+
+# format of %servers is:
+# [0] active
+# [1] process id
+# [2] device
+# [3] file descriptor
+
+# Do this neatly...
+sub exit_prog()
+{
+	foreach (keys(%servers))
+	{
+		#print "Closing $_ process $servers{$_}[1]\n";
+		# close the file descriptor
+		close($servers{$_}[3]) if($servers{$_}[3]);
+
+		# kill the process we have
+		kill(9, $servers{$_}[1]);
+
+		# delete it from the array
+		delete($servers{$_});
+	}
+
+	# and formally exit the program
+	exit 0;
+}
+
+
+##################
+# Top level menu items
+##################
+sub mw_mb_items
+{
+	[
+		[ 'cascade', "File", -tearoff, 0, -menuitems, mw_mb_file_items ],
+	#	[ 'cascade', "Hosts", -menuitems, mw_mb_hosts_items  ],
+		[ 'cascade', "Hosts", -tearoff, 1 ],
+		[ 'cascade', "Help", -tearoff, 0, -menuitems, mw_mb_help_items ],
+	]
+}
+###
+
+###
+# File menu items
+###
+sub mw_mb_file_items
+{
+	[
+			#[ 'command', "Exit", -command => \&exit ],
+			[ 'command', "Exit", -command => \&exit_prog, -accelerator => "Ctrl-x" ],
+			[ 'command', "printhash", -command => \&printhash ],
+	]
+}
+###
+
+###
+# Hosts menu item - list of hosts fomr command line in hash 
+###
+# Grab the menu and add in all the hosts by hand
+# First, button to allow more hosts to be added in later on
+$hosts_menu->command(
+	-label => "Add Host",
+	-accelerator => "Ctrl-A",
+	-command => \&add_host_win_entry,
+);
+$hosts_menu->separator;
+
+# Now add in all the hosts we know about from command line
+for (keys(%servers))
+{
+	my $serv=$_;
+	$serv=~s/__.*//;
+	if(checkProcID($servers{$_}[1]))
+	{
+		$hosts_menu->checkbutton(
+			-label=>"$serv",
+			-variable=>\$servers{$_}[0],
+		);
+	}
+}
+###
+
+###
+# Options menu item
+###
+sub mw_mb_options_items
+{
+	[
+		[ 'command', "Option" ]
+	]
+}
+###
+
+###
+# Help=>About dialogue box
+###
+my $wm_mb_help_about=$mw->Dialog(
+	-popover      => $mw,
+	-overanchor   => "c",
+	-popanchor    => "c",
+	-font         => 
+		[ -family => "interface system",
+			-size   => 10 ],
+	-text => "Cluster Administrator Console using SSH\n\nVersion: $::VERSION.\n\n" .
+	"Bug/Suggestions to duncan_ferguson\@users.sourceforge.net",
+);
+###
+
+###
+# Help=>To Do dialogue box
+###
+my $wm_mb_help_todo=$mw->Dialog(
+	-popover      => $mw,
+	-overanchor   => "c",
+	-popanchor    => "c",
+	-font         => 
+		[ -family => "interface system",
+			-size   => 8 ],
+	-text => 
+					 "\n",
+);
+###
+
+###
+# Help menu items
+###
+sub mw_mb_help_items
+{
+	[
+		#[ 'command', "To Do", -command=> sub { $wm_mb_help_todo->Show } ],
+		[ 'command', "About", -command=> sub { $wm_mb_help_about->Show } ],
+	]
+}
+###
+
+sub printhash
+{
+	# format of %servers is:
+	# [0] active
+	# [1] process id
+	# [2] device
+	# [3] file descriptor
+
+	foreach (keys(%servers))
+	{
+		print "$_ [0] is $servers{$_}[0]\n" if (defined($servers{$_}[0]));
+		print "$_ [1] is $servers{$_}[1]\n" if (defined($servers{$_}[1]));
+		print "$_ [2] is $servers{$_}[2]\n" if (defined($servers{$_}[2]));
+		print "$_ [3] is $servers{$_}[3]\n" if (defined($servers{$_}[3]));
+	}
+	print "----\n";
+}
+
+$mw_entry->focus;
+MainLoop();
+
+# Make sure our exit routine gets called
+# NOTE: this func calls an explicit exit
+exit_prog();
+
+# func to check if a process is still around and functioning
+sub checkProcID
+{
+	return kill(0,$_[0]);
+}
+
+sub setup_OS()
+{
+	# to attempt to find out plateform value for setting TIOCSTI
+	# and other such dependencies
+	use Config;
+
+	# predefined for linux
+	if($Config{archname}=~/i\d86-linux/)
+	{
+		$TIOCSTI=0x5412;
+		return;
+	}
+
+	# predefined for Sun Solaris
+	if($Config{archname}=~/solaris/)
+	{
+		# taint checks that Tk requires before can run
+		# seems only solaris needs this
+		$ENV{HOME}='/tmp';
+
+		$TIOCSTI=0x007417;
+		return;
+	}
+
+	# predefined for OpenBSD
+	if($Config{archname}=~/^OpenBSD.i\d86-openbsd$/)
+	{
+		$TIOCSTI=0x80017472;
+		return;
+	}
+
+	# not predefined, so attempt to work it out from the "normal" source
+	if(! eval { require "sys/ioctl.ph" } )
+	{
+		print "Archname: -$Config{archname}-\n";
+		die "FATAL ERROR: Please run \"cd /usr/include ; h2ph sys/ioctl.h\" as root\n";
+	}
+
+	my $tiocsti=eval{&TIOCSTI};
+
+	if(defined($tiocsti))
+	{
+		print "Please email duncan_ferguson\@users.sourceforge.net with the following:\n";
+		print "Archname: -$Config{archname}-\n";
+		print "TIOCSTI:  -$tiocsti-\n";
+		$TIOCSTI=$tiocsti;
+		return;
+	}
+
+	print "An error has occured; your architecture is unknown.  ".
+		"Please email\n\tduncan_ferguson\@users.sourceforge.net\nfor further ".
+		"support with the following information:\n";
+	print "\tArchname: -$Config{archname}-\n";
+	print "Please also look in the BUGS section of the man page and run the ".
+		"C code provided\n";
+
+	exit 1;
+}
+
+# grab the process listing and store in a hash for easy access
+# stored in tree form where ppid is the key, value is any children OR
+# if end leaf node, the controlling tty, which is what we ultimately want
+# To be called every time we finish starting up any new windows
+# processes[0]=child list
+# processes[1]=tty
+# processes[2]=command
+sub grab_process_list()
+{
+	%processes=(); # start fresh every time
+
+	for (`ps -eo pid,ppid,tty,args`)
+	{
+		# change all whitespace into 1 space char
+		s/\s+/ /;
+		# remove leading whitespace
+		s/^\s//;
+		# and remove the newline
+		chomp();
+		# now the split should work better...
+		my @line=split(/\s+/,$_,4);
+
+		my $pid=$line[0];
+		my $ppid=$line[1];
+		my $tty=$line[2];
+		my $comm=$line[3];
+
+		#print STDERR "Line:$_ pid:$pid ppid:$ppid tty:$tty comm:$comm\n";
+
+		# Set up child tty and command info for all processes
+		#print STDERR "Adding new child $pid ($pid $ppid $tty $comm)\n";
+		$processes{$pid}[1]=$tty;
+		$processes{$pid}[2]=$comm;
+
+		# if parent info doesnt exist, register it
+		if(!$processes{$ppid}[0])
+		{
+		#	print STDERR "Creating parent leaf $ppid ($pid $ppid $tty $comm)\n";
+			$processes{$ppid}[0]="$pid";
+		} else {
+			# else add to the existing entry
+		#	print STDERR "Adding $pid to parent leaf $ppid ($pid $ppid $tty $comm)\n";
+			$processes{$ppid}[0]="$processes{$ppid}[0] $pid";
+		}
+	} 
+
+	#foreach (keys(%processes))
+	#{
+		#print STDERR "process:$_\n";
+		#print STDERR "\tchildren:$processes{$_}[0]\n" if ($processes{$_}[0]);
+		#print STDERR "\ttty:$processes{$_}[1]\n" if ($processes{$_}[1]);
+		#print STDERR "\tcomm:$processes{$_}[2]\n" if ($processes{$_}[2]);
+	#}
+}
+
+# given a process ID, get the "youngest descendant", i.e. the futher node
+# on this branch of the process tree, and return the process id and tty
+# processes[0]=child list
+# processes[1]=tty
+# processes[2]=command
+sub get_descendant_tty($$)
+{
+	my ($server,$parent)=@_;
+
+#	print STDERR "LOOKING FOR $parent\n";
+
+	if($processes{$parent})
+	{
+		if(!$processes{$parent}[2] && !$processes{$parent}[0])
+		{
+	#		print "Returning deadedness\n";
+			return ("dead", "dead");
+		}
+
+		my ($tty,$comm);
+
+		# while child of $parent exists, walk the tree
+		while(defined($processes{$parent}[0]))
+		{
+
+			#print STDERR "Looking for next\n";
+			#print STDERR "Found parent $parent child $processes{$parent}[0]\n";
+			$parent=$processes{$parent}[0];
+			$tty=$processes{$parent}[1];
+			$comm=$processes{$parent}[2];
+		}
+
+		#print STDERR "Now checking info\n";
+		#print STDERR "ancestor=$parent\n";
+		#print STDERR "tty=$tty\n";
+		#print STDERR "comm=$comm\n";
+
+		# got the tty info now, so return it
+		# Make sure we untaint both the process ID and the tty before returning it
+		if($parent && $parent=~ /^([-\@\w.]+)$/) 
+		{
+			$parent=$1;
+		} else {
+			warn "FATAL: child process id used is insecure ($parent)\n";
+			exit_prog();
+		}
+		if($tty && $tty=~ /^([-\@\w\/\?.]+)$/) 
+		{
+			$tty=$1;
+		} else {
+			if($tty)
+			{
+				warn "FATAL: child process tty used is insecure ($tty)\n";
+				exit_prog();
+			}
+		}
+		if($comm && $comm =~ / $server$/ && $comm !~ /title/ && $tty !~ /\?/)
+		{
+			return ($parent,$tty);
+		}
+	} 
+
+	return (undef,undef); # unknown descendant
+}
+
+__END__
+
+=head1 NAME
+
+cssh - Cluster administration tool
+
+=head1 SYNOPSIS
+
+cssh [-hv] [-T "title"] [-t "term opts"] [[user@]<server>|<tag>] [...]
+crsh [-hv] [-T "title"] [-t "term opts"] [[user@]<server>|<tag>] [...]
+
+=head1 DESCRIPTION
+
+The above command opens multiple connections to the specified hosts and an
+administration console.  Any text typed into the administration console
+is replicated to all other connected and active windows.
+
+This tool is intended for cluster administration where the same configuration
+or commands must be run on each node within the cluster.  Performing these
+commands all at once via this tool ensures all nodes are kept in sync.
+
+Connections are opened via ssh so a correctly installed and configured 
+ssh installation is required.  If, however, the program is called by "crsh"
+then the rsh protocol is used (and the communcations channel is insecure).
+
+Extra caution should be taken when editing system files such as 
+/etc/inet/hosts as lines may not necessarily be in the same order.  Assuming
+line 5 is the same across all servers and modifying that is dangerous.  
+Better to search for the specific line to be changed and double-check before
+changes are committed.
+
+=head2 Further Notes
+
+=over
+
+=item *
+
+Linux users should consult "perldoc perlsec" to enable the use of a setuid
+perl script and/or check the first line of the script to use the correct 
+perl instance.
+
+=item *
+
+The dotted line on the Hosts sub-menu is a tear-off, i.e. click on it 
+and the sub-menu is turned into its own window.
+
+=item *
+
+Unchecking a hostname on the Hosts sub-menu will disassociate the host 
+window control from cluster control so no commands are sent.  Selecting 
+it will reassociate it.
+
+=item *
+
+If the code is called as crsh instead of cssh (i.e. a symlink called 
+crsh points to the cssh file or the file is renamed) rsh is used as the 
+communcations protocol instead of ssh.
+
+=back
+
+=head1 OPTIONS
+
+The following options are supported:
+
+=over
+
+=item -h
+
+Basic help text
+
+=item -v
+
+Show version information
+
+=item -T "title"
+
+Changes the title from "Cluster Control by SSH" to "title - cssh" to help 
+distinguish between different invocations of the program.
+
+=item -t "terminal options"
+
+Pass all the text between the quotes directly to the xterms that are started.
+Quotes must be used and all options must be accepted by xterm else the 
+program stops.  
+
+NOTE: options that include any of the following ; / | are excluded by
+default as this could otherwise be a backdoor into the system.  If you want
+to define colours you have to use names, i.e. -bg LightGrey1.  Names on Solaris
+can be found in /usr/openwin/lib/rgb.txt
+
+=back
+
+=head1 CONFIGURATION FILES
+
+=over
+
+=item /etc/clusters
+
+This file contains a list of tags to server names mappings.  When any name
+is used on the command line it is checked to see if it is a tag in 
+/etc/clusters.  If it is a tag, then the tag is replaced with the list 
+of servers from the file.  The file is formated as follows:
+
+<tag> [user@]<server> [user@]<server> [...]
+
+All comments and blank lines are ignored.
+
+=item /etc/csshrc $HOME/.csshrc
+
+This file contains configuration overrides - the defaults are as marked.  
+Options are overwritten first by the global file, and then by the user file.
+
+=over 
+
+=item terminal = /usr/openwin/bin/xterm
+
+Terminal to use for the connection
+
+=item terminal_options = -ls -sb -sl 1024
+
+Options to pass to the terminal used
+
+=item cx_path = /usr/bin/
+
+Path to binary used for the connection if it hasn't been found by default
+(i.e. the path to ssh with cssh, or the path to rsh with crsh)
+
+=item timeout = 20
+
+Number of seconds before timing out a terminal session connection
+
+=back
+
+=back
+
+=head1 AUTHOR
+
+Duncan Ferguson, 28/01/04, version 1.48
+http://www.sourceforge.net/projects/clusterssh
+
+=head1 BUGS
+
+=over 2
+
+=item *
+
+The "Add Host" menu option doesn't grab the focus, and return isn't bound
+on the "Add" button yet.
+
+=item *
+
+Only ASCII codes can be sent to child terminals, so arrow keys and such 
+cannot currently be used
+
+=item *
+
+Closing terminals too quickly may cause a spurious error dump
+
+=back
+
+=head1 REPORTING BUGS
+
+=over 2
+
+=item *
+
+If you require support of any nature, please run the following commands
+and send the output to the author, or report it on the web site:
+
+  $ perl -V
+
+  $ perl -MTk -e 'print $Tk::VERSION,$/'
+
+  $ perl -MConfig::Simple -e 'print $Config::Simple::VERSION,$/'
+
+=item *
+
+I have tried to include values of TIOCSTI for those OS's I can, but not
+all will currently work.  If cssh does not work for you due to a TIOCSTI 
+error, please do the following (as well as the above) and send the output 
+to the author, or report it on the web site (note: change the gcc as 
+necessary):
+
+  $ cat > tio.c <<EOF && gcc tio.c && ./a.out
+  #include <sys/termio.h>
+  #include <sys/ioctl.h>
+  main() {
+  printf("TIOCSTI:%#08x\n", TIOCSTI);
+  }
+  EOF
+
+=back
+
+=head1 SEE ALSO
+
+The clusterssh homepage at http://www.sourceforge.net/projects/clusterssh
+L<ssh>
+L<Tk>
+
+############################################################################
+#
+#               M A I N T E N A N C E     H I S T O R Y
+#
+# Rf/Vs  Date      Author         Purpose
+# -----  --------  -------------  -------------------------------------------
+# 1.00   ??/12/02  D Ferguson     Initial Version
+# 1.01   12/02/03  D Ferguson     Add in /etc/cluster aliasing
+# ...
+# 1.2    25/02/03  D Ferguson     Added: key-shortcuts, addition hosts,
+#                                 removal of dead hosts, error control,
+#                                 paste into text box
+# 1.21   25/02/03  D Ferguson     cater for duff hosts that do not exist
+#                                 properly by checking menu entries
+# 1.22   26/02/03  D Ferguson     minor bug array fix
+# 1.23   08/04/03  D Ferguson     Further bug fixes
+# 1.3    30/05/03  D Ferguson     FOUND IT - bug that stopped console window
+#                                 opening when more than 10 or so windows 
+#                                 being opened stamped on - the repeat
+#                                 was grabing too much process time due to 
+#                                 slow sub function. Fix was a bit of profiling
+# 1.31   02/06/03  D Ferguson     Remove introduced paste bug and added -v, -h
+# 1.32   01/09/03  D Ferguson     Update to docs only (pod file)
+# 1.33   03/09/03  D Ferguson     Include pod in this file, not seperatly
+# 1.34   04/09/03  D Ferguson     Allow for xterm opts and docs update
+# 1.35   05/09/03  D Ferguson     Tidied up taint error throughout for security
+#                                 Also, if called as crsh uses rsh instead
+# 1.36   08/09/03  D Ferguson     Found potentially serious bug with UID stuff
+#                                 Also added a cancel button to Add Host box
+# 1.37   12/09/03  D Ferguson     Amend how VERSION is defined so works with
+#                                 make_package better.  Also finally installed
+#                                 into my own SCCS
+# 1.38   12/09/03  D Ferguson     Correct man page version and date and tidy up
+# 1.39   22/09/03  D Ferguson     Change of email address
+#                                 First bash at arch-independant TIOCSTI
+#                                 Removed focus error msg from rocky_codehead
+#                                 Fix to allow multiple cx's to same host
+#                                 Mods to bugs section of man page
+#                                 Speeded up startup when no hosts given
+# 1.40   03/09/03  D Ferguson     Non-connecting client does not force
+#                                 cssh to die
+# 1.41   06/09/03  D Ferguson     Starting to fix linux issues
+#                                   account for arch dependant stuff better
+#                                     i.e. binary locations
+#                                   in-script ptree  - ptree is solaris only
+# 1.42   07/10/03  D Ferguson     Remove arbitary sleep and instead wait for
+#                                   connections
+#                                 Fix bugs in the new "ptree" in-house code
+#                                 Include a number of linux bug fixes by clink
+# 1.43   09/10/03  D Ferguson     Fix bug with unknown hosts not erroring
+# 1.44   15/12/03  D Ferguson     Make sure the GPL license was included
+# 1.45   06/01/04  D Ferguson     Modified to work on Solaris x86
+# 1.46   12/01/04  D Ferguson     Use Config::Simple for config files
+#                                 Allow -T "..." to set control window title
+# 1.47   28/01/04  D Ferguson     Untaint -T correctly.  
+#                                 Remove specific default path to xterm
+#                                 Moved to sf.net cvs
+#
+# $Log$
+# Revision 1.47  2004/01/28 10:38:03  duncan_ferguson
+# Moved to sf.net cvs
+#
+#
+############################################################################
