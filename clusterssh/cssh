@@ -604,7 +604,9 @@ sub open_windows
 			$debug="-d" if($options{d});
 
 			# Start up the terminal via ourselves so the pipes are in place
-			exec("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $place -title '$method:$serv' -e $FindBin::Bin/cchp $debug -x $servers{$serv_name}[2] -y $TIOCSTI -z $KILLOFF $path_method $serv") or warn("Could not exec session to $serv: $! ");
+			# NOTE - ssh -x to disable forwarding of X11 sessions due to problem
+			# on redhat machines
+			exec("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $place -title '$method:$serv' -e $FindBin::Bin/cchp $debug -x $servers{$serv_name}[2] -y $TIOCSTI -z $KILLOFF $path_method -x $serv") or warn("Could not exec session to $serv: $! ");
 		} else {
 			# parent => fork return process id of child
 
@@ -1409,6 +1411,9 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.12  2004/05/04 09:32:18  duncan_ferguson
+# Use -x in ssh connection string to disabled X forwarding
+#
 # Revision 2.11  2004/04/29 14:59:53  duncan_ferguson
 # ensure debug info stays debug
 #
