@@ -477,8 +477,13 @@ sub open_windows
 
 	if(!$options{G})
 	{
-		$cur_col = $total % $cols;
-		$cur_row = ($total - ($total % $cols)) / $cols;
+		if ($cols > 0) {
+			$cur_col = $total % $cols;
+			$cur_row = ($total - ($total % $cols)) / $cols;
+		} else {
+			$cur_col = 1;
+			$cur_row = 1;
+		}
 
 		# we want the first ones to be from 0 not 1, so take 1 off 
 		$cols-=1 if($cols > 0);
@@ -558,7 +563,12 @@ sub open_windows
 		# Start up the terminal ourselves so the pipes are in place
 		# NOTE - ssh -x to disable forwarding of X11 sessions due to problem
 		# on redhat systems
-		system("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $place -title '$method:$serv' -e $^X $user_config{'default.cchp_path'}/cchp $debug -s $user_config{'default.cchp_sleep'} -k $user_config{'default.keep_open'} -x $servers{$serv_name}[2] -y $user_config{'default.tiocsti'} -z $KILLOFF $path_method -p $port $user_config{'default.cx_args'} $serv &") == 0 or warn("Could not create session to $serv: $! ");
+
+		my $portarg = "-p $port";
+		if ($method eq "rsh") {
+			$portarg = "";
+		}
+		system("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $place -title '$method:$serv' -e $^X $user_config{'default.cchp_path'}/cchp $debug -s $user_config{'default.cchp_sleep'} -k $user_config{'default.keep_open'} -x $servers{$serv_name}[2] -y $user_config{'default.tiocsti'} -z $KILLOFF $path_method $portarg $user_config{'default.cx_args'} $serv &") == 0 or warn("Could not create session to $serv: $! ");
 
 		if(!sysopen($servers{$serv_name}[3], $servers{$serv_name}[2], O_WRONLY))
 		{
@@ -1117,6 +1127,30 @@ If the code is called as crsh instead of cssh (i.e. a symlink called
 crsh points to the cssh file or the file is renamed) rsh is used as the 
 communcations protocol instead of ssh.
 
+=item *
+
+When using cssh on a large number of systems to connect back to a single
+system (e.g. you issue a command to the cluster to scp a file from a given
+location) and when these connections require authentication (i.e. you are
+going to authenticate with a password), the sshd daemon at that location 
+may refuse connects after the number specified by MaxStartups in 
+sshd_config is exceeded.  (If this value is not set, it defaults to 10.)
+This is expected behavior; sshd uses this mechanism to prevent DoS attacks
+from unauthenticated sources.  Please tune sshd_config and reload the SSH
+daemon, or consider using the ~/.ssh/authorized_keys mechanism for 
+authentication if you encounter this problem.
+
+=item *
+
+cssh uses quite a number of file descriptors, and doesn't behave very well
+(at least on Debian systems when it runs out).  If you see errors like:
+
+      sh: /usr/X11R6/bin/xterm: Too many open files in system
+
+when trying to open a large number of windows, you'll need to kill
+(or CTRL-C) the cssh process and try again with a smaller number of
+connections.
+
 =back
 
 =head1 OPTIONS
@@ -1485,6 +1519,11 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.34  2005/01/31 09:01:59  duncan_ferguson
+# Fix tiling issue after initial tiling is completed (T.Mancill)
+# Do not use port when using rsh (T.Mancill)
+# Add usage notes relating to sshd configuration (T.Mancill)
+#
 # Revision 2.33  2005/01/26 14:25:07  duncan_ferguson
 # Added -u option to dump out configuration
 # Moved TIOCSTI settings to config file option
