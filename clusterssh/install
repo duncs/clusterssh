@@ -1,0 +1,89 @@
+#!/bin/ksh
+# $Id$
+#
+# Script:
+#   $RCSfile$
+#
+# Usage:
+#   <Normal usage of this script - how/when is it run>
+#
+# Options:
+#   <Standard options which this script accepts>
+#   -v  (O)  Verbose mode - prints out informational data
+#
+#   -?  (O) Usage and help for this script
+#
+# Parameters:
+#   <Specific parameters for the script>
+#   -p  (O)  process name (if not provided, use configuration file)
+#
+# Purpose:
+#   <Brief description of the scripts purpose>
+#
+# Processing:
+#   Detailed description of the process flow - virtually the pseudo code>
+#
+# Dependencies:
+#   <list of any know dependancies which this script requires>
+#
+# Limitations:
+#   <Any known or perceived limitations with the script - be honest now !!>
+#
+# Enhancements:
+#   <Any future enhancements which would either make this script
+#   more useful or fix any know limitations>
+#
+############################################################################
+# $Log$
+# Revision 1.1  2004/01/28 12:40:42  duncan_ferguson
+# inital version of in-house prject script
+# NOT FOR GENERAL CONSUMPTION
+#
+############################################################################
+VERSION=$(
+	echo '$Revision$ ($Date$)' | \
+	sed -e 's/$Revision: //' \
+			-e 's/$Date: //' \
+			-e 's/ \$//g'
+)
+
+SFDIR=~/sourceforge
+test -d $SFDIR || mkdir $SFDIR
+
+chmod +x make_package
+./make_package -n EGGcssh
+
+cp -rp EGGcssh ~/pkgs/EGGcssh
+
+chown root:bin cssh
+
+# now create sourceforge tarball
+# for security, remove sticky bit in the tar file
+VERSION=$(./cssh -v | sed -e 's/ (.*//' -e 's/.*: //')
+
+rm -f crsh
+ln -s cssh crsh
+
+chmod u-t ./cssh
+tar cvf $SFDIR/clusterssh_$VERSION.tar cssh crsh LICENSE
+gzip -f $SFDIR/clusterssh_$VERSION.tar
+echo "Tar file created as: $SFDIR/clusterssh_$VERSION.tar"
+# now replace the sticky bit
+chmod 4775 ./cssh
+
+# now create the tar file for the package maker
+VERSION=$(./make_package -v | sed -e 's/ (.*//' -e 's/.*: //')
+chmod a+x make_package
+tar cvf $SFDIR/make_package_$VERSION.tar make_package
+gzip -f $SFDIR/make_package_$VERSION.tar
+echo "Tar file created as: $SFDIR/make_package_$VERSION.tar"
+
+# now generate the txt docs for uploading with some tidying tasks
+# for the project doc area on sf.net
+pod2html cssh | sed \
+	-e "s/[\`']./\"/g" \
+	-e "s/^crsh /<BR>crsh/" \
+	> $SFDIR/cssh.html
+
+chgrp disthosts ./cssh
+rm -rf pod2htm*
