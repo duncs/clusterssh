@@ -79,7 +79,7 @@ use File::Basename;
 ### all global variables ###
 my $scriptname=$0; $scriptname=~ s!.*/!!; # get the script name, minus the path
 
-my $options='dDv?hHut:'; # Command line options list
+my $options='dDv?hHuqQt:'; # Command line options list
 my %options;
 my %config;
 my $debug=0;
@@ -179,6 +179,7 @@ sub load_config_defaults()
 	$config{reserve_bottom}=0;
 	$config{reserve_left}=0;
 	$config{reserve_right}=0;
+	$config{auto_quit}="yes";
 
 	($config{comms}=basename($0)) =~ s/^.//;
 	$config{$config{comms}}=$config{comms};
@@ -192,7 +193,7 @@ sub load_config_defaults()
 sub load_configfile($)
 {
 	my $config_file=shift;
-	logmsg(1,"Reading in from config file $config_file");
+	logmsg(2,"Reading in from config file $config_file");
 	return if (! -f $config_file);
 
 	open(CFG, $config_file) or die("Couldnt open $config_file: $!");;
@@ -238,6 +239,9 @@ sub check_config()
 
 	# Set any extra config options given on command line
 	$config{title}=$options{t} if($options{t});
+
+	$config{auto_quit}="yes" if $options{q};
+	$config{auto_quit}="no" if $options{Q};
 }
 
 # dump out the config to STDOUT
@@ -249,6 +253,7 @@ sub dump_config()
 
 	foreach (sort(keys(%config)))
 	{
+		next if($_ =~ /^internal/); # do not output internal vars
 		print "$_=$config{$_}\n";
 	}
 	exit_prog;
@@ -278,7 +283,7 @@ sub get_clusters()
 
 	if(-f $cluster_file)
 	{
-		logmsg(1,"Loading clusters in from $cluster_file");
+		logmsg(2,"Loading clusters in from $cluster_file");
 		open(CLUSTERS, $cluster_file) || die("Couldnt read $cluster_file");
 		while(<CLUSTERS>)
 		{
@@ -295,7 +300,7 @@ sub get_clusters()
 	logmsg(2,"Looking for user space clusters");
 	if($config{clusters})
 	{
-		logmsg(1,"Loading clusters in from user space");
+		logmsg(2,"Loading clusters in from user space");
 
 		foreach (split(/\s+/, $config{clusters}))
 		{
@@ -486,9 +491,10 @@ sub open_client_windows(@)
 		{
 			my $exec="$config{terminal} $config{terminal_args} $config{terminal_allow_send_events} $config{terminal_title_opt} '$config{title}:$server' -e $^X -e '$helper_script' $servers{$server}{pipenm} $servers{$server}{realname}";
 			# this is the child
-			logmsg(2,"$exec\n");
+			my $copy=$exec;
+			$copy =~ s/-e.*/-e 'echo Working - waiting 10 seconds;sleep 10;exit'/s;
+			logmsg(1,"$copy\n");
 			exec($exec) == 0 or warn("Failed: $!");;
-			#exec("$config{terminal} $config{terminal_args} -xrm 'XTerm.VT100.allowSendEvents:true' $config{terminal_title_opt} '$config{title}:$server' -e $^X -e '$helper_script' $servers{$server}{pipenm} $servers{$server}{realname}") ==0 or warn("Failed: $!");;
 		}
 
 		# block on open so we get the text when it comes in
@@ -506,12 +512,13 @@ sub open_client_windows(@)
 		delete($servers{$server}{pipenm});
 
 		$servers{$server}{active}=1; # mark as active
+		$config{internal_activate_autoquit}=1 ; # activate auto_quit if in use
 	}
 }
 
 sub add_host_by_name()
 {
-	print "Adding host to menu here\n";
+	logmsg(2, "Adding host to menu here");
 
 	$windows{host_entry}->focus();
 	my $answer=$windows{addhost}->Show();
@@ -522,7 +529,7 @@ sub add_host_by_name()
 		return;
 	}
 
-	print "host=$menus{host_entry}\n";
+	logmsg(2, "host=$menus{host_entry}");
 
 	open_client_windows( $menus{host_entry} );
 	build_hosts_menu();
@@ -566,7 +573,18 @@ sub setup_repeat()
 				delete($servers{$svr});
 			}
 		}
+
 		build_hosts_menu() if($build_menu);
+
+		# If there are no hosts in the list and we are set to autoquit
+		if(scalar(keys(%servers)) == 0 && $config{auto_quit}=~/yes/i)
+		{
+			# and some clients were actually opened...
+			if($config{internal_activate_autoquit})
+			{	
+				exit_prog;
+			}
+		}
 		$menus{entrytext}="";
 	});
 }
@@ -689,10 +707,10 @@ sub key_event {
 		# if active
 		if($servers{$_}{active} == 1)
 		{
-			print "Sending event $event with code $keycode to window $servers{$_}{wid}\n";
-			print "event:",$event, $/;
-			print "root:",$servers{$_}{wid}, $/;
-			print "detail:",$keycode, $/;
+			logmsg(3, "Sending event $event with code $keycode to window $servers{$_}{wid}");
+			logmsg(3, "event:",$event);
+			logmsg(3, "root:",$servers{$_}{wid});
+			logmsg(3, "detail:",$keycode);
 
 			$xdisplay->SendEvent($servers{$_}{wid}, 0, 
 				$xdisplay->pack_event_mask($event),
@@ -848,8 +866,8 @@ cssh (crsh) - Cluster administration tool
 
 =head1 SYNOPSIS
 
-S<< cssh [-?hHvdDu] [[user@]<server>|<tag>] [...] >>
-S<< crsh [-?hHvdDu] [[user@]<server>|<tag>] [...] >>
+S<< cssh [-?hHvdDuqQ] [[user@]<server>|<tag>] [...] >>
+S<< crsh [-?hHvdDuqQ] [[user@]<server>|<tag>] [...] >>
 
 =head1 DESCRIPTION
 
@@ -922,6 +940,14 @@ Enable basic debugging mode (can be combined with -D)
 =item -D 
 
 Enable extended debugging mode (can be combined with -d)
+
+=item -q
+
+Automatically quit after the last client window has closed
+
+=item -Q
+
+Disable auto_quit functionality (to allow for config file override)
 
 =item -u
 
@@ -1004,6 +1030,11 @@ user file.
 =item always_tile = yes
 
 Setting to anything other than C<yes> does not perform window tiling (see also -G).
+
+=item auto_quit = yes
+
+Automatically quit after the last client window closes.  Set to anything
+other than "yes" to disable.  Can be overridden by C<-Q> on the command line.
 
 =item comms = ssh
 
