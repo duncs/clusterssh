@@ -130,7 +130,7 @@ if($options{x})
 		print "ARGV=:",join(" ",@ARGV),":\n" if ($options{d});
 		exec(@ARGV) || die("Could not exec within x: $!");
 	} else {
-		print "Forked to:$pid from $$" if($options{d});
+		print "Forked to:$pid from $$\n" if($options{d});
 		# this is the parent
 
 		my $PIPELINE;
@@ -154,9 +154,10 @@ if($options{x})
 					{
 						print "Caught KILLOFF\n" if(ord($char) == $KILLOFF && $options{d});
 						last OUTTER if(ord($char) == $KILLOFF);
+						#print STDIN "This is an echo line\n";
 						unless(ioctl(STDIN,$TIOCSTI,$char))
 						{
-							print "failed to write to client\n";
+							print "failed to write to client ($!)\n";
 							last OUTTER;
 						}
 					}
@@ -200,6 +201,9 @@ sub exit_prog()
 }
 ############################################################################
 # $Log$
+# Revision 1.11  2004/11/29 16:18:13  duncan_ferguson
+# Change debug output slightly to be more meaningful
+#
 # Revision 1.10  2004/09/07 12:18:08  duncan_ferguson
 # Add -k functionality to keep child windows open for x seconds
 #
