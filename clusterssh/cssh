@@ -167,6 +167,7 @@ $path_method.=" -x " if($path_method =~ /ssh$/);
 if($options{v})
 {
 	print("$my_name: $VERSION\n");
+	system("$^X $FindBin::Bin/cchp -v");
 	exit;
 }
 
@@ -489,7 +490,7 @@ sub open_windows
 		# Start up the terminal ourselves so the pipes are in place
 		# NOTE - ssh -x to disable forwarding of X11 sessions due to problem
 		# on redhat systems
-		system("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $place -title '$method:$serv' -e $FindBin::Bin/cchp $debug -x $servers{$serv_name}[2] -y $TIOCSTI -z $KILLOFF $path_method $serv &") or warn("Could not exec session to $serv: $! ");
+		system("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $place -title '$method:$serv' -e $^X $FindBin::Bin/cchp $debug -x $servers{$serv_name}[2] -y $TIOCSTI -z $KILLOFF $path_method $serv &") or warn("Could not exec session to $serv: $! ");
 
 		if(!sysopen($servers{$serv_name}[3], $servers{$serv_name}[2], O_WRONLY))
 		{
@@ -1297,6 +1298,10 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.17  2004/05/10 12:34:00  duncan_ferguson
+# Call cchp using perl interpreter $^X
+# Also call cchp -v when printing -v for cssh
+#
 # Revision 2.16  2004/05/07 11:02:18  duncan_ferguson
 # Disable tiling if no hosts given on command line
 # Correct terminal height to ensure no greater than max size provided
