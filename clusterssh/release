@@ -121,8 +121,14 @@ pod2html cssh | sed \
 	-e "s/^crsh /<BR>crsh/" \
 	> ../../sourceforge/cssh_man.html
 
+# And now clean up after ourselves
+rm -rf pod2htm*
+
 ############################################################################
 # $Log$
+# Revision 1.3  2004/05/07 11:03:04  duncan_ferguson
+# Remove temp files from man/html pod generation
+#
 # Revision 1.2  2004/05/04 11:59:50  duncan_ferguson
 # Add in cssh html man page generation
 #
