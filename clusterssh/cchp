@@ -66,7 +66,7 @@ use Fcntl;
 use Getopt::Std;
 my %options;
 
-getopts('x:y:z:', \%options);
+getopts('x:y:z:d', \%options);
 
 unless ($ENV{TERM}) {
 	$ENV{TERM} = 'xterm';
@@ -83,6 +83,13 @@ if($options{x})
 
 	my $TIOCSTI=$options{y};
 	my $KILLOFF=$options{z};
+
+	if($options{d})
+	{
+		print "TIOCSTI=$TIOCSTI\n";
+		print "KILLOFF=$KILLOFF\n";
+		print "pipe=$options{x}\n";
+	}
 
 	my $pid=fork();
 
@@ -129,8 +136,10 @@ if($options{x})
 					{
 						while(read($READER,my $char,1))
 						{
+							print "Received:$char:\n" if ($options{d});
 							last OUTTER if(ord($char) == $KILLOFF);
 
+							print "Pipe removed\n" if ($options{d} && ! -p $options{x});
 							last if(! -p $options{x});
 
 							unless(ioctl(STDIN,$TIOCSTI,$char))
@@ -145,7 +154,10 @@ if($options{x})
 			last unless(kill(0,$pid));
 			}
 		}
+		print "Killing $pid\n" if($options{d});
+
 		kill(9,$pid) if (kill(0,$pid));
+		print "Removing pipe\n" if($options{d} && -p $options{x});
 		unlink($options{x}) if(-p $options{x});
 		exit;
 	}
@@ -157,6 +169,9 @@ if($options{x})
 
 ############################################################################
 # $Log$
+# Revision 1.2  2004/04/28 08:28:14  duncan_ferguson
+# added -d debug option for some small debug output
+#
 # Revision 1.1  2004/04/20 12:44:29  duncan_ferguson
 # Code split off from cssh version 2.7 in attempt to speed up cx's
 #

@@ -95,7 +95,7 @@ use Getopt::Std; # command line parsing, incase someone uses -v or -h
 my %options;
 
 # NOTE - option x is hidden and should never be called directly
-getopts('x:l:hvncgst:T:', \%options);
+getopts('x:l:hdvncgst:T:', \%options);
 
 my $TIOCSTI = "";
 
@@ -600,8 +600,11 @@ sub open_windows
 
 			my $KILLOFF=KILLOFF();
 
+			my $debug="";
+			$debug="-d" if($options{d});
+
 			# Start up the terminal via ourselves so the pipes are in place
-			exec("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $place -title '$method:$serv' -e $FindBin::Bin/cchp -x $servers{$serv_name}[2] -y $TIOCSTI -z $KILLOFF $path_method $serv") or warn("Could not exec session to $serv: $! ");
+			exec("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $place -title '$method:$serv' -e $FindBin::Bin/cchp $debug -x $servers{$serv_name}[2] -y $TIOCSTI -z $KILLOFF $path_method $serv") or warn("Could not exec session to $serv: $! ");
 		} else {
 			# parent => fork return process id of child
 
@@ -622,6 +625,17 @@ sub open_windows
 				syswrite($servers{$serv_name}[3], "setenv CSSH_CLIENT=".$serv.chr(13));
 				syswrite($servers{$serv_name}[3], "setenv CSSH_SERVER=".hostname.chr(13));
 			}
+		}
+	}
+}
+
+if($options{d})
+{
+	foreach (keys(%servers))
+	{
+		foreach my $i (0..3)
+		{
+			print "servers{$_}[$i]=$servers{$_}[$i]\n";
 		}
 	}
 }
@@ -837,6 +851,7 @@ sub send_character {
 	foreach (keys(%servers))
 	{
 		send_character_to_server($_,$char);
+		print "Sending :$char: to $_\n";
 	}
 	$entrytext="";
 }
@@ -1394,6 +1409,9 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.10  2004/04/28 08:28:14  duncan_ferguson
+# added -d debug option for some small debug output
+#
 # Revision 2.9  2004/04/20 15:51:50  duncan_ferguson
 # Fix bug better for when not using -g
 #
