@@ -298,7 +298,6 @@ if($control_title =~ /^([-\@\w. ]+)$/) {
 
 # remove 'bareword' errors for menu creation items
 use subs qw/mw_mb_items mw_mb_file_items mw_mb_hosts_items mw_mb_options_items mw_mb_help_items wm_mb_help_about/;
-sub grab_process_list();
 
 # because we are running setuid (i.e. in taint mode), clean up the 
 # environment we are running in
@@ -406,8 +405,8 @@ sub open_windows
 			# to remove all text after that point when we want to use the var
 			$serv_name="$1__".rand();
 			$serv_name=$user_config{'default.user'}."@".$serv_name if($serv_name !~ /@/);
-			$serv=$1;
-			$serv=$user_config{'default.user'}."@".$serv if($serv !~ /@/);
+			$serv=$serv_name;
+			$serv=~ s/__.*//;
 		} else {
 			warn "FATAL: server name given is insecure ($serv)\n";
 			exit_prog();
@@ -1207,6 +1206,9 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.3  2004/04/06 15:33:45  duncan_ferguson
+# fix use of user@server in /etc/clusters
+#
 # Revision 2.2  2004/04/06 14:10:21  duncan_ferguson
 # Reinsert lost "cssh -l user" code - no idea where that went...
 #
