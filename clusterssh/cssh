@@ -86,6 +86,7 @@ $user_config{'default.cx_path'}="/usr/bin";
 $user_config{'default.timeout'}=20;
 $user_config{'default.key_quit'}="Alt-x";
 $user_config{'default.key_addhost'}="Alt-a";
+$user_config{'default.key_clientname'}="Alt-n";
 $user_config{'default.variables'}="no";
 $user_config{'default.title_number'}="no";
 
@@ -560,6 +561,22 @@ sub add_host_win_entry {
 	$mw_entry->focus;
 }
 
+sub send_clientname {
+	foreach my $serv_name (keys(%servers))
+	{
+		my $serv=$serv_name;
+		$serv=~ s/__.*//;
+		for (split(//, $serv))
+		{
+			send_character_to_server($serv_name,$_);
+		}
+	}
+}
+
+# key binding to send client name 
+$mw->bind($mw, "<$user_config{'default.key_clientname'}>" => \&send_clientname);
+$mw_entry->bind("Tk::Text", "<$user_config{'default.key_quit'}>" => \&send_clientname);
+
 $mw_entry->eventAdd('<<Paste>>' => '<Control-v>');
 $mw_entry->eventAdd('<<Paste>>' => '<Button-2>');
 
@@ -632,21 +649,6 @@ sub send_character {
 	foreach (keys(%servers))
 	{
 		send_character_to_server($_,$char);
-#		if($servers{$_}[0])
-#		{
-#			# attempt to write; if fails remove from hash
-#			unless(ioctl($servers{$_}[3], $TIOCSTI, $char))
-#			{
-#				warn("ioctl failed on",$servers{$_}[3],"\n");
-#				# grab a link to the hosts menu so we can work on it
-#				my $menu=$mw_mb->entrycget('Hosts', -menu);
-#				# now remove the menu entry
-#				$menu->delete($_);
-#
-#				# delete from hash
-#				delete($servers{$_});
-#			}
-#		}
 	}
 	$entrytext="";
 }
@@ -1176,6 +1178,10 @@ See below note.
 
 Default key sequence to open AddHost menu.  See below note.
 
+=item key_clientname = Alt-n
+
+Default key sequence to send cssh client names to client
+
 NOTE: The key shortcut modifiers must be in the form "Control", "Alt", or 
 "Shift", i.e. with the first letter capitalised and the rest lower case.
 
@@ -1315,6 +1321,9 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 1.55  2004/03/25 12:27:46  duncan_ferguson
+# Added in configurable shortcut to send client names to client
+#
 # Revision 1.54  2004/03/25 10:49:19  duncan_ferguson
 # Remove debug message for number of cx's in title window
 # Finally fixed bug for sorting the Add Hosts menu
