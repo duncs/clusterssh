@@ -769,10 +769,7 @@ sub send_character_to_server
 			# send the characters unbuffered via pipe
 			{
 				local $SIG{PIPE} = 'IGNORE';
-				if(!syswrite($servers{$serv_name}[3], $char))
-				{
-					delete_host($serv_name);
-				}
+				syswrite($servers{$serv_name}[3], $char);
 			}
 		} else {
 			delete_host($serv_name);
@@ -785,8 +782,8 @@ sub send_character {
 
 	foreach (keys(%servers))
 	{
-		send_character_to_server($_,$char);
 		print "Sending :$char: to $_\n" if($options{d});
+		send_character_to_server($_,$char);
 	}
 	$entrytext="";
 }
@@ -1362,6 +1359,9 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.27  2004/08/13 15:13:29  duncan_ferguson
+# Fix bug introduced with syswrite fix in 2.24 that stopped arrow keys working
+#
 # Revision 2.26  2004/08/04 12:08:39  duncan_ferguson
 # Changes contact location in help->about
 #
