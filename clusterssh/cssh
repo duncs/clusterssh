@@ -87,6 +87,7 @@ $user_config{'default.timeout'}=20;
 $user_config{'default.key_quit'}="Alt-x";
 $user_config{'default.key_addhost'}="Alt-a";
 $user_config{'default.variables'}="no";
+$user_config{'default.title_number'}="no";
 
 # Now read in the system config file
 Config::Simple->import_from('/etc/csshrc', \%user_config);
@@ -143,7 +144,7 @@ my $path_method=$user_config{'default.cx_path'}."/".$method;
 
 use Getopt::Std; # command line parsing, incase someone uses -v or -h
 my %options;
-getopts('hvcst:T:', \%options);
+getopts('hvncst:T:', \%options);
 
 if($options{v})
 {
@@ -162,6 +163,7 @@ where:
 	-s             - set client-side environment variables (sh style)
 	-c             - set client-side environment variables (csh style)
   -T "title"     - Additional test for control window title
+	-n             - Show number of connection in control window title
   -t "termopts"  - start terminals with options in addition to 
                    "-ls -sb -sl 1024"
   <server name>  - list of servers to connect to
@@ -177,6 +179,11 @@ if($user_config{'default.variables'} eq "sh")
 	$options{s}="yes";
 } elsif($user_config{'default.variables'} eq "csh") {
 	$options{c}="yes";
+}
+
+if($user_config{'default.title_number'} ne "no")
+{
+	$options{n}="yes";
 }
 
 if($options{t})
@@ -282,7 +289,22 @@ foreach (reverse(@cmdargs))
 # [3] file handle
 my %servers;
 
+# handle for main window
+my $mw=MainWindow->new();
+
 open_windows(@cmdargs);
+
+sub change_title_number {
+	return unless $options{n};
+
+	my $number=keys(%servers);
+
+	print "number=$number\n";
+
+	$mw->title($control_title." [$number]");
+}
+
+change_title_number;
 
 sub open_windows
 {
@@ -375,6 +397,7 @@ sub open_windows
 						# don't delete it totally else we cannot error on it shortly, 
 						# but make sure the filedescriptor field is empty
 						delete($servers{$serv_name}[3]);
+						change_title_number();
 					} else {
 						$servers{$serv_name}[1]=$child;
 						$servers{$serv_name}[2]=$tty;
@@ -396,6 +419,7 @@ sub open_windows
 
 		# produce a clean line after the \r stuff and clean up line
 		print "Finished connecting                                              \n";
+		sleep 1; # give chance to pick up the fail connection below
 
 		# if anything is left unconnected, flag the problem and continue
 		foreach my $serv_name (keys(%servers))
@@ -408,6 +432,7 @@ sub open_windows
 			{
 				warn "WARNING: Failed to connect to $serv\n";
 				delete($servers{$serv_name});
+				change_title_number();
 			} else {
 				if($options{s})
 				{
@@ -441,10 +466,10 @@ sub open_windows
 			}
 		}
 	}
+	change_title_number();
 }
 
 
-my $mw=MainWindow->new(-title=>$control_title);
 $mw->configure(-menu=>my $mw_mb=$mw->Menu);
 my $file_menu = $mw_mb->cascade(
 	-label     => 'File', 
@@ -599,6 +624,7 @@ sub send_character_to_server
 
 			# delete from hash
 			delete($servers{$serv});
+			change_title_number();
 		}
 	}
 }
@@ -646,6 +672,7 @@ $mw->repeat(500, sub{
 			};
 			# delete from hash
 			delete($servers{$_});
+			change_title_number();
 		}
 	}
 
@@ -1139,6 +1166,10 @@ Number of seconds before timing out a terminal session connection
 Can be sh or csh.  Sets up environment variables on the client using
 bourne shell or c shell syntax
 
+=item title_number = no
+
+Show the number of open connections in control window title
+
 =item key_quit = Alt-x
 
 Default key sequence to quit the program (will terminate all open windows).
@@ -1287,9 +1318,13 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 1.53  2004/03/25 10:23:57  duncan_ferguson
+# Include option for displaying total number of connections in console title bar [Daivd Gardner]
+# Work on bug for failed connection messages not always showing [Daivd Gardner]
+#
 # Revision 1.52  2004/03/24 12:29:14  duncan_ferguson
 # Added in client side variables (i.e. CSSH_CLIENT and CSSH_SERVER) with -s|c
-# Changed key chortcuts to be user configurable
+# Changed key shortcuts to be user configurable
 # Changed key shortcut quit from Control-X to Alt-X (for EMACS users)
 # Changed key shortcut Add Host from Control-A to Alt-A (for consistency)
 #
