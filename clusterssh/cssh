@@ -205,7 +205,7 @@ $user_config{'default.key_clientname'}="Alt-n";
 $user_config{'default.variables'}="no";
 $user_config{'default.title_number'}="no";
 $user_config{'default.term_size'}="80x24";
-#$user_config{'default.term_size'}="50x10";
+$user_config{'default.always_tile'}="never";
 
 # Now read in the system config file
 Config::Simple->import_from('/etc/csshrc', \%user_config);
@@ -283,6 +283,11 @@ if($options{l})
 if($user_config{'default.title_number'} ne "no")
 {
 	$options{n}="yes";
+}
+
+if($user_config{'default.always_tile'} ne "never")
+{
+	$options{g}="yes";
 }
 
 if($options{t})
@@ -406,7 +411,7 @@ my $mw=MainWindow->new(-title=>$control_title);
 
 # work out how many windows we are opening if setting geometry
 # vars we need when we open windows
-my ($term_height, $term_width, $rows, $cols);
+my ($term_height, $term_width, $rows, $cols) = 0;
 
 if($options{g})
 {
@@ -1052,8 +1057,8 @@ cssh - Cluster administration tool
 
 =head1 SYNOPSIS
 
-S<< cssh [-hvncs] [-T"title"] [-t"opts"] [-l usr] [[usr@]<svr>|<tag>] [...] >>
-S<< crsh [-hvncs] [-T"title"] [-t"opts"] [-l usr] [[usr@]<svr>|<tag>] [...] >>
+S<< cssh [-hvngcs] [-T"title"] [-t"opts"] [-l usr] [[usr@]<svr>|<tag>] [...] >>
+S<< crsh [-hvngcs] [-T"title"] [-t"opts"] [-l usr] [[usr@]<svr>|<tag>] [...] >>
 
 =head1 DESCRIPTION
 
@@ -1111,6 +1116,10 @@ Basic help text
 =item -v
 
 Show version information
+
+=item -g
+
+Attempt to tile all the client windows in the available screen space
 
 =item -T "title"
 
@@ -1212,6 +1221,10 @@ bourne shell or c shell syntax
 =item title_number = no
 
 Show the number of open connections in control window title
+
+=item always_tile = never
+
+If set to anything than "never" always sets -g switch (to tile windows)
 
 =item clusters
 
@@ -1366,6 +1379,11 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.7  2004/04/20 08:08:11  duncan_ferguson
+# Add option "always_tile" to .csshrc
+# Remove error message if not tiling windows
+# Update docs to include new options
+#
 # Revision 2.6  2004/04/19 13:51:20  duncan_ferguson
 # First cut at "-g" - window tiling
 # Reapply Bren Viren's lost code for clusters in .csshrc (no idea where that went)
