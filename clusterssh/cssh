@@ -851,7 +851,7 @@ sub send_character {
 	foreach (keys(%servers))
 	{
 		send_character_to_server($_,$char);
-		print "Sending :$char: to $_\n";
+		print "Sending :$char: to $_\n" if($options{d});
 	}
 	$entrytext="";
 }
@@ -1409,6 +1409,9 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.11  2004/04/29 14:59:53  duncan_ferguson
+# ensure debug info stays debug
+#
 # Revision 2.10  2004/04/28 08:28:14  duncan_ferguson
 # added -d debug option for some small debug output
 #
