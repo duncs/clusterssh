@@ -59,6 +59,12 @@ TAG=$1 ; MAJOR=$2 ; MINOR=$3 ;
 #echo STATE=$STATE
 #export MINOR
 
+MINOR=$(awk "BEGIN {print $MINOR + 1}" < /dev/null)
+
+VERDATE=$(perl -e 'print scalar localtime((stat("version"))[9]),$/')
+
+TAG_VERSION="$(echo $TAG-$MAJOR-$MINOR${STATE:+-$STATE})"
+
 echo "Releasing as $TAG-$MAJOR-$MINOR${STATE:+-$STATE}"
 echo "Is this correct?"
 read YORN
@@ -67,13 +73,6 @@ case $YORN in
 	*) exit;;
 esac
 
-exit
-
-MINOR=$(awk "BEGIN {print $MINOR + 1}" < /dev/null)
-
-VERDATE=$(perl -e 'print scalar localtime((stat("version"))[9]),$/')
-
-TAG_VERSION="$(echo $TAG-$MAJOR-$MINOR${STATE:+-$STATE})"
 
 #echo TAG_VERSION=$TAG_VERSION
 
@@ -155,6 +154,9 @@ rm -rf pod2htm*
 
 ############################################################################
 # $Log$
+# Revision 1.7  2005/02/02 15:08:55  duncan_ferguson
+# bugfix
+#
 # Revision 1.6  2005/01/26 13:46:58  duncan_ferguson
 # Change BETA to STATE and allow STATE from , also change dirs
 #
