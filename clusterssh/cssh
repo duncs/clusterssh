@@ -1093,7 +1093,7 @@ changes are committed.
 
 =item *
 
-The dotted line on the Hosts sub-menu is a tear-off, i.e. click on it 
+The dotted line on any sub-menu is a tear-off, i.e. click on it 
 and the sub-menu is turned into its own window.
 
 =item *
@@ -1464,6 +1464,9 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.32  2004/09/24 09:47:19  duncan_ferguson
+# Amended wording of man page about menu seperators
+#
 # Revision 2.31  2004/09/24 09:44:54  duncan_ferguson
 # Add menu item send to send info to al conencted clients, i.e. menu item for <ALT>-n
 #
