@@ -95,7 +95,7 @@ $|=1;
 use Getopt::Std; # command line parsing, incase someone uses -v or -h
 my %options;
 
-getopts('l:hdvncgst:T:', \%options);
+getopts('l:hdvncgGsk:t:T:', \%options);
 
 my $TIOCSTI = "";
 
@@ -132,13 +132,14 @@ $user_config{'default.title_number'}="no";
 $user_config{'default.titlebar_size'}=30;
 $user_config{'default.term_size'}="80x24";
 $user_config{'default.term_font'}="6x13";
-$user_config{'default.always_tile'}="never";
+$user_config{'default.always_tile'}="yes";
 $user_config{'default.cchp_path'}="$FindBin::Bin";
 $user_config{'default.cchp_sleep'}="0.1";
 #$user_config{'default.reserve_top'}="0";
 $user_config{'default.reserve_bottom'}="0";
 #$user_config{'default.reserve_left'}="0";
 $user_config{'default.reserve_right'}="0";
+$user_config{'default.keep_open'}=0;
 
 # Now read in the system config file
 Config::Simple->import_from('/etc/csshrc', \%user_config);
@@ -197,11 +198,11 @@ if(! -x $path_method)
 # disable X11 forwarding if using ssh - fixes problem with redhat machines
 $path_method.=" -x " if($path_method =~ /ssh$/);
 
-if($options{v})
+if($options{v} || $options{d})
 {
 	print("$my_name: $VERSION\n");
 	system("$^X $user_config{'default.cchp_path'}/cchp -v");
-	exit;
+	exit if(!$options{d});
 }
 
 if($options{h})
@@ -219,7 +220,7 @@ Where:
   -l             - default login ID for ssh connections
   -t "termopts"  - start terminals with options in addition to 
                    terminal_options in csshrc (default: "-ls -sb -sl 1024")
-  -g             - attempts to tile terminal windows on the screen
+  -G             - disable window tiling
   <server name>  - list of servers to connect to
   <tag name>     - list of servers from /etc/clusters using name as a tag 
 
@@ -240,14 +241,32 @@ if($options{l})
 	$user_config{'default.user'}=$options{l};
 }
 
+if($options{k})
+{
+	if($options{k} =~ /\d/)
+	{
+		$user_config{'default.keep_open'}=$options{k};
+	} else {
+		warn "Option to -k must be a number\n";
+	}
+}
+
+$user_config{'default.keep_open'}=25 if($options{d});
+
 if($user_config{'default.title_number'} ne "no")
 {
 	$options{n}="yes";
 }
 
-if($user_config{'default.always_tile'} ne "never")
+if($user_config{'default.always_tile'} eq "never")
 {
-	$options{g}="yes";
+	$options{G}="no";
+}
+
+if($options{g})
+{
+	print "Default action is to tile windows; '-g' is no longer required\n";
+	print "Use '-G' to disable tiling, or use .csshrc file.\n";
 }
 
 if($options{t})
@@ -391,9 +410,9 @@ my ($term_height, $term_width, $rows, $cols) = (0,0,0,0);
 
 # Make sure we have some clients to open up, else we error when
 # trying to tile and no client
-delete $options{g} if(@cmdargs < 1);
+$options{G}="never" if(@cmdargs < 1);
 
-if($options{g})
+if(!$options{G})
 {
 	# Now get the screen height for tiling windows later
 	my $screen_height=$mw->screenheight;
@@ -464,7 +483,7 @@ sub open_windows
 
 	my $port=22;
 
-	if($options{g})
+	if(!$options{G})
 	{
 		$cur_col = $total % $cols;
 		$cur_row = ($total - ($total % $cols)) / $cols;
@@ -514,12 +533,12 @@ sub open_windows
 		# Now we create the fifo pipe file
 		mkfifo($servers{$serv_name}[2], 0600) or die("Cannot create pipe: $!");
 
-		my $size= $options{g} ? "-font $user_config{'default.term_font'} -geometry $user_config{'default.term_size'}" : "";
+		my $size= !$options{G} ? "-font $user_config{'default.term_font'} -geometry $user_config{'default.term_size'}" : "";
 		my $place=$size;
 
 		# If tiling, start at the bottom right and work backwards to ensure the 
 		# correct overlaps
-		if($options{g})
+		if(!$options{G})
 		{
 			warn "in cur_col=$cur_col\n" if($options{d});
 			warn "in cur_row=$cur_row\n" if($options{d});
@@ -547,7 +566,7 @@ sub open_windows
 		# Start up the terminal ourselves so the pipes are in place
 		# NOTE - ssh -x to disable forwarding of X11 sessions due to problem
 		# on redhat systems
-		system("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $place -title '$method:$serv' -e $^X $user_config{'default.cchp_path'}/cchp $debug -s $user_config{'default.cchp_sleep'} -x $servers{$serv_name}[2] -y $TIOCSTI -z $KILLOFF $path_method -p $port $user_config{'default.cx_args'} $serv &") == 0 or warn("Could not exec session to $serv: $! ");
+		system("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $place -title '$method:$serv' -e $^X $user_config{'default.cchp_path'}/cchp $debug -s $user_config{'default.cchp_sleep'} -k $user_config{'default.keep_open'} -x $servers{$serv_name}[2] -y $TIOCSTI -z $KILLOFF $path_method -p $port $user_config{'default.cx_args'} $serv &") == 0 or warn("Could not create session to $serv: $! ");
 
 		if(!sysopen($servers{$serv_name}[3], $servers{$serv_name}[2], O_WRONLY))
 		{
@@ -1016,14 +1035,19 @@ cssh - Cluster administration tool
 
 =head1 SYNOPSIS
 
-S<< cssh [-hvngcs] [-T"title"] [-t"opts"] [-l usr] [[usr@]<svr>|<tag>] [...] >>
-S<< crsh [-hvngcs] [-T"title"] [-t"opts"] [-l usr] [[usr@]<svr>|<tag>] [...] >>
+ cssh [-hv]
+ cssh [-ngcs] [-k n] [-T"xxx"] [-t"opts"] [-l usr]
+ cssh [[usr@]<svr>|<tag>] [...]
+
+ crsh [-hv]
+ crsh [-ngcs] [-k n] [-T"xxx"] [-t"opts"] [-l usr]
+ crsh [[usr@]<svr>|<tag>] [...]
 
 =head1 DESCRIPTION
 
 The above command opens multiple connections to the specified hosts and an
 administration console.  Any text typed into the administration console
-is replicated to all other connected and active windows.  All other active
+is replicated to all other connected and active windows.  All 
 windows may be typed into directly as well.
 
 This tool is intended for (but not limited to) cluster administration where 
@@ -1066,8 +1090,9 @@ communcations protocol instead of ssh.
 
 =head1 OPTIONS
 
-The following options are supported (some of these may be defined within the 
-configuration files detailed below):
+The following options are supported (some of these may also be defined 
+within the configuration files detailed below; the command line options take
+precedence):
 
 =over
 
@@ -1079,9 +1104,14 @@ Basic help text
 
 Show version information
 
-=item -g
+=item -G
 
-Attempt to tile all the client windows in the available screen space
+Do not attempt to tile the client windows
+
+=item -k <time>
+
+Length of time (in seconds) to keep child terminal windows open after the 
+connection has been closed or lost (i.e. to view connection error messages).
 
 =item -T "title"
 
@@ -1162,7 +1192,7 @@ user file.
 
 =over 
 
-=item terminal = 
+=item terminal = xterm
 
 Terminal to use for the connection
 
@@ -1175,7 +1205,7 @@ Options to pass to the terminal used
 Path to binary used for the connection if it hasn't been found by default
 (i.e. the path to ssh when using cssh, or the path to rsh when using crsh)
 
-=item cx_args = 
+=item cx_args = <unset>
 
 Extra arguments to pass to ssh, for example for routing via a gateway or 
 enabling compression, i.e.
@@ -1185,12 +1215,13 @@ enabling compression, i.e.
 =item cchp_path = <same location as cssh>
 
 Path to cchp script provided with cssh if it is not located in same directory.
-/usr/lib is search by default.
+/usr/lib is searched by default.
 
 =item variables = none
 
 Can be "sh" or "csh".  Sets up environment variables on the client using
-bourne shell or c shell syntax
+bourne shell or c shell syntax.  However, in most cases using <ALT>-n
+can achieve similar goals far more easily.
 
 =item title_number = no
 
@@ -1199,8 +1230,8 @@ Show the number of open connections in control window title
 =item titlebar_size = 30
 
 Default height of title bars on windows when tiling.  Can be set to 0 if your 
-window manager does not use them - allows correct spacing of windows on 
-screen when using -g
+window manager does not use them - allows correct spacing of windows when
+tiling
 
 =item reserve_bottom = 0 
 
@@ -1213,13 +1244,18 @@ if it draws one at the bottom of the screen.
 
 Same as "reserve_bottom," but for the right-hand side of the screen.
 
-=item always_tile = never
+=item always_tile = yes
 
-If set to anything other than "never" always sets -g switch (to tile windows)
+If set to "never" sets -G switch (to not tile windows)
+
+=item keep_open = 0
+
+Default time to keep child terminals open after the connection has been
+closed (i.e. to view any error messages that may have been returned)
 
 =item term_size = 80x24
 
-Sets the maximum size of a terminal window.  When using tiling (-g) the width
+Sets the maximum size of a terminal window.  When using tiling the width
 remains constant (at 80 in this case) and rows are decreased until all 
 windows fit into the available screen space.
 
@@ -1285,7 +1321,7 @@ clusterssh is distributed under the GNU public license.  See the file
 LICENSE for details.
 
 A web site for comments, requests, bug reports and bug fixes/patches is 
-available at http://www.sourceforge.net/projects/clusterssh/.
+available at http://clusterssh.sourceforge.net/
 
 =head1 BUGS
 
@@ -1330,11 +1366,17 @@ necessary):
   }
   EOF
 
+=item *
+
+Using a "hidden" -d switch will turn on debugging output.  However, please only
+use this option with one host at a time, i.e. "cssh -d <host>" due to the 
+amount of output produced (in both main and child windows).
+
 =back
 
 =head1 SEE ALSO
 
-L<http://www.sourceforge.net/projects/clusterssh/>,
+L<http://clusterssh.sourceforge.net/>,
 L<ssh>,
 L<Tk::overview>,
 L<Config::Simple>
@@ -1400,6 +1442,11 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.30  2004/09/07 12:20:35  duncan_ferguson
+# Updates and tidy of man/perldoc page
+# Set window tiling on by default (use -G to turn off)
+# Add in "-k n" to keep child windows open for x seconds (to view ssh errors)
+#
 # Revision 2.29  2004/08/26 07:49:57  duncan_ferguson
 # Add reserve_bottom, reserve_right and cchp_sleep options
 #
