@@ -129,6 +129,7 @@ $user_config{'default.titlebar_size'}=30;
 $user_config{'default.term_size'}="80x24";
 $user_config{'default.term_font'}="6x13";
 $user_config{'default.always_tile'}="never";
+$user_config{'default.cchp_path'}="$FindBin::Bin";
 
 # Now read in the system config file
 Config::Simple->import_from('/etc/csshrc', \%user_config);
@@ -136,8 +137,11 @@ Config::Simple->import_from('/etc/csshrc', \%user_config);
 # Now overwrite that with any user defined ones
 Config::Simple->import_from($ENV{HOME}."/.csshrc", \%user_config);
 
-# predfine funcs as necessary
-sub send_character_to_server;
+# Ensure we know where cchp is....
+if( ! -f $user_config{'default.cchp_path'} )
+{
+	$user_config{'default.cchp_path'}="/usr/lib" if ( -f "/usr/lib/cchp");
+}
 
 # We can do something funky here - if we are called using a name other than
 # 'cssh', drop the first letter and then use that instead, i.e. crsh uses
@@ -167,7 +171,7 @@ $path_method.=" -x " if($path_method =~ /ssh$/);
 if($options{v})
 {
 	print("$my_name: $VERSION\n");
-	system("$^X $FindBin::Bin/cchp -v");
+	system("$^X $user_config{'default.cchp_path'}/cchp -v");
 	exit;
 }
 
@@ -490,7 +494,7 @@ sub open_windows
 		# Start up the terminal ourselves so the pipes are in place
 		# NOTE - ssh -x to disable forwarding of X11 sessions due to problem
 		# on redhat systems
-		system("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $place -title '$method:$serv' -e $^X $FindBin::Bin/cchp $debug -x $servers{$serv_name}[2] -y $TIOCSTI -z $KILLOFF $path_method $serv &") or warn("Could not exec session to $serv: $! ");
+		system("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $place -title '$method:$serv' -e $^X $user_config{'default.cchp_path'}/cchp $debug -x $servers{$serv_name}[2] -y $TIOCSTI -z $KILLOFF $path_method $serv &") or warn("Could not exec session to $serv: $! ");
 
 		if(!sysopen($servers{$serv_name}[3], $servers{$serv_name}[2], O_WRONLY))
 		{
@@ -1107,6 +1111,11 @@ Options to pass to the terminal used
 Path to binary used for the connection if it hasn't been found by default
 (i.e. the path to ssh when using cssh, or the path to rsh when using crsh)
 
+=item cchp_path = <same location as cssh>
+
+Path to cchp script provided with cssh if it is not located in same directory.
+/usr/lib is search by default.
+
 =item variables = none
 
 Can be "sh" or "csh".  Sets up environment variables on the client using
@@ -1298,6 +1307,12 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.18  2004/05/12 10:16:27  duncan_ferguson
+# Code tidy
+# Added in csshrc option cchp_path to allow for cchp to be moved somewhere else
+#   - also looks in /usr/lib by default if cchp not in same dir as cssh
+# Man page update
+#
 # Revision 2.17  2004/05/10 12:34:00  duncan_ferguson
 # Call cchp using perl interpreter $^X
 # Also call cchp -v when printing -v for cssh
