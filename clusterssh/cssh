@@ -518,6 +518,9 @@ sub open_windows
 		$cur_col=$cols;
 	}
 
+	# If we are tiling, reverse the array we work on, else we get the windows
+	# out backwards
+	@_ = reverse(@_) if($options{g});
 
 	#warn "start cols:$cols, rows:$rows\n";
 	#warn "start cur_col=$cur_col\n";
@@ -592,8 +595,10 @@ sub open_windows
 		} elsif($servers{$serv_name}[1] == 0) {
 			# child => fork returned 0
 
+			my $KILLOFF=KILLOFF();
+
 			# Start up the terminal via ourselves so the pipes are in place
-			exec("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $place -title '$method:$serv' -e $FindBin::Bin/$FindBin::Script -x $servers{$serv_name}[2] $path_method $serv") or warn("Could not exec session to $serv: $! ");
+			exec("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $place -title '$method:$serv' -e $FindBin::Bin/cchp -x $servers{$serv_name}[2] -y $TIOCSTI -z $KILLOFF $path_method $serv") or warn("Could not exec session to $serv: $! ");
 		} else {
 			# parent => fork return process id of child
 
@@ -1014,6 +1019,13 @@ sub setup_OS()
 		return;
 	}
 
+	# predefined for HP-UX 11i rp7410
+	if($Config{archname}=~/^PA-RISC2.0-LP64$/)
+	{
+		$TIOCSTI=0x80017472;
+		return;
+	}
+
 	# not predefined, so attempt to work it out from the "normal" source
 	if(! eval { require "sys/ioctl.ph" } )
 	{
@@ -1301,7 +1313,7 @@ error, please do the following (as well as the above) and send the output
 to the author, or report it on the web site (note: change the gcc as 
 necessary):
 
-  $ cat > tio.c <<EOF && gcc tio.c && ./a.out
+  $ cat > tio.c <<EOF && gcc tio.c && ./a.out && rm ./a.out
   #include <sys/termio.h>
   #include <sys/ioctl.h>
   main() {
@@ -1379,6 +1391,14 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.8  2004/04/20 12:43:52  duncan_ferguson
+# When tiling, correct order of windows so they are alphabetically forwards,
+#   not backwards
+# Move some code into a sub-app (cchp) and amend cssh as required to called
+#   in attempt to speed up connections
+# Add in HP-UX TIOCSTI value
+# Modify man page BUG section in tio.c to remove a.out when completed
+#
 # Revision 2.7  2004/04/20 08:08:11  duncan_ferguson
 # Add option "always_tile" to .csshrc
 # Remove error message if not tiling windows
