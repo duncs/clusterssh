@@ -82,6 +82,7 @@ use File::Temp qw/:POSIX/;
 use POSIX qw/ mkfifo /;
 use Fcntl;
 use FindBin;
+use Term::Cap;
 
 # set autoflush so we print to client correctly
 $|=1;
@@ -103,6 +104,12 @@ sub setup_OS(); # make sure func is defined so we can use it straight away
 setup_OS(); # and now call it
 
 sub KILLOFF { return 0xEE }; # quit signal to send to xterm clients 
+
+# Load Term::Cap entries (Assuming children are same type as parent)
+my $termios = new POSIX::Termios;
+$termios->getattr;
+my $ospeed = $termios->getospeed;
+my $terminal = Tgetent Term::Cap { TERM => undef, OSPEED => $ospeed };
 
 # This is the process by which we get around requiring setuid while also
 # only running from one script
@@ -586,23 +593,29 @@ $mw_entry->bind('<<Paste>>' => sub {
 	}
 });
 
-# we currently can only deal with ASCII codes, and i cannot find a way to 
-# convert keysyms to control codes to send those the terminals, so arrow
-# keys and other such ones are out
+# we currently can only deal with ASCII codes, so any unusual
+# keys must be converted, i.e. arrow keys.  
 $mw->bind('<Key>' => sub { 
 	my $char=$Tk::event->A;
 	my $ascii=ord($Tk::event->A);
 
-	#my $deckeysym=$Tk::event->N;
-	#my $keysym=$Tk::event->K;
-	#my $keycode=$Tk::event->k;
-
-	#$char=sprintf("%c", $deckeysym);
-
-	#print "char:$char: ascii:$ascii: deckeysym:$deckeysym keysym:$keysym: keycode:$keycode:\n";
-
-	return if ($ascii eq 0); # catch all for control keys
-	#$char=chr($Tk::event->N) if ($ascii eq 0); # catch all for control keys
+	if(!$ascii)
+	{
+		my $keysym=$Tk::event->K;
+		if (my $termsym = {
+			'Up'    => 'ku',
+			'Right' => 'kr',
+			'Down'  => 'kd',
+			'Left'  => 'kl',
+		}->{$keysym}) {
+			for (split(//, $terminal->Tputs($termsym)))
+			{
+				send_character($_);
+			}
+		} else {
+			return; # catch all for unhandled control keys
+		}
+	}
 
 	if (!(keys(%servers)))
 	{
@@ -623,7 +636,7 @@ sub delete_host
 	# grab a link to the hosts menu so we can work on it
 	my $menu=$mw_mb->entrycget('Hosts', -menu);
 
-	$serv=~ s/.*@// if ($serv =~ /@/);
+	$serv=~ s/.*@// if ($serv =~ /$ENV{LOGNAME}@/);
 
 	# now remove the menu entry
 	$menu->delete($serv);
@@ -1097,11 +1110,8 @@ When Tk 804.xxx and perl 5.8.0 are much more widely spread i will fix this bug.
 =item *
 
 Only ASCII codes can be sent to child terminals, so arrow keys and such 
-cannot currently be used
-
-=item *
-
-Closing terminals too quickly may cause a spurious error dump
+have to be converted.  The arrow keys should work - please post to the
+web site for any others that are required and do not work.
 
 =back
 
@@ -1111,8 +1121,8 @@ Closing terminals too quickly may cause a spurious error dump
 
 =item *
 
-If you require support of any nature, please run the following commands
-and send the output to the author, or report it on the web site:
+If you require support, please run the following commands
+and post it on the web site in the support/problems forum:
 
   $ perl -V
 
@@ -1206,6 +1216,11 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.4  2004/04/13 12:19:50  duncan_ferguson
+# Apply patch from Tony Mancill for "-l <user>" errors when closing terminals.
+# Apply patch from Gavin Brock fix the arrow keys bug
+# Amend docs accordingly
+#
 # Revision 2.3  2004/04/06 15:33:45  duncan_ferguson
 # fix use of user@server in /etc/clusters
 #
