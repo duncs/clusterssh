@@ -35,6 +35,9 @@
 #
 ############################################################################
 # $Log$
+# Revision 1.5  2004/05/04 15:02:27  duncan_ferguson
+# Remove tar file creation for sf.net in leiu of 'release'
+#
 # Revision 1.4  2004/04/20 12:45:43  duncan_ferguson
 # Amended to include cchp in tarball
 #
@@ -56,44 +59,9 @@ VERSION=$(
 			-e 's/ \$//g'
 )
 
-SFDIR=~/sourceforge
-test -d $SFDIR || mkdir $SFDIR
-
 chmod +x make_package
 ./make_package -n EGGcssh
 
 cp -rp EGGcssh ~/pkgs/EGGcssh
 
-# now create sourceforge tarball
-# for security, remove sticky bit in the tar file
-VERSION=$(./cssh -v | sed -e 's/ (.*//' -e 's/.*: //')
-
-rm -f crsh
-ln -s cssh crsh
-
-tar cvf $SFDIR/clusterssh_$VERSION.tar cssh crsh cchp LICENSE
-gzip -f $SFDIR/clusterssh_$VERSION.tar
-echo "Tar file created as: $SFDIR/clusterssh_$VERSION.tar"
-
-# now create the tar file for the package maker
-VERSION=$(./make_package -v | sed -e 's/ (.*//' -e 's/.*: //')
-chmod a+x make_package
-tar cvf $SFDIR/make_package_$VERSION.tar make_package
-gzip -f $SFDIR/make_package_$VERSION.tar
-echo "Tar file created as: $SFDIR/make_package_$VERSION.tar"
-
-# now generate the txt docs for uploading with some tidying tasks
-# for the project doc area on sf.net
-pod2html cssh | sed \
-	-e "s/[\`']./\"/g" \
-	-e "s/^crsh /<BR>crsh/" \
-	> $SFDIR/cssh.html
-
-pod2text cssh > $SFDIR/cssh.text
-#| sed \
-#-e "s/[\`']./\"/g" \
-#-e "s/^crsh /<BR>crsh/" \
-#> $SFDIR/cssh.html
-
-chgrp disthosts ./cssh
 rm -rf pod2htm*
