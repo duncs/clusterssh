@@ -99,38 +99,48 @@ for F in $FILES ; do
 done
 rm -f /tmp/$$.cvs
 
+SFG="../../../sourceforge"
+
 # Only make this udpate if files have changed
 if [ -n "$UPDATEMADE"  ]; then
 
 	# create the distribution tar file
 	# NOTE: files are stored in the version file
-	TARFILE="../../sourceforge/${TAG}_${MAJOR}.${MINOR}${BETA:+_$BETA}.tar.gz"
-	tar czvf $TARFILE $FILES 1>/dev/null
+	TARDIR=$SFG
+	TARFILE="${TAG}_${MAJOR}.${MINOR}${BETA:+_$BETA}.tar.gz"
+	tar czvf ${TARDIR}/$TARFILE $FILES 1>/dev/null
 
 	# Now recreate version file
 	sed "s/^TAG_VERSION=.*/TAG_VERSION='$TAG $MAJOR $MINOR $BETA'/" version > version.new
 
 	echo "============================"
-	#mv version.new version
-	#cvs commit -m "New release cut `date`" version
-	#cvs tag ${TAG}-${MAJOR}-${MINOR}${BETA:+-$BETA}
+	mv version.new version
+	cvs commit -m "New release cut `date`" version
+	cvs tag ${TAG}-${MAJOR}-${MINOR}${BETA:+-$BETA}
 
 	# Now upload to sf.net
-	#echo Uploading to sf.net now
-	#ncftpput upload.sourceforge.net incoming ${TARFILE}
+	# first, send it to the shell
+	echo "Sending file to shell-ssh.sf.net"
+	scp ${TARDIR}/${TARFILE} shell-ssh.sf.net:
+	# now, send it from there to incoming
+	echo "Sending on to sf.net incoming area"
+	ssh shell-ssh.sf.net ncftpput upload.sourceforge.net incoming ${TARFILE}
 fi
 
 # create html docs for uploading into documentation manager on sf.net
 pod2html cssh 2>/dev/null | sed \
 	-e "s/[\`']./\"/g" \
 	-e "s/^crsh /<BR>crsh/" \
-	> ../../sourceforge/cssh_man.html
+	> $SFG/cssh_man.html
 
 # And now clean up after ourselves
 rm -rf pod2htm*
 
 ############################################################################
 # $Log$
+# Revision 1.5  2004/08/04 12:09:14  duncan_ferguson
+# route via shell-ssh & path tidy
+#
 # Revision 1.4  2004/06/02 11:21:02  duncan_ferguson
 # Amend output for easier posting of new release info in various places
 # Get all change information across all relevant files
