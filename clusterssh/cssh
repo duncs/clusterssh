@@ -322,31 +322,48 @@ sub resolve_name($)
 	# no point in doing anything if the alias file doesn't exist...
 	return $clusters{$alias} if defined($clusters{$alias});
 
-	return $alias;
+	return "";
 }
 
-# check all command line hosts for aliases and resolve
-# - reverse it so we don't cover what we add onto the end and get into
-# an infinite loop
-foreach (reverse(@cmdargs))
+sub resolve_names
 {
-	push (@cmdargs, split(/ /, resolve_name($_)));
+	my @list = @_;
 
-	# now remove the alias from @cmdargs
-	$_="";
-}
+	foreach (@list)
+	{
+		my @hosts = split(/ /, $_);
+		my $xit = 0;
 
-# Now, tidy the array up and remove any blank entries
-{
+		foreach(@hosts) 
+		{
+			my $host = resolve_name($_);
+
+			if ( ! $host eq "" )
+			{
+				push(@list, split(/ /, $host));
+				# now remove the alias
+				$_="";
+				$xit = 1;
+			}
+		}
+		if ( $xit == 1 ) {
+			$_="";
+		}
+	}
+
+	# Now, tidy the array up and remove any blank entries
 	my @cleanarray;
 
-	foreach (@cmdargs)
+	foreach (@list)
 	{
 		push(@cleanarray, $_) if($_ && $_ !~ /^$/);
 	}
 
-	@cmdargs=@cleanarray;
+	return @cleanarray;
 }
+
+# check all command line hosts for aliases and resolve
+@cmdargs = resolve_names(@cmdargs);
 
 # hash to contain all required info about windows used
 # format of %servers is:
@@ -410,7 +427,6 @@ if($options{g})
 	warn "default.term_size=$user_config{'default.term_size'}\n" if($options{d});
 }
 
-
 open_windows(@cmdargs);
 
 sub change_title_number {
@@ -428,10 +444,12 @@ sub open_windows
 	# Only need carry on if we have been passed some args
 	return if($#_ == -1);
 
-	my $total=@cmdargs;
+	my $total=@_;
 
 	my $cur_col = 0;
 	my $cur_row = 0;
+
+	my $port=22;
 
 	if($options{g})
 	{
@@ -471,6 +489,7 @@ sub open_windows
 		}
 
 		$serv=~s/.*@// if($serv =~ /$ENV{LOGNAME}@/);
+		($serv,$port)=split(/::/,$serv) if($serv =~ /::/);
 
 		$servers{$serv_name}[0]=1; # mark terminal child process as active
 
@@ -514,7 +533,7 @@ sub open_windows
 		# Start up the terminal ourselves so the pipes are in place
 		# NOTE - ssh -x to disable forwarding of X11 sessions due to problem
 		# on redhat systems
-		system("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $place -title '$method:$serv' -e $^X $user_config{'default.cchp_path'}/cchp $debug -x $servers{$serv_name}[2] -y $TIOCSTI -z $KILLOFF $path_method $serv &") or warn("Could not exec session to $serv: $! ");
+		system("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $place -title '$method:$serv' -e $^X $user_config{'default.cchp_path'}/cchp $debug -x $servers{$serv_name}[2] -y $TIOCSTI -z $KILLOFF $path_method -p $port $serv &") or warn("Could not exec session to $serv: $! ");
 
 		if(!sysopen($servers{$serv_name}[3], $servers{$serv_name}[2], O_WRONLY))
 		{
@@ -610,6 +629,7 @@ sub add_host_win_entry {
 	return if(!$newhosts);
 
 	my @new_hosts=split(/ /, $newhosts);
+	@new_hosts = resolve_names(@new_hosts);
 	open_windows(@new_hosts);
 
 	# Only way it seems we can to the hosts menu is to delete all and recreate
@@ -1327,6 +1347,10 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.22  2004/07/09 13:58:12  duncan_ferguson
+# Applied patch from Rob Petty (cx to specific ports, i.e. for terminal servers)
+# Applied patch from Jason (jklap) (bug fix & resolve cluster tags within tags)
+#
 # Revision 2.21  2004/05/20 15:38:36  duncan_ferguson
 # Tidy out output of cssh -h
 #
