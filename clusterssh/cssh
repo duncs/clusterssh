@@ -76,6 +76,7 @@ require Tk::Dialog; # for the about box
 require Tk::LabEntry; # for the add host widget
 use IO::Handle; # for untaint on the ps listing
 use File::Basename; # for cmdline version and help output
+use Sys::Hostname;
 
 # Set up some defaults
 my %user_config;
@@ -83,6 +84,9 @@ $user_config{'default.terminal'}="xterm";
 $user_config{'default.terminal_options'}="-ls -sb -sl 1024";
 $user_config{'default.cx_path'}="/usr/bin";
 $user_config{'default.timeout'}=20;
+$user_config{'default.key_quit'}="Alt-x";
+$user_config{'default.key_addhost'}="Alt-a";
+$user_config{'default.variables'}="no";
 
 # Now read in the system config file
 Config::Simple->import_from('/etc/csshrc', \%user_config);
@@ -90,7 +94,15 @@ Config::Simple->import_from('/etc/csshrc', \%user_config);
 # Now overwrite that with any user defined ones
 Config::Simple->import_from($ENV{HOME}."/.csshrc", \%user_config);
 
+#for (keys(%user_config))
+#{
+#	print "$_ = $user_config{$_}\n";
+#}
+
 my $TIOCSTI = "";
+
+# predfine funcs as necessary
+sub send_character_to_server;
 
 # Now set up all of those vars
 sub setup_OS(); # make sure func is defined so we can use it straight away
@@ -131,7 +143,7 @@ my $path_method=$user_config{'default.cx_path'}."/".$method;
 
 use Getopt::Std; # command line parsing, incase someone uses -v or -h
 my %options;
-getopts('hvt:T:', \%options);
+getopts('hvcst:T:', \%options);
 
 if($options{v})
 {
@@ -142,11 +154,13 @@ if($options{v})
 if($options{h})
 {
 	print(<<EOL);
-usage: $my_name [-hv] [-T "title"] [-t "term opts"] [[user@]<server>|<tag>] ...
+usage: $my_name [-hve] [-T "title"] [-t "term opts"] [[user@]<server>|<tag>] ...
 
 where:
   -h             - this text
   -v             - version and date information
+	-s             - set client-side environment variables (sh style)
+	-c             - set client-side environment variables (csh style)
   -T "title"     - Additional test for control window title
   -t "termopts"  - start terminals with options in addition to 
                    "-ls -sb -sl 1024"
@@ -156,6 +170,13 @@ where:
 See the man pages for more information ("perldoc cssh" or "man cssh").
 EOL
 	exit;
+}
+
+if($user_config{'default.variables'} eq "sh")
+{
+	$options{s}="yes";
+} elsif($user_config{'default.variables'} eq "csh") {
+	$options{c}="yes";
 }
 
 if($options{t})
@@ -300,6 +321,7 @@ sub open_windows
 			# make sure we drop UID/EUID privs here for the child
 			$EUID=$UID;
 			$EGID=$GID;
+
 			exec("$user_config{'default.terminal'} $user_config{'default.terminal_options'} -title '$method:$serv' -e $path_method $serv") or warn("Could not exec session to $serv: $! ");
 		} else {
 			# parent => fork return process id of child
@@ -310,8 +332,6 @@ sub open_windows
 	# now we have all the terminals open, get all the correct process id's.
 	# Try to watch the process tree and continue when all sessions have
 	# connected
-
-#	my $sleep= (int $#_ / 2) + 1;
 
 	{
 		my $total=$#_+1;
@@ -388,10 +408,41 @@ sub open_windows
 			{
 				warn "WARNING: Failed to connect to $serv\n";
 				delete($servers{$serv_name});
+			} else {
+				if($options{s})
+				{
+					sleep 1;
+					#print "send client vars to client\n";
+					for (split(//, "CSSH_CLIENT=".$serv.chr(13)))
+					{
+						send_character_to_server($serv_name,$_);
+					}
+					for (split(//, "CSSH_SERVER=".hostname.chr(13)))
+					{
+						send_character_to_server($serv_name,$_);
+					}
+					for (split(//, "export CSSH_CLIENT CSSH_SERVER".chr(13)))
+					{
+						send_character_to_server($serv_name,$_);
+					}
+				} elsif($options{c})
+				{
+					sleep 1;
+					#print "send client vars to client\n";
+					for (split(//, "setenv CSSH_CLIENT=".$serv.chr(13)))
+					{
+						send_character_to_server($serv_name,$_);
+					}
+					for (split(//, "setenv CSSH_SERVER=".hostname.chr(13)))
+					{
+						send_character_to_server($serv_name,$_);
+					}
+				}
 			}
 		}
 	}
 }
+
 
 my $mw=MainWindow->new(-title=>$control_title);
 $mw->configure(-menu=>my $mw_mb=$mw->Menu);
@@ -440,12 +491,12 @@ $add_host_win->add('LabEntry',
 # Set up key shortcuts
 
 # exit program - Ctrl-x
-$mw->bind($mw, "<Control-x>" => \&exit_prog);
-$mw_entry->bind("Tk::Text", "<Control-x>" => \&exit_prog);
+$mw->bind($mw, "<$user_config{'default.key_quit'}>" => \&exit_prog);
+$mw_entry->bind("Tk::Text", "<$user_config{'default.key_quit'}>" => \&exit_prog);
 
 # add host - Ctrl-a
-$mw->bind($mw, "<Control-a>" => \&add_host_win_entry);
-$mw_entry->bind("Tk::Text", "<Control-a>" => \&add_host_win_entry);
+$mw->bind($mw, "<$user_config{'default.key_addhost'}>" => \&add_host_win_entry);
+$mw_entry->bind("Tk::Text", "<$user_config{'default.key_addhost'}>" => \&add_host_win_entry);
 
 sub add_host_win_entry {
 #	$add_host_win->Subwidget('entry')->focus;
@@ -528,26 +579,51 @@ $mw->bind('<Key>' => sub {
 	$entrytext="";
 });
 
+sub send_character_to_server
+{
+	#[0]=server name
+	#[1]=character
+	my $serv=$_[0];
+	my $char=$_[1];
+
+	if($servers{$serv}[0])
+	{
+		# attempt to write; if fails remove from hash
+		unless(ioctl($servers{$serv}[3], $TIOCSTI, $char))
+		{
+			warn("ioctl failed on",$servers{$serv}[3],"\n");
+			# grab a link to the hosts menu so we can work on it
+			my $menu=$mw_mb->entrycget('Hosts', -menu);
+			# now remove the menu entry
+			$menu->delete($serv);
+
+			# delete from hash
+			delete($servers{$serv});
+		}
+	}
+}
+
 sub send_character {
 	my $char=$_[0];
 
 	foreach (keys(%servers))
 	{
-		if($servers{$_}[0])
-		{
-			# attempt to write; if fails remove from hash
-			unless(ioctl($servers{$_}[3], $TIOCSTI, $char))
-			{
-				warn("ioctl failed on",$servers{$_}[3],"\n");
-				# grab a link to the hosts menu so we can work on it
-				my $menu=$mw_mb->entrycget('Hosts', -menu);
-				# now remove the menu entry
-				$menu->delete($_);
-
-				# delete from hash
-				delete($servers{$_});
-			}
-		}
+		send_character_to_server($_,$char);
+#		if($servers{$_}[0])
+#		{
+#			# attempt to write; if fails remove from hash
+#			unless(ioctl($servers{$_}[3], $TIOCSTI, $char))
+#			{
+#				warn("ioctl failed on",$servers{$_}[3],"\n");
+#				# grab a link to the hosts menu so we can work on it
+#				my $menu=$mw_mb->entrycget('Hosts', -menu);
+#				# now remove the menu entry
+#				$menu->delete($_);
+#
+#				# delete from hash
+#				delete($servers{$_});
+#			}
+#		}
 	}
 	$entrytext="";
 }
@@ -1058,6 +1134,23 @@ Path to binary used for the connection if it hasn't been found by default
 
 Number of seconds before timing out a terminal session connection
 
+=item variables = no
+
+Can be sh or csh.  Sets up environment variables on the client using
+bourne shell or c shell syntax
+
+=item key_quit = Alt-x
+
+Default key sequence to quit the program (will terminate all open windows).
+See below note.
+
+=item key_addhost = Alt-a
+
+Default key sequence to open AddHost menu.  See below note.
+
+NOTE: The key shortcut modifiers must be in the form "Control", "Alt", or 
+"Shift", i.e. with the first letter capitalised and the rest lower case.
+
 =back
 
 =back
@@ -1194,6 +1287,12 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 1.52  2004/03/24 12:29:14  duncan_ferguson
+# Added in client side variables (i.e. CSSH_CLIENT and CSSH_SERVER) with -s|c
+# Changed key chortcuts to be user configurable
+# Changed key shortcut quit from Control-X to Alt-X (for EMACS users)
+# Changed key shortcut Add Host from Control-A to Alt-A (for consistency)
+#
 # Revision 1.51  2004/02/20 09:36:35  duncan_ferguson
 # Include Jason Hollands patches:
 # - includes :'s in hostnames
