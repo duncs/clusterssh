@@ -94,7 +94,7 @@ use Getopt::Std; # command line parsing, incase someone uses -v or -h
 my %options;
 
 # NOTE - option x is hidden and should never be called directly
-getopts('x:hvncst:T:', \%options);
+getopts('x:l:hvncst:T:', \%options);
 
 my $TIOCSTI = "";
 
@@ -184,6 +184,7 @@ if($options{x})
 # Set up some defaults
 my %user_config;
 $user_config{'default.terminal'}="xterm";
+$user_config{'default.user'}=$ENV{LOGNAME};
 $user_config{'default.terminal_options'}="-ls -sb -sl 1024";
 $user_config{'default.cx_path'}="/usr/bin";
 $user_config{'default.key_quit'}="Control-q";
@@ -241,6 +242,7 @@ where:
 	-c             - set client-side environment variables (csh style)
   -T "title"     - Additional test for control window title
 	-n             - Show number of connection in control window title
+	-l             - default login ID for ssh connections
   -t "termopts"  - start terminals with options in addition to 
                    "-ls -sb -sl 1024"
   <server name>  - list of servers to connect to
@@ -256,6 +258,11 @@ if($user_config{'default.variables'} eq "sh")
 	$options{s}="yes";
 } elsif($user_config{'default.variables'} eq "csh") {
 	$options{c}="yes";
+}
+
+if($options{l})
+{
+	$user_config{'default.user'}=$options{l};
 }
 
 if($user_config{'default.title_number'} ne "no")
@@ -398,11 +405,15 @@ sub open_windows
 			# open a cx to the same host more than once.  use the __ as a marker
 			# to remove all text after that point when we want to use the var
 			$serv_name="$1__".rand();
+			$serv_name=$user_config{'default.user'}."@".$serv_name if($serv_name !~ /@/);
 			$serv=$1;
+			$serv=$user_config{'default.user'}."@".$serv if($serv !~ /@/);
 		} else {
 			warn "FATAL: server name given is insecure ($serv)\n";
 			exit_prog();
 		}
+
+		$serv=~s/.*@// if($serv =~ /$ENV{LOGNAME}@/);
 
 		$servers{$serv_name}[0]=1; # mark terminal child process as active
 
@@ -529,6 +540,8 @@ sub add_host_win_entry {
 		my $serv=$serv_name;
 		$serv=~s/__.*//;
 
+		$serv=~s/.*@// if($serv =~ /$ENV{LOGNAME}@/);
+
 		$hosts_menu->checkbutton(
 			-label=>$serv,
 			-variable=>\$servers{$serv_name}[0],
@@ -610,6 +623,8 @@ sub delete_host
 
 	# grab a link to the hosts menu so we can work on it
 	my $menu=$mw_mb->entrycget('Hosts', -menu);
+
+	$serv=~ s/.*@// if ($serv =~ /@/);
 
 	# now remove the menu entry
 	$menu->delete($serv);
@@ -730,6 +745,10 @@ for (sort(keys(%servers)))
 {
 	my $serv=$_;
 	$serv=~s/__.*//;
+
+	# Remove any user@ if it is the current user
+	$serv=~s/.*@// if($serv =~ /$ENV{LOGNAME}@/);
+
 	if(checkProcID($servers{$_}[1]))
 	{
 		$hosts_menu->checkbutton(
@@ -876,8 +895,8 @@ cssh - Cluster administration tool
 
 =head1 SYNOPSIS
 
-S<< cssh [-hvncs] [-T "title"] [-t "term opts"] [[user@]<server>|<tag>] [...] >>
-S<< crsh [-hvncs] [-T "title"] [-t "term opts"] [[user@]<server>|<tag>] [...] >>
+S<< cssh [-hvncs] [-T"title"] [-t"opts"] [-l usr] [[usr@]<svr>|<tag>] [...] >>
+S<< crsh [-hvncs] [-T"title"] [-t"opts"] [-l usr] [[usr@]<svr>|<tag>] [...] >>
 
 =head1 DESCRIPTION
 
@@ -940,6 +959,15 @@ Show version information
 
 Changes the title from "cssh" to "title - cssh" to help 
 distinguish between different invocations of the program.
+
+=item -l userid
+
+Changes the default user for the ssh connection from the current user for
+all connection where not otherwise specified, i.e. 
+
+  cssh -l user1 server1 server2 server3 user2@server4
+
+will connect as user1 on server1, server2 and server3, and user2 on server4
 
 =item -t "terminal options"
 
@@ -1179,6 +1207,9 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.2  2004/04/06 14:10:21  duncan_ferguson
+# Reinsert lost "cssh -l user" code - no idea where that went...
+#
 # Revision 2.1  2004/04/06 11:41:08  duncan_ferguson
 # Strip off user@ in "Alt-N" and -s/-c options
 # Remove some unnecessary setuid stuff now no longer setuid
