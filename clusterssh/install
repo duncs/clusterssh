@@ -35,6 +35,9 @@
 #
 ############################################################################
 # $Log$
+# Revision 1.2  2004/01/28 13:40:31  duncan_ferguson
+# also create cssh man in plain text for web site upload
+#
 # Revision 1.1  2004/01/28 12:40:42  duncan_ferguson
 # inital version of in-house prject script
 # NOT FOR GENERAL CONSUMPTION
@@ -84,6 +87,12 @@ pod2html cssh | sed \
 	-e "s/[\`']./\"/g" \
 	-e "s/^crsh /<BR>crsh/" \
 	> $SFDIR/cssh.html
+
+pod2text cssh > $SFDIR/cssh.text
+#| sed \
+#-e "s/[\`']./\"/g" \
+#-e "s/^crsh /<BR>crsh/" \
+#> $SFDIR/cssh.html
 
 chgrp disthosts ./cssh
 rm -rf pod2htm*
