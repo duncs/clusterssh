@@ -72,10 +72,8 @@ use 5.006_000;
 use Tk 800.022;
 use Tk ':variables';
 use Config::Simple 4.55;
-##use English; # so we can use $UID and $EUID instead of $< and $>
 require Tk::Dialog; # for the about box
 require Tk::LabEntry; # for the add host widget
-##use IO::Handle; # for untaint on the ps listing
 use File::Basename; # for cmdline version and help output
 use Sys::Hostname;
 use File::Temp qw/:POSIX/;
@@ -107,6 +105,7 @@ sub KILLOFF { return 0xEE }; # quit signal to send to xterm clients
 # Load Term::Cap entries (Assuming children are same type as parent)
 my $termios = new POSIX::Termios;
 $termios->getattr;
+
 # 20040413 <tmancill@debian.org> - if TERM isn't set assume xterm
 unless ($ENV{TERM}) {
 	$ENV{TERM} = 'xterm';
@@ -183,7 +182,7 @@ where:
 	-l             - default login ID for ssh connections
   -t "termopts"  - start terminals with options in addition to 
                    "-ls -sb -sl 1024"
-	-g "termsize"  - starts terminal windows in the set size, i.e. 60x10
+	-g             - attempts to tile terminal windows on the screen
   <server name>  - list of servers to connect to
   <tag name>     - list of servers from /etc/clusters using name as a tag 
 
@@ -241,7 +240,7 @@ if($control_title =~ /^([-\@\w. ]+)$/) {
 }
 
 # remove 'bareword' errors for menu creation items
-use subs qw/mw_mb_items mw_mb_file_items mw_mb_hosts_items mw_mb_options_items mw_mb_help_items wm_mb_help_about/;
+use subs qw/mw_mb_file_items mw_mb_help_items wm_mb_help_about/;
 
 # because we are running setuid (i.e. in taint mode), clean up the 
 # environment we are running in
@@ -327,7 +326,6 @@ foreach (reverse(@cmdargs))
 # [1] process id # no longer required
 # [2] pipe file name
 # [3] pipe file handle
-# [4] window geometry if tiling
 my %servers;
 
 # handle for main window
@@ -343,16 +341,16 @@ if($options{g})
 	my $screen_height=$mw->screenheight - $user_config{'default.titlebar_size'};
 	my $screen_width=$mw->screenwidth;
 
-	#warn "screen_height=$screen_height\n";
-	#warn "screen_width=$screen_width\n";
-
 	my $finfo = `xlsfonts -ll -fn $user_config{'default.term_font'}`;
 	my $fwidth = ($finfo =~ /^\s*max\s+(\d+)/m)[0];
 	my $fheight = ($finfo =~ /^\s*PIXEL_SIZE\s*(\d+)/m)[0];
 
-	#warn "font = $fwidth x $fheight\n";
-
-	my $term_cols = 80; # make user choice
+	my $max_term_cols = $user_config{'default.term_size'};
+	my $max_term_rows = $user_config{'default.term_size'};
+	$max_term_cols =~ s/x.*//;
+	$max_term_rows =~ s/.*x//;
+	
+	my $term_cols=$max_term_cols;
 
 	# Get the term width and height
 	$term_width = ( $term_cols * $fwidth ) + 8 ; # convert loosly to pixels
@@ -365,7 +363,8 @@ if($options{g})
 	my $term_rows = int(($screen_height - 10 * $rows) / $fheight / $rows);
 	$term_height = $term_rows * $fheight + 10;
 	print "term_rows=$term_rows\n" if($options{d});
-	$term_rows= $term_rows > 24 ? 24 : $term_rows;
+	# make sure we have no more rows than the max specified
+	$term_rows= $term_rows > $max_term_rows ? $max_term_rows : $term_rows;
 
 	$user_config{'default.term_size'} = "${term_cols}x${term_rows}";
 
@@ -396,7 +395,6 @@ sub open_windows
 	return if($#_ == -1);
 
 	my $total=@cmdargs;
-	#warn "cols:$cols, rows:$rows\n";
 
 	my $cur_col = 0;
 	my $cur_row = 0;
@@ -405,9 +403,6 @@ sub open_windows
 	{
 		$cur_col = $total % $cols;
 		$cur_row = ($total - ($total % $cols)) / $cols;
-
-		#warn "cur_col=$cur_col\n";
-		#warn "cur_row=$cur_row\n";
 
 		# we want the first ones to be from 0 not 1, so take 1 off 
 		$cols-=1 if($cols > 0);
@@ -419,10 +414,6 @@ sub open_windows
 			$cur_row-=1 ;
 			$cur_col=$cols;
 		}
-
-		#warn "start cols:$cols, rows:$rows\n";
-		#warn "start cur_col=$cur_col\n";
-		#warn "start cur_row=$cur_row\n";
 	}
 
 	foreach (@_)
@@ -463,71 +454,51 @@ sub open_windows
 		# correct overlaps
 		if($options{g})
 		{
-
 			warn "in cur_col=$cur_col\n" if($options{d});
 			warn "in cur_row=$cur_row\n" if($options{d});
-
-			# Also cater for the size of the titlebar if necessary
-			#$place=$size."+".$cur_col*$term_width."+".(($cur_row*$term_height)+28);
 
 			my $x = $cur_col * $term_width;
 			my $y = ($cur_row*$term_height) + $user_config{'default.titlebar_size'};
 			$place="$size+$x+$y";
+
 			print "place=$place\n" if($options{d});
 
 			$cur_col -= 1;
 
 			if($cur_col<0)
 			{
-				#warn "cur_col reset, cur_row -1\n";
 				$cur_col = $cols;
 				$cur_row-=1;
 			}
-
-			#warn "out cur_col=$cur_col\n";
-			#warn "out cur_row=$cur_row\n";
 		}
 
-		#$servers{$serv_name}[1]=fork();
+		my $KILLOFF=KILLOFF();
 
-		#if(!defined($servers{$serv_name}[1]))
-		#{
-		#	# unset => fork failed for whatever reason
-		#	warn "Cannot fork: $!";
-		#	exit_prog();
-		#} elsif($servers{$serv_name}[1] == 0) {
-			# child => fork returned 0
+		my $debug="";
+		$debug="-d" if($options{d});
 
-			my $KILLOFF=KILLOFF();
+		# Start up the terminal ourselves so the pipes are in place
+		# NOTE - ssh -x to disable forwarding of X11 sessions due to problem
+		# on redhat systems
+		system("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $place -title '$method:$serv' -e $FindBin::Bin/cchp $debug -x $servers{$serv_name}[2] -y $TIOCSTI -z $KILLOFF $path_method -x $serv &") or warn("Could not exec session to $serv: $! ");
 
-			my $debug="";
-			$debug="-d" if($options{d});
+		if(!sysopen($servers{$serv_name}[3], $servers{$serv_name}[2], O_WRONLY))
+		{
+			unlink($servers{$serv_name}[2]);
+			die ("Cannot open pipe for writing: $!");
+		}
 
-			# Start up the terminal via ourselves so the pipes are in place
-			# NOTE - ssh -x to disable forwarding of X11 sessions due to problem
-			# on redhat machines
-			system("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $place -title '$method:$serv' -e $FindBin::Bin/cchp $debug -x $servers{$serv_name}[2] -y $TIOCSTI -z $KILLOFF $path_method -x $serv &") or warn("Could not exec session to $serv: $! ");
-		#} else {
-			# parent => fork return process id of child
-
-			if(!sysopen($servers{$serv_name}[3], $servers{$serv_name}[2], O_WRONLY))
-			{
-				unlink($servers{$serv_name}[2]);
-				die ("Cannot open pipe for writing: $!");
-			}
-
-			# strip off any username@ if included in the connection string
-			$serv=~ s/.*@// if ($serv =~ /@/);
-			if($options{s})
-			{
-				syswrite($servers{$serv_name}[3], "CSSH_CLIENT=".$serv.chr(13));
-				syswrite($servers{$serv_name}[3], "CSSH_SERVER=".hostname.chr(13));
-				syswrite($servers{$serv_name}[3], "export CSSH_CLIENT CSSH_SERVER".chr(13));
-			} elsif($options{c}) {
-				syswrite($servers{$serv_name}[3], "setenv CSSH_CLIENT=".$serv.chr(13));
-				syswrite($servers{$serv_name}[3], "setenv CSSH_SERVER=".hostname.chr(13));
-			}
-		#}
+		# strip off any username@ if included in the connection string
+		$serv=~ s/.*@// if ($serv =~ /@/);
+		if($options{s})
+		{
+			syswrite($servers{$serv_name}[3], "CSSH_CLIENT=".$serv.chr(13));
+			syswrite($servers{$serv_name}[3], "CSSH_SERVER=".hostname.chr(13));
+			syswrite($servers{$serv_name}[3], "export CSSH_CLIENT CSSH_SERVER".chr(13));
+		} elsif($options{c}) {
+			syswrite($servers{$serv_name}[3], "setenv CSSH_CLIENT=".$serv.chr(13));
+			syswrite($servers{$serv_name}[3], "setenv CSSH_SERVER=".hostname.chr(13));
+		}
 	}
 }
 
@@ -598,7 +569,6 @@ $mw->bind($mw, "<$user_config{'default.key_addhost'}>" => \&add_host_win_entry);
 $mw_entry->bind("Tk::Text", "<$user_config{'default.key_addhost'}>" => \&add_host_win_entry);
 
 sub add_host_win_entry {
-#	$add_host_win->Subwidget('entry')->focus;
 	$add_host_entry->focus();
 	my $answer=$add_host_win->Show();
 
@@ -764,8 +734,6 @@ sub send_character {
 $mw->repeat(500, sub{
 	foreach (keys(%servers))
 	{
-		#print "In repeat checking $_\n" if ($options{d});
-		#unless (checkProcID($servers{$_}[1]))
 		if(! -p $servers{$_}[2])
 		{
 			print "Looking at $servers{$_}[2]\n" if($options{d});
@@ -799,20 +767,6 @@ sub exit_prog()
 	# and formally exit the program
 	exit 0;
 }
-
-
-##################
-# Top level menu items
-##################
-sub mw_mb_items
-{
-	[
-		[ 'cascade', "File", -tearoff, 0, -menuitems, mw_mb_file_items ],
-		[ 'cascade', "Hosts", -tearoff, 1 ],
-		[ 'cascade', "Help", -tearoff, 0, -menuitems, mw_mb_help_items ],
-	]
-}
-###
 
 ###
 # File menu items
@@ -859,17 +813,6 @@ for (sort(keys(%servers)))
 	} else {
 		print "pipe file gone: $servers{$_}[2] on $_\n" if($options{d});
 	}
-}
-###
-
-###
-# Options menu item
-###
-sub mw_mb_options_items
-{
-	[
-		[ 'command', "Option" ]
-	]
 }
 ###
 
@@ -986,12 +929,6 @@ sub setup_OS()
 	exit 1;
 }
 
-# func to check if a process is still around and functioning
-#sub checkProcID
-#{
-	#return kill(0,$_[0]);
-#}
-
 
 __END__
 
@@ -1008,11 +945,13 @@ S<< crsh [-hvngcs] [-T"title"] [-t"opts"] [-l usr] [[usr@]<svr>|<tag>] [...] >>
 
 The above command opens multiple connections to the specified hosts and an
 administration console.  Any text typed into the administration console
-is replicated to all other connected and active windows.
+is replicated to all other connected and active windows.  All other active
+windows may be typed into directly as well.
 
-This tool is intended for cluster administration where the same configuration
-or commands must be run on each node within the cluster.  Performing these
-commands all at once via this tool ensures all nodes are kept in sync.
+This tool is intended for (but not limited to) cluster administration where 
+the same configuration or commands must be run on each node within the 
+cluster.  Performing these commands all at once via this tool ensures all 
+nodes are kept in sync.
 
 Connections are opened via ssh so a correctly installed and configured 
 ssh installation is required.  If, however, the program is called by "crsh"
@@ -1035,9 +974,9 @@ and the sub-menu is turned into its own window.
 
 =item *
 
-Unchecking a hostname on the Hosts sub-menu will disassociate the host 
-window control from cluster control so no commands are sent.  Selecting 
-it will reassociate it.
+Unchecking a hostname on the Hosts sub-menu will unplug the host from the
+cluster control window, so any text typed into the console is not sent to 
+that host.  Re-selecting it will plug it back in.
 
 =item *
 
@@ -1049,7 +988,8 @@ communcations protocol instead of ssh.
 
 =head1 OPTIONS
 
-The following options are supported:
+The following options are supported (some of these may be defined within the 
+configuration files detailed below):
 
 =over
 
@@ -1085,8 +1025,7 @@ Pass all the text between the quotes directly to the xterms that are started.
 Quotes must be used and all options must be accepted by xterm else the 
 program stops.  
 
-NOTE: options that include any of the following ; / | are excluded by
-default as this could otherwise be a backdoor into the system.  If you want
+NOTE: options that include any of the following ; / | are excluded.  If you want
 to define colours you have to use names, i.e. -bg LightGrey1.  Names on Solaris
 can be found in /usr/openwin/lib/rgb.txt
 
@@ -1113,7 +1052,7 @@ Paste in the correct client name to all clients, i.e.
 
   scp /etc/hosts server:files/<Alt-n>.hosts 
 
-would replace the <Alt-n> with the correct client name
+would replace the <Alt-n> with the correct client name in all the client windows
 
 =back
 
@@ -1137,10 +1076,11 @@ i.e.
 
 All standard comments and blank lines are ignored.
 
-=item /etc/csshrc $HOME/.csshrc
+=item /etc/csshrc & $HOME/.csshrc
 
 This file contains configuration overrides - the defaults are as marked.  
-Options are overwritten first by the global file, and then by the user file.
+Default options are overwritten first by the global file, and then by the 
+user file.
 
 =over 
 
@@ -1168,12 +1108,30 @@ Show the number of open connections in control window title
 
 =item always_tile = never
 
-If set to anything than "never" always sets -g switch (to tile windows)
+If set to anything other than "never" always sets -g switch (to tile windows)
+
+=item term_size = 80x24
+
+Sets the maximum size of a terminal window.  When using tiling (-g) the width
+remains constant (at 80 in this case) and rows are decreased until all 
+windows fit into the available screen space.
+
+=item term_font = 6x13
+
+Sets the default font used within terminal windows.  Available fonts can be 
+obtained from
+
+  xlsfonts -l
+
+The following commands may give more specific results on system fonts
+
+  xlsfonts -l -fn ?x*
+  xlsfonts -l -fn ??x*
 
 =item clusters
 
-List of defined clusters held within the file (see section on /etc/clusters 
-above), i.e.
+List of defined clusters held within the file (see also section on 
+/etc/clusters above), i.e.
 
   clusters = list1 list2
   list1 = server1 user@server2
@@ -1208,7 +1166,8 @@ Duncan Ferguson
 clusterssh is distributed under the GNU public license.  See the file 
 LICENSE for details.
 
-A web site is available at http://www.sourceforge.net/projects/clusterssh/.
+A web site for comments, requests, bug reports and bug fixes/patches is 
+available at http://www.sourceforge.net/projects/clusterssh/.
 
 =head1 BUGS
 
@@ -1323,13 +1282,12 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
-# Revision 2.13  2004/05/04 15:08:01  duncan_ferguson
-# Add in Wayne Scott's window tiling algorithm (reduce number of rows rather
-#   then overall term size)
-# Remove code to check existance of processes using PID's
-# Remove code to fork when opening xterm
-#   - both of these can be removed due to checking if pipes exist instead
-#   - should also speed code up as not forking as often any more
+# Revision 2.14  2004/05/04 16:10:25  duncan_ferguson
+# Rework of man page to include new functionality
+# Removal of redundant/unused code
+# Removal of comments out code no longer required
+# Added more debug code
+# General code tidyup
 #
 # Revision 2.12  2004/05/04 09:32:18  duncan_ferguson
 # Use -x in ssh connection string to disabled X forwarding
