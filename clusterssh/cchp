@@ -1,0 +1,163 @@
+#!/usr/bin/perl -w
+# $Id$
+#
+# Script:
+#   $RCSfile$
+#
+# Usage:
+#   cluster console helper program - only to be called by cssh/crsh
+#
+# Options:
+#   None of any interest
+#
+# Parameters:
+#   None of any interest
+#
+# Purpose:
+#   Smaller, quicker, program fo starting up sub-xterm childern
+#
+# Processing:
+#
+# Dependencies:
+#   Only to be called by cssh/crsh (did I mention that already?)
+#   See cssh/crsh for others
+#
+# Limitations:
+#
+# Enhancements:
+#
+# License:
+#   This code is distributed under the terms of the GPL (GNU General Pulic
+#   License).
+#
+#   Copyright (C)
+#
+#   This program is free software; you can redistribute it and/or modify it
+#   under the terms of the GNU General Public License as published by the
+#   Free Software Foundation; either version 2 of the License, or any later
+#   version.
+#
+#   This program is distributed in the hope that it will be useful, but
+#   WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+#   Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License along
+#   with this program; if not, write to the Free Software Foundation, Inc.,
+#   59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+#   Please see the full text of the licenses is in the file LICENSE and also at
+#     http://www.opensource.org/licenses/gpl-license.php
+#
+############################################################################
+# Change log located at file end
+############################################################################
+my $VERSION='$Revision$ ($Date$)';
+# Now tidy it up, but in such as way cvs doesn't kill the tidy up stuff
+$VERSION=~s/\$Revision: //;
+$VERSION=~s/\$Date: //;
+$VERSION=~s/ \$//g;
+
+use strict;
+use warnings;
+
+use Fcntl;
+
+use Getopt::Std;
+my %options;
+
+getopts('x:y:z:', \%options);
+
+unless ($ENV{TERM}) {
+	$ENV{TERM} = 'xterm';
+}
+
+$SIG{CHLD}='IGNORE';
+
+if($options{x})
+{
+	if( ! -p $options{x} || !  $options{y} || ! $options{z})
+	{
+		die ("cchp should only be called via cssh/crsh\n");
+	}
+
+	my $TIOCSTI=$options{y};
+	my $KILLOFF=$options{z};
+
+	my $pid=fork();
+
+	if(!defined($pid))
+	{
+		die("Could not fork: $!");
+	}
+
+	if($pid==0)
+	{
+		# this is the child
+		exec(@ARGV) || die("Could not exec within x: $!");
+	} else {
+		# this is the parent
+
+		use IO::Select;
+		use IO::Handle;
+
+		my $READER;
+
+		# open pipe for reading from
+		if(!sysopen($READER, $options{x}, O_RDONLY))
+		{
+			unlink($options{x});
+			die ("Cannot open pipe for reading: $!");
+		}
+
+		# Don't allow the read to stop the prog
+		$READER->blocking(0);
+
+		my $reader=new IO::Select($READER) or die("$!");;
+
+		my @ready;
+
+		OUTTER:
+		{
+			while()
+			{
+				@ready = $reader->can_read(0.25);
+
+				foreach my $fh (@ready)
+				{
+					if($fh == $READER)
+					{
+						while(read($READER,my $char,1))
+						{
+							last OUTTER if(ord($char) == $KILLOFF);
+
+							last if(! -p $options{x});
+
+							unless(ioctl(STDIN,$TIOCSTI,$char))
+							{
+								print "failed to write to client\n";
+								last OUTTER;
+							}
+						}
+					}
+				}
+			# if we can no longer write to client, it is gone
+			last unless(kill(0,$pid));
+			}
+		}
+		kill(9,$pid) if (kill(0,$pid));
+		unlink($options{x}) if(-p $options{x});
+		exit;
+	}
+	die("Weird error - should never get here: $!");
+} else {
+	die ("cchp should only be called via cssh/crsh\n");
+}
+
+
+############################################################################
+# $Log$
+# Revision 1.1  2004/04/20 12:44:29  duncan_ferguson
+# Code split off from cssh version 2.7 in attempt to speed up cx's
+#
+############################################################################
