@@ -69,9 +69,20 @@ TAG_VERSION="$(echo $TAG-$MAJOR-$MINOR${BETA:+-$BETA})"
 
 UPDATEMADE=
 
+echo ClusterSSH $MAJOR.$MINOR $BETA is now available
+echo
+echo A new release of ClusterSSH is now available.  
+echo 
 echo Release Name: $MAJOR.$MINOR $BETA
 echo Release File: ${TAG}_${MAJOR}.${MINOR}${BETA:+_$BETA}.tar.gz
 echo
+echo Please download it from:
+echo "  http://prdownloads.sf.net/clusterssh/${TAG}_${MAJOR}.${MINOR}${BETA:+_$BETA}.tar.gz?download"
+echo
+echo -e "  Duncs"
+echo
+echo "============================"
+echo "List of changes:"
 
 for F in $FILES ; do
 	cvs log -d "$VERDATE<"  $F | tail +13 > /tmp/$$.cvs
@@ -79,8 +90,10 @@ for F in $FILES ; do
 	#cat /tmp/$$.cvs
 	#echo "end check"
 	if [ -s /tmp/$$.cvs ]; then
+		echo "============================"
 		echo "File: $F"
-		cat /tmp/$$.cvs | sed 's/^=*$/ /'
+		echo "----------------------------"
+		cat /tmp/$$.cvs | sed -e 's/^=*$/ /' -e '/^$/d'
 		UPDATEMADE=1
 	fi
 done
@@ -91,32 +104,24 @@ if [ -n "$UPDATEMADE"  ]; then
 
 	# create the distribution tar file
 	# NOTE: files are stored in the version file
-	TARFILE="../../sourceforge/${TAG}_${MAJOR}.${MINOR}${BETA:+_$BETA}.tar"
-	tar cvf $TARFILE $FILES 1>/dev/null
-
-	gzip -f $TARFILE
+	TARFILE="../../sourceforge/${TAG}_${MAJOR}.${MINOR}${BETA:+_$BETA}.tar.gz"
+	tar czvf $TARFILE $FILES 1>/dev/null
 
 	# Now recreate version file
 	sed "s/^TAG_VERSION=.*/TAG_VERSION='$TAG $MAJOR $MINOR $BETA'/" version > version.new
 
-	mv version.new version
-	cvs commit -m "New release cut `date`" version
+	echo "============================"
+	#mv version.new version
+	#cvs commit -m "New release cut `date`" version
+	#cvs tag ${TAG}-${MAJOR}-${MINOR}${BETA:+-$BETA}
 
 	# Now upload to sf.net
-	echo Uploading to sf.net now
-	ncftpput upload.sourceforge.net incoming ${TARFILE}.gz
-	#ncftp <<-!EOF!
-		#o upload.sourceforge.net
-		#bin
-		#cd incoming
-		#ls
-		#close
-	#!EOF!
-
+	#echo Uploading to sf.net now
+	#ncftpput upload.sourceforge.net incoming ${TARFILE}
 fi
 
 # create html docs for uploading into documentation manager on sf.net
-pod2html cssh | sed \
+pod2html cssh 2>/dev/null | sed \
 	-e "s/[\`']./\"/g" \
 	-e "s/^crsh /<BR>crsh/" \
 	> ../../sourceforge/cssh_man.html
@@ -126,6 +131,12 @@ rm -rf pod2htm*
 
 ############################################################################
 # $Log$
+# Revision 1.4  2004/06/02 11:21:02  duncan_ferguson
+# Amend output for easier posting of new release info in various places
+# Get all change information across all relevant files
+# use ncftpput to send to uploads on sf.net
+# Generate POD pages and man pages as necessary
+#
 # Revision 1.3  2004/05/07 11:03:04  duncan_ferguson
 # Remove temp files from man/html pod generation
 #
