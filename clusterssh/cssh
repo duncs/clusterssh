@@ -960,6 +960,13 @@ sub setup_OS()
 		return;
 	}
 
+	# predefined for Mac OS X
+	if($Config{archname}=~/^-darwin-thread-multi-/)
+	{
+		$TIOCSTI=0x80017472;
+		return;
+	}
+
 	# not predefined, so attempt to work it out from the "normal" source
 	if(! eval { require "sys/ioctl.ph" } )
 	{
@@ -1359,6 +1366,9 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.28  2004/08/19 07:57:47  duncan_ferguson
+# Added TIOCSTI for Mac OS X (Chris Trahman)
+#
 # Revision 2.27  2004/08/13 15:13:29  duncan_ferguson
 # Fix bug introduced with syswrite fix in 2.24 that stopped arrow keys working
 #
