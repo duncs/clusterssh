@@ -86,7 +86,10 @@ use Term::Cap;
 $|=1;
 
 # autoreap our zombies
-$SIG{CHLD}='IGNORE';
+#
+# 20040603 <tmancill@debian.org> - this is causing problems for
+# the system() call, which returns -1 if this signal is masked
+#$SIG{CHLD}='IGNORE';
 
 # This section "up top" so unnecessary code isn't run if starting xterms
 use Getopt::Std; # command line parsing, incase someone uses -v or -h
@@ -131,6 +134,11 @@ $user_config{'default.term_size'}="80x24";
 $user_config{'default.term_font'}="6x13";
 $user_config{'default.always_tile'}="never";
 $user_config{'default.cchp_path'}="$FindBin::Bin";
+$user_config{'default.cchp_sleep'}="0.1";
+#$user_config{'default.reserve_top'}="0";
+$user_config{'default.reserve_bottom'}="0";
+#$user_config{'default.reserve_left'}="0";
+$user_config{'default.reserve_right'}="0";
 
 # Now read in the system config file
 Config::Simple->import_from('/etc/csshrc', \%user_config);
@@ -210,7 +218,7 @@ Where:
   -n             - Show number of connection in control window title
   -l             - default login ID for ssh connections
   -t "termopts"  - start terminals with options in addition to 
-                   "-ls -sb -sl 1024"
+                   terminal_options in csshrc (default: "-ls -sb -sl 1024")
   -g             - attempts to tile terminal windows on the screen
   <server name>  - list of servers to connect to
   <tag name>     - list of servers from /etc/clusters using name as a tag 
@@ -388,8 +396,12 @@ delete $options{g} if(@cmdargs < 1);
 if($options{g})
 {
 	# Now get the screen height for tiling windows later
-	my $screen_height=$mw->screenheight - $user_config{'default.titlebar_size'};
+	my $screen_height=$mw->screenheight;
 	my $screen_width=$mw->screenwidth;
+
+	# carve up the screen a bit based on how much to reserve
+	$screen_height -= $user_config{'default.titlebar_size'} + $user_config{'default.reserve_bottom'};
+	$screen_width -= $user_config{'default.reserve_right'};
 
 	my $finfo = `xlsfonts -ll -fn $user_config{'default.term_font'}`;
 	my $fwidth = ($finfo =~ /^\s*max\s+(\d+)/m)[0];
@@ -535,7 +547,7 @@ sub open_windows
 		# Start up the terminal ourselves so the pipes are in place
 		# NOTE - ssh -x to disable forwarding of X11 sessions due to problem
 		# on redhat systems
-		system("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $place -title '$method:$serv' -e $^X $user_config{'default.cchp_path'}/cchp $debug -x $servers{$serv_name}[2] -y $TIOCSTI -z $KILLOFF $path_method -p $port $user_config{'default.cx_args'} $serv &") or warn("Could not exec session to $serv: $! ");
+		system("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $place -title '$method:$serv' -e $^X $user_config{'default.cchp_path'}/cchp $debug -s $user_config{'default.cchp_sleep'} -x $servers{$serv_name}[2] -y $TIOCSTI -z $KILLOFF $path_method -p $port $user_config{'default.cx_args'} $serv &") == 0 or warn("Could not exec session to $serv: $! ");
 
 		if(!sysopen($servers{$serv_name}[3], $servers{$serv_name}[2], O_WRONLY))
 		{
@@ -1190,6 +1202,17 @@ Default height of title bars on windows when tiling.  Can be set to 0 if your
 window manager does not use them - allows correct spacing of windows on 
 screen when using -g
 
+=item reserve_bottom = 0 
+
+Number of pixels from the bottom of the screen to reserve when calculating
+screen geometry for tiling.  Setting this to something like 50 will 
+help keep cssh from positioning windows over your window manager's menu bar
+if it draws one at the bottom of the screen.
+
+=item reserve_right = 0 
+
+Same as "reserve_bottom," but for the right-hand side of the screen.
+
 =item always_tile = never
 
 If set to anything other than "never" always sets -g switch (to tile windows)
@@ -1236,6 +1259,17 @@ Default key sequence to send cssh client names to client
 
 NOTE: The key shortcut modifiers must be in the form "Control", "Alt", or 
 "Shift", i.e. with the first letter capitalised and the rest lower case.
+
+=item cchp_sleep = 0.1
+
+Value (in seconds) that cchp should sleep in its select() loop.  Decimal
+values are allowed.  The default is 0.1 seconds.
+
+Smaller values will increase responsiveness at the cost of additional CPU
+utilization on the system running cssh.  Increase this parameter - for example
+to something like 0.25 - if you are invoking large numbers of windows and 
+notice a general performance degredation on your workstation.  Decrease this
+value to prevent choppiness in sending keystrokes to the target cssh windows.
 
 =back
 
@@ -1366,6 +1400,9 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.29  2004/08/26 07:49:57  duncan_ferguson
+# Add reserve_bottom, reserve_right and cchp_sleep options
+#
 # Revision 2.28  2004/08/19 07:57:47  duncan_ferguson
 # Added TIOCSTI for Mac OS X (Chris Trahman)
 #
