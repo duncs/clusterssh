@@ -32,13 +32,16 @@
 ############################################################################
 
 # Version release information
-TAG_VERSION='clusterssh 2 16 Beta'
+TAG_VERSION='clusterssh 2 17 '
 
 # Files to be included within any releases made
 FILES="cssh crsh cchp LICENSE README"
 
 ############################################################################
 # $Log$
+# Revision 1.7  2004/10/19 10:39:27  duncan_ferguson
+# New release cut Tue Oct 19 11:38:51 BST 2004
+#
 # Revision 1.6  2004/08/16 13:10:16  duncan_ferguson
 # Added README into distribution
 #
