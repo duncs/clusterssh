@@ -33,11 +33,12 @@
 ############################################################################
 # History moved to bottom of file
 ############################################################################
-my $VERSION='$Revision$ ($Date$)';
-# Now tidy it up, but in such as way cvs doesn't kill the tidy up stuff
-$VERSION=~s/^\$Revision: //;
-$VERSION=~s/^\$Date: //;
-$VERSION=~s/ \$//g;
+VERSION=$(
+	echo '$Revision$ ($Date$)' | \
+	sed -e 's/$Revision: //' \
+		-e 's/$Date: //' \
+		-e 's/ \$//g'
+)
 
 SCRIPT=${0}
 SCRIPTDIR=$(cd ${SCRIPT%/*} ; pwd)
@@ -181,7 +182,7 @@ mv $TMP/Prototype $TMP/Prototype.old
 rm $TMP/Prototype.old
 
 # get the version from cssh and tidy it up a little so we can use it later
-CSSH_VERSION=$(grep "::VERSION=" $TMP/$PKGNM/bin/cssh)
+CSSH_VERSION=$($SCRIPTDIR/cssh -v)
 CSSH_VERSION=$(echo $CSSH_VERSION | sed -e 's/.*="//' -e 's/".*//')
 
 # now get today's date for the package creation date
@@ -238,6 +239,9 @@ rm -rf $TMP
 # 1.6    27/01/04 D Ferguson      Moved to sf.net cvs repository
 #
 # $Log$
+# Revision 1.7  2004/01/28 11:28:37  duncan_ferguson
+# fix bugs introduced by cvs move
+#
 # Revision 1.6  2004/01/28 10:45:33  duncan_ferguson
 # Moved to sf.net cvs
 #
