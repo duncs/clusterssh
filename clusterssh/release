@@ -1,0 +1,126 @@
+###!/bin/ksh
+# $Id$
+#
+# Script:
+#   $RCSfile$
+#
+# Usage:
+#   from system able to access sf.net
+#
+# Options:
+#
+# Parameters:
+#   -v  (O)  Provide version information
+#
+# Purpose:
+#   Upload new version of cssh to sf.net
+#
+# Processing:
+#
+# Dependencies:
+#   ncftp
+#   access to cvs on sf.net
+#   perl for working out age of files
+#
+# Limitations:
+#
+# Enhancements:
+#
+############################################################################
+# Change log located at file end
+############################################################################
+VERSION=$(
+	echo '$Revision$ ($Date$)' | \
+	sed -e 's/$Revision: //' \
+			-e 's/$Date: //' \
+			-e 's/ \$//g'
+)
+
+SCRIPT=${0}
+SCRIPTDIR=$(cd ${SCRIPT%/*} 1>/dev/null ; pwd)
+SCRIPTNM=${0##*/}
+
+# source in the tag version file
+. $SCRIPTDIR/version
+
+#echo TAG_VERSION=$TAG_VERSION
+
+cd $SCRIPTDIR
+
+# Now, get the tag info from the previous public version
+# Have to do it this way as bash read doesnt work under cygwin
+set -- $TAG_VERSION 
+TAG=$1 ; MAJOR=$2 ; MINOR=$3 ; BETA=$4
+#echo TAG=$TAG
+#echo MAJOR=$MAJOR
+#echo MINOR=$MINOR
+#echo BETA=$BETA
+#export MINOR
+
+MINOR=$(awk "BEGIN {print $MINOR + 1}" < /dev/null)
+
+VERDATE=$(perl -e 'print scalar localtime((stat("version"))[9]),$/')
+
+TAG_VERSION="$(echo $TAG-$MAJOR-$MINOR${BETA:+-$BETA})"
+
+#echo TAG_VERSION=$TAG_VERSION
+
+#echo VERDATE=$VERDATE
+
+UPDATEMADE=
+
+echo Release Name: $MAJOR.$MINOR $BETA
+echo Release File: ${TAG}_${MAJOR}.${MINOR}${BETA:+_$BETA}.tar.gz
+echo
+
+for F in $FILES ; do
+	cvs log -d "$VERDATE<"  $F | tail +13 > /tmp/$$.cvs
+	#echo "check: $F"
+	#cat /tmp/$$.cvs
+	#echo "end check"
+	if [ -s /tmp/$$.cvs ]; then
+		echo "File: $F"
+		cat /tmp/$$.cvs | sed 's/^=*$/ /'
+		UPDATEMADE=1
+	fi
+done
+rm -f /tmp/$$.cvs
+
+# Only make this udpate if files have changed
+if [ -n "$UPDATEMADE"  ]; then
+
+	# create the distribution tar file
+	# NOTE: files are stored in the version file
+	TARFILE="../../sourceforge/${TAG}_${MAJOR}.${MINOR}${BETA:+_$BETA}.tar"
+	tar cvf $TARFILE $FILES 1>/dev/null
+
+	gzip -f $TARFILE
+
+	# Now recreate version file
+	sed "s/^TAG_VERSION=.*/TAG_VERSION='$TAG $MAJOR $MINOR $BETA'/" version > version.new
+
+	mv version.new version
+	cvs commit -m "New release cut `date`" version
+
+	# Now upload to sf.net
+	echo Uploading to sf.net now
+	ncftpput upload.sourceforge.net incoming ${TARFILE}.gz
+	#ncftp <<-!EOF!
+		#o upload.sourceforge.net
+		#bin
+		#cd incoming
+		#ls
+		#close
+	#!EOF!
+
+fi
+
+############################################################################
+# $Log$
+# Revision 1.1  2004/05/04 11:55:20  duncan_ferguson
+# New automated release mechanism to replace some functionality in install
+#
+# Revision 1.1.1.1  2004/04/21 12:44:51  fergusod
+# Imported, initial version
+#
+############################################################################
