@@ -1,5 +1,4 @@
-#!/usr/local/bin/perl -w
-# #!/usr/bin/suidperl -w # USE IF ON LINUX
+#!/usr/local/bin/perl -w 
 #
 # $Id$
 #
@@ -10,6 +9,7 @@
 #   cluster administrator console
 #
 # Options:
+#  See help text below
 #
 # Parameters:
 #   servers names to open cx's to
@@ -20,13 +20,14 @@
 #
 # Processing:
 #
-#   Note: current we "xterm->start ssh host" rather than "ssh host->start xterm"
+#   Note: we "xterm->start ssh host" rather than "ssh host->start xterm"
 #   because this allows us to easily use ssh to a number of different unices.
 #   Otherwise, we have to work out target host type and work out where xterm is
 #
 # Dependencies:
 #   perl
 #   Tk
+#   Config::Simple
 #
 # Limitations:
 #
@@ -40,8 +41,8 @@
 #
 #   This program is free software; you can redistribute it and/or modify it 
 #   under the terms of the GNU General Public License as published by the 
-#   Free Software Foundation; either version 2 of the License, or (at your 
-#   option) any later version.
+#   Free Software Foundation; either version 2 of the License, or any later
+#   version.
 #
 #   This program is distributed in the hope that it will be useful, but 
 #   WITHOUT ANY WARRANTY; without even the implied warranty of 
@@ -71,21 +72,122 @@ use 5.006_001;
 use Tk 800.022;
 use Tk ':variables';
 use Config::Simple 4.55;
-use English; # so we can use $UID and $EUID instead of $< and $>
+##use English; # so we can use $UID and $EUID instead of $< and $>
 require Tk::Dialog; # for the about box
 require Tk::LabEntry; # for the add host widget
-use IO::Handle; # for untaint on the ps listing
+##use IO::Handle; # for untaint on the ps listing
 use File::Basename; # for cmdline version and help output
 use Sys::Hostname;
+use File::Temp qw/:POSIX/;
+use POSIX qw/ mkfifo /;
+use Fcntl;
+use FindBin;
+
+# set autoflush so we print to client correctly
+$|=1;
+
+# autoreap our zombies
+$SIG{CHLD}='IGNORE';
+
+# This section "up top" so unnecessary code isn't run if starting xterms
+use Getopt::Std; # command line parsing, incase someone uses -v or -h
+my %options;
+
+# NOTE - option x is hidden and should never be called directly
+getopts('x:hvncst:T:', \%options);
+
+my $TIOCSTI = "";
+
+# Now set up all of those vars
+sub setup_OS(); # make sure func is defined so we can use it straight away
+setup_OS(); # and now call it
+
+sub KILLOFF { return 0xEE }; # quit signal to send to xterm clients 
+
+# This is the process by which we get around requiring setuid while also
+# only running from one script
+if($options{x})
+{
+	if( ! -p $options{x})
+	{
+		die ("cssh called incorrectly\n");
+	}
+
+	my $pid=fork();
+
+	if(!defined($pid))
+	{
+		die("Could not fork: $!");
+	}
+
+	if($pid==0)
+	{
+		# this is the child
+		exec(@ARGV) || die("Could not exec within x: $!");
+	} else {
+		# this is the parent
+
+		use IO::Select;
+		use IO::Handle;
+
+		my $READER;
+
+		# open pipe for reading from
+		if(!sysopen($READER, $options{x}, O_RDONLY))
+		{
+			unlink($options{x});
+			die ("Cannot open pipe for reading: $!");
+		}
+
+		# Don't allow the read to stop the prog
+		$READER->blocking(0);
+
+		my $reader=new IO::Select($READER) or die("$!");;
+
+		my @ready;
+
+		OUTTER:
+		{
+			while()
+			{
+				@ready = $reader->can_read(0.25);
+			
+				foreach my $fh (@ready)
+				{
+					if($fh == $READER)
+					{
+						while(read($READER,my $char,1))
+						{
+							last OUTTER if(ord($char) == KILLOFF);
+
+							last if(! -p $options{x});
+							
+							unless(ioctl(STDIN,$TIOCSTI,$char))
+							{
+								print "failed to write to client\n";
+								last OUTTER;
+							}
+						}
+					}
+				}
+				# if we can no longer write to client, it is gone
+				last unless(kill(0,$pid));
+			}
+		}
+		kill(9,$pid) if (kill(0,$pid));
+		unlink($options{x}) if(-p $options{x});
+		exit;
+	}
+	die("Weird error - should never get here: $!");
+}
 
 # Set up some defaults
 my %user_config;
 $user_config{'default.terminal'}="xterm";
 $user_config{'default.terminal_options'}="-ls -sb -sl 1024";
 $user_config{'default.cx_path'}="/usr/bin";
-$user_config{'default.timeout'}=20;
-$user_config{'default.key_quit'}="Alt-x";
-$user_config{'default.key_addhost'}="Alt-a";
+$user_config{'default.key_quit'}="Control-q";
+$user_config{'default.key_addhost'}="Control-plus";
 $user_config{'default.key_clientname'}="Alt-n";
 $user_config{'default.variables'}="no";
 $user_config{'default.title_number'}="no";
@@ -96,40 +198,25 @@ Config::Simple->import_from('/etc/csshrc', \%user_config);
 # Now overwrite that with any user defined ones
 Config::Simple->import_from($ENV{HOME}."/.csshrc", \%user_config);
 
-my $TIOCSTI = "";
-
 # predfine funcs as necessary
 sub send_character_to_server;
 
-# Now set up all of those vars
-sub setup_OS(); # make sure func is defined so we can use it straight away
-setup_OS(); # and now call it
-
-# if we do not have any privs, don't bother doing anything after this point
-if ($UID == $EUID && $UID != 0)
-{
-	die("FATAL: lost setuid priviliges.\n",
-	    "Please run 'chown root:bin $0 ; chmod 4755 $0' as root to fix\n");
-}
-
-# has to contain process tree listing
-my %processes;
-
-$0=$ENV{'_'}; # correct program name, required as we are SUID script
+$0=$ENV{'_'}; # correct program name
 
 # We can do something funky here - if we are called using a name other than
 # 'cssh', drop the first letter and then use that instead, i.e. crsh uses
 # rsh not ssh...
 my $my_name=basename($0);
-my $method=$my_name;
-$method =~ s/^.//;
 
 # now, untaint it 
-if($method =~ /^([-\@\w.]+)$/) {
-	$method=$1;
+if($my_name =~ /^([-\@\w.]+)$/) {
+	$my_name=$1;
 } else {
-	die "FATAL: program name used is insecure ($method)\n";
+	die "FATAL: program name used is insecure ($my_name)\n";
 }
+
+my $method=$my_name;
+$method =~ s/^.//;
 
 if($method !~ /^[rs]sh$/) 
 {
@@ -137,10 +224,6 @@ if($method !~ /^[rs]sh$/)
 }
 
 my $path_method=$user_config{'default.cx_path'}."/".$method;
-
-use Getopt::Std; # command line parsing, incase someone uses -v or -h
-my %options;
-getopts('hvncst:T:', \%options);
 
 if($options{v})
 {
@@ -281,12 +364,12 @@ foreach (reverse(@cmdargs))
 # format of %servers is:
 # [0] active
 # [1] process id
-# [2] device
-# [3] file handle
+# [2] pipe file name
+# [3] pipe file handle
 my %servers;
 
 # handle for main window
-my $mw=MainWindow->new();
+my $mw=MainWindow->new(-title=>$control_title);
 
 open_windows(@cmdargs);
 
@@ -325,141 +408,49 @@ sub open_windows
 
 		$servers{$serv_name}[0]=1; # mark terminal child process as active
 
+		# Sort out a unique temp name for our pipe - do before fork so both
+		# client and parent have access to it
+		$servers{$serv_name}[2]=tmpnam();
+
+		# Now we create the fifo pipe file
+		mkfifo($servers{$serv_name}[2], 0600) or die("Cannot create pipe: $!");
+
 		$servers{$serv_name}[1]=fork();
+
 
 		if(!defined($servers{$serv_name}[1]))
 		{
-			# unset => exec failed for whatever reason
+			# unset => fork failed for whatever reason
 			warn "Cannot fork: $!";
 			exit_prog();
 		} elsif($servers{$serv_name}[1] == 0) {
 			# child => fork returned 0
-			# make sure we drop UID/EUID privs here for the child
-			$EUID=$UID;
-			$EGID=$GID;
-
-			exec("$user_config{'default.terminal'} $user_config{'default.terminal_options'} -title '$method:$serv' -e $path_method $serv") or warn("Could not exec session to $serv: $! ");
+			
+			# Start up the terminal via ourselves so the pipes are in place
+			exec("$user_config{'default.terminal'} $user_config{'default.terminal_options'} -title '$method:$serv' -e $FindBin::Bin/$FindBin::Script -x $servers{$serv_name}[2] $path_method $serv") or warn("Could not exec session to $serv: $! ");
 		} else {
 			# parent => fork return process id of child
-			# nothing required here
-		}
-	}
 
-	# now we have all the terminals open, get all the correct process id's.
-	# Try to watch the process tree and continue when all sessions have
-	# connected
-
-	{
-		my $total=$#_+1;
-		my $count=0;
-		my $end_time=time()+ $user_config{'default.timeout'}; # now plus length of timeout value (seconds)
-
-		print "Waiting for terminal session connections\n";
-
-		# set autoflush so we can correctly overwrite the status line
-		$|=1;
-
-		# while we havnt connected to everything AND we havnt timed out
-		while($count < $total && time() < $end_time)
-		{
-			my $timeout=$end_time-time();
-			print "Connection status: $count/$total (timeout:$timeout seconds)    \r";
-			sleep 1; # sleep long enough for connection status' to change
-
-			# get current process table
-			grab_process_list();
-
-			# now, for each unconnection session
-			foreach my $serv_name (keys(%servers))
+			if(!sysopen($servers{$serv_name}[3], $servers{$serv_name}[2], O_WRONLY))
 			{
-				next if($servers{$serv_name}[3]); # next server if FD open
-
-				my $serv;
-				# strip off the random element of the key
-				($serv=$serv_name)=~s/__.*//;
-
-				# get the descendant of the forked process
-				my ($child,$tty)=get_descendant_tty($serv, $servers{$serv_name}[1]);
-
-				# if we have a tty returned, open it up
-				if($child)
-				{
-					if($child eq "dead")
-					{
-						# we have a dead session - remove it from the servers hash
-						# don't delete it totally else we cannot error on it shortly, 
-						# but make sure the filedescriptor field is empty
-						delete($servers{$serv_name}[3]);
-						change_title_number();
-					} else {
-						$servers{$serv_name}[1]=$child;
-						$servers{$serv_name}[2]=$tty;
-
-						if(!open($servers{$serv_name}[3], '>', "/dev/$servers{$serv_name}[2]"))
-						{
-							warn "failed to open /dev/$servers{$serv_name}[2]: $!";
-							exit_prog();
-						}
-					}
-					$count++;
-				}
-				# no tty, continue the loop
+				unlink($servers{$serv_name}[2]);
+				die ("Cannot open pipe for writing: $!");
 			}
-		}
 
-		#reset autoflush
-		$|=0;
-
-		# produce a clean line after the \r stuff and clean up line
-		print "Finished connecting                                              \n";
-		sleep 1; # give chance to pick up the fail connection below
-
-		# if anything is left unconnected, flag the problem and continue
-		foreach my $serv_name (keys(%servers))
-		{
-			my $serv;
-			# strip off the random element of the key
-			($serv=$serv_name)=~s/__.*//;
-
-			if(!$servers{$serv_name}[3])
+			if($options{s})
 			{
-				warn "WARNING: Failed to connect to $serv\n";
-				delete($servers{$serv_name});
-				change_title_number();
-			} else {
-				if($options{s})
-				{
-					sleep 1;
-					for (split(//, "CSSH_CLIENT=".$serv.chr(13)))
-					{
-						send_character_to_server($serv_name,$_);
-					}
-					for (split(//, "CSSH_SERVER=".hostname.chr(13)))
-					{
-						send_character_to_server($serv_name,$_);
-					}
-					for (split(//, "export CSSH_CLIENT CSSH_SERVER".chr(13)))
-					{
-						send_character_to_server($serv_name,$_);
-					}
-				} elsif($options{c})
-				{
-					sleep 1;
-					for (split(//, "setenv CSSH_CLIENT=".$serv.chr(13)))
-					{
-						send_character_to_server($serv_name,$_);
-					}
-					for (split(//, "setenv CSSH_SERVER=".hostname.chr(13)))
-					{
-						send_character_to_server($serv_name,$_);
-					}
-				}
+				syswrite($servers{$serv_name}[3], "CSSH_CLIENT=".$serv.chr(13));
+				syswrite($servers{$serv_name}[3], "CSSH_SERVER=".hostname.chr(13));
+				syswrite($servers{$serv_name}[3], "export CSSH_CLIENT CSSH_SERVER".chr(13));
+			} elsif($options{c}) {
+				syswrite($servers{$serv_name}[3], "setenv CSSH_CLIENT=".$serv.chr(13));
+				syswrite($servers{$serv_name}[3], "setenv CSSH_SERVER=".hostname.chr(13));
 			}
 		}
 	}
-	change_title_number();
 }
 
+change_title_number();
 
 $mw->configure(-menu=>my $mw_mb=$mw->Menu);
 my $file_menu = $mw_mb->cascade(
@@ -506,11 +497,11 @@ $add_host_win->add('LabEntry',
 
 # Set up key shortcuts
 
-# exit program - Ctrl-x
+# exit program key shortcut
 $mw->bind($mw, "<$user_config{'default.key_quit'}>" => \&exit_prog);
 $mw_entry->bind("Tk::Text", "<$user_config{'default.key_quit'}>" => \&exit_prog);
 
-# add host - Ctrl-a
+# add host key shortcut
 $mw->bind($mw, "<$user_config{'default.key_addhost'}>" => \&add_host_win_entry);
 $mw_entry->bind("Tk::Text", "<$user_config{'default.key_addhost'}>" => \&add_host_win_entry);
 
@@ -610,27 +601,42 @@ $mw->bind('<Key>' => sub {
 	$entrytext="";
 });
 
+sub delete_host
+{
+	my $serv_name=shift;
+	my $serv=$serv_name;
+	$serv=~ s/__.*//;
+
+	# grab a link to the hosts menu so we can work on it
+	my $menu=$mw_mb->entrycget('Hosts', -menu);
+
+	# now remove the menu entry
+	$menu->delete($serv);
+
+	if($servers{$serv_name})
+	{
+		unlink($servers{$serv_name}[2]);
+		delete($servers{$serv_name});
+	}
+	change_title_number();
+}
+
+
 sub send_character_to_server
 {
 	#[0]=server name
 	#[1]=character
-	my $serv=$_[0];
+	my $serv_name=$_[0];
 	my $char=$_[1];
 
-	if($servers{$serv}[0])
+	if($servers{$serv_name}[0])
 	{
-		# attempt to write; if fails remove from hash
-		unless(ioctl($servers{$serv}[3], $TIOCSTI, $char))
+		if(-p $servers{$serv_name}[2])
 		{
-			warn("ioctl failed on",$servers{$serv}[3],"\n");
-			# grab a link to the hosts menu so we can work on it
-			my $menu=$mw_mb->entrycget('Hosts', -menu);
-			# now remove the menu entry
-			$menu->delete($serv);
-
-			# delete from hash
-			delete($servers{$serv});
-			change_title_number();
+			# send the characters unbuffered via pipe
+			syswrite($servers{$serv_name}[3], $char);
+		} else {
+			delete_host($serv_name);
 		}
 	}
 }
@@ -652,18 +658,7 @@ $mw->repeat(500, sub{
 	{
 		unless (checkProcID($servers{$_}[1]))
 		{
-			my $serv=$_;
-			$serv=~ s/__.*//;
-			# grab a link to the hosts menu so we can work on it
-			my $menu=$mw_mb->entrycget('Hosts', -menu);
-			# now remove the menu entry - stick in an eval to catch
-			# and ignore errors if menu entry wasnt created already
-			eval {
-				$menu->delete($serv) if ($menu->index($serv));
-			};
-			# delete from hash
-			delete($servers{$_});
-			change_title_number();
+			delete_host($_);
 		}
 	}
 
@@ -672,26 +667,19 @@ $mw->repeat(500, sub{
 	$entrytext="";
 });
 
-# format of %servers is:
-# [0] active
-# [1] process id
-# [2] device
-# [3] file descriptor
-
 # Do this neatly...
 sub exit_prog()
 {
 	foreach (keys(%servers))
 	{
-		#print "Closing $_ process $servers{$_}[1]\n";
-		# close the file descriptor
-		close($servers{$_}[3]) if($servers{$_}[3]);
-
-		# kill the process we have
-		kill(9, $servers{$_}[1]);
-
-		# delete it from the array
-		delete($servers{$_});
+		if($servers{$_}[0])
+		{
+			if(-p $servers{$_}[2])
+			{
+				# send the children die signal - unused ASCII char
+				syswrite($servers{$_}[3], chr(KILLOFF));
+			}
+		}
 	}
 
 	# and formally exit the program
@@ -706,7 +694,6 @@ sub mw_mb_items
 {
 	[
 		[ 'cascade', "File", -tearoff, 0, -menuitems, mw_mb_file_items ],
-	#	[ 'cascade', "Hosts", -menuitems, mw_mb_hosts_items  ],
 		[ 'cascade', "Hosts", -tearoff, 1 ],
 		[ 'cascade', "Help", -tearoff, 0, -menuitems, mw_mb_help_items ],
 	]
@@ -719,9 +706,8 @@ sub mw_mb_items
 sub mw_mb_file_items
 {
 	[
-			#[ 'command', "Exit", -command => \&exit ],
 			[ 'command', "Exit", -command => \&exit_prog, -accelerator => "$user_config{'default.key_quit'}" ],
-			#[ 'command', "printhash", -command => \&printhash ],
+		#	[ 'command', "printhash", -command => \&printhash ],
 	]
 }
 ###
@@ -780,27 +766,11 @@ my $wm_mb_help_about=$mw->Dialog(
 ###
 
 ###
-# Help=>To Do dialogue box
-###
-my $wm_mb_help_todo=$mw->Dialog(
-	-popover      => $mw,
-	-overanchor   => "c",
-	-popanchor    => "c",
-	-font         => 
-		[ -family => "interface system",
-			-size   => 8 ],
-	-text => 
-					 "\n",
-);
-###
-
-###
 # Help menu items
 ###
 sub mw_mb_help_items
 {
 	[
-		#[ 'command', "To Do", -command=> sub { $wm_mb_help_todo->Show } ],
 		[ 'command', "About", -command=> sub { $wm_mb_help_about->Show } ],
 	]
 }
@@ -830,12 +800,6 @@ MainLoop();
 # Make sure our exit routine gets called
 # NOTE: this func calls an explicit exit
 exit_prog();
-
-# func to check if a process is still around and functioning
-sub checkProcID
-{
-	return kill(0,$_[0]);
-}
 
 sub setup_OS()
 {
@@ -896,125 +860,12 @@ sub setup_OS()
 	exit 1;
 }
 
-# grab the process listing and store in a hash for easy access
-# stored in tree form where ppid is the key, value is any children OR
-# if end leaf node, the controlling tty, which is what we ultimately want
-# To be called every time we finish starting up any new windows
-# processes[0]=child list
-# processes[1]=tty
-# processes[2]=command
-sub grab_process_list()
+# func to check if a process is still around and functioning
+sub checkProcID
 {
-	%processes=(); # start fresh every time
-
-	for (`ps -eo pid,ppid,tty,args`)
-	{
-		# change all whitespace into 1 space char
-		s/\s+/ /;
-		# remove leading whitespace
-		s/^\s//;
-		# and remove the newline
-		chomp();
-		# now the split should work better...
-		my @line=split(/\s+/,$_,4);
-
-		my $pid=$line[0];
-		my $ppid=$line[1];
-		my $tty=$line[2];
-		my $comm=$line[3];
-
-		#print STDERR "Line:$_ pid:$pid ppid:$ppid tty:$tty comm:$comm\n";
-
-		# Set up child tty and command info for all processes
-		#print STDERR "Adding new child $pid ($pid $ppid $tty $comm)\n";
-		$processes{$pid}[1]=$tty;
-		$processes{$pid}[2]=$comm;
-
-		# if parent info doesnt exist, register it
-		if(!$processes{$ppid}[0])
-		{
-		#	print STDERR "Creating parent leaf $ppid ($pid $ppid $tty $comm)\n";
-			$processes{$ppid}[0]="$pid";
-		} else {
-			# else add to the existing entry
-		#	print STDERR "Adding $pid to parent leaf $ppid ($pid $ppid $tty $comm)\n";
-			$processes{$ppid}[0]="$processes{$ppid}[0] $pid";
-		}
-	} 
-
-	#foreach (keys(%processes))
-	#{
-		#print STDERR "process:$_\n";
-		#print STDERR "\tchildren:$processes{$_}[0]\n" if ($processes{$_}[0]);
-		#print STDERR "\ttty:$processes{$_}[1]\n" if ($processes{$_}[1]);
-		#print STDERR "\tcomm:$processes{$_}[2]\n" if ($processes{$_}[2]);
-	#}
+	return kill(0,$_[0]);
 }
 
-# given a process ID, get the "youngest descendant", i.e. the futher node
-# on this branch of the process tree, and return the process id and tty
-# processes[0]=child list
-# processes[1]=tty
-# processes[2]=command
-sub get_descendant_tty($$)
-{
-	my ($server,$parent)=@_;
-
-#	print STDERR "LOOKING FOR $parent\n";
-
-	if($processes{$parent})
-	{
-		if(!$processes{$parent}[2] && !$processes{$parent}[0])
-		{
-	#		print "Returning deadedness\n";
-			return ("dead", "dead");
-		}
-
-		my ($tty,$comm);
-
-		# while child of $parent exists, walk the tree
-		while(defined($processes{$parent}[0]))
-		{
-
-			#print STDERR "Looking for next\n";
-			#print STDERR "Found parent $parent child $processes{$parent}[0]\n";
-			$parent=$processes{$parent}[0];
-			$tty=$processes{$parent}[1];
-			$comm=$processes{$parent}[2];
-		}
-
-		#print STDERR "Now checking info\n";
-		#print STDERR "ancestor=$parent\n";
-		#print STDERR "tty=$tty\n";
-		#print STDERR "comm=$comm\n";
-
-		# got the tty info now, so return it
-		# Make sure we untaint both the process ID and the tty before returning it
-		if($parent && $parent=~ /^([-\@\w.]+)$/) 
-		{
-			$parent=$1;
-		} else {
-			warn "FATAL: child process id used is insecure ($parent)\n";
-			exit_prog();
-		}
-		if($tty && $tty=~ /^([-\@\w\/\?.]+)$/) 
-		{
-			$tty=$1;
-		} else {
-			if($tty)
-			{
-				warn "FATAL: child process tty used is insecure ($tty)\n";
-				exit_prog();
-			}
-		}
-		if($comm && $comm =~ / $server$/ && $comm !~ /title/ && $tty !~ /\?/)
-		{
-			return ($parent,$tty);
-		}
-	} 
-
-	return (undef,undef); # unknown descendant
-}
 
 __END__
 
@@ -1053,12 +904,6 @@ changes are committed.
 
 =item *
 
-Linux users should consult "perldoc perlsec" to enable the use of a setuid
-perl script and/or check the first line of the script to use the correct 
-perl instance.
-
-=item *
-
 The dotted line on the Hosts sub-menu is a tear-off, i.e. click on it 
 and the sub-menu is turned into its own window.
 
@@ -1092,7 +937,7 @@ Show version information
 
 =item -T "title"
 
-Changes the title from "Cluster Control by SSH" to "title - cssh" to help 
+Changes the title from "cssh" to "title - cssh" to help 
 distinguish between different invocations of the program.
 
 =item -t "terminal options"
@@ -1115,19 +960,19 @@ of them may be changed via the configuration files.
 
 =over
 
-=item Alt-x
+=item Control-q
 
 Quit the program and close all connections and windows
 
-=item Alt-a
+=item Control-+
 
 Open the Add Host dialogue box
 
 =item Alt-n
 
 Paste in the correct client name to all clients, i.e. 
- scp /etc/hosts <server>:files/<client>.hosts 
-would replace the <client> with the correct client name
+ scp /etc/hosts server:files/<Alt-n>.hosts 
+would replace the <Alt-n> with the correct client name
 
 =back
 
@@ -1169,27 +1014,23 @@ Options to pass to the terminal used
 =item cx_path = /usr/bin/
 
 Path to binary used for the connection if it hasn't been found by default
-(i.e. the path to ssh with cssh, or the path to rsh with crsh)
+(i.e. the path to ssh when using cssh, or the path to rsh when using crsh)
 
-=item timeout = 20
+=item variables = none
 
-Number of seconds before timing out a terminal session connection
-
-=item variables = no
-
-Can be sh or csh.  Sets up environment variables on the client using
+Can be "sh" or "csh".  Sets up environment variables on the client using
 bourne shell or c shell syntax
 
 =item title_number = no
 
 Show the number of open connections in control window title
 
-=item key_quit = Alt-x
+=item key_quit = Control-q
 
 Default key sequence to quit the program (will terminate all open windows).
 See below note.
 
-=item key_addhost = Alt-a
+=item key_addhost = Control-+
 
 Default key sequence to open AddHost menu.  See below note.
 
@@ -1222,7 +1063,8 @@ A web site is available at http://www.sourceforge.net/projects/clusterssh/.
 =item *
 
 The "Add Host" menu option doesn't grab the focus, and return isn't bound
-on the "Add" button yet.
+on the "Add" button yet.  This seems to be due to the version of Tk (800.024).
+When Tk 804.xxx and perl 5.8.0 are much more widely spread i will fix this bug.
 
 =item *
 
@@ -1336,6 +1178,14 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.0  2004/04/02 13:27:03  duncan_ferguson
+# MAJOR CHANGE - removal of setuid requirement and references
+# Reset key shortcuts to CTRL-q, CTRL-+ and ALT-n
+# Reorg of reused code into funcs
+# Change of main hash format
+# Removal all ps listing stuff as no longer required
+# Update man page
+#
 # Revision 1.56  2004/03/26 11:38:23  duncan_ferguson
 # Removed debug menu option "printhash"
 # Corrected menu accelorator keys (Tony Mancill)
