@@ -493,6 +493,7 @@ sub open_windows
 		($serv,$port)=split(/::/,$serv) if($serv =~ /::/);
 
 		$servers{$serv_name}[0]=1; # mark terminal child process as active
+		$servers{$serv_name}[1]="unused"; #mark unused var
 
 		# Sort out a unique temp name for our pipe - do before fork so both
 		# client and parent have access to it
@@ -701,6 +702,7 @@ $mw->bind('<Key>' => sub {
 	my $char=$Tk::event->A;
 	my $ascii=ord($Tk::event->A);
 
+
 	if(!$ascii)
 	{
 		my $keysym=$Tk::event->K;
@@ -718,6 +720,7 @@ $mw->bind('<Key>' => sub {
 			return; # catch all for unhandled control keys
 		}
 	}
+
 
 	if (!(keys(%servers)))
 	{
@@ -766,7 +769,13 @@ sub send_character_to_server
 		if(-p $servers{$serv_name}[2])
 		{
 			# send the characters unbuffered via pipe
-			syswrite($servers{$serv_name}[3], $char);
+			{
+				local $SIG{PIPE} = 'IGNORE';
+				if(!syswrite($servers{$serv_name}[3], $char))
+				{
+					delete_host($serv_name);
+				}
+			}
 		} else {
 			delete_host($serv_name);
 		}
@@ -830,7 +839,7 @@ sub mw_mb_file_items
 {
 	[
 			[ 'command', "Exit", -command => \&exit_prog, -accelerator => "$user_config{'default.key_quit'}" ],
-		#	[ 'command', "printhash", -command => \&printhash ],
+			# [ 'command', "printhash", -command => \&printhash ],
 	]
 }
 ###
@@ -1355,6 +1364,9 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.24  2004/08/03 13:38:59  duncan_ferguson
+# Found long-standing problem with uncaught error on syswrite
+#
 # Revision 2.23  2004/08/02 15:58:09  duncan_ferguson
 # Apply patch from Cyril Bouthors for passing ssh arguments via cx_args
 #
