@@ -1,0 +1,245 @@
+#!/bin/ksh
+# $Id$
+#
+# Script:
+#   $RCSfile$
+#
+# Usage:
+#   from command line
+#
+# Options:
+#   N/A
+#
+# Parameters:
+#   -v   = return version information
+#   -h   = help instructions
+#   -n   = installation name for package, i.e. SFNcssh
+#   -d   = installation site for package, i.e. /opt
+#   -s   = create package as datastream rather than file system format
+#
+#   For info, SFN == SourceForge.Net
+#
+# Purpose:
+#   create package Solaris for cssh
+#
+# Processing:
+#
+# Dependencies:
+#
+# Limitations:
+#
+# Enhancements:
+#
+############################################################################
+# History moved to bottom of file
+############################################################################
+my $VERSION='$Revision$ ($Date$)';
+# Now tidy it up, but in such as way cvs doesn't kill the tidy up stuff
+$VERSION=~s/^\$Revision: //;
+$VERSION=~s/^\$Date: //;
+$VERSION=~s/ \$//g;
+
+SCRIPT=${0}
+SCRIPTDIR=$(cd ${SCRIPT%/*} ; pwd)
+SCRIPTNM=${0##*/}
+
+# always reference relative to SCRIPTDIR so we can be called (and run 
+# correctly) from anywhere within the directory structure
+
+# temp file location
+TMP=$SCRIPTDIR/tmp
+
+USAGE="Usage: ${SCRIPTNM} [-v] [-d <pkg inst dir>] [-n <pkg inst name>]"
+
+# set defaults
+INSTDIR=/opt
+PKGNM=SFNcssh
+STREAM=
+
+# work out the command line options
+while getopts 'hvsn:d:' KEY $*
+do
+	case $KEY in
+		v) 
+			echo "$SCRIPTNM: $VERSION"
+			exit 0
+		;;
+		
+		d)
+			if [ -z "$OPTARG" ]
+			then
+				echo $USAGE
+				exit 1
+			fi
+			INSTDIR=$OPTARG
+		;;
+
+		n)
+			if [ -z "$OPTARG" ]
+			then
+				echo $USAGE
+				exit 1
+			fi
+			PKGNM=$OPTARG
+		;;
+
+		s)
+			STREAM="true"
+			;;
+
+		*) 
+			CODE=0
+			if [ -n "$OPTARG" ]
+			then
+				echo "WARNING: Unknown option '$OPTARG'"
+				CODE=1
+			fi
+			cat <<-!EOF!
+				$SCRIPTNM: Only valid options are
+				-h        - Show this help text and exit
+				-v        - Show version information and exit
+				-s        - Use datastream format rather than file system format
+				-n <name> - Package installation name (default: SFNcssh)
+				-d <dir>  - Package installation destination (default: /opt)
+			!EOF!
+			exit $CODE
+		;;
+	esac
+done
+
+# remove anything from the cmd line we have processed
+shift `expr $OPTIND - 1`
+
+# anything else left on the cmd line is an error on usage
+if [[ -n "$@" ]]
+then
+	print -u2 "$USAGE"
+	exit 1
+fi
+
+if [ -z "`type pod2man`" ]
+then
+	print -u2 "FATAL: pod2man cannot be found; please change your \$PATH variable accordingly"
+	exit 1
+fi
+
+echo Creating package $PKGNM for installation in $INSTDIR
+
+# Create the temp directory we need; be aware this may have been moved 
+# to /tmp by user and we want to be able to clean up nicely afterwards 
+# with a single "rm"
+TMP=$TMP/pkgfiles
+test -d $TMP || mkdir -p $TMP/$PKGNM
+# if we havnt made it, then we have already generated the error so just exit
+test -d $TMP || exit 1
+
+# make all the directories, then populate with files
+mkdir -p $TMP/$PKGNM/bin $TMP/$PKGNM/man/man1
+
+# now copy in cssh
+cp $SCRIPTDIR/cssh $TMP/$PKGNM/bin/cssh
+
+# and now create a man page from the pod
+pod2man $SCRIPTDIR/cssh > $TMP/$PKGNM/man/man1/cssh.1
+
+# Now we have got all the files into the correct place, create the 
+# package info files we need
+
+# Get a list of all files expected to be in the package
+find $TMP/$PKGNM -print > $TMP/files
+
+# create package prototype file
+cat $TMP/files | pkgproto > $TMP/Prototype
+
+# Amend the Prototype file to correct permissons and ownerships
+# and insert the first line - all done the "easy" way
+###
+# The sed commands do the following:
+# "s!$TMP/!!g"
+#              - remove absolute path names
+# "/^d/s/ [0-9]... / 0555 /" 
+#              - change directory entries perms to 0555
+# "/^f/s/ [0-9]... / 0444 /" 
+#              - change file entries perms to 0444
+# "/^[df]/s/ [a-zA-Z0-9]* [a-zA-Z0-9]*$/ bin bin/" 
+#              - change any file/dir owner/group to bin:bin
+# "s!bin/cssh [0-9]... .*!bin/cssh 4555 root bin!" 
+#              - any line with bin/cssh change perms to 4555
+###
+mv $TMP/Prototype $TMP/Prototype.old
+{
+	echo "i pkginfo" # insert at line 1
+	cat $TMP/Prototype.old # cat resst of file
+} | sed \
+	-e "s!$TMP/!!g" \
+	-e "/^d/s/ [0-9]... / 0555 /" \
+	-e "/^f/s/ [0-9]... / 0444 /" \
+	-e "/^[df]/s/ [a-zA-Z0-9]* [a-zA-Z0-9]*$/ bin bin/" \
+	-e "s!bin/cssh [0-9]... .*!bin/cssh 4555 root bin!" \
+	> $TMP/Prototype
+
+rm $TMP/Prototype.old
+
+# get the version from cssh and tidy it up a little so we can use it later
+CSSH_VERSION=$(grep "::VERSION=" $TMP/$PKGNM/bin/cssh)
+CSSH_VERSION=$(echo $CSSH_VERSION | sed -e 's/.*="//' -e 's/".*//')
+
+# now get today's date for the package creation date
+# have to do it this way so SCCS doesn't screw it up
+DATE=$(date '+%d %B %Y' | sed 's/ //g')
+
+# Create the pkginfo file
+cat <<!EOF! > $TMP/pkginfo 
+PKG="$PKGNM"
+NAME="cssh cluster control"
+VERSION=$CSSH_VERSION
+ARCH="sparc"
+DESC="cluster administration tool"
+CLASSES="none"
+CATEGORY="utility"
+VENDOR="http://www.sourceforge.net/projects/clusterssh"
+PSTAMP="$DATE"
+ISTATES="S s 1 2 3"
+RSTATES="S s 1 2 3"
+BASEDIR="$INSTDIR"
+!EOF!
+
+# Now, actually create the package
+pkgmk -o -b $TMP -d $SCRIPTDIR -f $TMP/Prototype -r / 1>/dev/null 2>&1
+
+# see if we are making a package stream rather than file system format
+# and convert it if a stream is required
+if [ -n "$STREAM" ]
+then
+	pkgtrans -os $SCRIPTDIR $SCRIPTDIR/$PKGNM.pkg $PKGNM
+	rm -rf $SCRIPTDIR/$PKGNM
+	echo "Datastream package has been created as $SCRIPTDIR/$PKGNM" 1>/dev/null
+else
+	echo "Package has been created as $SCRIPTDIR/$PKGNM"
+fi
+
+# and finally, clean up all our tmp stuff (see, thats we we play with $TMP)
+rm -rf $TMP
+
+############################################################################
+#               M A I N T E N A N C E     H I S T O R Y
+#
+# Rf/Vs  Date      Author         Purpose
+# -----  --------  -------------  -------------------------------------------
+# 1.0    09/09/03  D Ferguson     Initial Version
+# 1.1    09/09/03  D Ferguson     Installed into SCCS
+# 1.2    09/09/03  D Ferguson     Fixed SCCS introduced problem with date string
+# 1.3    09/09/03  D Ferguson     Amend to cope with VERSION type change in cssh
+#                                 Amend some FATAL error messages
+#                                 Unprocessed cmd line args throw error
+#                                 Remove dependancy of root on creating pkg
+# 1.4    11/09/03 D Ferguson      Arse; bug in Prototype sed stuff (relpath)
+# 1.5    11/09/03 D Ferguson      Arse; bug in Prototype sed stuff (setuid)
+# 1.6    27/01/04 D Ferguson      Moved to sf.net cvs repository
+#
+# $Log$
+# Revision 1.6  2004/01/28 10:45:33  duncan_ferguson
+# Moved to sf.net cvs
+#
+#
+############################################################################
