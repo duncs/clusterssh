@@ -58,11 +58,10 @@
 ############################################################################
 # History moved to bottom of file
 ############################################################################
-### NOTE; also change text within the pod at the bottom of this document
 my $VERSION='$Revision$ ($Date$)';
 # Now tidy it up, but in such as way cvs doesn't kill the tidy up stuff
-$VERSION=~s/^\$Revision: //;
-$VERSION=~s/^\$Date: //;
+$VERSION=~s/\$Revision: //;
+$VERSION=~s/\$Date: //;
 $VERSION=~s/ \$//g;
 
 use strict;
@@ -136,7 +135,7 @@ getopts('hvt:T:', \%options);
 
 if($options{v})
 {
-	print("$my_name: version $::VERSION\n");
+	print("$my_name: $VERSION\n");
 	exit;
 }
 
@@ -148,7 +147,7 @@ usage: $my_name [-hv] [-T "title"] [-t "term opts"] [[user@]<server>|<tag>] ...
 where:
   -h             - this text
   -v             - version and date information
-  -T  "title"    - Additional test for control window title
+  -T "title"     - Additional test for control window title
   -t "termopts"  - start terminals with options in addition to 
                    "-ls -sb -sl 1024"
   <server name>  - list of servers to connect to
@@ -676,7 +675,7 @@ my $wm_mb_help_about=$mw->Dialog(
 	-font         => 
 		[ -family => "interface system",
 			-size   => 10 ],
-	-text => "Cluster Administrator Console using SSH\n\nVersion: $::VERSION.\n\n" .
+	-text => "Cluster Administrator Console using SSH\n\nVersion: $VERSION.\n\n" .
 	"Bug/Suggestions to duncan_ferguson\@users.sourceforge.net",
 );
 ###
@@ -926,8 +925,8 @@ cssh - Cluster administration tool
 
 =head1 SYNOPSIS
 
-cssh [-hv] [-T "title"] [-t "term opts"] [[user@]<server>|<tag>] [...]
-crsh [-hv] [-T "title"] [-t "term opts"] [[user@]<server>|<tag>] [...]
+S<< cssh [-hv] [-T "title"] [-t "term opts"] [[user@]<server>|<tag>] [...] >>
+S<< crsh [-hv] [-T "title"] [-t "term opts"] [[user@]<server>|<tag>] [...] >>
 
 =head1 DESCRIPTION
 
@@ -1032,7 +1031,7 @@ Options are overwritten first by the global file, and then by the user file.
 
 =over 
 
-=item terminal = /usr/openwin/bin/xterm
+=item terminal = xterm
 
 Terminal to use for the connection
 
@@ -1055,8 +1054,14 @@ Number of seconds before timing out a terminal session connection
 
 =head1 AUTHOR
 
-Duncan Ferguson, 28/01/04, version 1.48
-http://www.sourceforge.net/projects/clusterssh
+Duncan Ferguson
+
+=head1 CREDITS
+
+clusterssh is distributed under the GNU public license.  See the file 
+LICENSE for details.
+
+A web site is available at http://www.sourceforge.net/projects/clusterssh/.
 
 =head1 BUGS
 
@@ -1113,9 +1118,12 @@ necessary):
 
 =head1 SEE ALSO
 
-The clusterssh homepage at http://www.sourceforge.net/projects/clusterssh
+L<http://www.sourceforge.net/projects/clusterssh/>
 L<ssh>
-L<Tk>
+L<Tk::overview>
+L<Config::Simple>
+
+=cut
 
 ############################################################################
 #
@@ -1176,6 +1184,9 @@ L<Tk>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 1.48  2004/01/28 12:34:03  duncan_ferguson
+# fix bugs introduced by cvs move
+#
 # Revision 1.47  2004/01/28 10:38:03  duncan_ferguson
 # Moved to sf.net cvs
 #
