@@ -115,8 +115,17 @@ if [ -n "$UPDATEMADE"  ]; then
 
 fi
 
+# create html docs for uploading into documentation manager on sf.net
+pod2html cssh | sed \
+	-e "s/[\`']./\"/g" \
+	-e "s/^crsh /<BR>crsh/" \
+	> ../../sourceforge/cssh_man.html
+
 ############################################################################
 # $Log$
+# Revision 1.2  2004/05/04 11:59:50  duncan_ferguson
+# Add in cssh html man page generation
+#
 # Revision 1.1  2004/05/04 11:55:20  duncan_ferguson
 # New automated release mechanism to replace some functionality in install
 #
