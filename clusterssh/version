@@ -32,13 +32,16 @@
 ############################################################################
 
 # Version release information
-TAG_VERSION='clusterssh 2 15 Beta'
+TAG_VERSION='clusterssh 2 16 Beta'
 
 # Files to be included within any releases made
 FILES="cssh crsh cchp LICENSE"
 
 ############################################################################
 # $Log$
+# Revision 1.5  2004/08/13 15:16:22  duncan_ferguson
+# New release cut Fri Aug 13 16:16:18 BST 2004
+#
 # Revision 1.4  2004/08/04 10:00:44  duncan_ferguson
 # New release cut Wed Aug  4 10:58:58 BST 2004
 #
