@@ -133,9 +133,6 @@ if($options{x})
 				{
 					print "Received:$chars:\n" if ($options{d});
 
-					print "Pipe removed\n" if ($options{d} && ! -p $options{x});
-					last OUTTER if(! -p $options{x});
-
 					foreach my $char (split(//, $chars))
 					{
 						print "Caught KILLOFF\n" if(ord($char) == $KILLOFF && $options{d});
@@ -147,17 +144,24 @@ if($options{x})
 						}
 					}
 				}
+				print "Pipe removed\n" if ($options{d} && ! -p $options{x});
+				last OUTTER if(! -p $options{x});
+
 				# if we can no longer write to client, it is gone
 				print "Whoops - $pid no longer there\n" if($options{d} && ! kill(0,$pid));
 				#print "KILL RETURNED:",kill(0,$pid),$/ if($options{d});
 				last unless(kill(0,$pid));
+
+				# sleep for a bit so we are nicer to the machine
+				select(undef,undef,undef,0.25);
 			}
 		}
 		print "Killing $pid\n" if($options{d} && kill(0,$pid));
-
 		kill(9,$pid) if (kill(0,$pid));
+
 		print "Removing pipe\n" if($options{d} && -p $options{x});
 		unlink($options{x}) if(-p $options{x});
+
 		print "sleeping for 25 seconds for reading any debug\n" if($options{d});
 		sleep 25 if($options{d});
 		exit;
@@ -172,6 +176,10 @@ if($options{x})
 
 ############################################################################
 # $Log$
+# Revision 1.6  2004/05/04 15:04:33  duncan_ferguson
+# Swap around code order when detecting a removed pipe
+# Add in sleep for .25 of a second during read to be nicer to the system
+#
 # Revision 1.5  2004/05/04 09:33:57  duncan_ferguson
 # Add more debug info and also -v
 #
