@@ -95,13 +95,13 @@ $|=1;
 use Getopt::Std; # command line parsing, incase someone uses -v or -h
 my %options;
 
-getopts('l:hdvncgGsk:t:T:', \%options);
+getopts('l:h?HdvuncgGsk:t:T:', \%options);
 
-my $TIOCSTI = "";
+use Pod::Usage;
+pod2usage(-verbose => 1) if($options{h} || $options{'?'});
+pod2usage(-verbose => 2) if($options{H});
 
-# Now set up all of those vars
-sub setup_OS(); # make sure func is defined so we can use it straight away
-setup_OS(); # and now call it
+my %user_config;
 
 sub KILLOFF { return 0xEE }; # quit signal to send to xterm clients 
 
@@ -118,10 +118,9 @@ my $ospeed = $termios->getospeed;
 my $terminal = Tgetent Term::Cap { TERM => undef, OSPEED => $ospeed };
 
 # Set up some defaults
-my %user_config;
 $user_config{'default.terminal'}="xterm";
 $user_config{'default.user'}=$ENV{LOGNAME};
-$user_config{'default.terminal_options'}="-ls -sb -sl 1024";
+$user_config{'default.terminal_options'}="";
 $user_config{'default.cx_path'}="/usr/bin";
 $user_config{'default.cx_args'}="-C";
 $user_config{'default.key_quit'}="Control-q";
@@ -147,12 +146,15 @@ Config::Simple->import_from('/etc/csshrc', \%user_config);
 # Now overwrite that with any user defined ones
 Config::Simple->import_from($ENV{HOME}."/.csshrc", \%user_config);
 
+# Set up TIOCSTI 
+sub setup_OS(); # make sure func is defined so we can use it straight away
+setup_OS(); # and now call it
+
 # Check to make sure we can access xterm
 if(system("type $user_config{'default.terminal'} 1>/dev/null 2>&1") > 0)
 {
-	print system("type $user_config{'default.terminal'}"),$/;
-	die("Cannot access $user_config{'default.terminal'} - please define ".
-		" \"terminal\" in configuration file\n");
+	die("Cannot access $user_config{'default.terminal'} - add ".
+		"\"terminal = /path/to/xterm\" to \$HOME/.csshrc,\nand see \"cssh -H\"\n");
 }
 
 # Ensure we know where cchp is....
@@ -203,30 +205,6 @@ if($options{v} || $options{d})
 	print("$my_name: $VERSION\n");
 	system("$^X $user_config{'default.cchp_path'}/cchp -v");
 	exit if(!$options{d});
-}
-
-if($options{h})
-{
-	print(<<EOL);
-usage: $my_name [-hve] [-T "title"] [-t "term opts"] [[user@]<server>|<tag>] ...
-
-Where:
-  -h             - this text
-  -v             - version and date information
-  -s             - set client-side environment variables (sh style)
-  -c             - set client-side environment variables (csh style)
-  -T "title"     - Additional test for control window title
-  -n             - Show number of connection in control window title
-  -l             - default login ID for ssh connections
-  -t "termopts"  - start terminals with options in addition to 
-                   terminal_options in csshrc (default: "-ls -sb -sl 1024")
-  -G             - disable window tiling
-  <server name>  - list of servers to connect to
-  <tag name>     - list of servers from /etc/clusters using name as a tag 
-
-See the man pages for more information ("perldoc cssh" or "man cssh").
-EOL
-	exit;
 }
 
 if($user_config{'default.variables'} eq "sh")
@@ -338,6 +316,18 @@ if ( -r "/etc/clusters" )
 	}
 }
 
+# dump out config file
+if($options{u})
+{
+	foreach (sort(keys(%user_config)))
+	{
+		my $key=$_;
+		$key =~ s/default.//;
+		print "$key = $user_config{$_}\n";
+	}
+	exit 0;
+}
+
 # loop over ARGV and expand any cluster aliases
 my @cmdargs=@ARGV;
 
@@ -422,7 +412,9 @@ if(!$options{G})
 	$screen_height -= $user_config{'default.titlebar_size'} + $user_config{'default.reserve_bottom'};
 	$screen_width -= $user_config{'default.reserve_right'};
 
-	my $finfo = `xlsfonts -ll -fn $user_config{'default.term_font'}`;
+	my $xlsfonts_path=$user_config{'default.terminal'};
+	$xlsfonts_path =~ s/xterm/xlsfonts/;
+	my $finfo = `$xlsfonts_path -ll -fn $user_config{'default.term_font'}`;
 	my $fwidth = ($finfo =~ /^\s*max\s+(\d+)/m)[0];
 	my $fheight = ($finfo =~ /^\s*PIXEL_SIZE\s*(\d+)/m)[0];
 
@@ -566,7 +558,7 @@ sub open_windows
 		# Start up the terminal ourselves so the pipes are in place
 		# NOTE - ssh -x to disable forwarding of X11 sessions due to problem
 		# on redhat systems
-		system("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $place -title '$method:$serv' -e $^X $user_config{'default.cchp_path'}/cchp $debug -s $user_config{'default.cchp_sleep'} -k $user_config{'default.keep_open'} -x $servers{$serv_name}[2] -y $TIOCSTI -z $KILLOFF $path_method -p $port $user_config{'default.cx_args'} $serv &") == 0 or warn("Could not create session to $serv: $! ");
+		system("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $place -title '$method:$serv' -e $^X $user_config{'default.cchp_path'}/cchp $debug -s $user_config{'default.cchp_sleep'} -k $user_config{'default.keep_open'} -x $servers{$serv_name}[2] -y $user_config{'default.tiocsti'} -z $KILLOFF $path_method -p $port $user_config{'default.cx_args'} $serv &") == 0 or warn("Could not create session to $serv: $! ");
 
 		if(!sysopen($servers{$serv_name}[3], $servers{$serv_name}[2], O_WRONLY))
 		{
@@ -752,6 +744,7 @@ $mw->bind('<Key>' => sub {
 				send_character($_);
 			}
 		} else {
+			print "Ignoring :$keysym:\n" if($options{d});
 			return; # catch all for unhandled control keys
 		}
 	}
@@ -981,50 +974,64 @@ exit_prog();
 
 sub setup_OS()
 {
+	if($user_config{'default.tiocsti'})
+	{
+		# assume if defined in config file, it is correct
+		print "TIOCSTI fonud on config file - not working out\n" if($options{d});
+		return;
+	}
+
 	# to attempt to find out plateform value for setting TIOCSTI
 	# and other such dependencies
 	use Config;
 
 	# predefined for linux
-	if($Config{archname}=~/-linux/)
+	if($Config{archname}=~/linux/)
 	{
-		$TIOCSTI=0x5412;
+		$user_config{'default.tiocsti'}=0x5412;
+		return;
+	}
+
+	# predefined for FreeBSD
+	if($Config{archname}=~/FreeBSD/i)
+	{
+		$user_config{'default.tiocsti'}=0x80017472;
 		return;
 	}
 
 	# predefined for Sun Solaris
 	if($Config{archname}=~/solaris/)
 	{
-		$TIOCSTI=0x007417;
+		$user_config{'default.tiocsti'}=0x007417;
 		return;
 	}
 
 	# predefined for OpenBSD
 	if($Config{archname}=~/^OpenBSD.i\d86-openbsd$/)
 	{
-		$TIOCSTI=0x80017472;
+		$user_config{'default.tiocsti'}=0x80017472;
 		return;
 	}
 
 	# predefined for HP-UX 11i rp7410
-	if($Config{archname}=~/^PA-RISC2.0-LP64$/)
+	if($Config{archname}=~/^PA-RISC2.0-.*LP64$/)
 	{
-		$TIOCSTI=0x80017472;
+		$user_config{'default.tiocsti'}=0x80017472;
 		return;
 	}
 
 	# predefined for Mac OS X
-	if($Config{archname}=~/^-darwin-thread-multi-/)
+	if($Config{archname}=~/darwin-thread/)
 	{
-		$TIOCSTI=0x80017472;
+		$user_config{'default.tiocsti'}=0x80007472;
 		return;
 	}
 
 	# not predefined, so attempt to work it out from the "normal" source
 	if(! eval { require "sys/ioctl.ph" } )
 	{
-		print "Archname: -$Config{archname}-\n";
-		die "FATAL ERROR: Please run \"cd /usr/include ; h2ph sys/ioctl.h\" as root\n";
+		print "Archname: $Config{archname}\n";
+		die "FATAL ERROR: Please run \"cd /usr/include ; h2ph sys/ioctl.h\" or on whichever header file contains the TIOCSTI definition (as root)\n";
 	}
 
 	my $tiocsti=eval{&TIOCSTI};
@@ -1032,16 +1039,18 @@ sub setup_OS()
 	if(defined($tiocsti))
 	{
 		print "Please email duncan_ferguson\@users.sourceforge.net with the following:\n";
-		print "Archname: -$Config{archname}-\n";
-		print "TIOCSTI:  -$tiocsti-\n";
-		$TIOCSTI=$tiocsti;
+		print "Archname: $Config{archname}\n";
+		printf "TIOCSTI: %#08x\n", $tiocsti;
+		print "This value can be defined within \$HOME/.csshrc as \"tiocsti = <number\"\nto stop this error message\n";
+		print "See also 'cssh -o'\n";
+		$user_config{'default.tiocsti'}=$tiocsti;
 		return;
 	}
 
 	print "An error has occured; your architecture is unknown.  ".
 		"Please email\n\tduncan_ferguson\@users.sourceforge.net\nfor further ".
 		"support with the following information:\n";
-	print "\tArchname: -$Config{archname}-\n";
+	print "\tArchname: $Config{archname}\n";
 	print "Please also look in the BUGS section of the man page and run the ".
 		"C code provided\n";
 
@@ -1057,11 +1066,11 @@ cssh - Cluster administration tool
 
 =head1 SYNOPSIS
 
- cssh [-hv]
+ cssh [-hHvu]
  cssh [-ngcs] [-k n] [-T"xxx"] [-t"opts"] [-l usr]
  cssh [[usr@]<svr>|<tag>] [...]
 
- crsh [-hv]
+ crsh [-hHvu]
  crsh [-ngcs] [-k n] [-T"xxx"] [-t"opts"] [-l usr]
  crsh [[usr@]<svr>|<tag>] [...]
 
@@ -1120,11 +1129,20 @@ precedence):
 
 =item -h
 
-Basic help text
+Display basic help text
+
+=item -H
+
+Display the full man page
 
 =item -v
 
 Show version information
+
+=item -u
+
+Output configuration options in config file format (i.e. you could use it
+to generate your default .csshrc file for amending)
 
 =item -G
 
@@ -1377,8 +1395,8 @@ and post it on the web site in the support/problems forum:
 I have tried to include values of TIOCSTI for those OS's I can, but not
 all will currently work.  If cssh does not work for you due to a TIOCSTI 
 error, please do the following (as well as the above) and send the output 
-to the author, or report it on the web site (note: change the gcc as 
-necessary):
+to the author, or report it on the web site (note: change the gcc and the 
+files to include as necessary):
 
   $ cat > tio.c <<EOF && gcc tio.c && ./a.out && rm ./a.out
   #include <sys/termio.h>
@@ -1387,6 +1405,9 @@ necessary):
   printf("TIOCSTI:%#08x\n", TIOCSTI);
   }
   EOF
+
+You can also add "tiocsti = <number>" into a .csshrc file until support is
+fully added by the author.
 
 =item *
 
@@ -1464,6 +1485,17 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.33  2005/01/26 14:25:07  duncan_ferguson
+# Added -u option to dump out configuration
+# Moved TIOCSTI settings to config file option
+# Use Pod::Usage instead of manually updated help text
+# Removed default terminal options to use .Xdefaults correctly, but may still be used from .csshrc or cmdline (Olivier Beyssac)
+# Amended some error messages for clarity
+# Corrected path used for xlsfonts
+# Put in error text about unknown/ignored keysyms
+# Corrected some platform TIOCSTI settings and added FreeBSD
+# Updates and corrections to POD text
+#
 # Revision 2.32  2004/09/24 09:47:19  duncan_ferguson
 # Amended wording of man page about menu seperators
 #
