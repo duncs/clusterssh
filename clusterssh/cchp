@@ -71,7 +71,7 @@ my %options;
 
 sub exit_prog();
 
-getopts('vx:y:z:ds:', \%options);
+getopts('vx:y:z:k:ds:', \%options);
 
 if($options{v})
 {
@@ -190,12 +190,19 @@ sub exit_prog()
 	print "Removing pipe\n" if($options{d} && -p $options{x});
 	unlink($options{x}) if(-p $options{x});
 
-	print "sleeping for 25 seconds for reading any debug\n" if($options{d});
-	sleep 25 if($options{d});
+	if($options{k})
+	{
+		print "-k option set; sleeping for $options{k} seconds\n";
+		sleep $options{k};
+	}
+
 	exit;
 }
 ############################################################################
 # $Log$
+# Revision 1.10  2004/09/07 12:18:08  duncan_ferguson
+# Add -k functionality to keep child windows open for x seconds
+#
 # Revision 1.9  2004/08/26 07:47:49  duncan_ferguson
 # Code added to allow user definition of of the cchp sleep interval, default=0.1 (Tony Mancill)
 #
