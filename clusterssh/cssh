@@ -68,7 +68,7 @@ $VERSION=~s/ \$//g;
 use strict;
 use warnings;
 
-use 5.006_001;
+use 5.006_000;
 use Tk 800.022;
 use Tk ':variables';
 use Config::Simple 4.55;
@@ -95,7 +95,7 @@ use Getopt::Std; # command line parsing, incase someone uses -v or -h
 my %options;
 
 # NOTE - option x is hidden and should never be called directly
-getopts('x:l:hvncst:T:', \%options);
+getopts('x:l:hvncgst:T:', \%options);
 
 my $TIOCSTI = "";
 
@@ -108,6 +108,11 @@ sub KILLOFF { return 0xEE }; # quit signal to send to xterm clients
 # Load Term::Cap entries (Assuming children are same type as parent)
 my $termios = new POSIX::Termios;
 $termios->getattr;
+# 20040413 <tmancill@debian.org> - if TERM isn't set assume xterm
+unless ($ENV{TERM}) {
+	$ENV{TERM} = 'xterm';
+}
+
 my $ospeed = $termios->getospeed;
 my $terminal = Tgetent Term::Cap { TERM => undef, OSPEED => $ospeed };
 
@@ -199,6 +204,7 @@ $user_config{'default.key_addhost'}="Control-plus";
 $user_config{'default.key_clientname'}="Alt-n";
 $user_config{'default.variables'}="no";
 $user_config{'default.title_number'}="no";
+$user_config{'default.size'}="80x10";
 
 # Now read in the system config file
 Config::Simple->import_from('/etc/csshrc', \%user_config);
@@ -252,6 +258,7 @@ where:
 	-l             - default login ID for ssh connections
   -t "termopts"  - start terminals with options in addition to 
                    "-ls -sb -sl 1024"
+	-g "termsize"  - starts terminal windows in the set size, i.e. 60x10
   <server name>  - list of servers to connect to
   <tag name>     - list of servers from /etc/clusters using name as a tag 
 
@@ -382,6 +389,21 @@ my %servers;
 # handle for main window
 my $mw=MainWindow->new(-title=>$control_title);
 
+# Now get the screen height for tiling windows later
+my $screen_height=$mw->screenheight;
+my $screen_width=$mw->screenwidth;
+
+# Get the term widht and height
+my $term_height=$user_config{'default.size'};
+$term_height=~ s/.*x//;
+my $term_width=$user_config{'default.size'};
+$term_width=~ s/x.*//;
+
+# Work out the seen term size
+my $over_height=int($screen_height/10);
+my $over_width=int($screen_width/4);
+
+
 open_windows(@cmdargs);
 
 sub change_title_number {
@@ -440,9 +462,11 @@ sub open_windows
 			exit_prog();
 		} elsif($servers{$serv_name}[1] == 0) {
 			# child => fork returned 0
+
+			my $size= $options{g} ? "-geometry $user_config{'default.size'}" : "";
 			
 			# Start up the terminal via ourselves so the pipes are in place
-			exec("$user_config{'default.terminal'} $user_config{'default.terminal_options'} -title '$method:$serv' -e $FindBin::Bin/$FindBin::Script -x $servers{$serv_name}[2] $path_method $serv") or warn("Could not exec session to $serv: $! ");
+			exec("$user_config{'default.terminal'} $user_config{'default.terminal_options'} $size -title '$method:$serv' -e $FindBin::Bin/$FindBin::Script -x $servers{$serv_name}[2] $path_method $serv") or warn("Could not exec session to $serv: $! ");
 		} else {
 			# parent => fork return process id of child
 
@@ -505,7 +529,7 @@ my $add_host_win=$mw->DialogBox(
 
 my $newhosts="";
 
-$add_host_win->add('LabEntry', 
+my $add_host_entry = $add_host_win->add('LabEntry', 
 	-textvariable => \$newhosts,
 	-width        => 20,
 	-label        => "Host",
@@ -524,6 +548,7 @@ $mw_entry->bind("Tk::Text", "<$user_config{'default.key_addhost'}>" => \&add_hos
 
 sub add_host_win_entry {
 #	$add_host_win->Subwidget('entry')->focus;
+	$add_host_entry->focus();
 	my $answer=$add_host_win->Show();
 
 	return if($answer eq "Cancel");
@@ -584,7 +609,8 @@ $mw_entry->eventAdd('<<Paste>>' => '<Control-v>');
 $mw_entry->eventAdd('<<Paste>>' => '<Button-2>');
 
 $mw_entry->bind('<<Paste>>' => sub {
-	my $paste_text=$mw_entry->SelectionGet;
+	my $paste_text = '';
+	Tk::catch { $paste_text=$mw_entry->SelectionGet }; # SelectionGet is fatal if no sel
 
 	# grab everything within the text entry variable and output it to children
 	for (split(//, $paste_text))
@@ -639,7 +665,8 @@ sub delete_host
 	$serv=~ s/.*@// if ($serv =~ /$ENV{LOGNAME}@/);
 
 	# now remove the menu entry
-	$menu->delete($serv);
+	
+	Tk::catch { $menu->delete($serv) }; # Sometimes the menu is not yet created
 
 	if($servers{$serv_name})
 	{
@@ -849,10 +876,6 @@ sub setup_OS()
 	# predefined for Sun Solaris
 	if($Config{archname}=~/solaris/)
 	{
-		# taint checks that Tk requires before can run
-		# seems only solaris needs this
-		$ENV{HOME}='/tmp';
-
 		$TIOCSTI=0x007417;
 		return;
 	}
@@ -1103,12 +1126,6 @@ A web site is available at http://www.sourceforge.net/projects/clusterssh/.
 
 =item *
 
-The "Add Host" menu option doesn't grab the focus, and return isn't bound
-on the "Add" button yet.  This seems to be due to the version of Tk (800.024).
-When Tk 804.xxx and perl 5.8.0 are much more widely spread i will fix this bug.
-
-=item *
-
 Only ASCII codes can be sent to child terminals, so arrow keys and such 
 have to be converted.  The arrow keys should work - please post to the
 web site for any others that are required and do not work.
@@ -1216,6 +1233,13 @@ L<Config::Simple>
 #                                 Moved to sf.net cvs
 #
 # $Log$
+# Revision 2.5  2004/04/15 09:35:28  duncan_ferguson
+# Applied patch for missing env vars when run from window manager not cmd line
+#   - Tony Mancill
+# Apply patch for the "Add Host" window not accepting <RETURN> correctly and
+#   not grabbing the focus correctly.  Also remove some taint checks
+#   - Gavin Brock
+#
 # Revision 2.4  2004/04/13 12:19:50  duncan_ferguson
 # Apply patch from Tony Mancill for "-l <user>" errors when closing terminals.
 # Apply patch from Gavin Brock fix the arrow keys bug
