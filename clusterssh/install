@@ -35,6 +35,9 @@
 #
 ############################################################################
 # $Log$
+# Revision 1.4  2004/04/20 12:45:43  duncan_ferguson
+# Amended to include cchp in tarball
+#
 # Revision 1.3  2004/04/06 11:42:13  duncan_ferguson
 # Remove setuid stuff for version 2.0
 #
@@ -68,7 +71,7 @@ VERSION=$(./cssh -v | sed -e 's/ (.*//' -e 's/.*: //')
 rm -f crsh
 ln -s cssh crsh
 
-tar cvf $SFDIR/clusterssh_$VERSION.tar cssh crsh LICENSE
+tar cvf $SFDIR/clusterssh_$VERSION.tar cssh crsh cchp LICENSE
 gzip -f $SFDIR/clusterssh_$VERSION.tar
 echo "Tar file created as: $SFDIR/clusterssh_$VERSION.tar"
 
