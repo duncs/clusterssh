@@ -184,7 +184,8 @@ sub load_config_defaults()
 	($config{comms}=basename($0)) =~ s/^.//;
 	$config{$config{comms}}=$config{comms};
 
-	$config{comms_args}.="-x" if ($config{$config{comms}} =~ /ssh$/);
+	$config{ssh_args}.="-x" if ($config{$config{comms}} =~ /ssh$/);
+	$config{rsh_args}="";
 
 	$config{title}="CSSH";
 }
@@ -451,7 +452,7 @@ sub setup_helper_script()
 		open(PIPE, ">", \$pipe);
 		print PIPE "\$ENV{WINDOWID}";
 		close(PIPE);
-		exec("$config{$config{comms}} $config{comms_args} \$svr");
+		exec("$config{$config{comms}} $config{$config{comms}."_args"} \$svr");
 	HERE
 }
 
@@ -1041,7 +1042,7 @@ other than "yes" to disable.  Can be overridden by C<-Q> on the command line.
 Sets the default communication method (initially taken from the name of 
 program, but can be overridden here).
 
-=item comms_args = -x
+=item ssh_args = -x & rsh_args = <blank>
 
 Sets any arguments to be used with the communication method (defaults to ssh
 arguments).
