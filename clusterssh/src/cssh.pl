@@ -63,7 +63,7 @@ use warnings;
 use 5.006_000;
 use Pod::Usage;
 use Getopt::Std;
-use POSIX qw/strftime mkfifo :sys_wait_h/;
+use POSIX qw/:sys_wait_h strftime mkfifo/;
 use File::Temp qw/:POSIX/;
 use Fcntl;
 use Tk 800.022;
@@ -75,6 +75,7 @@ use vars qw/ %keysymtocode /;
 use X11::Keysyms '%keysymtocode';
 #use FindBin; # used to get full path to this script
 use File::Basename;
+use Net::hostent;
 
 ### all global variables ###
 my $scriptname=$0; $scriptname=~ s!.*/!!; # get the script name, minus the path
@@ -88,7 +89,7 @@ my %windows; # hash for all window definitions
 my %menus; # hash for all menu definitions
 my @servers; # array of servers provided on cmdline
 my %servers; # hash of server cx info
-my $helper_script;
+my $helper_script="";
 my $xdisplay=X11::Protocol->new();
 my %keycodes;
 
@@ -182,9 +183,12 @@ sub load_config_defaults()
 	$config{auto_quit}="yes";
 
 	($config{comms}=basename($0)) =~ s/^.//;
+	$config{comms} =~ s/.pl$//; # for when testing directly out of cvs
+
 	$config{$config{comms}}=$config{comms};
 
-	$config{ssh_args}.="-x" if ($config{$config{comms}} =~ /ssh$/);
+	$config{ssh_args}="";
+	$config{ssh_args}.="-x -o ConnectTimeout=10" if ($config{$config{comms}} =~ /ssh$/);
 	$config{rsh_args}="";
 
 	$config{title}="CSSH";
@@ -446,6 +450,7 @@ sub send_clientname()
 
 sub setup_helper_script()
 {
+	logmsg(2, "Setting up helper script");
 	$helper_script=<<"	HERE";
 		my \$pipe=shift;
 		my \$svr=shift;
@@ -454,6 +459,8 @@ sub setup_helper_script()
 		close(PIPE);
 		exec("$config{$config{comms}} $config{$config{comms}."_args"} \$svr");
 	HERE
+	logmsg(2, $helper_script);
+	logmsg(2, "Helper script done");
 }
 
 sub open_client_windows(@)
@@ -461,6 +468,13 @@ sub open_client_windows(@)
 	foreach (@_)
 	{
 		next unless($_);
+
+		# see if we can find the hostname - if not, drop it
+		if(!gethost("$_"))
+		{
+			warn("WARNING: unknown host $_ - ignoring\n");
+			next;
+		}
 
 		my $count = 1;
 		my $server=$_;
@@ -487,14 +501,13 @@ sub open_client_windows(@)
 			die("Could not fork: $!");
 		}
 
-
 		if($servers{$server}{pid}==0)
 		{
 			my $exec="$config{terminal} $config{terminal_args} $config{terminal_allow_send_events} $config{terminal_title_opt} '$config{title}:$server' -e $^X -e '$helper_script' $servers{$server}{pipenm} $servers{$server}{realname}";
 			# this is the child
 			my $copy=$exec;
 			$copy =~ s/-e.*/-e 'echo Working - waiting 10 seconds;sleep 10;exit'/s;
-			logmsg(1,"$copy\n");
+			logmsg(1,"Terminal testing line:\n$copy\n");
 			exec($exec) == 0 or warn("Failed: $!");;
 		}
 
@@ -505,7 +518,10 @@ sub open_client_windows(@)
 			die ("Cannot open pipe for writing: $!");
 		}
 
+		logmsg(2, "Performing sysread");
 		sysread($servers{$server}{pipehl}, $servers{$server}{wid}, 100);
+		logmsg(2, "Done and closing pipe");
+
 		close($servers{$server}{pipehl});
 		delete($servers{$server}{pipehl});
 
@@ -515,6 +531,7 @@ sub open_client_windows(@)
 		$servers{$server}{active}=1; # mark as active
 		$config{internal_activate_autoquit}=1 ; # activate auto_quit if in use
 	}
+	logmsg(1, "All client windows opened");
 }
 
 sub add_host_by_name()
@@ -545,27 +562,37 @@ sub add_host_by_name()
 
 sub build_hosts_menu()
 {
+	logmsg(2, "Building hosts menu");
 	# first, emtpy the hosts menu from the 2nd entry on
 	my $menu=$menus{bar}->entrycget('Hosts', -menu);
 	$menu->delete(2,'end');
 
+	logmsg(3, "Menu deleted");
+
 	# add back the seperator
 	$menus{hosts}->separator;
 
+	logmsg(3, "Parsing list");
 	foreach my $svr (sort(keys(%servers)))
 	{
+		logmsg(3, "Checking $svr and marking as active");
 		$menus{hosts}->checkbutton(
 			-label=>$svr,
 			-variable=>\$servers{$svr}{active},
 		);
 	}
+	logmsg(3, "Changing window title");
 	change_main_window_title();
+	logmsg(2, "Done");
 }
 
 sub setup_repeat()
 {
+	logmsg(2, "Setting up repeat");
+	# if this is too fast then we end up with multiple concurrent repeats
 	$windows{main_window}->repeat(500, sub {
 		my $build_menu=0;
+		logmsg(3, "Running repeat");
 		foreach my $svr (keys(%servers))
 		{
 			if(! kill(0, $servers{$svr}{pid}) )
@@ -573,21 +600,24 @@ sub setup_repeat()
 				$build_menu=1;
 				delete($servers{$svr});
 			}
-		}
-
-		build_hosts_menu() if($build_menu);
-
-		# If there are no hosts in the list and we are set to autoquit
-		if(scalar(keys(%servers)) == 0 && $config{auto_quit}=~/yes/i)
-		{
-			# and some clients were actually opened...
-			if($config{internal_activate_autoquit})
-			{	
-				exit_prog;
+				
+			# If there are no hosts in the list and we are set to autoquit
+			if(scalar(keys(%servers)) == 0 && $config{auto_quit}=~/yes/i)
+			{
+				# and some clients were actually opened...
+				if($config{internal_activate_autoquit})
+				{	
+					logmsg(2, "Autoquitting");
+					exit_prog;
+				}
 			}
+
+			# now, we are still running, so rebuilt host menu
+			build_hosts_menu() if($build_menu);
 		}
-		$menus{entrytext}="";
+		logmsg(3, "repeat completed");
 	});
+	logmsg(2, "Repeat setup");
 }
 
 ### Window and menu definitions ###
@@ -816,7 +846,13 @@ if($options{v}) {
 }
 
 # catch and reap any zombies
-sub REAPER { 1 until waitpid(-1, WNOHANG) == -1 }
+sub REAPER { 
+	my $kid;
+	do {
+		$kid=waitpid(-1, WNOHANG);
+		logmsg(3, "Reaper currently returns: $kid");
+	} until ($kid == -1 || $kid ==0);
+}
 $SIG{CHLD} = \&REAPER;
 
 $debug+=1 if($options{d});
@@ -844,15 +880,22 @@ open_client_windows(@servers);
 
 build_hosts_menu();
 
-setup_repeat();
 
 #print "$_ = $keysymtocode{$_}\n" foreach (keys(%keysymtocode));
 
 #exit;
 
-select(undef,undef,undef,0.25); #sleep for a mo
+logmsg(2, "Sleeping for a mo");
+select(undef, undef, undef, 0.25);
+
+logmsg(2, "Sorting focus on console");
 $windows{text_entry}->focus();
+
+logmsg(2, "Setting up repeat");
+setup_repeat();
+
 # Start even loop & open windows
+logmsg(2, "Starting MainLoop");
 MainLoop();
 
 # make sure we leave program in an expected way
@@ -1042,7 +1085,7 @@ other than "yes" to disable.  Can be overridden by C<-Q> on the command line.
 Sets the default communication method (initially taken from the name of 
 program, but can be overridden here).
 
-=item ssh_args = -x & rsh_args = <blank>
+=item ssh_args = "-x -o ConnectTimeout=10" & rsh_args = <blank>
 
 Sets any arguments to be used with the communication method (defaults to ssh
 arguments).
