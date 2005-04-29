@@ -1,0 +1,22 @@
+Working from CVS
+================
+
+This file gives a brief overview of using this package after pulling 
+it directly from CVS.
+
+The GNU autotools are used for building this package (for ease of 
+end-user use and building RPM's).
+
+Outline of actions when performing a release
+============================================
+Modify "src/cssh.pl" as necessary
+Run "./reconf"
+Run "./configure"
+Run "make distcheck" to ensure the package builds correctly
+Modify "ChangeLog" as necessary
+Update version in configure.in
+When all is ok, modify "cluster.spec" as necssary 
+	NOTE: always check "Release:" and "Version:" and "%changelog"
+Run "make dist" and release as appropriate.
+
+$Id$

@@ -1,0 +1,22 @@
+ClusterSSH THANKS file
+
+ClusterSSH has originally been written by Duncan Ferguson. Many
+people further contributed to ClusterSSH by reporting problems,
+suggesting various improvements or submitting actual code.
+Here is a list of these people. Help me keep it complete and
+exempt of errors.
+
+Tony Mancill
+David Gardner
+Hans-Joachim Hoetger
+Gavin Brock
+Bren Viren
+Rob Petty
+Jason (jklap)
+Cyril Bouthors
+Chris Trahman
+Olivier Beyssac
+Rob Dawson
+Steve Roome
+
+$Id$

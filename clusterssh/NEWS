@@ -1,0 +1,14 @@
+Version 3 of clusterssh is a total rewrite, from scratch.  New 
+features have been added, unused features have been taken away.
+
+To list some of the bigger changes starting from version 3.0:
+
+* Total re-write from scratch, with no code imported directly 
+	from the previous version, without a review of that code
+* No longer uses kernel calls, but X window messages between 
+	the console and client windows
+* GNU Autotools are used to build the package, in the hope it 
+	makes life easier for users (and myself...)
+* Also include a spec file to creating RPM's from the source
+
+$Id$
