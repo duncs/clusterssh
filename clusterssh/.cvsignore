@@ -4,3 +4,17 @@ tmp
 crsh
 crsh.lnk
 save
+aclocal.m4
+configure
+install-sh
+Makefile.in
+missing
+clusterssh-*.tar.gz
+.in
+Makefile
+autom4te.cache
+config.log
+config.status
+#
+# $Id$
+#
