@@ -1,0 +1,17 @@
+2005-05-26 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.4
+
+* Changed order of "use POSIX" to put :sys_wait_h first to avoid chance of hitting known issue
+* Allow for running from cvs dir in config{comms}
+* Add "ConnectTimeout=10" to default ssh options
+* Add further debug info
+* Add check to ensure hostname can be resolved before attempting connection
+* Modigy zombie reaping to prevent hand on unconnected cx term closing
+* Add "autoquit" feature to close ClusterSSH after last client window closes
+* Also produce man page and include as part of install
+
+2005-05-10 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.3
+
+* src/cssh.pl: Rewritten from scratch
+* Set up to use Gnu Autotools
+
+$Id$
