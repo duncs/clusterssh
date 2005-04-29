@@ -1,5 +1,7 @@
 Makefile.in
 Makefile
+cssh
+cssh.1
 #
 # $Id$
 #
