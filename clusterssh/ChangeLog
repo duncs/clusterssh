@@ -1,4 +1,13 @@
-2005-05-26 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.4
+2005-05-03 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.5
+
+* Remove some old (commented out) code
+* Remove some (unnecessary) debug code
+* Start coding for window tiling
+* Modify find_binary function to make it more portable
+* Output internal vars in "-u -d"
+* Small mods to docs to take account of all of the above
+
+2005-04-26 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.4
 
 * Changed order of "use POSIX" to put :sys_wait_h first to avoid chance of hitting known issue
 * Allow for running from cvs dir in config{comms}
@@ -9,7 +18,7 @@
 * Add "autoquit" feature to close ClusterSSH after last client window closes
 * Also produce man page and include as part of install
 
-2005-05-10 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.3
+2005-04-10 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.3
 
 * src/cssh.pl: Rewritten from scratch
 * Set up to use Gnu Autotools
