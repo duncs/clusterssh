@@ -2,6 +2,7 @@ Makefile.in
 Makefile
 cssh
 cssh.1
+.cssh.pl.swp
 #
 # $Id$
 #
