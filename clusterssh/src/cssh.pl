@@ -171,6 +171,8 @@ sub load_config_defaults()
 	$config{terminal_args}="";
 	$config{terminal_title_opt}="-T";
 	$config{terminal_allow_send_events}="-xrm 'XTerm.VT100.allowSendEvents:true'";
+	$config{terminal_font}="6x13";
+	$config{terminal_size}="80x24";
 	$config{user}=$ENV{LOGNAME};
 	$config{use_hotkeys}="yes";
 	$config{key_quit}="Control-q";
@@ -181,6 +183,17 @@ sub load_config_defaults()
 	$config{reserve_left}=0;
 	$config{reserve_right}=0;
 	$config{auto_quit}="yes";
+	$config{xlsfonts}="xlsfonts";
+
+	$config{screen_reserve_top}=40;
+	$config{screen_reserve_bottom}=40;
+	$config{screen_reserve_left}=0;
+	$config{screen_reserve_right}=0;
+
+	$config{terminal_reserve_top}=40;
+	$config{terminal_reserve_bottom}=0;
+	$config{terminal_reserve_left}=0;
+	$config{terminal_reserve_right}=40;
 
 	($config{comms}=basename($0)) =~ s/^.//;
 	$config{comms} =~ s/.pl$//; # for when testing directly out of cvs
@@ -192,6 +205,7 @@ sub load_config_defaults()
 	$config{rsh_args}="";
 
 	$config{title}="CSSH";
+
 }
 
 # load in config file settings
@@ -207,7 +221,9 @@ sub load_configfile($)
 		next if(/^\s*$/ || /^#/); # ignore blank lines & commented lines
 		s/#.*//; # remove comments from remaining lines
 		chomp();
-		my ($key, $value) = split(/[ 	]*=[ 	]*/);
+		#my ($key, $value) = split(/[ 	]*=[ 	]*/);
+		/(\w+)[   ]*=[  ]*(.*)/;	
+		my ($key, $value) = ($1, $2);
 		$config{$key} = $value;
 		logmsg(3,"$key=$value");
 	}
@@ -218,8 +234,24 @@ sub find_binary($)
 {
 	my $binary=shift;
 
-	logmsg(3,"Looking for $binary");
-	my $path=`which $binary 2>/dev/null`;
+	logmsg(1,"Looking for $binary");
+	my $path;
+	if(! -x $binary)
+	{
+		foreach (split(/:/, $ENV{PATH}))
+		{
+			logmsg(2, "Looking in $_");
+			if(-x $_.'/'.$binary)
+			{
+				$path=$_.'/'.$binary;
+				logmsg(1, "Found at $path");
+				last;
+			}
+		}
+	} else {
+		logmsg(1, "Already configured OK");
+		$path=$binary;
+	}
 	if(!$path)
 	{
 		die("$binary not found - please amend \$PATH or the cssh config file\n");
@@ -228,16 +260,20 @@ sub find_binary($)
 	return $path;
 }
 
-# make sure our config is sane (i.e. binaries found)
+# make sure our config is sane (i.e. binaries found) and get some extra bits
 sub check_config()
 {
 	# check we have xterm on our path
 	logmsg(2, "Checking path to xterm");
 	$config{terminal}=find_binary($config{terminal});
 
+	# check we have xlsfonts on our path
+	logmsg(2, "Checking path to xlsfonts");
+	$config{xlsfonts}=find_binary($config{xlsfonts});
+
 	# check we have comms method on our path
 	logmsg(2, "Checking path to $config{comms}");
-	$config{$config{comms}}=find_binary($config{comms});
+	$config{$config{comms}}=find_binary($config{$config{comms}});
 
 	# make sure comms in an accepted value
 	die "FATAL: Only ssh and rsh protocols are currently supported (comms=$config{comms})\n" if($config{comms} !~ /^[rs]sh$/);
@@ -247,6 +283,53 @@ sub check_config()
 
 	$config{auto_quit}="yes" if $options{q};
 	$config{auto_quit}="no" if $options{Q};
+
+	# backwards compatibility & tidyup
+	if($config{always_tile})
+	{
+		if(!$config{window_tiling})
+		{
+			if($config{always_tile} eq "never")
+			{
+				$config{window_tiling}="no";
+			} else {
+				$config{window_tiling}="yes";
+			}
+		}
+		delete($config{always_tile});
+	}
+	$config{window_tiling}="yes" if $options{g};
+	$config{window_tiling}="no" if $options{G};
+
+	# Do some maths to work out initial figures for window tiling
+
+	# work out default screen height & width (minus reserves)
+	logmsg(1, "Screen Height: ", $xdisplay->{height_in_pixels});
+	$config{internal_screen_height}=$xdisplay->{height_in_pixels};
+	$config{internal_screen_height} -= 
+		($config{screen_reserve_top} + $config{screen_reserve_bottom});
+
+	logmsg(1, "Screen Width: ", $xdisplay->{width_in_pixels});
+	$config{internal_screen_width}=$xdisplay->{width_in_pixels};
+	$config{internal_screen_width} -= 
+		($config{screen_reserve_left} + $config{screen_reserve_right});
+
+	# Work out terminal size
+	$config{internal_max_term_cols}=($config{terminal_size}=~ /(\d+)x.*/)[0];
+	$config{internal_max_term_rows}=($config{terminal_size}=~ /.*x(\d+)/)[0];
+
+	# Work out font size
+	my $font_info=`$config{xlsfonts} -ll -fn $config{terminal_font}`;
+	$config{internal_font_width}=($font_info =~ /^\s*max\s+(\d+)/m)[0];
+	$config{internal_font_height}=($font_info =~ /^\s*PIXEL_SIZE\s*(\d+)/m)[0];
+
+	$config{internal_term_cols}=
+		($config{internal_max_term_cols} * $config{internal_font_width}) + 
+		$config{screen_reserve_left} + $config{screen_reserve_right};
+
+	# use int() to round off to nearest integer
+	$config{internal_columns}=int($config{internal_screen_width}/($config{internal_max_term_cols} * $config{internal_font_width}) - ($config{reserve_left} + $config{reserve_right}));
+	# Cannot work out rows until we know how many windows there are...
 }
 
 # dump out the config to STDOUT
@@ -258,7 +341,7 @@ sub dump_config()
 
 	foreach (sort(keys(%config)))
 	{
-		next if($_ =~ /^internal/); # do not output internal vars
+		next if($_ =~ /^internal/ && $debug == 0); # do not output internal vars
 		print "$_=$config{$_}\n";
 	}
 	exit_prog;
@@ -415,36 +498,6 @@ sub send_clientname()
 	foreach my $svr (keys(%servers))
 	{
 		send_text($svr, $svr."\n");
-#		foreach my $char (split(//, $servers{$svr}{realname}), "Return")
-#		{
-#			$xdisplay->SendEvent($servers{$svr}{wid}, 0, 
-#				$xdisplay->pack_event_mask("KeyPress"),
-#				$xdisplay->pack_event(
-#					'name' => "KeyPress",
-#					'detail' => $keycodes{$keysymtocode{$char}},
-#					'state' => 0,
-#					'time' => time(),
-#					'event' => $servers{$svr}{wid}, 
-#					'root' => $xdisplay->root(), 
-#					'same_screen' => 1,
-#				)
-#			);
-#			$xdisplay->flush();
-#
-#			$xdisplay->SendEvent($servers{$svr}{wid}, 0, 
-#				$xdisplay->pack_event_mask("KeyRelease"),
-#				$xdisplay->pack_event(
-#					'name' => "KeyRelease",
-#					'detail' => $keycodes{$keysymtocode{$char}},
-#					'state' => 0,
-#					'time' => time(),
-#					'event' => $servers{$svr}{wid}, 
-#					'root' => $xdisplay->root(), 
-#					'same_screen' => 1,
-#				)
-#			);
-#			$xdisplay->flush();
-#		}
 	}
 }
 
@@ -489,11 +542,7 @@ sub open_client_windows(@)
 		#print "Finished with $server for $_\n";
 
 		$servers{$server}{pipenm}=tmpnam();
-		#print "tmpnam=$servers{$server}{pipenm}\n";
 		mkfifo($servers{$server}{pipenm}, 0600) or die("Cannot create pipe: $!");
-
-		#print "fifo made\n";
-		#print "Helper: $helper_script\n";
 
 		$servers{$server}{pid}=fork();
 		if(!defined($servers{$server}{pid}))
@@ -508,6 +557,7 @@ sub open_client_windows(@)
 			my $copy=$exec;
 			$copy =~ s/-e.*/-e 'echo Working - waiting 10 seconds;sleep 10;exit'/s;
 			logmsg(1,"Terminal testing line:\n$copy\n");
+			logmsg(2,"Terminal testing line:\n$exec\n");
 			exec($exec) == 0 or warn("Failed: $!");;
 		}
 
@@ -880,11 +930,6 @@ open_client_windows(@servers);
 
 build_hosts_menu();
 
-
-#print "$_ = $keysymtocode{$_}\n" foreach (keys(%keysymtocode));
-
-#exit;
-
 logmsg(2, "Sleeping for a mo");
 select(undef, undef, undef, 0.25);
 
@@ -996,6 +1041,14 @@ Disable auto_quit functionality (to allow for config file override)
 =item -u
 
 Output configuration in the format used by the F<$HOME/.csshrc> file
+
+=item -g 
+
+Enable window tiling (if disabled in config file)
+
+=item -G
+
+Disable window tiling (if enabled in config file)
 
 =back
 
@@ -1151,6 +1204,10 @@ Setting to anything other than C<yes> will disable all hotkeys.
 =item user = $LOGNAME
 
 Sets the default user for running commands on clients.
+
+=item window_tiling = yes
+
+Perform window tiling (set to C<no> to disable)
 
 =back
 
