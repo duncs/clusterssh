@@ -15,7 +15,8 @@ modules are:
 	X11::Protocol
 
 For each of these modules, run the following command.  If it fails, 
-download and install the module from http://search.cpan.org/
+either install from your apt-get or yum repositories, or download 
+and install the module from http://search.cpan.org/
 
 	$ perl -M<module> -e "print"
 i.e.
