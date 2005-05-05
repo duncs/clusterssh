@@ -17,6 +17,7 @@
 # 
 EXTRA_DIST = reconf configure clusterssh.spec
 SUBDIRS = src
+CLEANFILES = clusterssh-*.tar.gz
 # 
 # $Id$
 #
