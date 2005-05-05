@@ -485,16 +485,14 @@ sub send_resizemove($$$$$)
 
 	logmsg(2,"Moving window $win to x:$x_pos y:$y_pos (size x:$x_siz y:$y_siz)");
 
-#
-# ARG! Looks like MoveResizeWindow currently isnt in X11::protocol!
-#
-#	$xdisplay->req('MoveResizeWindow',
-#		$win,
-#		$x_pos,
-#		$y_pos,
-#		$x_siz,
-#		$y_siz
-#	);
+	$xdisplay->req('ConfigureWindow',
+		$win,
+		'x'	=>	$x_pos,
+		'y'	=>	$y_pos,
+		'width'	=>	$x_siz,
+		'height'	=>	$y_siz,
+	);
+	$xdisplay->flush();
 }
 
 sub setup_helper_script()
