@@ -73,14 +73,13 @@ require Tk::LabEntry;
 use X11::Protocol;
 use vars qw/ %keysymtocode /;
 use X11::Keysyms '%keysymtocode';
-#use FindBin; # used to get full path to this script
 use File::Basename;
 use Net::hostent;
 
 ### all global variables ###
 my $scriptname=$0; $scriptname=~ s!.*/!!; # get the script name, minus the path
 
-my $options='dDv?hHuqQt:'; # Command line options list
+my $options='dDv?hHuqQgGt:'; # Command line options list
 my %options;
 my %config;
 my $debug=0;
@@ -178,12 +177,11 @@ sub load_config_defaults()
 	$config{key_quit}="Control-q";
 	$config{key_addhost}="Control-plus";
 	$config{key_clientname}="Alt-n";
-	$config{reserve_top}=50;
-	$config{reserve_bottom}=0;
-	$config{reserve_left}=0;
-	$config{reserve_right}=0;
+	$config{key_retilehosts}="Alt-r";
 	$config{auto_quit}="yes";
 	$config{xlsfonts}="xlsfonts";
+	$config{window_tiling}="yes";
+	$config{window_tiling_direction}="right";
 
 	$config{screen_reserve_top}=40;
 	$config{screen_reserve_bottom}=40;
@@ -209,7 +207,7 @@ sub load_config_defaults()
 }
 
 # load in config file settings
-sub load_configfile($)
+sub parse_config_file($)
 {
 	my $config_file=shift;
 	logmsg(2,"Reading in from config file $config_file");
@@ -254,7 +252,8 @@ sub find_binary($)
 	}
 	if(!$path)
 	{
-		die("$binary not found - please amend \$PATH or the cssh config file\n");
+		warn("$binary not found - please amend \$PATH or the cssh config file\n");
+		die unless($options{u});
 	} 
 	chomp($path);
 	return $path;
@@ -300,41 +299,20 @@ sub check_config()
 	}
 	$config{window_tiling}="yes" if $options{g};
 	$config{window_tiling}="no" if $options{G};
+}
 
-	# Do some maths to work out initial figures for window tiling
-
-	# work out default screen height & width (minus reserves)
-	logmsg(1, "Screen Height: ", $xdisplay->{height_in_pixels});
-	$config{internal_screen_height}=$xdisplay->{height_in_pixels};
-	$config{internal_screen_height} -= 
-		($config{screen_reserve_top} + $config{screen_reserve_bottom});
-
-	logmsg(1, "Screen Width: ", $xdisplay->{width_in_pixels});
-	$config{internal_screen_width}=$xdisplay->{width_in_pixels};
-	$config{internal_screen_width} -= 
-		($config{screen_reserve_left} + $config{screen_reserve_right});
-
-	# Work out terminal size
-	$config{internal_max_term_cols}=($config{terminal_size}=~ /(\d+)x.*/)[0];
-	$config{internal_max_term_rows}=($config{terminal_size}=~ /.*x(\d+)/)[0];
-
-	# Work out font size
-	my $font_info=`$config{xlsfonts} -ll -fn $config{terminal_font}`;
-	$config{internal_font_width}=($font_info =~ /^\s*max\s+(\d+)/m)[0];
-	$config{internal_font_height}=($font_info =~ /^\s*PIXEL_SIZE\s*(\d+)/m)[0];
-
-	$config{internal_term_cols}=
-		($config{internal_max_term_cols} * $config{internal_font_width}) + 
-		$config{screen_reserve_left} + $config{screen_reserve_right};
-
-	# use int() to round off to nearest integer
-	$config{internal_columns}=int($config{internal_screen_width}/($config{internal_max_term_cols} * $config{internal_font_width}) - ($config{reserve_left} + $config{reserve_right}));
-	# Cannot work out rows until we know how many windows there are...
+sub load_configfile()
+{
+	parse_config_file('/etc/csshrc');
+	parse_config_file($ENV{HOME}.'/.csshrc');
+	check_config();
 }
 
 # dump out the config to STDOUT
-sub dump_config()
+sub dump_config
 {
+	my $noexit=shift;
+
 	logmsg(3, "Dumping config to STDOUT");
 
 	print("# Configuration dump produced by 'cssh -u'\n");
@@ -344,7 +322,7 @@ sub dump_config()
 		next if($_ =~ /^internal/ && $debug == 0); # do not output internal vars
 		print "$_=$config{$_}\n";
 	}
-	exit_prog;
+	exit_prog if(!$noexit);
 }
 
 sub load_keyboard_map()
@@ -501,6 +479,24 @@ sub send_clientname()
 	}
 }
 
+sub send_resizemove($$$$$)
+{
+	my ($win, $x_pos, $y_pos, $x_siz, $y_siz)=@_;
+
+	logmsg(2,"Moving window $win to x:$x_pos y:$y_pos (size x:$x_siz y:$y_siz)");
+
+#
+# ARG! Looks like MoveResizeWindow currently isnt in X11::protocol!
+#
+#	$xdisplay->req('MoveResizeWindow',
+#		$win,
+#		$x_pos,
+#		$y_pos,
+#		$x_siz,
+#		$y_siz
+#	);
+}
+
 sub setup_helper_script()
 {
 	logmsg(2, "Setting up helper script");
@@ -550,14 +546,28 @@ sub open_client_windows(@)
 			die("Could not fork: $!");
 		}
 
+		if($config{window_tiling} =~ /yes/i)
+		{
+			# Fistly, open off screen (unless debugging) - we need all windows 
+			# open before we can work out how to tiling them.
+			$servers{$server}{position}="-geometry ".
+				$config{terminal_size}."+50+50";	
+				# -geometry WxH+X+Y
+			#$servers{$server}{position}="";
+		} else {
+			# not window tiling, so just blank the var and let the window manager
+			# sort it out
+			$servers{$server}{position}="";
+		}
+
 		if($servers{$server}{pid}==0)
 		{
-			my $exec="$config{terminal} $config{terminal_args} $config{terminal_allow_send_events} $config{terminal_title_opt} '$config{title}:$server' -e $^X -e '$helper_script' $servers{$server}{pipenm} $servers{$server}{realname}";
+			my $exec="$config{terminal} $config{terminal_args} $config{terminal_allow_send_events} $config{terminal_title_opt} '$config{title}:$server' $servers{$server}{position} -font $config{terminal_font} -e $^X -e '$helper_script' $servers{$server}{pipenm} $servers{$server}{realname}";
 			# this is the child
 			my $copy=$exec;
 			$copy =~ s/-e.*/-e 'echo Working - waiting 10 seconds;sleep 10;exit'/s;
 			logmsg(1,"Terminal testing line:\n$copy\n");
-			logmsg(2,"Terminal testing line:\n$exec\n");
+			logmsg(3,"Terminal testing line:\n$exec\n");
 			exec($exec) == 0 or warn("Failed: $!");;
 		}
 
@@ -582,6 +592,164 @@ sub open_client_windows(@)
 		$config{internal_activate_autoquit}=1 ; # activate auto_quit if in use
 	}
 	logmsg(1, "All client windows opened");
+}
+
+sub retile_hosts()
+{
+#	# -geometry WxH+X+Y
+	logmsg(0, "Retiling windows");
+
+	# ALL SIZES SHOULD BE IN PIXELS for consistency
+
+	# get current number of clients
+	$config{internal_total}=int(keys(%servers));
+
+	# Work out font size
+	{
+		my $font_info=`$config{xlsfonts} -ll -fn $config{terminal_font}`;
+		$config{internal_font_width}=($font_info =~ /^\s*max\s+(\d+)/m)[0];
+		$config{internal_font_height}=($font_info =~ /^\s*PIXEL_SIZE\s*(\d+)/m)[0];
+	}
+
+	# work out terminal pixel size from terminal size & font size
+	# does not include any title bars or scroll bars - purely text area
+	$config{internal_terminal_cols}=($config{terminal_size}=~ /(\d+)x.*/)[0];
+	$config{internal_terminal_width}=
+		$config{internal_terminal_cols} * $config{internal_font_width};
+
+	$config{internal_terminal_rows}=($config{terminal_size}=~ /.*x(\d+)/)[0];
+	$config{internal_terminal_height}=
+		$config{internal_terminal_rows} * $config{internal_font_height};
+
+	# fetch screen size
+	$config{internal_screen_height}=$xdisplay->{height_in_pixels};
+	$config{internal_screen_width}=$xdisplay->{width_in_pixels};
+
+	# Now, work out how many columns of terminals we can fit on screen
+	$config{internal_columns}=int(
+		(
+			$config{internal_screen_width} -
+			$config{screen_reserve_left} -
+			$config{screen_reserve_right}
+		) / (	
+			$config{internal_terminal_width} - 
+			$config{terminal_reserve_left} -
+			$config{terminal_reserve_right}
+		)
+	);
+
+	# Work out the number of rows we need to use to fit everything on screen
+	$config{internal_rows}=int(
+		($config{internal_total} / $config{internal_columns}) + 0.999
+	);
+
+	logmsg(2, "Screen Columns: ", $config{internal_columns});
+	logmsg(2, "Screen Rows: ", $config{internal_rows});
+
+	# Now adjust the height of the terminal to either the max given, 
+	# or to get everything on screen
+	{
+		my $height = int(
+			(
+				(
+					$config{internal_screen_height} -
+					$config{screen_reserve_top} -
+					$config{screen_reserve_bottom}
+				) - (
+					$config{internal_rows} * 
+					(
+						$config{terminal_reserve_top} +
+						$config{terminal_reserve_bottom}
+					)
+				)
+			) / $config{internal_rows} 
+		);
+
+		logmsg(2, "Terminal height=$height");
+
+		$config{internal_terminal_height} = 
+			(
+				$height > $config{internal_terminal_height} ? 
+					$config{internal_terminal_height} : $height
+			);
+	}
+
+	dump_config("noexit") if($debug > 1);
+
+	# now we have the info, for each server, plot its new position
+	my @hosts;
+	my ($current_x, $current_y, $current_row, $current_col)=0;
+	if($config{window_tiling_direction} =~ /right/i)
+	{
+		logmsg(2, "Tiling top left going bot right");
+		@hosts=sort(keys(%servers));
+		$current_x=$config{screen_reserve_left};
+		$current_y=$config{screen_reserve_top};
+		$current_row=0;
+		$current_col=0;
+	} else {
+		logmsg(2, "Tiling bot right going top left");
+		@hosts=reverse(sort(keys(%servers)));
+		$current_x=
+			$config{internal_screen_width} - 
+			$config{screen_reserve_right} -
+			$config{internal_terminal_width};
+		$current_y=
+			$config{internal_screen_height} - 
+			$config{screen_reserve_bottom} -
+			$config{internal_terminal_height};
+
+		$current_row=$config{internal_rows}-1;
+		$current_col=$config{internal_columns}-1;
+	}
+
+
+	foreach my $server (@hosts)
+	{
+		logmsg(2, "x:$current_x y:$current_y, r:$current_row c:$current_col");
+
+		# initial positions have already been set
+		send_resizemove(
+			$servers{$server}{wid}, 
+			$current_x, 
+			$current_y, 
+			$config{internal_terminal_width}, 
+			$config{internal_terminal_height}
+		);
+
+		if($config{window_tiling_direction} =~ /right/i)
+		{
+			# starting top left, and move right and down
+			$current_x+=
+				$config{terminal_reserve_left}+
+				$config{internal_terminal_width};
+
+			$current_col+=1;
+			if($current_col == $config{internal_columns})
+			{
+				$current_y+=
+					$config{terminal_reserve_top}+
+					$config{internal_terminal_height};
+				$current_x=$config{screen_reserve_left};
+				$current_row++;
+				$current_col=0;
+			}
+		} else {
+			# starting bottom right, and move left and up
+
+			$current_col-=1;
+			if($current_col < 0)
+			{
+				$current_row--;
+				$current_col=$config{internal_columns};
+			}
+		}
+	}
+}
+
+sub capture_terminal()
+{
+	losgmsg(0, "Stub for capturing a terminal window");
 }
 
 sub add_host_by_name()
@@ -613,9 +781,9 @@ sub add_host_by_name()
 sub build_hosts_menu()
 {
 	logmsg(2, "Building hosts menu");
-	# first, emtpy the hosts menu from the 2nd entry on
+	# first, emtpy the hosts menu from the 4th entry on
 	my $menu=$menus{bar}->entrycget('Hosts', -menu);
-	$menu->delete(2,'end');
+	$menu->delete(4,'end');
 
 	logmsg(3, "Menu deleted");
 
@@ -661,10 +829,11 @@ sub setup_repeat()
 					exit_prog;
 				}
 			}
-
-			# now, we are still running, so rebuilt host menu
-			build_hosts_menu() if($build_menu);
 		}
+
+		# rebuild host menu if something has changed
+		build_hosts_menu() if($build_menu);
+
 		logmsg(3, "repeat completed");
 	});
 	logmsg(2, "Repeat setup");
@@ -752,8 +921,8 @@ sub key_event {
 	my $state=$Tk::event->s;
 	$menus{entrytext}="";
 
-	logmsg(2, "event=$event");
-	logmsg(2, "sym=$keysym (state=$state)");
+	logmsg(3, "event=$event");
+	logmsg(3, "sym=$keysym (state=$state)");
 	if($config{use_hotkeys} eq "yes")
 	{
 		my $combo=$Tk::event->s."-".$Tk::event->K;
@@ -772,6 +941,7 @@ sub key_event {
 					#print "FOUND for $hotkey!\n";
 					send_clientname() if($hotkey eq "key_clientname");
 					add_host_by_name() if($hotkey eq "key_addhost");
+					retile_hosts() if($hotkey eq "key_retilehosts");
 					exit_prog() if($hotkey eq "key_quit");
 				}
 				return;
@@ -818,6 +988,11 @@ sub create_menubar()
 	$menus{file}=$menus{bar}->cascade(
 		-label     => '~File',
 		-menuitems => [
+#			[
+#				"command",
+#				"Reload config",
+#				-command => \&load_configfile,
+#			],
 			[ 
 				"command", 
 				"Exit", 
@@ -832,6 +1007,17 @@ sub create_menubar()
 		-label     => 'H~osts',
 		-tearoff   => 1,
 		-menuitems => [
+			[
+				"command",
+				"Retile Hosts",
+				-command		=> \&retile_hosts,
+				-accelerator => $config{key_retilehosts},
+			],
+			[
+				"command",
+				"Capture Terminal",
+				-command		=> \&capture_terminal,
+			],
 			[
 				 "command",
 				 "Add Host",
@@ -909,9 +1095,7 @@ $debug+=1 if($options{d});
 $debug+=2 if($options{D});
 
 load_config_defaults();
-load_configfile('/etc/csshrc');
-load_configfile($ENV{HOME}.'/.csshrc');
-check_config();
+load_configfile();
 dump_config() if($options{u});
 
 load_keyboard_map();
@@ -927,6 +1111,10 @@ change_main_window_title();
 
 setup_helper_script();
 open_client_windows(@servers);
+
+# Check here if we are tiling windows.  Here instead of in func to
+# can be tiled from console window if wanted
+retile_hosts() if($config{window_tiling} =~ /yes/i);
 
 build_hosts_menu();
 
@@ -1157,13 +1345,17 @@ on shortcuts.
 Default key sequence to quit the program (will terminate all open windows).  
 See below notes on shortcuts.
 
-=item reserve_top = 50
+=item key_retilehosts = Alt-r
 
-=item reserve_bottom = 0
+Default key sequence to retile host windows.  See below notes on shortcuts.
 
-=item reserve_left = 0
+=item screen_reserve_top = 25
 
-=item reserve_right = 0
+=item screen_reserve_bottom = 30
+
+=item screen_reserve_left = 0
+
+=item screen_reserve_right = 0
 
 Number of pixels from the screen side to reserve when calculating screen 
 geometry for tiling.  Setting this to something like 50 will help keep cssh 
@@ -1184,6 +1376,27 @@ Path to the x-windows terminal used for the client.
 
 Arguments to use when opening terminal windows.  Otherwise takes defaults
 from F<$HOME/.Xdefaults> or $<$HOME/.Xresources> file.
+
+=item terminal_font = 6x13
+
+Font to use in the terminal windows
+
+=item terminal_reserve_top = 0
+
+=item terminal_reserve_bottom = 0
+
+=item terminal_reserve_left = 0
+
+=item terminal_reserve_right = 0
+
+Number of pixels from the terminal side to reserve when calculating screen 
+geometry for tiling.  Setting these will help keep cssh from positioning 
+windows over your scroll and title bars
+
+=item terminal_size = 80x24
+
+Initial size of terminals to use (note: the number of lines (24) will be 
+decreased when resizing terminals for tiling, not the number of characters (80))
 
 =item terminal_title_opt = -T
 
@@ -1208,6 +1421,12 @@ Sets the default user for running commands on clients.
 =item window_tiling = yes
 
 Perform window tiling (set to C<no> to disable)
+
+=item window_tiling_direction = right
+
+Direction to tile windows, where "right" means starting top left and moving
+right and down, and anything else means starting bottom right and moving 
+left and up
 
 =back
 
