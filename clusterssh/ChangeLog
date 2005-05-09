@@ -1,3 +1,24 @@
+2005-05-09 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.8
+
+* Remove the need for xlsfonts (perform function by X window calls instead)
+* Debug level output changes
+* Ensure windows are overlapping in the right places, instead of any order
+* Create config section on window decorations (i.e. title & scroll bars)
+
+2005-05-05 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.7
+
+* Found ConfigureWindow instead of ResizeMoveWindow
+
+2005-05-05 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.6
+
+* Lots of work on window tiling - to fall at last hurdle (No XResizeMoveWindow)
+* Documentation updates
+* Allow -u ouput when binaries havnt been found
+* Start coding for capturing an existing terminal window
+* Rebuild hosts menu when all hosts checked, not when each host checked
+* Change debug message output level of keysyms
+* Cater for config of no tiling, but allow to retile in console window anyhow
+
 2005-05-03 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.5
 
 * Remove some old (commented out) code

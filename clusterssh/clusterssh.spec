@@ -1,6 +1,6 @@
 Name: clusterssh
-Version: 3.4
-Release: 3
+Version: 3.8
+Release: 1
 Summary: Secure concurrent multi-server terminal control
 
 Group: Applications/Productivity
@@ -36,8 +36,8 @@ rm -rf %{buildroot}
 
 %changelog
 
-* Mon Apr 25 2005 Duncan Ferguson <duncan_ferguson@users.sf.net> - 3.0-4
-- Created initial spec file for building the RPM
+* Mon Apr 25 2005 Duncan Ferguson <duncan_ferguson@users.sf.net> - 3.0
+- Please see ChangeLog in documentation area
 
 #
 # $Id$
