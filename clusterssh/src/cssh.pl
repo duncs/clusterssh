@@ -179,19 +179,21 @@ sub load_config_defaults()
 	$config{key_clientname}="Alt-n";
 	$config{key_retilehosts}="Alt-r";
 	$config{auto_quit}="yes";
-	$config{xlsfonts}="xlsfonts";
 	$config{window_tiling}="yes";
 	$config{window_tiling_direction}="right";
 
-	$config{screen_reserve_top}=40;
+	$config{screen_reserve_top}=0;
 	$config{screen_reserve_bottom}=40;
 	$config{screen_reserve_left}=0;
 	$config{screen_reserve_right}=0;
 
-	$config{terminal_reserve_top}=40;
+	$config{terminal_reserve_top}=0;
 	$config{terminal_reserve_bottom}=0;
 	$config{terminal_reserve_left}=0;
-	$config{terminal_reserve_right}=40;
+	$config{terminal_reserve_right}=0;
+
+	$config{terminal_decoration_height}=10;
+	$config{terminal_decoration_width}=8;
 
 	($config{comms}=basename($0)) =~ s/^.//;
 	$config{comms} =~ s/.pl$//; # for when testing directly out of cvs
@@ -203,7 +205,6 @@ sub load_config_defaults()
 	$config{rsh_args}="";
 
 	$config{title}="CSSH";
-
 }
 
 # load in config file settings
@@ -232,22 +233,22 @@ sub find_binary($)
 {
 	my $binary=shift;
 
-	logmsg(1,"Looking for $binary");
+	logmsg(2,"Looking for $binary");
 	my $path;
 	if(! -x $binary)
 	{
 		foreach (split(/:/, $ENV{PATH}))
 		{
-			logmsg(2, "Looking in $_");
+			logmsg(3, "Looking in $_");
 			if(-x $_.'/'.$binary)
 			{
 				$path=$_.'/'.$binary;
-				logmsg(1, "Found at $path");
+				logmsg(2, "Found at $path");
 				last;
 			}
 		}
 	} else {
-		logmsg(1, "Already configured OK");
+		logmsg(2, "Already configured OK");
 		$path=$binary;
 	}
 	if(!$path)
@@ -265,10 +266,6 @@ sub check_config()
 	# check we have xterm on our path
 	logmsg(2, "Checking path to xterm");
 	$config{terminal}=find_binary($config{terminal});
-
-	# check we have xlsfonts on our path
-	logmsg(2, "Checking path to xlsfonts");
-	$config{xlsfonts}=find_binary($config{xlsfonts});
 
 	# check we have comms method on our path
 	logmsg(2, "Checking path to $config{comms}");
@@ -534,6 +531,7 @@ sub open_client_windows(@)
 		$servers{$server}{realname}=$_;
 
 		#print "Finished with $server for $_\n";
+		logmsg(2, "Working on server $server");
 
 		$servers{$server}{pipenm}=tmpnam();
 		mkfifo($servers{$server}{pipenm}, 0600) or die("Cannot create pipe: $!");
@@ -562,10 +560,9 @@ sub open_client_windows(@)
 		{
 			my $exec="$config{terminal} $config{terminal_args} $config{terminal_allow_send_events} $config{terminal_title_opt} '$config{title}:$server' $servers{$server}{position} -font $config{terminal_font} -e $^X -e '$helper_script' $servers{$server}{pipenm} $servers{$server}{realname}";
 			# this is the child
-			my $copy=$exec;
-			$copy =~ s/-e.*/-e 'echo Working - waiting 10 seconds;sleep 10;exit'/s;
-			logmsg(1,"Terminal testing line:\n$copy\n");
-			logmsg(3,"Terminal testing line:\n$exec\n");
+			my $test="$config{terminal} $config{terminal_allow_send_events} -e 'echo Working - waiting 10 seconds;sleep 10;exit'";
+			logmsg(1,"Terminal testing line:\n$test\n");
+			logmsg(3,"Terminal exec line:\n$exec\n");
 			exec($exec) == 0 or warn("Failed: $!");;
 		}
 
@@ -589,35 +586,55 @@ sub open_client_windows(@)
 		$servers{$server}{active}=1; # mark as active
 		$config{internal_activate_autoquit}=1 ; # activate auto_quit if in use
 	}
-	logmsg(1, "All client windows opened");
+	logmsg(2, "All client windows opened");
+}
+
+sub get_font_size()
+{
+	foreach my $font ($xdisplay->req('ListFontsWithInfo', '*'.$config{terminal_font}.'*', 1))
+	{
+		my %info = %$font;
+		my %prop = %{$info{'properties'}};
+
+		#print "general: ", join(" ", %info), "\n";
+		#print "min_bounds: ", join(" ", @{$info{'min_bounds'}}), "\n";
+		#print "max_bounds: ", join(" ", @{$info{'max_bounds'}}), "\n";
+		#foreach my $atom (keys %prop)
+		#{
+			#print $xdisplay->atom_name($atom), " ($atom) => ", $prop{$atom}, "; ";
+		#}
+		#print "\n";
+
+		$config{internal_font_width}=$prop{57}; # 57 equates to QUAD_WIDTH
+		$config{internal_font_height}=$prop{199}; # 199 equates to PIXEL_SIZE
+	}
 }
 
 sub retile_hosts()
 {
 #	# -geometry WxH+X+Y
-	logmsg(0, "Retiling windows");
+	logmsg(2, "Retiling windows");
 
 	# ALL SIZES SHOULD BE IN PIXELS for consistency
 
 	# get current number of clients
 	$config{internal_total}=int(keys(%servers));
 
-	# Work out font size
-	{
-		my $font_info=`$config{xlsfonts} -ll -fn $config{terminal_font}`;
-		$config{internal_font_width}=($font_info =~ /^\s*max\s+(\d+)/m)[0];
-		$config{internal_font_height}=($font_info =~ /^\s*PIXEL_SIZE\s*(\d+)/m)[0];
-	}
+	get_font_size();
 
 	# work out terminal pixel size from terminal size & font size
 	# does not include any title bars or scroll bars - purely text area
 	$config{internal_terminal_cols}=($config{terminal_size}=~ /(\d+)x.*/)[0];
 	$config{internal_terminal_width}=
-		$config{internal_terminal_cols} * $config{internal_font_width};
+		($config{internal_terminal_cols} * $config{internal_font_width})+
+			$config{terminal_decoration_width} +
+			$config{terminal_reserve_left} + $config{terminal_reserve_right};
 
 	$config{internal_terminal_rows}=($config{terminal_size}=~ /.*x(\d+)/)[0];
 	$config{internal_terminal_height}=
-		$config{internal_terminal_rows} * $config{internal_font_height};
+		($config{internal_terminal_rows} * $config{internal_font_height}) +
+			$config{terminal_decoration_height} +
+			$config{terminal_reserve_top} + $config{terminal_reserve_bottom};
 
 	# fetch screen size
 	$config{internal_screen_height}=$xdisplay->{height_in_pixels};
@@ -743,11 +760,46 @@ sub retile_hosts()
 			}
 		}
 	}
+	if($config{window_tiling_direction} =~ /right/i)
+	{
+		foreach my $server (reverse(@hosts))
+		{
+			logmsg(2, "Setting focus on $server");
+			$xdisplay->req('UnmapWindow', $servers{$server}{wid});
+			$xdisplay->flush();
+			$xdisplay->req('MapWindow', $servers{$server}{wid});
+			$xdisplay->flush();
+		}
+	} else {
+		foreach my $server (@hosts)
+		{
+			logmsg(2, "Setting focus on $server");
+			$xdisplay->req('UnmapWindow', $servers{$server}{wid});
+			$xdisplay->flush();
+			$xdisplay->req('MapWindow', $servers{$server}{wid});
+			$xdisplay->flush();
+		}
+	}
 }
 
 sub capture_terminal()
 {
-	losgmsg(0, "Stub for capturing a terminal window");
+	logmsg(0, "Stub for capturing a terminal window");
+
+	for my $atom ($xdisplay->req('ListProperties', $servers{loki}{wid})) {
+		print $xdisplay->atom_name($atom), " => ";
+		print join(",", $xdisplay->req('GetProperty', $servers{loki}{wid}, $atom, "AnyPropertyType", 0, 200, 0)), "\n";
+	}
+
+	for my $atom (1 .. 90) {
+		print "$atom: ", $xdisplay->req('GetAtomName', $atom), ", ";
+	}
+	print"\n";
+
+	print "geom\n";
+	print join " ", $xdisplay->req('GetGeometry', $servers{loki}{wid}),$/;
+	print "attrib\n";
+	print join " ", $xdisplay->req('GetWindowAttributes', $servers{loki}{wid}),$/;
 }
 
 sub add_host_by_name()
