@@ -1,3 +1,14 @@
+2005-05-11 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.9
+
+* Allow multiple hosts or tags in the "Add Host" text widget
+* Retile all windows (if set) after adding a host
+* Do not automatically send a return after hostname (Alt-n)
+* Fix bug with sending read hostname instead of internal unique host 
+  name (Alt-n)
+* Fix bug whereby cannot start cssh without any hosts on cmd-line
+* Fix bug where client name was sent to inactive clients
+* Fix bug whereby 0's in sent text were ignored
+
 2005-05-09 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.8
 
 * Remove the need for xlsfonts (perform function by X window calls instead)
@@ -30,7 +41,8 @@
 
 2005-04-26 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.4
 
-* Changed order of "use POSIX" to put :sys_wait_h first to avoid chance of hitting known issue
+* Changed order of "use POSIX" to put :sys_wait_h first to avoid chance of 
+  hitting known issue
 * Allow for running from cvs dir in config{comms}
 * Add "ConnectTimeout=10" to default ssh options
 * Add further debug info
