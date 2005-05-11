@@ -428,8 +428,9 @@ sub send_text($@)
 #		$newline =~ s/\\x{a}$//;
 #	}
 
-	foreach my $char (split(//, $text) , ($newline ? "Return" : ""))
+	foreach my $char (split(//, $text) , ($newline ? "Return" : undef))
 	{
+		next if(!defined($char));
 		my $code;
 		if(exists($chartokeysym{$char}))
 		{
@@ -472,7 +473,7 @@ sub send_clientname()
 {
 	foreach my $svr (keys(%servers))
 	{
-		send_text($svr, $svr."\n");
+		send_text($svr, $servers{$svr}{realname}) if($servers{$svr}{active} == 1);
 	}
 }
 
@@ -619,6 +620,8 @@ sub retile_hosts()
 
 	# get current number of clients
 	$config{internal_total}=int(keys(%servers));
+
+	return if($config{internal_total} == 0);
 
 	get_font_size();
 
@@ -817,7 +820,10 @@ sub add_host_by_name()
 
 	logmsg(2, "host=$menus{host_entry}");
 
-	open_client_windows( $menus{host_entry} );
+	open_client_windows(resolve_names(split(/\s+/, $menus{host_entry})));
+
+	retile_hosts() if($config{window_tiling} =~ /yes/i); # auto-retile 
+
 	build_hosts_menu();
 	$menus{host_entry}="";
 	select(undef,undef,undef,0.25); #sleep for a mo
