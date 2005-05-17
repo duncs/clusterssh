@@ -596,18 +596,25 @@ sub get_font_size()
 	{
 		my %info = %$font;
 		my %prop = %{$info{'properties'}};
+		my %atoms;
 
 		#print "general: ", join(" ", %info), "\n";
 		#print "min_bounds: ", join(" ", @{$info{'min_bounds'}}), "\n";
 		#print "max_bounds: ", join(" ", @{$info{'max_bounds'}}), "\n";
-		#foreach my $atom (keys %prop)
-		#{
-			#print $xdisplay->atom_name($atom), " ($atom) => ", $prop{$atom}, "; ";
-		#}
+		foreach my $atom (sort(keys %prop))
+		{
+			#print($xdisplay->atom_name($atom), " ($atom) => ", $prop{$atom}, "; ");
+			# set up new hash which resolves atom names to numbers
+			$atoms{$xdisplay->atom_name($atom)}=$prop{$atom};
+		}
 		#print "\n";
 
-		$config{internal_font_width}=$prop{57}; # 57 equates to QUAD_WIDTH
-		$config{internal_font_height}=$prop{199}; # 199 equates to PIXEL_SIZE
+		#$config{internal_font_width}=$prop{57}; # 57 equates to QUAD_WIDTH
+		#$config{internal_font_height}=$prop{205}; # 205 equates to PIXEL_SIZE
+		# have to resolve name first as it seems the numbers move for some reason?
+		$config{internal_font_width}=$atoms{QUAD_WIDTH};
+		$config{internal_font_height}=$atoms{PIXEL_SIZE};
+
 	}
 }
 
