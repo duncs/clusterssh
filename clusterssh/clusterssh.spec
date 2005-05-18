@@ -1,6 +1,6 @@
 Name: clusterssh
-Version: 3.9
-Release: 2
+Version: 3.11
+Release: 1
 Summary: Secure concurrent multi-server terminal control
 
 Group: Applications/Productivity

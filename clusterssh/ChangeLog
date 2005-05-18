@@ -1,3 +1,9 @@
+2005-05-18 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.11
+
+* Remove trailing whitespace from config file lines
+* Prevent paste events being sent to non-active clients
+* Allow paste events to send capitalised letters
+
 2005-05-17 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.10
 
 * fix for moving atom numbers in font info
