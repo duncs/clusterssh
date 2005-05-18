@@ -71,6 +71,7 @@ use Tk::Xlib;
 require Tk::Dialog;
 require Tk::LabEntry;
 use X11::Protocol;
+use X11::Protocol::Constants qw/ ShiftMask /;
 use vars qw/ %keysymtocode /;
 use X11::Keysyms '%keysymtocode';
 use File::Basename;
@@ -219,6 +220,7 @@ sub parse_config_file($)
 	{
 		next if(/^\s*$/ || /^#/); # ignore blank lines & commented lines
 		s/#.*//; # remove comments from remaining lines
+		s/\s*//; # remove trailing whitespace
 		chomp();
 		#my ($key, $value) = split(/[ 	]*=[ 	]*/);
 		/(\w+)[   ]*=[  ]*(.*)/;	
@@ -431,6 +433,7 @@ sub send_text($@)
 	foreach my $char (split(//, $text) , ($newline ? "Return" : undef))
 	{
 		next if(!defined($char));
+		my $mask=0;
 		my $code;
 		if(exists($chartokeysym{$char}))
 		{
@@ -446,7 +449,9 @@ sub send_text($@)
 			#$code=$keycodes{$keysymtocode{$char}};
 		#}
 
-		logmsg(2, "char=:$char: code=:$code: number=:$keycodes{$keysymtocode{$code}}:");
+		$mask=ShiftMask if($char =~ /[A-Z]/); # catch capital letters
+
+		logmsg(2, "char=:$char: code=:$code: mask=:$mask: number=:$keycodes{$keysymtocode{$code}}:");
 		#logmsg(2, "char=:$char:");
 
 		for my $event (qw/KeyPress KeyRelease/)
@@ -457,7 +462,7 @@ sub send_text($@)
 				$xdisplay->pack_event(
 					'name' => $event,
 					'detail' => $keycodes{$keysymtocode{$code}},
-					'state' => 0,
+					'state' => $mask,
 					'time' => time(),
 					'event' => $servers{$svr}{wid},
 					'root' => $xdisplay->root(),
@@ -796,6 +801,8 @@ sub capture_terminal()
 {
 	logmsg(0, "Stub for capturing a terminal window");
 
+	return;
+
 	for my $atom ($xdisplay->req('ListProperties', $servers{loki}{wid})) {
 		print $xdisplay->atom_name($atom), " => ";
 		print join(",", $xdisplay->req('GetProperty', $servers{loki}{wid}, $atom, "AnyPropertyType", 0, 200, 0)), "\n";
@@ -897,6 +904,9 @@ sub setup_repeat()
 		# rebuild host menu if something has changed
 		build_hosts_menu() if($build_menu);
 
+		# clean out text area, anyhow
+		$menus{entrytext}="";
+
 		logmsg(3, "repeat completed");
 	});
 	logmsg(2, "Repeat setup");
@@ -928,10 +938,12 @@ sub create_windows()
 		# SelectionGet is fatal if no selection is given
 		Tk::catch { $paste_text=$windows{main_window}->SelectionGet };
 
+		logmsg(2, "PASTE EVENT: got '$paste_text'");
+
 		# now sent it on
 		foreach my $svr (keys(%servers))
 		{
-			send_text($svr, $paste_text);
+			send_text($svr, $paste_text) if($servers{$svr}{active} == 1);
 		}
 	});
 
