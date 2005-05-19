@@ -130,6 +130,22 @@ my %chartokeysym = (
 	' ' => 'space',
 );
 
+# list of key codes that do not require the shift key
+my %unshiftedchars = (
+	'semicolon' => 1,
+	'minus'     => 1,
+	'equal'     => 1,
+	'bracketleft' => 1,
+	'bracketright' => 1,
+	'apostrophe' => 1,
+	'numbersign' => 1,
+	'comma' => 1,
+	'period' => 1,
+	'slash' => 1,
+	'backslash' => 1,
+);
+
+
 ### all sub-routines ###
 
 # catch_all exit routine that should always be used
@@ -449,7 +465,8 @@ sub send_text($@)
 			#$code=$keycodes{$keysymtocode{$char}};
 		#}
 
-		$mask=ShiftMask if($char =~ /[A-Z]/); # catch capital letters
+		# catch letters that require the shift key when sent
+		$mask=ShiftMask if($char =~ /[A-Z]/ || ($char =~ /\W/ && !$unshiftedchars{$code}));
 
 		logmsg(2, "char=:$char: code=:$code: mask=:$mask: number=:$keycodes{$keysymtocode{$code}}:");
 		#logmsg(2, "char=:$char:");
