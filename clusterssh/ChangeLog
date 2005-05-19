@@ -1,3 +1,8 @@
+2005-05-19 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.12.1
+
+* Bugfix for shifted non-alphanumeric keyboard chars not being pasted correctly
+* Marked version number with 3rd digit to signify beta releases
+
 2005-05-18 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.11
 
 * Remove trailing whitespace from config file lines
