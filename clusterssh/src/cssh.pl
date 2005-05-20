@@ -145,7 +145,6 @@ my %unshiftedchars = (
 	'backslash' => 1,
 );
 
-
 ### all sub-routines ###
 
 # catch_all exit routine that should always be used
@@ -236,7 +235,7 @@ sub parse_config_file($)
 	{
 		next if(/^\s*$/ || /^#/); # ignore blank lines & commented lines
 		s/#.*//; # remove comments from remaining lines
-		s/\s*//; # remove trailing whitespace
+		s/\s*$//; # remove trailing whitespace
 		chomp();
 		#my ($key, $value) = split(/[ 	]*=[ 	]*/);
 		/(\w+)[   ]*=[  ]*(.*)/;	
@@ -314,6 +313,10 @@ sub check_config()
 	}
 	$config{window_tiling}="yes" if $options{g};
 	$config{window_tiling}="no" if $options{G};
+
+	$config{internal_retile_in_progress}=0;
+	$config{internal_map_count}=0;
+	$config{internal_unmap_count}=0;
 }
 
 sub load_configfile()
@@ -640,9 +643,21 @@ sub get_font_size()
 	}
 }
 
+sub show_console()
+{
+	logmsg(2, "Sending console to front");
+	select(undef,undef,undef,0.1); #sleep for a mo
+	$windows{main_window}->withdraw;
+	$windows{main_window}->deiconify;
+	$windows{main_window}->raise;
+	$windows{main_window}->focus;
+	$windows{text_entry}->focus();
+}
+
 sub retile_hosts()
 {
-#	# -geometry WxH+X+Y
+	return if($config{internal_retile_in_progress} == 1);
+	$config{internal_retile_in_progress}=1;
 	logmsg(2, "Retiling windows");
 
 	# ALL SIZES SHOULD BE IN PIXELS for consistency
@@ -812,23 +827,44 @@ sub retile_hosts()
 			$xdisplay->flush();
 		}
 	}
+
+	# and as a last item, set focus back onto the console
+	show_console();
+
+	$config{internal_retile_in_progress}=0;
 }
 
 sub capture_terminal()
 {
 	logmsg(0, "Stub for capturing a terminal window");
 
-	return;
+	return if($debug < 2);
+
+	my %atoms;
 
 	for my $atom ($xdisplay->req('ListProperties', $servers{loki}{wid})) {
-		print $xdisplay->atom_name($atom), " => ";
-		print join(",", $xdisplay->req('GetProperty', $servers{loki}{wid}, $atom, "AnyPropertyType", 0, 200, 0)), "\n";
+		$atoms{$xdisplay->atom_name($atom)}=$xdisplay->req('GetProperty', $servers{loki}{wid}, $atom, "AnyPropertyType", 0, 200, 0);
+
+		print $xdisplay->atom_name($atom), " ($atom) => ";
+		print "join here\n";
+		print join("\n", $xdisplay->req('GetProperty', $servers{loki}{wid}, $atom, "AnyPropertyType", 0, 200, 0)), "\n";
 	}
 
+	print "list by number\n";
 	for my $atom (1 .. 90) {
-		print "$atom: ", $xdisplay->req('GetAtomName', $atom), ", ";
+		print "$atom: ", $xdisplay->req('GetAtomName', $atom), "\n";
+		print join("\n", $xdisplay->req('GetProperty', $servers{loki}{wid}, $atom, "AnyPropertyType", 0, 200, 0)), "\n";
 	}
 	print"\n";
+
+	print "size hints\n";
+	print join("\n", $xdisplay->req('GetProperty', $servers{loki}{wid}, 42, "AnyPropertyType", 0, 200, 0)), "\n";
+
+	print "atom list by name\n";
+	foreach (keys(%atoms))
+	{
+		print "atom :$_: = $atoms{$_}\n";
+	}
 
 	print "geom\n";
 	print join " ", $xdisplay->req('GetGeometry', $servers{loki}{wid}),$/;
@@ -853,16 +889,16 @@ sub add_host_by_name()
 
 	open_client_windows(resolve_names(split(/\s+/, $menus{host_entry})));
 
-	retile_hosts() if($config{window_tiling} =~ /yes/i); # auto-retile 
-
 	build_hosts_menu();
 	$menus{host_entry}="";
-	select(undef,undef,undef,0.25); #sleep for a mo
-	$windows{main_window}->withdraw;
-	$windows{main_window}->deiconify;
-	$windows{main_window}->raise;
-	$windows{main_window}->focus;
-	$windows{text_entry}->focus();
+
+	# retile, or bring console to front
+	if($config{window_tiling} =~ /yes/i)
+	{
+		retile_hosts();
+	} else {
+		show_console();
+	}
 }
 
 sub build_hosts_menu()
@@ -935,12 +971,41 @@ sub create_windows()
 {
 	$windows{main_window}=MainWindow->new(-title=>"ClusterSSH");
 
+	# pick up on minimise/maximise events so we can do all windows
+	$windows{main_window}->bind(
+		'<Map>' => sub {
+			$config{internal_map_count}++;
+			return if($config{internal_map_count} < 2 || $config{internal_retile_in_progress} == 1);
+
+			logmsg(2, "Got map event, count is: ", $config{internal_map_count});
+
+			retile_hosts();
+			$config{internal_map_count}=0;
+		}
+	);
+	$windows{main_window}->bind(
+		'<Unmap>' => sub {
+			$config{internal_unmap_count}++;
+			return if($config{internal_unmap_count} < 2 || $config{internal_retile_in_progress} == 1);
+
+			logmsg(2, "Got unmap event, count is: ", $config{internal_unmap_count});
+
+			foreach my $server (reverse(keys(%servers)))
+			{
+				$xdisplay->req('UnmapWindow', $servers{$server}{wid});
+				$xdisplay->flush();
+			}
+
+			$config{internal_unmap_count}=0;
+		}
+	);
+
 	$menus{entrytext}="";
 	$windows{text_entry}=$windows{main_window}->Entry(
 		-textvariable  =>  \$menus{entrytext},
 		-insertborderwidth            => 4,
 		-width => 25,
-	)->pack( 
+	)->pack(
 		-fill => "x",
 		-expand => 1,
 	);
@@ -1219,7 +1284,7 @@ $windows{text_entry}->focus();
 logmsg(2, "Setting up repeat");
 setup_repeat();
 
-# Start even loop & open windows
+# Start event loop
 logmsg(2, "Starting MainLoop");
 MainLoop();
 
