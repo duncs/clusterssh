@@ -1,4 +1,9 @@
-2005-05-19 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.12.1
+2005-05-20 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.13.1 
+
+* Bugfix for whitespace in config files (missing a char from regexp)
+* Allow for minimising/maximising all windows when done on console
+
+2005-05-19 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.12.1 
 
 * Bugfix for shifted non-alphanumeric keyboard chars not being pasted correctly
 * Marked version number with 3rd digit to signify beta releases
