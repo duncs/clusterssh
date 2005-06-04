@@ -556,8 +556,7 @@ sub open_client_windows(@)
 
 		$servers{$server}{realname}=$_;
 
-		#print "Finished with $server for $_\n";
-		logmsg(2, "Working on server $server");
+		logmsg(2, "Working on server $server for $_");
 
 		$servers{$server}{pipenm}=tmpnam();
 		mkfifo($servers{$server}{pipenm}, 0600) or die("Cannot create pipe: $!");
@@ -568,30 +567,21 @@ sub open_client_windows(@)
 			die("Could not fork: $!");
 		}
 
-		if($config{window_tiling} =~ /yes/i)
-		{
-			# Fistly, open off screen (unless debugging) - we need all windows 
-			# open before we can work out how to tiling them.
-			$servers{$server}{position}="-geometry ".
-				$config{terminal_size}."+50+50";	
-				# -geometry WxH+X+Y
-			#$servers{$server}{position}="";
-		} else {
-			# not window tiling, so just blank the var and let the window manager
-			# sort it out
-			$servers{$server}{position}="";
-		}
-
 		if($servers{$server}{pid}==0)
 		{
-			my $exec="$config{terminal} $config{terminal_args} $config{terminal_allow_send_events} $config{terminal_title_opt} '$config{title}:$server' $servers{$server}{position} -font $config{terminal_font} -e $^X -e '$helper_script' $servers{$server}{pipenm} $servers{$server}{realname}";
+			my $exec="$config{terminal} $config{terminal_args} $config{terminal_allow_send_events} $config{terminal_title_opt} '$config{title}:$server' -font $config{terminal_font} -e $^X -e '$helper_script' $servers{$server}{pipenm} $servers{$server}{realname}";
 			# this is the child
 			my $test="$config{terminal} $config{terminal_allow_send_events} -e 'echo Working - waiting 10 seconds;sleep 10;exit'";
 			logmsg(1,"Terminal testing line:\n$test\n");
 			logmsg(3,"Terminal exec line:\n$exec\n");
 			exec($exec) == 0 or warn("Failed: $!");;
 		}
+	}
 
+	# Now all the windows are open, get all their window id's
+
+	foreach my $server (keys(%servers))
+	{
 		# block on open so we get the text when it comes in
 		if(!sysopen($servers{$server}{pipehl}, $servers{$server}{pipenm}, O_RDONLY))
 		{
