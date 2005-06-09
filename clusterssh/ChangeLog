@@ -1,3 +1,23 @@
+2005-06-09 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.15.1 
+
+* Add and document "-c <clusterfile>"
+* Add and document "-l <username>"
+* Add and document "-o <options>"
+* Document "-t <title>"
+* Set controlled terminals to have user set size & position (WM_SIZE_HINTS)
+* Speed up initial terminal openings
+* Remove all key bindings from drop down menus (conflicts with emacs and
+  can all be done by other hotkeys anyhow)
+* Allow individual hotkeys to be disabled, instead of all-or-nothing
+* Updates to POD
+* Update retile code to avoid flickering windows (& also fix cygwin bug)
+* Rename -t to -T to match previous series option
+* Added in -t to modify cmd line args for terminals
+
+2005-06-04 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.14.1 
+
+* first cut at terminal opening speed up
+
 2005-05-20 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.13.1 
 
 * Bugfix for whitespace in config files (missing a char from regexp)
