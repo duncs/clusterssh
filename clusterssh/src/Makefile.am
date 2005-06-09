@@ -21,7 +21,6 @@ CLEANFILES = $(bin_SCRIPTS) $(man1_MANS)
 EXTRA_DIST = cssh.pl
 
 cssh: $(srcdir)/cssh.pl
-	$(PERL) -c $(srcdir)/cssh.pl
 	rm -f cssh
 	echo "#!"$(PERL) > cssh
 	cat $(srcdir)/cssh.pl >> cssh
