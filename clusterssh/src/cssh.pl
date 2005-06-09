@@ -80,7 +80,7 @@ use Net::hostent;
 ### all global variables ###
 my $scriptname=$0; $scriptname=~ s!.*/!!; # get the script name, minus the path
 
-my $options='dDv?hHuqQgGt:'; # Command line options list
+my $options='dDv?hHuqQgGt:T:c:l:o:'; # Command line options list
 my %options;
 my %config;
 my $debug=0;
@@ -188,7 +188,6 @@ sub load_config_defaults()
 	$config{terminal_allow_send_events}="-xrm 'XTerm.VT100.allowSendEvents:true'";
 	$config{terminal_font}="6x13";
 	$config{terminal_size}="80x24";
-	$config{user}=$ENV{LOGNAME};
 	$config{use_hotkeys}="yes";
 	$config{key_quit}="Control-q";
 	$config{key_addhost}="Control-plus";
@@ -292,7 +291,7 @@ sub check_config()
 	die "FATAL: Only ssh and rsh protocols are currently supported (comms=$config{comms})\n" if($config{comms} !~ /^[rs]sh$/);
 
 	# Set any extra config options given on command line
-	$config{title}=$options{t} if($options{t});
+	$config{title}=$options{T} if($options{T});
 
 	$config{auto_quit}="yes" if $options{q};
 	$config{auto_quit}="no" if $options{Q};
@@ -314,9 +313,14 @@ sub check_config()
 	$config{window_tiling}="yes" if $options{g};
 	$config{window_tiling}="no" if $options{G};
 
-	$config{internal_retile_in_progress}=0;
+	$config{internal_retile_completed}=0;
 	$config{internal_map_count}=0;
 	$config{internal_unmap_count}=0;
+
+	$config{user}=$options{l} if($options{l});
+	$config{terminal_args}=$options{t} if($options{t});
+	
+	get_font_size();
 }
 
 sub load_configfile()
@@ -363,7 +367,7 @@ sub get_clusters()
 	# first, read in global file
 	my $cluster_file='/etc/clusters';
 
-	logmsg(3, "Looging for $cluster_file");
+	logmsg(3, "Logging for $cluster_file");
 
 	if(-f $cluster_file)
 	{
@@ -381,15 +385,36 @@ sub get_clusters()
 	}
 
 	# Now get any definitions out of %config
-	logmsg(2,"Looking for user space clusters");
+	logmsg(2,"Looking for csshrc");
 	if($config{clusters})
 	{
-		logmsg(2,"Loading clusters in from user space");
+		logmsg(2,"Loading clusters in from csshrc");
 
 		foreach (split(/\s+/, $config{clusters}))
 		{
 			logmsg(3,"cluster $_ = $config{$_}");
 			$clusters{$_} = $config{$_};
+		}
+	}
+
+	# and finally, any additional cluster file provided
+	if($options{c})
+	{
+		if(-f $options{c})
+		{
+			logmsg(2,"Loading clusters in from $options{c}");
+			open(CLUSTERS, $options{c}) || die("Couldnt read $options{c}");
+			while(<CLUSTERS>)
+			{
+				next if(/^\s*$/ || /^#/); # ignore blank lines & commented lines
+				chomp();
+				s/^([\w-]+)\s*//; # remote first word and stick into $1
+				logmsg(3,"cluster $1 = $_");
+				$clusters{$1} = $_ ; # Now bung in rest of line
+			}
+			close(CLUSTERS);
+		} else {
+			warn("WARNING: Custom cluster file '$options{c}' cannot be opened\n");
 		}
 	}
 }
@@ -508,6 +533,20 @@ sub send_resizemove($$$$$)
 
 	logmsg(2,"Moving window $win to x:$x_pos y:$y_pos (size x:$x_siz y:$y_siz)");
 
+	#logmsg(2, "Normal: ", $xdisplay->atom('WM_NORMAL_HINTS'));
+	#logmsg(2, "Size:   ", $xdisplay->atom('WM_SIZE_HINTS'));
+
+	# set the window to have "user" set size & position, rather than "program"
+	$xdisplay->req('ChangeProperty',
+		$win,
+		$xdisplay->atom('WM_NORMAL_HINTS'),
+		$xdisplay->atom('WM_SIZE_HINTS'),
+		32,
+		'Replace',
+		# dark magic - create data struct on fly - to set required flags
+		pack("L" . "x[i]" x 17, 3),
+	);
+
 	$xdisplay->req('ConfigureWindow',
 		$win,
 		'x'	=>	$x_pos,
@@ -515,7 +554,7 @@ sub send_resizemove($$$$$)
 		'width'	=>	$x_siz,
 		'height'	=>	$y_siz,
 	);
-	$xdisplay->flush();
+	#$xdisplay->flush(); # dont flush here, but after all tiling worked out
 }
 
 sub setup_helper_script()
@@ -524,10 +563,12 @@ sub setup_helper_script()
 	$helper_script=<<"	HERE";
 		my \$pipe=shift;
 		my \$svr=shift;
+		my \$user=shift;
+		\$user = \$user ? "-l \$user" : "";
 		open(PIPE, ">", \$pipe);
 		print PIPE "\$ENV{WINDOWID}";
 		close(PIPE);
-		exec("$config{$config{comms}} $config{$config{comms}."_args"} \$svr");
+		exec("$config{$config{comms}} $config{$config{comms}."_args"} \$user \$svr");
 	HERE
 	logmsg(2, $helper_script);
 	logmsg(2, "Helper script done");
@@ -538,6 +579,16 @@ sub open_client_windows(@)
 	foreach (@_)
 	{
 		next unless($_);
+
+		my $username="";
+		$username=$config{user} if($config{user});
+
+		# split off any provided hostname
+		if($_ =~ /(\w+)@/)
+		{
+			$username=$1;
+			$_ =~ s/.*@//;
+		}
 
 		# see if we can find the hostname - if not, drop it
 		if(!gethost("$_"))
@@ -555,10 +606,13 @@ sub open_client_windows(@)
 		}
 
 		$servers{$server}{realname}=$_;
+		$servers{$server}{username}=$username;
 
 		logmsg(2, "Working on server $server for $_");
 
 		$servers{$server}{pipenm}=tmpnam();
+
+		logmsg(2, "Set temp name to: $servers{$server}{pipenm}");
 		mkfifo($servers{$server}{pipenm}, 0600) or die("Cannot create pipe: $!");
 
 		$servers{$server}{pid}=fork();
@@ -569,19 +623,21 @@ sub open_client_windows(@)
 
 		if($servers{$server}{pid}==0)
 		{
-			my $exec="$config{terminal} $config{terminal_args} $config{terminal_allow_send_events} $config{terminal_title_opt} '$config{title}:$server' -font $config{terminal_font} -e $^X -e '$helper_script' $servers{$server}{pipenm} $servers{$server}{realname}";
 			# this is the child
+			my $exec="$config{terminal} $config{terminal_args} $config{terminal_allow_send_events} $config{terminal_title_opt} '$config{title}:$server' -font $config{terminal_font} -e $^X -e '$helper_script' $servers{$server}{pipenm} $servers{$server}{realname} $servers{$server}{username}";
 			my $test="$config{terminal} $config{terminal_allow_send_events} -e 'echo Working - waiting 10 seconds;sleep 10;exit'";
 			logmsg(1,"Terminal testing line:\n$test\n");
-			logmsg(3,"Terminal exec line:\n$exec\n");
+			logmsg(2,"Terminal exec line:\n$exec\n");
+			logmsg(3, $_) foreach (split(/ /, $exec));
 			exec($exec) == 0 or warn("Failed: $!");;
 		}
 	}
 
 	# Now all the windows are open, get all their window id's
-
 	foreach my $server (keys(%servers))
 	{
+		next if(defined($servers{$server}{active}));
+
 		# block on open so we get the text when it comes in
 		if(!sysopen($servers{$server}{pipehl}, $servers{$server}{pipenm}, O_RDONLY))
 		{
@@ -603,10 +659,12 @@ sub open_client_windows(@)
 		$config{internal_activate_autoquit}=1 ; # activate auto_quit if in use
 	}
 	logmsg(2, "All client windows opened");
+	$config{internal_total}=int(keys(%servers));
 }
 
 sub get_font_size()
 {
+	logmsg(2, "Fetching font size");
 	foreach my $font ($xdisplay->req('ListFontsWithInfo', '*'.$config{terminal_font}.'*', 1))
 	{
 		my %info = %$font;
@@ -631,6 +689,7 @@ sub get_font_size()
 		$config{internal_font_height}=$atoms{PIXEL_SIZE};
 
 	}
+	logmsg(2, "Done with font size");
 }
 
 sub show_console()
@@ -646,18 +705,13 @@ sub show_console()
 
 sub retile_hosts()
 {
-	return if($config{internal_retile_in_progress} == 1);
-	$config{internal_retile_in_progress}=1;
 	logmsg(2, "Retiling windows");
 
 	# ALL SIZES SHOULD BE IN PIXELS for consistency
 
-	# get current number of clients
-	$config{internal_total}=int(keys(%servers));
+	logmsg(2, "Count is currently $config{internal_total}");
 
 	return if($config{internal_total} == 0);
-
-	get_font_size();
 
 	# work out terminal pixel size from terminal size & font size
 	# does not include any title bars or scroll bars - purely text area
@@ -726,9 +780,9 @@ sub retile_hosts()
 			);
 	}
 
-	dump_config("noexit") if($debug > 1);
+	#dump_config("noexit") if($debug > 1);
 
-	# now we have the info, for each server, plot its new position
+	# now we have the info, for each server, plot first window position
 	my @hosts;
 	my ($current_x, $current_y, $current_row, $current_col)=0;
 	if($config{window_tiling_direction} =~ /right/i)
@@ -755,12 +809,17 @@ sub retile_hosts()
 		$current_col=$config{internal_columns}-1;
 	}
 
-
+	# Unmap windows (hide them)
+	# Move windows to new locatation
+	# Remap all windows in correct order
 	foreach my $server (@hosts)
 	{
 		logmsg(2, "x:$current_x y:$current_y, r:$current_row c:$current_col");
 
-		# initial positions have already been set
+		$xdisplay->req('UnmapWindow', $servers{$server}{wid});
+		$xdisplay->flush; # flush here to hide window asap
+
+		logmsg(2, "Moving $server window");
 		send_resizemove(
 			$servers{$server}{wid}, 
 			$current_x, 
@@ -780,8 +839,8 @@ sub retile_hosts()
 			if($current_col == $config{internal_columns})
 			{
 				$current_y+=
-					$config{terminal_reserve_top}+
-					$config{internal_terminal_height};
+				$config{terminal_reserve_top}+
+				$config{internal_terminal_height};
 				$current_x=$config{screen_reserve_left};
 				$current_row++;
 				$current_col=0;
@@ -797,31 +856,29 @@ sub retile_hosts()
 			}
 		}
 	}
+
+	# Now remap in right order to get overlaps correct
 	if($config{window_tiling_direction} =~ /right/i)
 	{
 		foreach my $server (reverse(@hosts))
 		{
 			logmsg(2, "Setting focus on $server");
-			$xdisplay->req('UnmapWindow', $servers{$server}{wid});
-			$xdisplay->flush();
 			$xdisplay->req('MapWindow', $servers{$server}{wid});
-			$xdisplay->flush();
 		}
 	} else {
 		foreach my $server (@hosts)
 		{
 			logmsg(2, "Setting focus on $server");
-			$xdisplay->req('UnmapWindow', $servers{$server}{wid});
-			$xdisplay->flush();
 			$xdisplay->req('MapWindow', $servers{$server}{wid});
-			$xdisplay->flush();
 		}
 	}
+
+	$xdisplay->flush(); 
 
 	# and as a last item, set focus back onto the console
 	show_console();
 
-	$config{internal_retile_in_progress}=0;
+	$config{internal_retile_completed}=1;
 }
 
 sub capture_terminal()
@@ -829,6 +886,16 @@ sub capture_terminal()
 	logmsg(0, "Stub for capturing a terminal window");
 
 	return if($debug < 2);
+
+	foreach my $server (keys(%servers))
+	{
+		foreach my $data (keys(%{$servers{$server}}))
+		{
+			print "server $server key $data is $servers{$server}{$data}\n";
+		}
+	}
+
+	#return;
 
 	my %atoms;
 
@@ -906,7 +973,7 @@ sub build_hosts_menu()
 	logmsg(3, "Parsing list");
 	foreach my $svr (sort(keys(%servers)))
 	{
-		logmsg(3, "Checking $svr and marking as active");
+		logmsg(3, "Checking $svr and restoring active value");
 		$menus{hosts}->checkbutton(
 			-label=>$svr,
 			-variable=>\$servers{$svr}{active},
@@ -924,12 +991,14 @@ sub setup_repeat()
 	$windows{main_window}->repeat(500, sub {
 		my $build_menu=0;
 		logmsg(3, "Running repeat");
+		logmsg(3, "Number of servers in hash is: ",scalar(keys(%servers)));
 		foreach my $svr (keys(%servers))
 		{
-			if(! kill(0, $servers{$svr}{pid}) )
+			if(!kill(0, $servers{$svr}{pid}) )
 			{
 				$build_menu=1;
 				delete($servers{$svr});
+				logmsg(2, "removed one");
 			}
 				
 			# If there are no hosts in the list and we are set to autoquit
@@ -943,6 +1012,11 @@ sub setup_repeat()
 				}
 			}
 		}
+
+		# get current number of clients
+		$config{internal_total}=int(keys(%servers));
+
+		logmsg(3, "Number after tidy is: ",scalar(keys(%servers)));
 
 		# rebuild host menu if something has changed
 		build_hosts_menu() if($build_menu);
@@ -965,28 +1039,33 @@ sub create_windows()
 	$windows{main_window}->bind(
 		'<Map>' => sub {
 			$config{internal_map_count}++;
-			return if($config{internal_map_count} < 2 || $config{internal_retile_in_progress} == 1);
-
-			logmsg(2, "Got map event, count is: ", $config{internal_map_count});
+			$config{internal_retile_completed}-- if($config{internal_retile_completed});
+			logmsg(2, "Got map event ($config{internal_map_count}:$config{internal_retile_completed})");
+			return if($config{internal_map_count}<2);
+			$config{internal_map_count}=0;
+			return if(!$config{internal_retile_completed});
 
 			retile_hosts();
 			$config{internal_map_count}=0;
+			$config{internal_retile_completed}=0;
 		}
 	);
 	$windows{main_window}->bind(
 		'<Unmap>' => sub {
-			$config{internal_unmap_count}++;
-			return if($config{internal_unmap_count} < 2 || $config{internal_retile_in_progress} == 1);
-
-			logmsg(2, "Got unmap event, count is: ", $config{internal_unmap_count});
+			$config{internal_map_count}++;
+			$config{internal_retile_completed}-- if($config{internal_retile_completed});
+			logmsg(2, "Got unmap event ($config{internal_map_count}:$config{internal_retile_completed})");
+			return if($config{internal_map_count}<2);
+			$config{internal_map_count}=0;
+			return if(!$config{internal_retile_completed});
 
 			foreach my $server (reverse(keys(%servers)))
 			{
 				$xdisplay->req('UnmapWindow', $servers{$server}{wid});
-				$xdisplay->flush();
 			}
-
-			$config{internal_unmap_count}=0;
+			$xdisplay->flush();
+			$config{internal_map_count}=0;
+			$config{internal_retile_completed}=0;
 		}
 	);
 
@@ -1078,6 +1157,7 @@ sub key_event {
 		{
 			#print "Checking hotkey $hotkey ($config{$hotkey})\n";
 			my $key=$config{$hotkey};
+			next if($key eq "null"); # ignore disabled keys
 			$key =~ s/-/.*/g;
 			#print "key=$key\n";
 			#print "combo=$combo\n";
@@ -1133,13 +1213,8 @@ sub create_menubar()
 	$windows{main_window}->configure(-menu=>$menus{bar}); 
 
 	$menus{file}=$menus{bar}->cascade(
-		-label     => '~File',
+		-label     => 'File',
 		-menuitems => [
-#			[
-#				"command",
-#				"Reload config",
-#				-command => \&load_configfile,
-#			],
 			[ 
 				"command", 
 				"Exit", 
@@ -1151,7 +1226,7 @@ sub create_menubar()
 	);
 
 	$menus{hosts}=$menus{bar}->cascade(
-		-label     => 'H~osts',
+		-label     => 'Hosts',
 		-tearoff   => 1,
 		-menuitems => [
 			[
@@ -1176,7 +1251,7 @@ sub create_menubar()
 	);
 
 	$menus{send}=$menus{bar}->cascade(
-		-label     => '~Send',
+		-label     => 'Send',
 		-menuitems => [
 			[
 				"command", 
@@ -1189,7 +1264,7 @@ sub create_menubar()
 	);
 
 	$menus{help}=$menus{bar}->cascade(
-		-label     => '~Help',
+		-label     => 'Help',
 		-menuitems => [
 			[
 				'command',
@@ -1233,7 +1308,7 @@ sub REAPER {
 	my $kid;
 	do {
 		$kid=waitpid(-1, WNOHANG);
-		logmsg(3, "Reaper currently returns: $kid");
+		logmsg(2, "REAPER currently returns: $kid");
 	} until ($kid == -1 || $kid ==0);
 }
 $SIG{CHLD} = \&REAPER;
@@ -1290,8 +1365,8 @@ cssh (crsh) - Cluster administration tool
 
 =head1 SYNOPSIS
 
-S<< cssh [-?hHvdDuqQ] [[user@]<server>|<tag>] [...] >>
-S<< crsh [-?hHvdDuqQ] [[user@]<server>|<tag>] [...] >>
+S<< cssh [options] [[user@]<server>|<tag>] [...] >>
+S<< crsh [options] [[user@]<server>|<tag>] [...] >>
 
 =head1 DESCRIPTION
 
@@ -1335,13 +1410,33 @@ If the code is called as crsh instead of cssh (i.e. a symlink called
 crsh points to the cssh file or the file is renamed) rsh is used as the
 communcations protocol instead of ssh.
 
+=item *
+
+Starting the utility will be much faster with a configuration file (as this
+prevents searching for required files).  Generate one containing all default
+entries with:
+
+C<< cssh -u > $HOME/.csshrc >>
+
+=item *
+
+When using cssh on a large number of systems to connect back to a single
+system (e.g. you issue a command to the cluster to scp a file from a given
+location) and when these connections require authentication (i.e. you are
+going to authenticate with a password), the sshd daemon at that location 
+may refuse connects after the number specified by MaxStartups in 
+sshd_config is exceeded.  (If this value is not set, it defaults to 10.)
+This is expected behavior; sshd uses this mechanism to prevent DoS attacks
+from unauthenticated sources.  Please tune sshd_config and reload the SSH
+daemon, or consider using the ~/.ssh/authorized_keys mechanism for 
+authentication if you encounter this problem.
+
 =back
 
 =head1 OPTIONS
 
-The following options are supported (some of these may also be defined
-within the configuration files detailed below; the command line options take
-precedence):
+Some of these options may also be defined within the configuration file. 
+Default options are shown as appropriate.
 
 =over
 
@@ -1385,6 +1480,29 @@ Enable window tiling (if disabled in config file)
 
 Disable window tiling (if enabled in config file)
 
+=item -c <file>
+
+Use supplied file as additional cluster file (see also L<"FILES">)
+
+=item -l $LOGNAME
+
+Specify the default username to use for connections (if different from the
+currently logged in user).  NOTE: will be overridden by <user>@<host>
+
+=item -T "CSSH"
+
+Specify the initial part of the title used in the console and client windows
+
+=item -o "-x -o ConnectTimeout=10" - for ssh connections
+
+=item -o ""                        - for rsh connections
+
+Specify arguments to be passed to ssh or rsh when making the connection.
+
+=item -t ""
+
+Specify arguments to be passed to terminals being used
+
 =back
 
 =head1 ARGUMENTS
@@ -1401,7 +1519,7 @@ console.
 =item <tag> ...
 
 Open a series of xterms defined by <tag> within either /etc/clusters or
-F<$HOME/.csshrc> (see FILES).
+F<$HOME/.csshrc> (see L<"FILES">).
 
 =back
 
@@ -1578,7 +1696,8 @@ left and up
 =back
 
 NOTE: The key shortcut modifiers must be in the form "Control", "Alt", or 
-"Shift", i.e. with the first letter capitalised and the rest lower case.
+"Shift", i.e. with the first letter capitalised and the rest lower case.  Keys
+may also be disabled individually by setting to the work "null".
 
 =back
 
