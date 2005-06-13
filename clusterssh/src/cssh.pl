@@ -80,7 +80,7 @@ use Net::hostent;
 ### all global variables ###
 my $scriptname=$0; $scriptname=~ s!.*/!!; # get the script name, minus the path
 
-my $options='dDv?hHuqQgGt:T:c:l:o:'; # Command line options list
+my $options='dDv?hHuqQgGit:T:c:l:o:'; # Command line options list
 my %options;
 my %config;
 my $debug=0;
@@ -196,6 +196,8 @@ sub load_config_defaults()
 	$config{auto_quit}="yes";
 	$config{window_tiling}="yes";
 	$config{window_tiling_direction}="right";
+
+	$config{ignore_host_errors}="no";
 
 	$config{screen_reserve_top}=0;
 	$config{screen_reserve_bottom}=40;
@@ -319,6 +321,8 @@ sub check_config()
 
 	$config{user}=$options{l} if($options{l});
 	$config{terminal_args}=$options{t} if($options{t});
+
+	$config{ignore_host_errors}="yes" if($options{i});
 	
 	get_font_size();
 }
@@ -568,6 +572,13 @@ sub setup_helper_script()
 		open(PIPE, ">", \$pipe);
 		print PIPE "\$ENV{WINDOWID}";
 		close(PIPE);
+		if(\$svr =~ /==\$/)
+		{
+			\$svr =~ s/==\$//;
+			warn("\n\nWARNING: failed to resolve IP address for \$svr.\n\n".
+				"Either 'ignore_host_errors' or -i is set.  This connection may hang\n\n\n"
+			);
+		}
 		exec("$config{$config{comms}} $config{$config{comms}."_args"} \$user \$svr");
 	HERE
 	logmsg(2, $helper_script);
@@ -590,19 +601,23 @@ sub open_client_windows(@)
 			$_ =~ s/.*@//;
 		}
 
-		# see if we can find the hostname - if not, drop it
-		if(!gethost("$_"))
-		{
-			warn("WARNING: unknown host $_ - ignoring\n");
-			next;
-		}
-
 		my $count = 1;
 		my $server=$_;
 
 		while(defined($servers{$server}))
 		{
 			$server=$_." ".$count++;
+		}
+
+		# see if we can find the hostname - if not, drop it
+		my $gethost=gethost("$_");
+		if(!$gethost)
+		{
+			my $text="WARNING: unknown host $_";
+			$text.=" - ignoring" unless($config{ignore_host_errors} =~ /yes/i);
+			$text.="\n";
+			warn($text);
+			next unless($config{ignore_host_errors} =~ /yes/i);
 		}
 
 		$servers{$server}{realname}=$_;
@@ -624,6 +639,9 @@ sub open_client_windows(@)
 		if($servers{$server}{pid}==0)
 		{
 			# this is the child
+			# Since this is the child, we can mark any server unreolved without
+			# affecting the main program
+			$servers{$server}{realname}.="==" if(!$gethost);
 			my $exec="$config{terminal} $config{terminal_args} $config{terminal_allow_send_events} $config{terminal_title_opt} '$config{title}:$server' -font $config{terminal_font} -e $^X -e '$helper_script' $servers{$server}{pipenm} $servers{$server}{realname} $servers{$server}{username}";
 			my $test="$config{terminal} $config{terminal_allow_send_events} -e 'echo Working - waiting 10 seconds;sleep 10;exit'";
 			logmsg(1,"Terminal testing line:\n$test\n");
@@ -1503,6 +1521,12 @@ Specify arguments to be passed to ssh or rsh when making the connection.
 
 Specify arguments to be passed to terminals being used
 
+=item -i
+
+Ignore errors from resolving host names (i.e. because the name is an alias
+within an ssh config file or similar) (see also "ignore_host_errors" in 
+L<"FILES">)
+
 =back
 
 =head1 ARGUMENTS
@@ -1595,6 +1619,11 @@ program, but can be overridden here).
 
 Sets any arguments to be used with the communication method (defaults to ssh
 arguments).
+
+=item ignore_host_errors = "no"
+
+If set to "yes", ignore host names that cannot be resolved (i.e. because
+they are aliased in an ssh config file)
 
 =item key_addhost = Control-plus
 
