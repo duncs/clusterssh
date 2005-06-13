@@ -1,3 +1,8 @@
+2005-06-13 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.16.1
+
+* Allow ignoring of unresolved hosts (i.e. if hostname aliased in 
+  ssh config file)
+
 2005-06-09 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.15.1 
 
 * Add and document "-c <clusterfile>"
