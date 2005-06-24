@@ -8,6 +8,7 @@ License: GPL
 URL: http://clusterssh.sourceforge.net
 Source0: %{name}-%{version}.tar.gz
 Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+Requires: perl-Tk perl-X11-Protocol
 
 %description
 Control multiple terminals open on different servers to perform administration
