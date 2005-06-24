@@ -1,3 +1,14 @@
+2005-06-24 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3..17.1
+
+* Allow _'s in paste text correctly
+* Bugfix minimise/maximise again
+* Run through "perltidy -i=4 -ce"
+* Unmap all windows in one go instead of one at a time when retiling
+* Add + doc 'console_position'
+* Maintain user position of console between maps (i.e. tell window manager 
+  not to move it)
+* Note that ssh options are for OpenSSH not for any other ssh version
+
 2005-06-13 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.16.1
 
 * Allow ignoring of unresolved hosts (i.e. if hostname aliased in 
