@@ -145,6 +145,7 @@ my %unshiftedchars = (
   'period'       => 1,
   'slash'        => 1,
   'backslash'    => 1,
+  'grave'        => 1,
 );
 
 ### all sub-routines ###
@@ -159,6 +160,7 @@ sub exit_prog() {
   # finished starting or received teh kill signal, do it like this
   while (%servers) {
     foreach my $svr ( keys(%servers) ) {
+      logmsg( 2, "Killing process $servers{$svr}{pid}" );
       kill( 9, $servers{$svr}{pid} ) if kill( 0, $servers{$svr}{pid} );
       delete( $servers{$svr} );
     }
@@ -173,6 +175,7 @@ sub logmsg($@) {
   my $level = shift;
 
   if ( $level <= $debug ) {
+    print( strftime( "%H:%M:%S: ", localtime ) ) if ( $debug > 1 );
     print @_, $/;
   }
 }
@@ -194,7 +197,7 @@ sub load_config_defaults() {
   $config{auto_quit}               = "yes";
   $config{window_tiling}           = "yes";
   $config{window_tiling_direction} = "right";
-	$config{console_position}        = "";
+  $config{console_position}        = "";
 
   $config{ignore_host_errors} = "no";
 
@@ -260,7 +263,8 @@ sub find_binary($) {
         last;
       }
     }
-  } else {
+  }
+  else {
     logmsg( 2, "Already configured OK" );
     $path = $binary;
   }
@@ -299,7 +303,8 @@ sub check_config() {
     if ( !$config{window_tiling} ) {
       if ( $config{always_tile} eq "never" ) {
         $config{window_tiling} = "no";
-      } else {
+      }
+      else {
         $config{window_tiling} = "yes";
       }
     }
@@ -368,9 +373,13 @@ sub get_clusters() {
     while (<CLUSTERS>) {
       next if ( /^\s*$/ || /^#/ );    # ignore blank lines & commented lines
       chomp();
-      s/^([\w-]+)\s*//;               # remote first word and stick into $1
-      logmsg( 3, "cluster $1 = $_" );
-      $clusters{$1} = $_;             # Now bung in rest of line
+      my @line = split(/\s/);
+
+      #s/^([\w-]+)\s*//;               # remote first word and stick into $1
+
+      logmsg( 3, "cluster $line[0] = ", join( " ", @line[ 1 .. $#line ] ) );
+      $clusters{ $line[0] } =
+        join( " ", @line[ 1 .. $#line ] );    # Now bung in rest of line
     }
     close(CLUSTERS);
   }
@@ -394,18 +403,26 @@ sub get_clusters() {
       while (<CLUSTERS>) {
         next if ( /^\s*$/ || /^#/ );    # ignore blank lines & commented lines
         chomp();
-        s/^([\w-]+)\s*//;               # remote first word and stick into $1
-        logmsg( 3, "cluster $1 = $_" );
-        $clusters{$1} = $_;             # Now bung in rest of line
+
+        #s/^([\w-]+)\s*//;               # remote first word and stick into $1
+        #logmsg( 3, "cluster $1 = $_" );
+        #$clusters{$1} = $_;             # Now bung in rest of line
+        my @line = split(/\s/);
+        logmsg( 3, "cluster $line[0] = ", join( " ", @line[ 1 .. $#line ] ) );
+        $clusters{ $line[0] } =
+          join( " ", @line[ 1 .. $#line ] );    # Now bung in rest of line
       }
       close(CLUSTERS);
-    } else {
+    }
+    else {
       warn("WARNING: Custom cluster file '$options{c}' cannot be opened\n");
     }
   }
+  logmsg( 2, "Finished loading clusters" );
 }
 
 sub resolve_names(@) {
+  logmsg( 2, "Resolving cluster names: started" );
   my @servers = @_;
 
   foreach (@servers) {
@@ -427,6 +444,7 @@ sub resolve_names(@) {
   foreach (@cleanarray) {
     logmsg( 3, "leaving with $_" );
   }
+  logmsg( 2, "Resolving cluster names: completed" );
   return (@cleanarray);
 }
 
@@ -459,7 +477,8 @@ sub send_text($@) {
     my $code;
     if ( exists( $chartokeysym{$char} ) ) {
       $code = $chartokeysym{$char};
-    } else {
+    }
+    else {
       $code = $char;
     }
 
@@ -511,7 +530,7 @@ sub send_clientname() {
 sub send_resizemove($$$$$) {
   my ( $win, $x_pos, $y_pos, $x_siz, $y_siz ) = @_;
 
-  logmsg( 2,
+  logmsg( 3,
     "Moving window $win to x:$x_pos y:$y_pos (size x:$x_siz y:$y_siz)" );
 
   #logmsg(2, "Normal: ", $xdisplay->atom('WM_NORMAL_HINTS'));
@@ -550,7 +569,7 @@ sub setup_helper_script() {
 		my \$user=shift;
 		\$user = \$user ? "-l \$user" : "";
 		open(PIPE, ">", \$pipe);
-		print PIPE "\$ENV{WINDOWID}";
+		print PIPE "\$\$:\$ENV{WINDOWID}";
 		close(PIPE);
 		if(\$svr =~ /==\$/)
 		{
@@ -605,6 +624,8 @@ sub open_client_windows(@) {
     logmsg( 2, "Set temp name to: $servers{$server}{pipenm}" );
     mkfifo( $servers{$server}{pipenm}, 0600 ) or die("Cannot create pipe: $!");
 
+    # NOTE: the pid is re-fetched from the xterm window (via helper_script)
+    # later as it changes and we need an accurate PID as it is widely used
     $servers{$server}{pid} = fork();
     if ( !defined( $servers{$server}{pid} ) ) {
       die("Could not fork: $!");
@@ -617,12 +638,11 @@ sub open_client_windows(@) {
       # affecting the main program
       $servers{$server}{realname} .= "==" if ( !$gethost );
       my $exec =
-"$config{terminal} $config{terminal_args} $config{terminal_allow_send_events} $config{terminal_title_opt} '$config{title}:$server' -font $config{terminal_font} -e $^X -e '$helper_script' $servers{$server}{pipenm} $servers{$server}{realname} $servers{$server}{username}";
+"$config{terminal} $config{terminal_args} $config{terminal_allow_send_events} $config{terminal_title_opt} '$config{title}:$server' -font $config{terminal_font} -e \"$^X\" \"-e\" '$helper_script' $servers{$server}{pipenm} $servers{$server}{realname} $servers{$server}{username}";
       my $test =
-"$config{terminal} $config{terminal_allow_send_events} -e 'echo Working - waiting 10 seconds;sleep 10;exit'";
+"$config{terminal} $config{terminal_allow_send_events} -e \"$^X\" \"-e\" 'print \"Working\\n\" ; sleep 5'";
       logmsg( 1, "Terminal testing line:\n$test\n" );
       logmsg( 2, "Terminal exec line:\n$exec\n" );
-      logmsg( 3, $_ ) foreach ( split( / /, $exec ) );
       exec($exec) == 0 or warn("Failed: $!");
     }
   }
@@ -639,11 +659,17 @@ sub open_client_windows(@) {
       )
     {
       unlink( $servers{$server}{pipenm} );
-      die("Cannot open pipe for writing: $!");
+      warn("Cannot open pipe for writing when talking to $server: $!\n");
     }
 
+    # NOTE: read both the xterm pid and the window ID here
+    # get PID here as it changes from the fork above, and we need the
+    # correct PID
     logmsg( 2, "Performing sysread" );
-    sysread( $servers{$server}{pipehl}, $servers{$server}{wid}, 100 );
+    my $piperead;
+    sysread( $servers{$server}{pipehl}, $piperead, 100 );
+    $servers{$server}{pid} = ( split( ":", $piperead ) )[0];
+    $servers{$server}{wid} = ( split( ":", $piperead ) )[1];
     logmsg( 2, "Done and closing pipe" );
 
     close( $servers{$server}{pipehl} );
@@ -695,12 +721,19 @@ sub get_font_size() {
 
 sub show_console() {
   logmsg( 2, "Sending console to front" );
-  select( undef, undef, undef, 0.1 );    #sleep for a mo
+
+  # fudge the counter to drop a redraw event;
+  $config{internal_map_count} -= 4;
+
+  $xdisplay->flush();
+  $windows{main_window}->update();
+
+  select( undef, undef, undef, 0.2 );    #sleep for a mo
   $windows{main_window}->withdraw;
   $windows{main_window}->deiconify;
   $windows{main_window}->raise;
-  $windows{main_window}->focus;
-  $windows{text_entry}->focus();
+  $windows{main_window}->focus( -force );
+  $windows{text_entry}->focus( -force );
 }
 
 sub retile_hosts() {
@@ -710,7 +743,12 @@ sub retile_hosts() {
 
   logmsg( 2, "Count is currently $config{internal_total}" );
 
-  return if ( $config{internal_total} == 0 ); # dont bother if nothing to retile
+  if ( $config{internal_total} == 0 ) {
+
+    # If nothing to tile, done bother doing anything, just show console
+    show_console();
+    return;
+  }
 
   # work out terminal pixel size from terminal size & font size
   # does not include any title bars or scroll bars - purely text area
@@ -766,10 +804,11 @@ sub retile_hosts() {
 
     logmsg( 2, "Terminal height=$height" );
 
-    $config{internal_terminal_height} =
-      ( $height > $config{internal_terminal_height}
+    $config{internal_terminal_height} = (
+        $height > $config{internal_terminal_height}
       ? $config{internal_terminal_height}
-      : $height );
+      : $height
+    );
   }
 
   #dump_config("noexit") if($debug > 1);
@@ -784,7 +823,8 @@ sub retile_hosts() {
     $current_y   = $config{screen_reserve_top};
     $current_row = 0;
     $current_col = 0;
-  } else {
+  }
+  else {
     logmsg( 2, "Tiling bot right going top left" );
     @hosts     = reverse( sort( keys(%servers) ) );
     $current_x =
@@ -802,7 +842,7 @@ sub retile_hosts() {
   # Move windows to new locatation
   # Remap all windows in correct order
   foreach my $server (@hosts) {
-    logmsg( 2, "x:$current_x y:$current_y, r:$current_row c:$current_col" );
+    logmsg( 3, "x:$current_x y:$current_y, r:$current_row c:$current_col" );
 
     $xdisplay->req( 'UnmapWindow', $servers{$server}{wid} );
 
@@ -828,7 +868,8 @@ sub retile_hosts() {
         $current_row++;
         $current_col = 0;
       }
-    } else {
+    }
+    else {
 
       # starting bottom right, and move left and up
 
@@ -840,22 +881,21 @@ sub retile_hosts() {
     }
   }
 
-	$xdisplay->flush; # Unmap everything all in one go
-
   # Now remap in right order to get overlaps correct
   if ( $config{window_tiling_direction} =~ /right/i ) {
     foreach my $server ( reverse(@hosts) ) {
       logmsg( 2, "Setting focus on $server" );
       $xdisplay->req( 'MapWindow', $servers{$server}{wid} );
     }
-  } else {
+  }
+  else {
     foreach my $server (@hosts) {
       logmsg( 2, "Setting focus on $server" );
       $xdisplay->req( 'MapWindow', $servers{$server}{wid} );
     }
   }
 
-  $xdisplay->flush();
+  #$xdisplay->flush(); # let show_console to the flush
 
   logmsg( 2, "Setting retile marker to 1" );
   $config{internal_retile_completed} = 1;
@@ -953,7 +993,8 @@ sub add_host_by_name() {
   # retile, or bring console to front
   if ( $config{window_tiling} =~ /yes/i ) {
     retile_hosts();
-  } else {
+  }
+  else {
     show_console();
   }
 }
@@ -984,36 +1025,41 @@ sub build_hosts_menu() {
 }
 
 sub setup_repeat() {
+  $config{internal_count} = 0;
 
-  # if this is too fast then we end up with multiple concurrent repeats
+  # if this is too fast then we end up with queued invocations
+  # with no time to run anything else
   $windows{main_window}->repeat(
     500,
     sub {
+      $config{internal_count} = 0
+      if ( $config{internal_count} > 60000 );    # reset if too high
+      $config{internal_count}++;
       my $build_menu = 0;
-      logmsg( 3, "Running repeat" );
+      logmsg( 3, "Running repeat (count=$config{internal_count})" );
       logmsg( 3, "Number of servers in hash is: ", scalar( keys(%servers) ) );
       foreach my $svr ( keys(%servers) ) {
         if ( !kill( 0, $servers{$svr}{pid} ) ) {
           $build_menu = 1;
           delete( $servers{$svr} );
-          logmsg( 2, "removed one" );
+          logmsg( 0, "$svr session closed" );
         }
+      }
 
-        # If there are no hosts in the list and we are set to autoquit
-        if ( scalar( keys(%servers) ) == 0 && $config{auto_quit} =~ /yes/i ) {
+      # If there are no hosts in the list and we are set to autoquit
+      if ( scalar( keys(%servers) ) == 0 && $config{auto_quit} =~ /yes/i ) {
 
-          # and some clients were actually opened...
-          if ( $config{internal_activate_autoquit} ) {
-            logmsg( 2, "Autoquitting" );
-            exit_prog;
-          }
+        # and some clients were actually opened...
+        if ( $config{internal_activate_autoquit} ) {
+          logmsg( 2, "Autoquitting" );
+          exit_prog;
         }
       }
 
       # get current number of clients
       $config{internal_total} = int( keys(%servers) );
 
-      logmsg( 3, "Number after tidy is: ", scalar( keys(%servers) ) );
+      logmsg( 3, "Number after tidy is: ", $config{internal_total} );
 
       # rebuild host menu if something has changed
       build_hosts_menu() if ($build_menu);
@@ -1030,11 +1076,15 @@ sub setup_repeat() {
 ### Window and menu definitions ###
 
 sub create_windows() {
+  logmsg( 2, "create_windows: started" );
   $windows{main_window} = MainWindow->new( -title => "ClusterSSH" );
+  $windows{main_window}->withdraw;    # leave withdrawn until needed
 
-	if(defined($config{console_position}) && $config{console_position} =~ /[+-]\d+[+-]\d+/) {
-		$windows{main_window}->geometry($config{console_position});
-	}
+  if ( defined( $config{console_position} )
+    && $config{console_position} =~ /[+-]\d+[+-]\d+/ )
+  {
+    $windows{main_window}->geometry( $config{console_position} );
+  }
 
   $menus{entrytext}    = "";
   $windows{text_entry} = $windows{main_window}->Entry(
@@ -1045,6 +1095,8 @@ sub create_windows() {
     -fill   => "x",
     -expand => 1,
     );
+
+  $windows{main_window}->bind( '<Destroy>' => \&exit_prog );
 
   # grab paste events into the text entry
   $windows{main_window}->eventAdd( '<<Paste>>' => '<Control-v>' );
@@ -1107,20 +1159,21 @@ sub create_windows() {
     -label        => 'Host',
     -labelPack    => [ -side => 'left', ],
   )->pack( -side => 'left' );
+  logmsg( 2, "create_windows: completed" );
 }
 
 sub capture_map_events() {
   $config{internal_map_count} = 0;    # reset on first use
+  $config{internal_iconised}  = 0;    # reset on first use
 
   # pick up on console minimise/maximise events so we can do all windows
   $windows{main_window}->bind(
     '<Map>' => sub {
-
-      # return is we arent iconified
-      return if ( $windows{main_window}->state eq "normal" );
+      logmsg( 2, "main window state=", $windows{main_window}->state() );
       logmsg( 2,
 "Got map event ($config{internal_map_count}:$config{internal_retile_completed})"
       );
+      return if ( $windows{main_window}->state() eq "withdrawn" );
       $config{internal_map_count}++;
 
       return if ( $config{internal_map_count} < 2 );
@@ -1134,16 +1187,19 @@ sub capture_map_events() {
       }
       logmsg( 2, "Got map this far 2" );
 
-      retile_hosts();
       $config{internal_retile_completed} = 0;
+      retile_hosts();
     }
   );
 
   $windows{main_window}->bind(
     '<Unmap>' => sub {
+      logmsg( 2, "main window state=", $windows{main_window}->state() );
+
       logmsg( 2,
 "Got unmap event ($config{internal_map_count}:$config{internal_retile_completed})"
       );
+      return if ( $windows{main_window}->state() eq "withdrawn" );
 
       $config{internal_map_count}++;
       return if ( $config{internal_map_count} < 2 );
@@ -1239,6 +1295,7 @@ sub key_event {
 }
 
 sub create_menubar() {
+  logmsg( 2, "create_menubar: started" );
   $menus{bar} = $windows{main_window}->Menu;
   $windows{main_window}->configure( -menu => $menus{bar} );
 
@@ -1306,6 +1363,7 @@ sub create_menubar() {
   #);
   $windows{main_window}->bind( '<KeyPress>'   => \&key_event, );
   $windows{main_window}->bind( '<KeyRelease>' => \&key_event, );
+  logmsg( 2, "create_menubar: completed" );
 }
 
 ### main ###
@@ -1349,36 +1407,45 @@ create_menubar();
 
 change_main_window_title();
 
+logmsg( 2, "Capture map events" );
+capture_map_events();
+
 setup_helper_script();
 open_client_windows(@servers);
 
-# Check here if we are tiling windows.  Here instead of in func to
+# Check here if we are tiling windows.  Here instead of in func so
 # can be tiled from console window if wanted
-retile_hosts() if ( $config{window_tiling} =~ /yes/i );
+if ( $config{window_tiling} =~ /yes/i ) {
+  retile_hosts();
+}
+else {
+  show_console();
+}
 
 build_hosts_menu();
 
+logmsg( 2, "Removing retile flag" );
+$config{internal_retile_completed} = 0;
+
 logmsg( 2, "Sleeping for a mo" );
-select( undef, undef, undef, 0.25 );
+select( undef, undef, undef, 0.5 );
 
 logmsg( 2, "Sorting focus on console" );
 $windows{text_entry}->focus();
 
-logmsg( 2, "Marking main window as user positioned");
-$windows{main_window}->positionfrom('user'); # user puts it somewhere, leave it there
+logmsg( 2, "Marking main window as user positioned" );
+$windows{main_window}->positionfrom('user')
+  ;    # user puts it somewhere, leave it there
 
 logmsg( 2, "Setting up repeat" );
 setup_repeat();
-
-logmsg( 2, "Starting map event capture" );
-capture_map_events();
 
 # Start event loop
 logmsg( 2, "Starting MainLoop" );
 MainLoop();
 
 # make sure we leave program in an expected way
-exit_prog;
+exit_prog();
 
 __END__
 # man/perldoc/pod page
@@ -1455,6 +1522,16 @@ from unauthenticated sources.  Please tune sshd_config and reload the SSH
 daemon, or consider using the ~/.ssh/authorized_keys mechanism for 
 authentication if you encounter this problem.
 
+=item *
+
+If client windows fail to open, try running "cssh -d <single host name>".  
+This will output a command to run which will test the method used by cssh
+to open client windows.  If you copy-and-paste this command into a window
+and it fails, this is the issue.  It is most likely due to the "-xrm" option
+which enables "AllowSendEvents" in the terminal.  Some terminal do not 
+require this option, other terminals have another method for enabling it.  
+See your terminal documention for further information.
+
 =back
 
 =head1 OPTIONS
@@ -1484,25 +1561,18 @@ Enable basic debugging mode (can be combined with -D)
 
 Enable extended debugging mode (can be combined with -d)
 
-=item -q
+=item -q|-Q
 
-Automatically quit after the last client window has closed
-
-=item -Q
-
-Disable auto_quit functionality (to allow for config file override)
+Enable|Disable automatically quiting after the last client window has closed
+(overriding the config file)
 
 =item -u
 
 Output configuration in the format used by the F<$HOME/.csshrc> file
 
-=item -g 
+=item -g|-G 
 
-Enable window tiling (if disabled in config file)
-
-=item -G
-
-Disable window tiling (if enabled in config file)
+Enable|Disable window tiling (overriding the config file)
 
 =item -c <file>
 
@@ -1576,6 +1646,10 @@ C<< scp /etc/hosts server:files/<Alt-n>.hosts >>
 
 would replace the <Alt-n> with the client's name in all the client windows
 
+=item Alt-r
+
+Retile all the client windows
+
 =back
 
 =head1 FILES
@@ -1586,8 +1660,9 @@ would replace the <Alt-n> with the client's name in all the client windows
 
 This file contains a list of tags to server names mappings.  When any name
 is used on the command line it is checked to see if it is a tag in
-/etc/clusters.  If it is a tag, then the tag is replaced with the list
-of servers from the file.  The file is formated as follows:
+/etc/clusters (or the .csshrc file, or any addition cluster file specified 
+by -c).  If it is a tag, then the tag is replaced with the list of servers 
+from the file.  The file is formated as follows:
 
 S<< <tag> [user@]<server> [user@]<server> [...] >>
 
@@ -1627,15 +1702,18 @@ Set the initial position of the console - if empty then let the window manager
 decide.  Format is '+<x>+<y>', i.e. '+0+0' is top left hand corner of the screen,
 '+0-70' is bottom left hand side of screen (more or less).
 
-=item ssh_args = "-x -o ConnectTimeout=10" & rsh_args = <blank>
+=item ssh_args = "-x -o ConnectTimeout=10" 
+
+=item rsh_args = <blank>
 
 Sets any arguments to be used with the communication method (defaults to ssh
-arguments).  NOTE: these are based on OpenSSH, not commercial ssh software.
+arguments).  NOTE: the given defaults are based on OpenSSH, not 
+commercial ssh software.
 
 =item ignore_host_errors = "no"
 
 If set to "yes", ignore host names that cannot be resolved (i.e. because
-they are aliased in an ssh config file)
+they are aliased in an ssh config file) - see also "-i"
 
 =item key_addhost = Control-plus
 
@@ -1731,8 +1809,8 @@ Perform window tiling (set to C<no> to disable)
 =item window_tiling_direction = right
 
 Direction to tile windows, where "right" means starting top left and moving
-right and down, and anything else means starting bottom right and moving 
-left and up
+right and then down, and anything else means starting bottom right and moving 
+left and then up
 
 =back
 
