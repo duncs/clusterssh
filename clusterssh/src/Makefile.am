@@ -28,6 +28,7 @@ cssh: $(srcdir)/cssh.pl
 
 cssh.1: $(srcdir)/cssh.pl
 	rm -f cssh.1
+	podchecker $(srcdir)/cssh.pl
 	pod2man $(srcdir)/cssh.pl > cssh.1
 	chmod 444 cssh.1
 
