@@ -1,4 +1,19 @@
-2005-06-24 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3..17.1
+2005-11-28 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.18.1-1
+
+* Correct mask value for backtick (grave) character
+* Add more logging for debug mode
+* Amend indentation
+* Rerun through perltidy
+* Improve cluster file import efficiency as was taking faaar too long previously
+* Fixed bug whereby when pid's of the xterm changes records were not updated
+* Do not die when pipe open fails, but continue as others may be connected
+* Remove code that breaks the minimize/maximise stuff;
+* Catch X button presses on title bar to close all windows correctly
+* Delay map event capture at program start to avoid infinite loop
+* Fix execvp error on Solaris 10
+* Update to man pages
+
+2005-06-24 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.17.1
 
 * Allow _'s in paste text correctly
 * Bugfix minimise/maximise again
