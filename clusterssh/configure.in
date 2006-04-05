@@ -16,7 +16,7 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 # 
 AC_INIT
-AM_INIT_AUTOMAKE(clusterssh,3.18.1)
+AM_INIT_AUTOMAKE(clusterssh,3.18.3)
 AC_PATH_PROGS(PERL, perl perl5)
 AC_OUTPUT([Makefile src/Makefile])
 #
