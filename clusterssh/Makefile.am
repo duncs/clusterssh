@@ -15,7 +15,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 # 
-EXTRA_DIST = reconf configure clusterssh.spec
+EXTRA_DIST = reconf configure \
+	clusterssh.spec clusterssh.desktop \
+	clusterssh-48x48.png clusterssh-32x32.png clusterssh-24x24.png
 SUBDIRS = src
 CLEANFILES = clusterssh-*.tar.gz
 # 

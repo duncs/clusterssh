@@ -1,3 +1,32 @@
+2006-07-24 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.19.1-1
+
+- Below is an abridged version of changes - see CVS for more information
+* Check for failure to connect to X session
+* Totally rework character mapping and events to cope with non-QWERTY keyboards
+* Rework pasting code to cope with non-QWERTY charatcters
+* Manpage/help doc updates and corrections
+* Check for missing definitions for cluster tags in .csshrc
+* Run through perltidy -b -i=2
+* Apply patch to add in optional port information from D. Dumont
+* Amend hotkey code to not pick up <ctrl>-<alt> as default clientname shortcut
+* Alter repeat function to improve efficiency
+* Rework retiling code 
+* Add "-e <host>" to evaluate terminal and communcation methods
+* Add in toggle option on hosts menu
+* Fix check in find_binary to ensure one is actually found
+* Search $PATH and other standard places for binaries incase $PATH is incomplete
+* Amend code to allow getting help when no X display available
+* Allow override of both key and mouse paste key sequences
+* Added icons and desktop file
+* Amended clusterssh.spec to cope with icons and desktop file
+* Improve cluster file import efficiency as was taking faaar too long previously
+* Fixed bug whereby when pid's of the xterm changes records were not updated
+* Do not die when pipe open fails, but continue as others may be connected
+* Remove code that breaks the minimize/maximise stuff;
+* Catch X button presses on title bar to close all windows correctly
+* Delay map event capture at program start to avoid infinite loop
+* Fix execvp error on Solaris 10
+
 2005-11-28 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.18.1-1
 
 * Correct mask value for backtick (grave) character

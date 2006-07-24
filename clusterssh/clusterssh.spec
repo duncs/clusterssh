@@ -1,15 +1,16 @@
 Name:          clusterssh
-Version:       3.18.3
+Version:       3.19.1
 Release:       1%{?dist}
 Summary:       Secure concurrent multi-server terminal control
 
 Group:         Applications/Productivity
 License:       GPL
 URL:           http://clusterssh.sourceforge.net
-Source0:       http://download.sourceforge.net/%{name}/%{name}-%{version}.tar.gz
+Source0:       http://osdn.dl.sourceforge.net/sourceforge/%{name}/%{name}-%{version}.tar.gz
 BuildRoot:     %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildArch:     noarch
+BuildRequires: desktop-file-utils
 Requires:      perl-Tk perl-X11-Protocol
 
 %description
@@ -27,6 +28,30 @@ make %{?_smp_mflags}
 %install
 rm -rf %{buildroot}
 make install DESTDIR=%{buildroot}
+mkdir -p %{buildroot}/%{_datadir}/applications
+install -p -m 644 %{name}.desktop \
+        %{buildroot}/%{_datadir}/applications/%{name}.desktop
+mkdir -p %{buildroot}/%{_datadir}/icons/hicolor/48x48/apps/
+install -p -m 644 %{name}-48x48.png \
+        %{buildroot}/%{_datadir}/icons/hicolor/48x48/apps/%{name}.png
+mkdir -p %{buildroot}/%{_datadir}/icons/hicolor/32x32/apps/
+install -p -m 644 %{name}-32x32.png \
+        %{buildroot}/%{_datadir}/icons/hicolor/32x32/apps/%{name}.png
+mkdir -p %{buildroot}/%{_datadir}/icons/hicolor/24x24/apps/
+install -p -m 644 %{name}-24x24.png \
+        %{buildroot}/%{_datadir}/icons/hicolor/24x24/apps/%{name}.png
+
+%post
+touch --no-create %{_datadir}/icons/hicolor || :
+if [ -x %{_bindir}/gtk-update-icon-cache ]; then
+   %{_bindir}/gtk-update-icon-cache --quiet %{_datadir}/icons/hicolor || :
+fi
+
+%postun
+touch --no-create %{_datadir}/icons/hicolor || :
+if [ -x %{_bindir}/gtk-update-icon-cache ]; then
+   %{_bindir}/gtk-update-icon-cache --quiet %{_datadir}/icons/hicolor || :
+fi
 
 %clean
 rm -rf %{buildroot}
@@ -36,8 +61,21 @@ rm -rf %{buildroot}
 %doc COPYING AUTHORS README NEWS ChangeLog
 %{_bindir}/cssh
 %{_mandir}/man1/*.1*
+%{_datadir}/icons/hicolor/*/apps/%{name}.png
+%{_datadir}/applications/clusterssh.desktop
 
 %changelog
+
+* Mon Jul 24 2006 Duncan Ferguson <duncan_ferguson@users.sf.net> - 3.19.1-1
+- Update Changelog, commit all branch changes and release
+
+* Tue Jul 18 2006 Duncan Ferguson <duncan_ferguson@users.sf.net> - 3.18.2.10-2
+- Correct download URL (Source0)
+
+* Mon Jul 17 2006 Duncan Ferguson <duncan_ferguson@users.sf.net> - 3.18.2.10-1
+- Lots of amendments and fixes to clusterssh code
+- Added icons and desktop file
+- Submitted to Fedora Extras for review
 
 * Mon Nov 28 2005 Duncan Ferguson <duncan_ferguson@users.sf.net> - 3.18.1-1
 - Updates and bugfixes to cssh
