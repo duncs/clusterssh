@@ -1,17 +1,16 @@
 Name:          clusterssh
 Version:       3.19.1
-Release:       1%{?dist}
+Release:       2%{?dist}
 Summary:       Secure concurrent multi-server terminal control
 
 Group:         Applications/Productivity
 License:       GPL
 URL:           http://clusterssh.sourceforge.net
-Source0:       http://osdn.dl.sourceforge.net/sourceforge/%{name}/%{name}-%{version}.tar.gz
+Source0:       http://easynews.dl.sourceforge.net/sourceforge/%{name}/%{name}-%{version}.tar.gz
 BuildRoot:     %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildArch:     noarch
 BuildRequires: desktop-file-utils
-Requires:      perl-Tk perl-X11-Protocol
 
 %description
 Control multiple terminals open on different servers to perform administration
@@ -28,18 +27,20 @@ make %{?_smp_mflags}
 %install
 rm -rf %{buildroot}
 make install DESTDIR=%{buildroot}
-mkdir -p %{buildroot}/%{_datadir}/applications
-install -p -m 644 %{name}.desktop \
-        %{buildroot}/%{_datadir}/applications/%{name}.desktop
-mkdir -p %{buildroot}/%{_datadir}/icons/hicolor/48x48/apps/
+mkdir -p %{buildroot}%{_datadir}/applications
+desktop-file-install --vendor fedora                            \
+        --dir ${RPM_BUILD_ROOT}%{_datadir}/applications         \
+        --add-category X-Fedora                                 \
+        %{name}.desktop
+mkdir -p %{buildroot}%{_datadir}/icons/hicolor/48x48/apps/
 install -p -m 644 %{name}-48x48.png \
-        %{buildroot}/%{_datadir}/icons/hicolor/48x48/apps/%{name}.png
-mkdir -p %{buildroot}/%{_datadir}/icons/hicolor/32x32/apps/
+        %{buildroot}%{_datadir}/icons/hicolor/48x48/apps/%{name}.png
+mkdir -p %{buildroot}%{_datadir}/icons/hicolor/32x32/apps/
 install -p -m 644 %{name}-32x32.png \
-        %{buildroot}/%{_datadir}/icons/hicolor/32x32/apps/%{name}.png
-mkdir -p %{buildroot}/%{_datadir}/icons/hicolor/24x24/apps/
+        %{buildroot}%{_datadir}/icons/hicolor/32x32/apps/%{name}.png
+mkdir -p %{buildroot}%{_datadir}/icons/hicolor/24x24/apps/
 install -p -m 644 %{name}-24x24.png \
-        %{buildroot}/%{_datadir}/icons/hicolor/24x24/apps/%{name}.png
+        %{buildroot}%{_datadir}/icons/hicolor/24x24/apps/%{name}.png
 
 %post
 touch --no-create %{_datadir}/icons/hicolor || :
@@ -58,13 +59,16 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-%doc COPYING AUTHORS README NEWS ChangeLog
+%doc COPYING AUTHORS README NEWS THANKS ChangeLog
 %{_bindir}/cssh
 %{_mandir}/man1/*.1*
 %{_datadir}/icons/hicolor/*/apps/%{name}.png
-%{_datadir}/applications/clusterssh.desktop
+%{_datadir}/applications/fedora-%{name}.desktop
 
 %changelog
+
+* Tue Aug 15 2006 Duncan Ferguson <duncan_ferguson@users.sf.net> - 3.19.1-2
+- Tidyups as per https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=199173
 
 * Mon Jul 24 2006 Duncan Ferguson <duncan_ferguson@users.sf.net> - 3.19.1-1
 - Update Changelog, commit all branch changes and release
