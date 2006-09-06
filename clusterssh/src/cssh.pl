@@ -195,6 +195,7 @@ sub load_config_defaults()
   $config{rsh_args} = "";
 
   $config{title} = "CSSH";
+  $config{unmap_on_redraw} = "no";     # Debian #329440
 }
 
 # load in config file settings
@@ -684,9 +685,10 @@ sub setup_helper_script()
 		my \$port=shift;
 		\$user = \$user ? "-l \$user" : "";
 		\$port = \$port ? "-p \$port" : "";
-		open(PIPE, ">", \$pipe);
-		print PIPE "\$\$:\$ENV{WINDOWID}";
-		close(PIPE);
+		open(PIPE, ">", \$pipe) or die("Failed to open pipe: $!\n");
+		print PIPE "\$\$:\$ENV{WINDOWID}" 
+			or die("Failed to write to pipe: $!\n");
+		close(PIPE) or die("Failed to close pipe: $!\n");
 		if(\$svr =~ /==\$/)
 		{
 			\$svr =~ s/==\$//;
@@ -771,9 +773,6 @@ sub open_client_windows(@)
       $servers{$server}{realname} .= "==" if ( !$gethost );
       my $exec =
 "$config{terminal} $config{terminal_args} $config{terminal_allow_send_events} $config{terminal_title_opt} '$config{title}:$server' -font $config{terminal_font} -e \"$^X\" \"-e\" '$helper_script' $servers{$server}{pipenm} $servers{$server}{realname} $servers{$server}{username} $servers{$server}{port_nb}";
-      my $test =
-"$config{terminal} $config{terminal_allow_send_events} -e \"$^X\" \"-e\" 'print \"Working\\n\" ; sleep 5'";
-      logmsg( 1, "Terminal testing line:\n$test\n" );
       logmsg( 2, "Terminal exec line:\n$exec\n" );
       exec($exec) == 0 or warn("Failed: $!");
     }
@@ -784,28 +783,28 @@ sub open_client_windows(@)
   {
     next if ( defined( $servers{$server}{active} ) );
 
+    # sleep for a moment to give system time to come up
+    select(undef,undef,undef,0.1); 
+
     # block on open so we get the text when it comes in
-    if (
-      !sysopen(
-        $servers{$server}{pipehl}, $servers{$server}{pipenm}, O_RDONLY
-      )
-      )
-    {
-      unlink( $servers{$server}{pipenm} );
-      warn("Cannot open pipe for writing when talking to $server: $!\n");
+    unless(sysopen(
+      $servers{$server}{pipehl}, $servers{$server}{pipenm}, O_RDONLY
+    )) {
+      warn("Cannot open pipe for reading when talking to $server: $!\n");
+    } else {
+      # NOTE: read both the xterm pid and the window ID here
+      # get PID here as it changes from the fork above, and we need the
+      # correct PID
+      logmsg( 2, "Performing sysread" );
+      my $piperead;
+      sysread( $servers{$server}{pipehl}, $piperead, 100 );
+      ($servers{$server}{pid}, $servers{$server}{wid}) = split(/:/, $piperead, 2);
+      warn("Cannot determ pid of '$server' window\n") unless $servers{$server}{pid};
+      warn("Cannot determ window ID of '$server' window\n") unless $servers{$server}{wid};
+      logmsg( 2, "Done and closing pipe" );
+
+      close( $servers{$server}{pipehl} );
     }
-
-    # NOTE: read both the xterm pid and the window ID here
-    # get PID here as it changes from the fork above, and we need the
-    # correct PID
-    logmsg( 2, "Performing sysread" );
-    my $piperead;
-    sysread( $servers{$server}{pipehl}, $piperead, 100 );
-    $servers{$server}{pid} = ( split( ":", $piperead ) )[0];
-    $servers{$server}{wid} = ( split( ":", $piperead ) )[1];
-    logmsg( 2, "Done and closing pipe" );
-
-    close( $servers{$server}{pipehl} );
     delete( $servers{$server}{pipehl} );
 
     unlink( $servers{$server}{pipenm} );
@@ -861,12 +860,17 @@ sub show_console()
 
   select( undef, undef, undef, 0.2 );    #sleep for a mo
   $windows{main_window}->withdraw;
+  # Sleep for a moment to give WM time to bring console back
+  select( undef,undef,undef,0.5);
   $windows{main_window}->deiconify;
   $windows{main_window}->raise;
   $windows{main_window}->focus( -force );
   $windows{text_entry}->focus( -force );
 
   $config{internal_previous_state} = "normal";
+
+  # fvwm seems to need this (Debian #329440)
+  $windows{main_window}->MapWindow;            
 }
 
 # leave function def open here so we can be flexible in how it called
@@ -1002,6 +1006,11 @@ sub retile_hosts
 
     $xdisplay->req( 'UnmapWindow', $servers{$server}{wid} );
 
+    if ($config{unmap_on_redraw} =~ /yes/i) 
+    {
+      $xdisplay->req( 'UnmapWindow', $servers{$server}{wid} );
+    }
+
     logmsg( 2, "Moving $server window" );
     send_resizemove(
       $servers{$server}{wid},
@@ -1009,6 +1018,9 @@ sub retile_hosts
       $config{internal_terminal_width},
       $config{internal_terminal_height}
     );
+
+  $xdisplay->flush();
+  select (undef,undef,undef,0.1); # sleep for a moment for the WM
 
     if ( $config{window_tiling_direction} =~ /right/i )
     {
@@ -1052,6 +1064,9 @@ sub retile_hosts
     {
       logmsg( 2, "Setting focus on $server" );
       $xdisplay->req( 'MapWindow', $servers{$server}{wid} );
+      # flush every time and wait a moment (The WMs are so slow...)
+      $xdisplay->flush();
+      select(undef,undef,undef,0.1); # sleep for a mo
     }
   } else
   {
@@ -1059,6 +1074,9 @@ sub retile_hosts
     {
       logmsg( 2, "Setting focus on $server" );
       $xdisplay->req( 'MapWindow', $servers{$server}{wid} );
+      # flush every time and wait a moment (The WMs are so slow...)
+      $xdisplay->flush();
+      select(undef,undef,undef,0.1); # sleep for a mo
     }
   }
 
@@ -1226,11 +1244,17 @@ sub setup_repeat()
 
       foreach my $svr ( keys(%servers) )
       {
-        if ( !kill( 0, $servers{$svr}{pid} ) )
+	if(defined($servers{$svr}{pid}))
         {
-          $build_menu = 1;
+          if ( !kill( 0, $servers{$svr}{pid} ) )
+          {
+            $build_menu = 1;
+            delete( $servers{$svr} );
+            logmsg( 0, "$svr session closed" );
+          } 
+        } else {
+          warn("Lost pid of $svr; deleting\n");
           delete( $servers{$svr} );
-          logmsg( 0, "$svr session closed" );
         }
       }
 
@@ -1440,6 +1464,10 @@ sub capture_map_events()
         foreach my $server ( reverse( keys(%servers) ) )
         {
           $xdisplay->req( 'UnmapWindow', $servers{$server}{wid} );
+          if ($config{unmap_on_redraw} =~ /yes/i) 
+          {
+            $xdisplay->req( 'UnmapWindow', $servers{$server}{wid} );
+          }
         }
         $xdisplay->flush();
       }
@@ -2092,6 +2120,13 @@ Option required by the terminal to allow XSendEvents to be received
 =item title = cssh
 
 Title of windows to use for both the console and terminals.
+
+=item unmap_on_redraw = no
+
+Tell Tk to use the UnmapWindow request before redrawing terminal windows.
+This defaults to "no" as it causes some problems with the FVWM window 
+manager.  If you are experiencing problems with redraws, you can set it to
+"yes" to allow the window to be unmapped before it is repositioned.
 
 =item use_hotkeys = yes
 
