@@ -189,8 +189,8 @@ sub load_config_defaults()
 
   $config{ $config{comms} } = $config{comms};
 
-  $config{ssh_args} = "";
-  $config{ssh_args} .= "-x -o ConnectTimeout=10"
+  $config{ssh_args} = $options{o} if ($options{o});
+  $config{ssh_args} .= " -x -o ConnectTimeout=10"
     if ( $config{ $config{comms} } =~ /ssh$/ );
   $config{rsh_args} = "";
 
@@ -714,7 +714,7 @@ sub open_client_windows(@)
     my $port_nb;
 
     # split off any provided hostname and port
-    if ( $_ =~ /(\w+)@/ )
+    if ( $_ =~ /([\w:]+)@/ )
     {
       $username = $1;
       $_ =~ s/.*@//;
