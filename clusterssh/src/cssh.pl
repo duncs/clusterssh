@@ -228,7 +228,7 @@ sub find_binary($)
 
   logmsg( 2, "Looking for $binary" );
   my $path;
-  if ( ! -x $binary )
+  unless ( $binary =~ m#/# )
   {
     # search the users $PATH and then a few other places to find the binary
     # just in case $PATH isnt set up right
