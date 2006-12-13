@@ -86,7 +86,7 @@ use Net::hostent;
 my $scriptname = $0;
 $scriptname =~ s!.*/!!;    # get the script name, minus the path
 
-my $options = 'dDv?hHuqQgGit:T:c:l:o:e:';    # Command line options list
+my $options = 'dDv?hHuqQgGit:T:c:l:o:e:f:';    # Command line options list
 my %options;
 my %config;
 my $debug = 0;
@@ -308,6 +308,7 @@ sub check_config()
 
   $config{user}          = $options{l} if ( $options{l} );
   $config{terminal_args} = $options{t} if ( $options{t} );
+  $config{terminal_font} = $options{f} if ( $options{f} );
 
   $config{ignore_host_errors} = "yes" if ( $options{i} );
 
@@ -1872,6 +1873,10 @@ currently logged in user).  NOTE: will be overridden by <user>@<host>
 =item -T "CSSH"
 
 Specify the initial part of the title used in the console and client windows
+
+=item -f "5x8"
+
+Specify the font to use in the terminal windows. Use standard X font notation.
 
 =item -o "-x -o ConnectTimeout=10" - for ssh connections
 
