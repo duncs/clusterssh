@@ -1,0 +1,215 @@
+#!/bin/sh
+
+#LICENSE: Gnu GPL version 2
+#Author: JT Moree: moreejt@pcxperience.com
+#Date: 20061213
+#
+# $Header$
+#
+
+VERSION=$Version$
+PROGRAM=`basename $0`
+
+usage()
+{
+  echo "$PROGRAM v. $VERSION"
+  echo "Usage: $PROGRAM [options] -C<cluster> file1 file2 file3 . . ."
+  echo "    or $PROGRAM [options] -H<user@host> file1 file2 file3 . . ."
+  echo
+  echo "This program copies files to remote machines using ssh and scp and can log the action"
+  echo
+  echo "LICENSE"
+  echo "  Released under the terms of the GNU GPL version 2"
+  echo
+  echo "OPTIONS"
+  echo "  -C  server cluster(s) to scp to.  see GROUPS/CLUSTERS"
+  echo "  -D  destination directory on target servers"
+  echo "  -d  Debug mode"
+  echo "  -H  copy to this one host (format user@host)"
+  echo "  -h  help"
+  echo "  -f  Use this config file for groups/clusters.  Use this to override the use of clusterssh config in /etc/clusters."
+  echo "  -t  comment to describe the action"
+  echo
+  echo "Make sure to use quotes when there are spaces in your params. "
+  echo "And dont put a space between the switches and the params"
+  echo "ie.  -Cfoo NOT -C foo"
+  echo
+  echo "GROUPS/CLUSTERS"
+  echo "  This script uses scp to copy files to the specified destination of each server in a server cluster."
+  echo "A server cluster is specified in a file (usually $CONF) in the format:"
+  echo "  <clustername> <user>@<server> <user>@<server> . . . ."
+  echo "See clusterssh for more info"
+  echo "Each cluster may also have custom configurations specified in a file ending with .cfg."
+  echo " ie.  servers A, B, and C are in group FOO.  There is a line in file $CONF"
+  echo "   FOO root@A root@B root@C"
+  echo "and potentially another file $ETC/FOO.cfg"
+  echo
+  echo "CONFIG FILES"
+  echo "In the .cfg file vars can be set in the form of bash/sh vars:"
+  echo "  LOG=/root/Documentation/changelog"
+  echo
+  echo "LOGGING to SYSLOG"
+  echo "The log string will use the format '20060111 11:11:11 user clusterscp:cluster:comment: <files>'"
+  echo "The script attempts to use logger (syslog) on each target machine.  To turn this off"
+  echo "set the SYSLOG=0 config in $RC or in the .cfg for that cluster."
+  echo
+  echo "LOGGING to a CUSTOM LOG"
+  echo "The log string will use the format '20060111 11:11:11 user clusterscp:group:comment: <files>'"
+  echo "The .cfg file can have a parameter set LOG=/path/to/log.  If so, it logs the action"
+  echo "to that file by appending to the end of it. "
+  echo
+  echo "SSH w/o PASSWORDS"
+  echo "If ssh public/private key authentication is setup with no passphrase then no password is neccessary to scp the files.  Otherwise you will be prompted for each server password."
+  echo
+}
+
+copy_files()
+{
+  copy_files_TARGET=$1
+  copy_files_DEST=$2
+  shift 2
+  CHECK=`echo $copy_files_TARGET | grep '@'`
+  if [ -z "$CHECK" ] ; then  #target does not have format of user@host.  perhaps it is another cluster?
+    #check to see if a cluster matches this name and process it
+    copy_cluster "$copy_files_TARGET" "$copy_files_DEST" $@
+  else
+    if [ "$DEBUG" = "y" ] ; then
+      echo scp $@ $copy_files_TARGET:$copy_files_DEST >/dev/null
+    else
+      scp $@ $copy_files_TARGET:$copy_files_DEST >/dev/null
+    fi
+    if [ "$?" -eq 0 ] ; then
+      echo "$copy_files_TARGET: OK"
+
+      if [ $SYSLOG -eq 1 ] ; then
+        if [ "$DEBUG" = "y" ] ; then
+          echo ssh $copy_files_TARGET "logger -t$PROGRAM -pauth.info '$LOGSTRING'"
+        else
+          ssh $copy_files_TARGET "logger -t$PROGRAM -pauth.info '$LOGSTRING'"
+        fi
+      fi
+      if [ -n "$CLOG" ] ; then
+        if [ "$DEBUG" = "y" ] ; then
+          echo ssh $copy_files_TARGET "echo '`date +"%Y%m%d %H:%M:%S"` $LOGSTRING' >> $CLOG"
+        else
+          ssh $copy_files_TARGET "echo '`date +"%Y%m%d %H:%M:%S"` $LOGSTRING' >> $CLOG"
+        fi
+      fi
+    else
+      echo "$copy_files_TARGET: ERROR"
+    fi
+  fi
+}
+
+copy_cluster()
+{
+  copy_cluster_CLUSTER=$1
+  copy_cluster_DEST=$2
+  shift 2
+  copy_cluster_SKIP=  #to skip the first word in the line
+  copy_cluster_COUNT=0
+  for copy_cluster_TARGET in `egrep "^$copy_cluster_CLUSTER" $CONF` ; do
+    if [ -z "$copy_cluster_SKIP" ] ; then
+      copy_cluster_SKIP=n
+    else
+      copy_files "$copy_cluster_TARGET" "$copy_cluster_DEST" $@
+    fi
+    copy_cluster_COUNT=$(($copy_cluster_COUNT + 1))
+  done
+  if [ 0 -eq $copy_cluster_COUNT ] ; then
+    echo "Warning!  No cluster found with name $copy_cluster_CLUSTER" >&2
+  fi
+}
+
+
+DEBUG=n
+ETC=/etc/clusterscp
+CONF=/etc/clusters
+RC=/etc/clusterscprc
+GRP=
+COMMENT=
+DEST=
+SYSLOG=0
+
+#source global config file
+if [ -f $RC ] ; then
+  . $RC
+fi
+
+while getopts C:dD:hH:vx OPTION
+do
+  case "$OPTION" in
+  h) usage ; exit 1
+  ;;
+  v) echo $VERSION; exit 1
+  ;;
+  x) set -x; DEBUG=y; shift 1
+  ;;
+  C) GRP=$OPTARG; shift 1
+  ;;
+  d) DEBUG=y
+  ;;
+  D) DEST=$OPTARG; shift 1
+  ;;
+  f) CONF=$OPTARG; shift 1
+  ;;
+  H) HOST=$OPTARG; shift 1
+  ;;
+  t) COMMENT=$OPTARG; shift 1
+  ;;
+  *) echo ; echo "!!!!!!Error.  Invalid option given" >&2; echo ; usage; exit 1
+  ;;
+  esac
+done
+
+if [ -z "$GRP" ] && [ -z "$HOST" ] ; then
+  usage
+  echo
+  echo "Error.  You must specify a cluster or a host (-C or -H)!" >&2
+  exit 1
+fi
+
+#do a sanity check on all files
+if [ 0 -eq $# ] ; then
+  usage
+  echo "Error.  No files specified." >&2
+  exit 1
+fi
+for f in $@ ; do
+  if [ ! -r $f ] ; then
+    echo "Error reading file $f.  Aborting transaction." >&2
+    exit 1
+  fi
+  #build file list for log
+  FILES="${FILES} `basename $f`"
+done
+
+if [ -n "$HOST" ] ; then
+  CHECK=`echo $HOST | grep '@'`
+  if [ -z "$CHECK" ] ; then  #target does not have format of user@host.  perhaps it is another cluster?
+    echo "Error!  -H option must use format user@host: '$HOST' is invalid." >&2
+    echo "If this is a cluster use the -C option." >&2
+    exit 1
+  fi
+  #build log string
+  LOGSTRING="$USER $PROGRAM:$COMMENT:$DEST $FILES"
+  copy_files "$HOST" "$DEST" $@
+fi
+
+if [ -n "$GRP" ] ; then
+  #build log string
+  LOGSTRING="$USER $PROGRAM $GRP:$COMMENT:$DEST $FILES"
+  if [ -r $ETC/$GRP.cfg ] ; then
+    . $ETC/$GRP.cfg
+  fi
+  if [ -z "$SYSLOG" ] ; then
+    SYSLOG=0
+  fi
+
+  if [ "$DEBUG" = "y" ] ; then
+    echo "cluster IS '$GRP'"
+  fi
+
+  copy_cluster "$GRP" "$DEST" $@
+fi
+ 	  	 
