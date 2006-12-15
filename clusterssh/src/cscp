@@ -4,10 +4,11 @@
 #Author: JT Moree: moreejt@pcxperience.com
 #Date: 20061213
 #
-# $Header$
+# $URL$
+# $Id$
 #
 
-VERSION=$Version$
+VERSION="$Revision$ ($Date$)"
 PROGRAM=`basename $0`
 
 usage()
