@@ -1,4 +1,4 @@
-# -* perl *-
+# - perl *-
 # $Id$
 #
 # Script:
@@ -86,7 +86,7 @@ use Net::hostent;
 my $scriptname = $0;
 $scriptname =~ s!.*/!!;    # get the script name, minus the path
 
-my $options = 'dDv?hHuqQgGit:T:c:l:o:e:f:';    # Command line options list
+my $options = 'dDv?hHuqQgGit:T:c:l:o:e:';    # Command line options list
 my %options;
 my %config;
 my $debug = 0;
@@ -194,6 +194,8 @@ sub load_config_defaults()
     if ( $config{ $config{comms} } =~ /ssh$/ );
   $config{rsh_args} = "";
 
+  $config{extra_cluster_file} = "";
+
   $config{title} = "CSSH";
   $config{unmap_on_redraw} = "no";     # Debian #329440
 }
@@ -228,7 +230,7 @@ sub find_binary($)
 
   logmsg( 2, "Looking for $binary" );
   my $path;
-  unless ( $binary =~ m#/# )
+  if ( ! -x $binary )
   {
     # search the users $PATH and then a few other places to find the binary
     # just in case $PATH isnt set up right
@@ -308,12 +310,13 @@ sub check_config()
 
   $config{user}          = $options{l} if ( $options{l} );
   $config{terminal_args} = $options{t} if ( $options{t} );
-  $config{terminal_font} = $options{f} if ( $options{f} );
 
   $config{ignore_host_errors} = "yes" if ( $options{i} );
 
   $config{internal_previous_state} = "";    # set to default
   get_font_size();
+
+	$config{extra_cluster_file}  =~ s/\s+//g;
 }
 
 sub load_configfile()
@@ -395,47 +398,39 @@ sub load_keyboard_map()
 
   foreach ( 0 .. $#keyboard )
   {
-               if(defined $keyboard[$_][0]) {
-                       if(defined($keycodetosym { $keyboard[$_][0] }))
-                       {
-                               $keyboardmap{ $keycodetosym { $keyboard[$_][0] } } = 'n' . ($_ + $min);
-                       } else {
-                               logmsg(2, "Unknown keycode ", $keyboard[$_][0]) if($keyboard[$_][0] != 0);
-                       }
+		if(defined($keycodetosym { $keyboard[$_][0] }))
+		{
+			$keyboardmap{ $keycodetosym { $keyboard[$_][0] } } = 'n' . ($_ + $min);
+		} else {
+			logmsg(2, "Unknown keycode ", $keyboard[$_][0]) if($keyboard[$_][0] != 0);
 		}
-               if(defined $keyboard[$_][1]) {
-                       if(defined($keycodetosym { $keyboard[$_][1] }))
-                       {
-                               $keyboardmap{ $keycodetosym { $keyboard[$_][1] } } = 's' . ($_ + $min);
-                       } else {
-                               logmsg(2, "Unknown keycode ", $keyboard[$_][1]) if($keyboard[$_][1] != 0);
-                       }
+		if(defined($keycodetosym { $keyboard[$_][1] }))
+		{
+			$keyboardmap{ $keycodetosym { $keyboard[$_][1] } } = 's' . ($_ + $min);
+		} else {
+			logmsg(2, "Unknown keycode ", $keyboard[$_][1]) if($keyboard[$_][1] != 0);
 		}
-               if(defined $keyboard[$_][2]) {
-                       if(defined($keycodetosym { $keyboard[$_][2] }))
-                        {
-                               $keyboardmap{ $keycodetosym { $keyboard[$_][2] } } = 'a' . ($_ + $min);
-                        } else {
-                               logmsg(2, "Unknown keycode ", $keyboard[$_][2]) if($keyboard[$_][2] != 0);
-                        }
-                }
-               if(defined $keyboard[$_][3]) {
-                       if(defined($keycodetosym { $keyboard[$_][3] }))
-                       {
-                               $keyboardmap{ $keycodetosym { $keyboard[$_][3] } } = 'sa' . ($_ + $min);
-                        } else {
-                               logmsg(2, "Unknown keycode ", $keyboard[$_][3]) if($keyboard[$_][3] != 0);
-                        }
-                }
+		if(defined($keycodetosym { $keyboard[$_][2] }))
+		{
+			$keyboardmap{ $keycodetosym { $keyboard[$_][2] } } = 'a' . ($_ + $min);
+		} else {
+			logmsg(2, "Unknown keycode ", $keyboard[$_][2]) if($keyboard[$_][2] != 0);
+		}
+		if(defined($keycodetosym { $keyboard[$_][3] }))
+		{
+			$keyboardmap{ $keycodetosym { $keyboard[$_][3] } } = 'sa' . ($_ + $min);
+		} else {
+			logmsg(2, "Unknown keycode ", $keyboard[$_][3]) if($keyboard[$_][3] != 0);
+		}
 
 		# dont know these two key combs yet...
 		#$keyboardmap{ $keycodetosym { $keyboard[$_][4] } } = $_ + $min;
 		#$keyboardmap{ $keycodetosym { $keyboard[$_][5] } } = $_ + $min;
   }
 
-	#print "$_ => $keyboardmap{$_}\n" foreach(sort(keys(%keyboardmap)));
-	#print "keysymtocode: $keysymtocode{EuroSign}\n";
-	#die;
+#	print "$_ => $keyboardmap{$_}\n" foreach(sort(keys(%keyboardmap)));
+#	print "keysymtocode: $keysymtocode{o}\n";
+#	die;
 }
 
 sub get_keycode_state($)
@@ -521,32 +516,41 @@ sub get_clusters()
     }
   }
 
-  # and finally, any additional cluster file provided
-  if ( $options{c} )
-  {
-    if ( -f $options{c} )
-    {
-      logmsg( 2, "Loading clusters in from $options{c}" );
-      open( CLUSTERS, $options{c} ) || die("Couldnt read $options{c}");
-      while (<CLUSTERS>)
-      {
-        next if ( /^\s*$/ || /^#/ );    # ignore blank lines & commented lines
-        chomp();
+	# and any clusters defined within the config file or on the command line
+	if ( $config{extra_cluster_file}  || $options{c})
+	{
+		# check for multiple entries and push it through glob to catch ~'s
+		foreach my $item (split(/,/,$config{extra_cluster_file}), $options{c})
+		{
+			next unless($item);
 
-        #s/^([\w-]+)\s*//;               # remote first word and stick into $1
-        #logmsg( 3, "cluster $1 = $_" );
-        #$clusters{$1} = $_;             # Now bung in rest of line
-        my @line = split(/\s/);
-        logmsg( 3, "cluster $line[0] = ", join( " ", @line[ 1 .. $#line ] ) );
-        $clusters{ $line[0] } =
-          join( " ", @line[ 1 .. $#line ] );    # Now bung in rest of line
-      }
-      close(CLUSTERS);
-    } else
-    {
-      warn("WARNING: Custom cluster file '$options{c}' cannot be opened\n");
-    }
-  }
+			# cater for people using '$HOME'
+			$item =~ s/\$HOME/$ENV{HOME}/;
+			foreach my $file (glob( $item ))
+			{
+				if(! -r $file)
+				{
+					warn("Unable to read cluster file '$file': $!\n");
+					next;
+				}
+				logmsg( 2, "Loading clusters in from '$file'");
+
+				open( CLUSTERS, $file ) || die("Couldnt read '$file': $!\n");
+				while (<CLUSTERS>)
+				{
+					next if ( /^\s*$/ || /^#/ );
+					chomp;
+
+					my @line = split(/\s/);
+					logmsg( 3, "cluster $line[0] = ", join( " ", @line[ 1 .. $#line ] ) );
+					$clusters{ $line[0] } =
+						join( " ", @line[ 1 .. $#line ] );    # Now bung in rest of line
+				}
+			}
+
+		}
+	}
+
   logmsg( 2, "Finished loading clusters" );
 }
 
@@ -1882,10 +1886,6 @@ currently logged in user).  NOTE: will be overridden by <user>@<host>
 
 Specify the initial part of the title used in the console and client windows
 
-=item -f "5x8"
-
-Specify the font to use in the terminal windows. Use standard X font notation.
-
 =item -o "-x -o ConnectTimeout=10" - for ssh connections
 
 =item -o ""                        - for rsh connections
@@ -1968,23 +1968,23 @@ Retile all the client windows
 =item /etc/clusters
 
 This file contains a list of tags to server names mappings.  When any name
-is used on the command line it is checked to see if it is a tag in
-/etc/clusters (or the .csshrc file, or any additional cluster file specified 
-by -c).  If it is a tag, then the tag is replaced with the list of servers 
-from the file.  The file is formated as follows:
+is used on the command line it is checked to see if it is a tag.
+If it is a tag, then the tag is replaced with the list of servers.  The 
+formated is as follows:
 
 S<< <tag> [user@]<server> [user@]<server> [...] >>
 
-i.e.
+  i.e.
 
- # List of servers in live
- live admin1@server1 admin2@server2 server3 server4 
+  # List of servers in live
+  live admin1@server1 admin2@server2 server3 server4 
 
-All standard comments and blank lines are ignored.  Tags may be nested, but
-be aware of recursive tags.
+All comments (marked by a #) and blank lines are ignored.  Tags may be 
+nested, but be aware of recursive tags which are not checked for.
 
-Clusters may also be specified within the user's .csshrc file, as documented
-below.
+Clusters may also be specified either directly (see C<clusters> configuration
+options) or indirectly (see C<extra_cluster_file> configuration option) 
+in the users F<$HOME/.csshrc> file.
 
 =item F</etc/csshrc> & F<$HOME/.csshrc>
 
@@ -2003,11 +2003,6 @@ Setting to anything other than C<yes> does not perform window tiling (see also -
 Automatically quit after the last client window closes.  Set to anything
 other than "yes" to disable.  Can be overridden by C<-Q> on the command line.
 
-=item comms = ssh
-
-Sets the default communication method (initially taken from the name of 
-program, but can be overridden here).
-
 =item clusters = <blank>
 
 Define a number of cluster tags in addition to (or to replace) tags defined
@@ -2020,24 +2015,24 @@ in the F</etc/clusters> file.  The format is:
 
 As with the F</etc/clusters> file, be sure not to create recursivly nested tags.
 
+=item comms = ssh
+
+Sets the default communication method (initially taken from the name of 
+program, but can be overridden here).
+
 =item console_position = <null>
 
 Set the initial position of the console - if empty then let the window manager 
 decide.  Format is '+<x>+<y>', i.e. '+0+0' is top left hand corner of the screen,
 '+0-70' is bottom left hand side of screen (more or less).
 
-=item ssh_args = "-x -o ConnectTimeout=10" 
+=item extra_cluster_file = <null>
 
-=item rsh_args = <blank>
+Define an extra cluster file in the format of F</etc/clusters>.  Multiple
+files can be specified, seperated by commas.  Both ~ and $HOME are acceptable
+as a to reference the users home directory, i.e.
 
-Sets any arguments to be used with the communication method (defaults to ssh
-arguments).  
-
-NOTE: The given defaults are based on OpenSSH, not commercial ssh software.
-
-NOTE: Any "generic" change to the method (i.e. specifying the ssh port to use)
-should be done in the medium's own config file (see L<ssh_config> and 
-F<$HOME/.ssh/config>).
+ extra_cluster_file = ~/clusters, $HOME/clus
 
 =item ignore_host_errors = "no"
 
@@ -2054,6 +2049,11 @@ Default key sequence to open AddHost menu.  See below notes on shortcuts.
 Default key sequence to send cssh client names to client.  See below notes 
 on shortcuts.
 
+=item key_paste = Control-v
+
+Default key sequence to paste text into the console window.  See below notes
+on shortcuts.
+
 =item key_quit = Control-q
 
 Default key sequence to quit the program (will terminate all open windows).  
@@ -2063,15 +2063,23 @@ See below notes on shortcuts.
 
 Default key sequence to retile host windows.  See below notes on shortcuts.
 
-=item key_paste = Control-v
-
-Default key sequence to paste text into the console window.  See below notes
-on shortcuts.
-
 =item mouse_paste = Button-2 (middle mouse button)
 
 Default key sequence to paste text into the console window using the mouse.  
 See below notes on shortcuts.
+
+=item rsh_args = <blank>
+
+=item ssh_args = "-x -o ConnectTimeout=10" 
+
+Sets any arguments to be used with the communication method (defaults to ssh
+arguments).  
+
+NOTE: The given defaults are based on OpenSSH, not commercial ssh software.
+
+NOTE: Any "generic" change to the method (i.e. specifying the ssh port to use)
+should be done in the medium's own config file (see L<ssh_config> and 
+F<$HOME/.ssh/config>).
 
 =item screen_reserve_top = 25
 
@@ -2086,9 +2094,9 @@ geometry for tiling.  Setting this to something like 50 will help keep cssh
 from positioning windows over your window manager's menu bar if it draws one 
 at that side of the screen.
 
-=item ssh = /path/to/ssh
-
 =item rsh = /path/to/rsh
+
+=item ssh = /path/to/ssh
 
 Depending on the value of comms, set the path of the communication binary.
 
