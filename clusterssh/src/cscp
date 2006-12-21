@@ -2,6 +2,7 @@
 
 #LICENSE: Gnu GPL version 2
 #Author: JT Moree: moreejt@pcxperience.com
+#Copyright:  Kahala Corp. 2006
 #Date: 20061213
 #
 # $URL$
@@ -10,58 +11,77 @@
 
 VERSION="$Revision$ ($Date$)"
 PROGRAM=`basename $0`
+DEBUG=n
+ETC=/etc/clusterscp
+CONF=/etc/clusters
+RC=/etc/clusterscprc
+GRP=
+COMMENT=
+DEST=
+SYSLOG=0
 
 usage()
 {
-  echo "$PROGRAM v. $VERSION"
-  echo "Usage: $PROGRAM [options] -C<cluster> file1 file2 file3 . . ."
-  echo "    or $PROGRAM [options] -H<user@host> file1 file2 file3 . . ."
-  echo
-  echo "This program copies files to remote machines using ssh and scp and can log the action"
-  echo
-  echo "LICENSE"
-  echo "  Released under the terms of the GNU GPL version 2"
-  echo
-  echo "OPTIONS"
-  echo "  -C  server cluster(s) to scp to.  see GROUPS/CLUSTERS"
-  echo "  -D  destination directory on target servers"
-  echo "  -d  Debug mode"
-  echo "  -H  copy to this one host (format user@host)"
-  echo "  -h  help"
-  echo "  -f  Use this config file for groups/clusters.  Use this to override the use of clusterssh config in /etc/clusters."
-  echo "  -t  comment to describe the action"
-  echo
-  echo "Make sure to use quotes when there are spaces in your params. "
-  echo "And dont put a space between the switches and the params"
-  echo "ie.  -Cfoo NOT -C foo"
-  echo
-  echo "GROUPS/CLUSTERS"
-  echo "  This script uses scp to copy files to the specified destination of each server in a server cluster."
-  echo "A server cluster is specified in a file (usually $CONF) in the format:"
-  echo "  <clustername> <user>@<server> <user>@<server> . . . ."
-  echo "See clusterssh for more info"
-  echo "Each cluster may also have custom configurations specified in a file ending with .cfg."
-  echo " ie.  servers A, B, and C are in group FOO.  There is a line in file $CONF"
-  echo "   FOO root@A root@B root@C"
-  echo "and potentially another file $ETC/FOO.cfg"
-  echo
-  echo "CONFIG FILES"
-  echo "In the .cfg file vars can be set in the form of bash/sh vars:"
-  echo "  LOG=/root/Documentation/changelog"
-  echo
-  echo "LOGGING to SYSLOG"
-  echo "The log string will use the format '20060111 11:11:11 user clusterscp:cluster:comment: <files>'"
-  echo "The script attempts to use logger (syslog) on each target machine.  To turn this off"
-  echo "set the SYSLOG=0 config in $RC or in the .cfg for that cluster."
-  echo
-  echo "LOGGING to a CUSTOM LOG"
-  echo "The log string will use the format '20060111 11:11:11 user clusterscp:group:comment: <files>'"
-  echo "The .cfg file can have a parameter set LOG=/path/to/log.  If so, it logs the action"
-  echo "to that file by appending to the end of it. "
-  echo
-  echo "SSH w/o PASSWORDS"
-  echo "If ssh public/private key authentication is setup with no passphrase then no password is neccessary to scp the files.  Otherwise you will be prompted for each server password."
-  echo
+  cat <<FOO
+
+  $PROGRAM v. $VERSION
+    Usage: $PROGRAM [options] -C<cluster> file1 file2 file3 . . .
+        or $PROGRAM [options] -H<user@host> file1 file2 file3 . . .
+
+This program copies files to multiple remote machines using ssh and scp and can log the action.
+
+LICENSE
+  Released under the terms of the GNU GPL version 2
+
+OPTIONS
+  -C  server cluster(s) to scp to.  see GROUPS/CLUSTERS
+  -D  destination directory on target servers
+  -d  Debug mode
+  -H  scp to this one host (format user@host)
+  -h  help
+  -f  Use this config file for groups/clusters.  Use this to override the use of clusterssh config in /etc/clusters.
+  -t  comment to describe the action
+
+Make sure to use quotes when there are spaces in your params and dont put a space between the switches and the params.
+  ie.  -Cfoo  NOT  -C foo
+
+GROUPS/CLUSTERS
+
+This script uses scp to copy files to the specified destination of each server
+in a server cluster.  A server cluster is specified in a file (usually $CONF)
+in the format:
+  <clustername> <user>@<server> <user>@<server> . . . .
+See clusterssh for more info
+
+Each cluster may also have custom configurations specified in a file ending with .cfg.
+ ie.  servers A, B, and C are in group FOO.  There is a line in file $CONF
+   FOO root@A root@B root@C
+and potentially another file $ETC/FOO.cfg
+
+CONFIG FILES
+
+In the .cfg file vars can be set in the form of bash/sh vars:
+  LOG=/root/Documentation/changelog
+
+LOGGING to SYSLOG
+
+The log string will use the format
+  20060111 11:11:11 user clusterscp:cluster:comment: <files>
+The script attempts to use logger (syslog) on each target machine.  To turn
+this off set the SYSLOG=0 config in $RC or in the .cfg for that cluster.
+
+LOGGING to a CUSTOM LOG
+
+The log string will use the format
+  20060111 11:11:11 user clusterscp:group:comment: <files>
+The .cfg file can have a parameter set LOG=/path/to/log.  If so, it logs the
+action to that file by appending to the end of it.
+
+SSH w/o PASSWORDS
+
+If ssh public/private key authentication is setup with no passphrase then no password is neccessary to scp the files.  Otherwise you will be prompted for each server password.
+
+FOO
 }
 
 copy_files()
@@ -121,16 +141,6 @@ copy_cluster()
     echo "Warning!  No cluster found with name $copy_cluster_CLUSTER" >&2
   fi
 }
-
-
-DEBUG=n
-ETC=/etc/clusterscp
-CONF=/etc/clusters
-RC=/etc/clusterscprc
-GRP=
-COMMENT=
-DEST=
-SYSLOG=0
 
 #source global config file
 if [ -f $RC ] ; then
