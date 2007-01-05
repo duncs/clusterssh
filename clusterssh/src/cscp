@@ -9,7 +9,7 @@
 # $Id$
 #
 
-VERSION="$Revision$ ($Date$)"
+VERSION='$Revision$ ($Date$)'
 PROGRAM=`basename $0`
 DEBUG=n
 ETC=/etc/clusterscp
