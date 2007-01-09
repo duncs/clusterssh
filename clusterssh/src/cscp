@@ -42,8 +42,7 @@ OPTIONS
   -f  Use this config file for groups/clusters.  Use this to override the use of clusterssh config in /etc/clusters.
   -t  comment to describe the action
 
-Make sure to use quotes when there are spaces in your params and dont put a space between the switches and the params.
-  ie.  -Cfoo  NOT  -C foo
+Make sure to use quotes when there are spaces in your params.
 
 GROUPS/CLUSTERS
 
@@ -109,11 +108,11 @@ copy_files()
           ssh $copy_files_TARGET "logger -t$PROGRAM -pauth.info '$LOGSTRING'"
         fi
       fi
-      if [ -n "$CLOG" ] ; then
+      if [ -n "$LOG" ] ; then
         if [ "$DEBUG" = "y" ] ; then
-          echo ssh $copy_files_TARGET "echo '`date +"%Y%m%d %H:%M:%S"` $LOGSTRING' >> $CLOG"
+          echo ssh $copy_files_TARGET "echo '`date +"%Y%m%d %H:%M:%S"` $LOGSTRING' >> $LOG"
         else
-          ssh $copy_files_TARGET "echo '`date +"%Y%m%d %H:%M:%S"` $LOGSTRING' >> $CLOG"
+          ssh $copy_files_TARGET "echo '`date +"%Y%m%d %H:%M:%S"` $LOGSTRING' >> $LOG"
         fi
       fi
     else
@@ -147,7 +146,7 @@ if [ -f $RC ] ; then
   . $RC
 fi
 
-while getopts C:dD:hH:vx OPTION
+while getopts C:dD:f:hH:t:vx OPTION
 do
   case "$OPTION" in
   h) usage ; exit 1
@@ -156,17 +155,17 @@ do
   ;;
   x) set -x; DEBUG=y; shift 1
   ;;
-  C) GRP=$OPTARG; shift 1
+  C) GRP=$OPTARG; shift 2
   ;;
-  d) DEBUG=y
+  d) DEBUG=y; shift 1
   ;;
-  D) DEST=$OPTARG; shift 1
+  D) DEST=$OPTARG; shift 2
   ;;
-  f) CONF=$OPTARG; shift 1
+  f) CONF=$OPTARG; shift 2
   ;;
-  H) HOST=$OPTARG; shift 1
+  H) HOST=$OPTARG; shift 2
   ;;
-  t) COMMENT=$OPTARG; shift 1
+  t) COMMENT=$OPTARG; shift 2
   ;;
   *) echo ; echo "!!!!!!Error.  Invalid option given" >&2; echo ; usage; exit 1
   ;;
@@ -223,4 +222,3 @@ if [ -n "$GRP" ] ; then
 
   copy_cluster "$GRP" "$DEST" $@
 fi
- 	  	 
