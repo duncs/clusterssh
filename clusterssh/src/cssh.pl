@@ -187,6 +187,10 @@ sub load_config_defaults()
   ( $config{comms} = basename($0) ) =~ s/^.//;
   $config{comms} =~ s/.pl$//;    # for when testing directly out of cvs
 
+  $config{title} = "C".uc($config{comms});
+
+	$config{comms} = "telnet" if($config{comms} eq "tel");
+
   $config{ $config{comms} } = $config{comms};
 
   $config{ssh_args} = $options{o} if ($options{o});
@@ -194,9 +198,10 @@ sub load_config_defaults()
     if ( $config{ $config{comms} } =~ /ssh$/ );
   $config{rsh_args} = "";
 
+  $config{telnet_args} = "";
+
   $config{extra_cluster_file} = "";
 
-  $config{title} = "CSSH";
   $config{unmap_on_redraw} = "no";     # Debian #329440
 }
 
@@ -281,8 +286,8 @@ sub check_config()
 
   # make sure comms in an accepted value
   die
-"FATAL: Only ssh and rsh protocols are currently supported (comms=$config{comms})\n"
-    if ( $config{comms} !~ /^[rs]sh$/ );
+"FATAL: Only ssh, rsh and telnet protocols are currently supported (comms=$config{comms})\n"
+    if ( $config{comms} !~ /^(:?[rs]sh|telnet)$/ );
 
   # Set any extra config options given on command line
   $config{title} = $options{T} if ( $options{T} );
@@ -350,12 +355,12 @@ sub evaluate_commands
   # break apart the given host string to check for user or port configs
   print "{e}=$options{e}\n";
   $user = $1 if ( $options{e} =~ m/^(\w+)@\w+/ );
-  $port = $1 if ( $options{e} =~ m/:(\d+)/ );
+  $port = $1 if ( $options{e} =~ s/:(\d+)// );
   $host = $options{e};
   $host =~ s/^(?:\w+@)(\w+)(?::\d+)$/$1/;
 
   $user = $user ? "-l $user" : "";
-  $port = $port ? "-p $port" : "";
+  $port = $port ? "-p $port" : "" unless($config{comms} eq "telnet");
 
   print STDERR "Testing terminal - running command:\n";
 
@@ -369,8 +374,13 @@ sub evaluate_commands
 
   my $comms_command =
       $config{ $config{comms} } . " "
-    . $config{ $config{comms} . "_args" }
-    . " $user $port $host echo Working";
+    . $config{ $config{comms} . "_args" };
+
+	if($config{comms} eq "telnet") {
+		$comms_command .= " $host $port";
+	} else {
+		$comms_command .= " $user $port $host echo Working";
+	}
 
   print STDERR $comms_command, $/;
 
@@ -696,21 +706,42 @@ sub setup_helper_script()
 		my \$svr=shift;
 		my \$user=shift;
 		my \$port=shift;
-		\$user = \$user ? "-l \$user" : "";
-		\$port = \$port ? "-p \$port" : "";
-		open(PIPE, ">", \$pipe) or die("Failed to open pipe: $!\n");
+		my \$command="$config{$config{comms}} $config{$config{comms}."_args"}";
+		open(PIPE, ">", \$pipe) or die("Failed to open pipe: \$!\\n");
 		print PIPE "\$\$:\$ENV{WINDOWID}" 
-			or die("Failed to write to pipe: $!\n");
-		close(PIPE) or die("Failed to close pipe: $!\n");
-		if(\$svr =~ /==\$/)
+			or die("Failed to write to pipe: $!\\n");
+		close(PIPE) or die("Failed to close pipe: $!\\n");
+		if(\$svr =~ m/==\$/)
 		{
 			\$svr =~ s/==\$//;
-			warn("\n\nWARNING: failed to resolve IP address for \$svr.\n\n".
-				"Either 'ignore_host_errors' or -i is set.  This connection may hang\n\n\n"
+			warn("\\nWARNING: failed to resolve IP address for \$svr.\\n\\n"
+				. "Either 'ignore_host_errors' or -i is set.  "
+				. "This connection may hang\\n\\n"
 			);
+			sleep 5;
 		}
-		exec("$config{$config{comms}} $config{$config{comms}."_args"} \$port \$user \$svr");
+		if(\$port) {
+			unless("$config{comms}" eq "telnet") {
+				\$user = \$user ? "-l \$user" : "";
+				\$command .= \$user;
+			}
+		}
+		if(\$port) {
+			if("$config{comms}" eq "telnet") {
+				\$port = \$port ? "\$port" : "";
+				\$command .= "\$svr \$port";
+			} else {
+				\$port = \$port ? "-p \$port" : "";
+				\$command .= "\$port \$svr";
+			}
+		} else {
+			\$command .= "\$svr";
+		}
+		\$command .= " || sleep 5";
+#		warn("Running:\$command\\n"); # for debug purposes
+		exec(\$command);
 	HERE
+#	eval $helper_script || die ($@); # for debug purposes
   logmsg( 2, $helper_script );
   logmsg( 2, "Helper script done" );
 }
@@ -785,7 +816,7 @@ sub open_client_windows(@)
       # affecting the main program
       $servers{$server}{realname} .= "==" if ( !$gethost );
       my $exec =
-"$config{terminal} $config{terminal_args} $config{terminal_allow_send_events} $config{terminal_title_opt} '$config{title}:$server' -font $config{terminal_font} -e \"$^X\" \"-e\" '$helper_script' $servers{$server}{pipenm} $servers{$server}{realname} $servers{$server}{username} $servers{$server}{port_nb}";
+"$config{terminal} $config{terminal_args} $config{terminal_allow_send_events} $config{terminal_title_opt} '$config{title}:$server' -font $config{terminal_font} -e \"$^X\" \"-e\" '$helper_script' '$servers{$server}{pipenm}' '$servers{$server}{realname}' '$servers{$server}{username}' '$servers{$server}{port_nb}'";
       logmsg( 2, "Terminal exec line:\n$exec\n" );
       exec($exec) == 0 or warn("Failed: $!");
     }
@@ -1749,7 +1780,7 @@ __END__
 
 =head1 NAME
 
-cssh (crsh) - Cluster administration tool
+cssh (crsh, ctel) - Cluster administration tool
 
 =head1 SYNOPSIS
 
@@ -1757,6 +1788,8 @@ S<< cssh [options] [[user@]<server>|<tag>] [...] >>
 S<< crsh [options] [[user@]<server>|<tag>] [...] >>
 S<< cssh [options] [[user@]<server>[:port]|<tag>] [...] >>
 S<< crsh [options] [[user@]<server>[:port]|<tag>] [...] >>
+S<< ctel [options] [<server>|<tag>] [...] >>
+S<< ctel [options] [<server>|<tag>] [...] >>
 
 =head1 DESCRIPTION
 
@@ -1771,7 +1804,8 @@ nodes are kept in sync.
 
 Connections are opened via ssh so a correctly installed and configured
 ssh installation is required.  If, however, the program is called by "crsh"
-then the rsh protocol is used (and the communications channel is insecure).
+then the rsh protocol is used (and the communications channel is insecure),
+or by "ctel" then telnet is used.
 
 Extra caution should be taken when editing system files such as
 /etc/inet/hosts as lines may not necessarily be in the same order.  Assuming
@@ -1798,6 +1832,12 @@ that host.  Re-selecting it will plug it back in.
 
 If the code is called as crsh instead of cssh (i.e. a symlink called
 crsh points to the cssh file or the file is renamed) rsh is used as the
+communications protocol instead of ssh.
+
+=item *
+
+If the code is called as ctel instead of cssh (i.e. a symlink called
+ctel points to the cssh file or the file is renamed) telnet is used as the
 communications protocol instead of ssh.
 
 =item *
