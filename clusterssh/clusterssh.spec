@@ -1,6 +1,6 @@
 Name:          clusterssh
-Version:       3.19.1
-Release:       2%{?dist}
+Version:       3.20
+Release:       1%{?dist}
 Summary:       Secure concurrent multi-server terminal control
 
 Group:         Applications/Productivity
@@ -66,6 +66,9 @@ rm -rf %{buildroot}
 %{_datadir}/applications/fedora-%{name}.desktop
 
 %changelog
+
+* Mon Nov 26 2008 Duncan Ferguson  <duncan_ferguson@users.sf.net> - 3.20-1
+- Updates and fixes - see ChangeLog
 
 * Tue Aug 15 2006 Duncan Ferguson <duncan_ferguson@users.sf.net> - 3.19.1-2
 - Tidyups as per https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=199173
