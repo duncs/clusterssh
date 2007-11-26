@@ -1,3 +1,29 @@
+2008-11-26 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.20-1
+
+* Move source repository frmo CVS to SVN on sourceforge
+* Remove last digit of version number since not required with SVN
+* Add in host menu option to close inactive windows
+* Apply bugfixes suppled by Tony Mancill
+- reset xrm switch in terminal_args 
+- prevent warning messages being printed when keysyms arent found
+- fixes for fvwm
+- chekc for child process before sending kill
+* Slight rewording of man page
+* Add in option to use telnet as comms command (use 'ctel' to invoke script)
+* Run through perltidy -b -i=2
+* Appy patches frmo Klaus Ethgen
+- Client dies when cannot write to pipe
+- Sleeping and flushing in window manager to allow time to draw windows
+- Fix pipe reading to not use undefined values
+* Apply patches from Nicolas Simonds
+- allow colons in hostnames
+- allow -o option as per man page
+* Apply patch from Peter Palfrader
+- improvement to finding binaries
+* Allow font to be specified on the command line
+* Check for errors around key data gathering
+* Add in 'extra_cluster_file' to csshrc
+
 2006-07-24 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.19.1-1
 
 - Below is an abridged version of changes - see CVS for more information
