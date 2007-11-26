@@ -112,6 +112,21 @@ binmode STDOUT, ":utf8";
 
 ### all sub-routines ###
 
+# close a specific host session
+sub terminate_host($)
+{
+  my $svr=shift;
+  logmsg( 2, "Killing session for $svr" );
+  if(!$servers{$svr}) {
+    logmsg( 2, "Session for $svr not found");
+    return;
+  }
+  
+  logmsg( 2, "Killing process $servers{$svr}{pid}" );
+  kill( 9, $servers{$svr}{pid} ) if kill( 0, $servers{$svr}{pid} );
+  delete( $servers{$svr} );
+}
+
 # catch_all exit routine that should always be used
 sub exit_prog()
 {
@@ -125,9 +140,7 @@ sub exit_prog()
   {
     foreach my $svr ( keys(%servers) )
     {
-      logmsg( 2, "Killing process $servers{$svr}{pid}" );
-      kill( 9, $servers{$svr}{pid} ) if kill( 0, $servers{$svr}{pid} );
-      delete( $servers{$svr} );
+      terminate_host($svr);
     }
   }
   exit 0;
@@ -316,12 +329,17 @@ sub check_config()
   $config{user}          = $options{l} if ( $options{l} );
   $config{terminal_args} = $options{t} if ( $options{t} );
 
+  if ( $config{terminal_args} =~ /-class (\w+)/)
+  {
+    $config{terminal_allow_send_events} = "-xrm '$1.VT100.allowSendEvents:true'";
+  }
+
   $config{ignore_host_errors} = "yes" if ( $options{i} );
 
   $config{internal_previous_state} = "";    # set to default
   get_font_size();
 
-	$config{extra_cluster_file}  =~ s/\s+//g;
+  $config{extra_cluster_file}  =~ s/\s+//g;
 }
 
 sub load_configfile()
@@ -706,7 +724,7 @@ sub setup_helper_script()
 		my \$svr=shift;
 		my \$user=shift;
 		my \$port=shift;
-		my \$command="$config{$config{comms}} $config{$config{comms}."_args"}";
+		my \$command="$config{$config{comms}} $config{$config{comms}."_args"} ";
 		open(PIPE, ">", \$pipe) or die("Failed to open pipe: \$!\\n");
 		print PIPE "\$\$:\$ENV{WINDOWID}" 
 			or die("Failed to write to pipe: $!\\n");
@@ -1212,6 +1230,17 @@ sub toggle_active_state()
 	}
 }
 
+sub close_inactive_sessions()
+{
+  logmsg(2, "Closing all inactive sessions");
+
+  foreach my $svr ( sort( keys(%servers) ) )
+  {
+  	terminate_host($svr) if(!$servers{$svr}{active});
+  }
+  build_hosts_menu();
+}
+
 sub add_host_by_name()
 {
   logmsg( 2, "Adding host to menu here" );
@@ -1248,7 +1277,7 @@ sub build_hosts_menu()
 
   # first, emtpy the hosts menu from the 4th entry on
   my $menu = $menus{bar}->entrycget( 'Hosts', -menu );
-  $menu->delete( 5, 'end' );
+  $menu->delete( 6, 'end' );
 
   logmsg( 3, "Menu deleted" );
 
@@ -1445,7 +1474,7 @@ sub create_windows()
 
 sub capture_map_events()
 {
-	# pick up on console minimise/maximise events so we can do all windows
+ # pick up on console minimise/maximise events so we can do all windows
   $windows{main_window}->bind(
     '<Map>' => sub {
       logmsg( 3, "Entering MAP" );
@@ -1541,11 +1570,11 @@ sub key_event
   logmsg( 3, "keysymdec=$keysymdec" );
   logmsg( 3, "keycode  =$keycode" );
   logmsg( 3, "state    =$state" );
-	logmsg( 3, "codetosym=$keycodetosym{$keysymdec}" ) if($keycodetosym{$keysymdec});
-	logmsg( 3, "symtocode=$keysymtocode{$keysym}" );
-	logmsg( 3, "keyboard =$keyboardmap{ $keysym }" );
+  logmsg( 3, "codetosym=$keycodetosym{$keysymdec}" ) if($keycodetosym{$keysymdec});
+  logmsg( 3, "symtocode=$keysymtocode{$keysym}" );
+  logmsg( 3, "keyboard =$keyboardmap{ $keysym }" ) if($keyboardmap{ $keysym });
 
-	#warn("debug stop point here");
+  #warn("debug stop point here");
   if ( $config{use_hotkeys} eq "yes" )
   {
     my $combo = $Tk::event->s . $Tk::event->K;
@@ -1637,7 +1666,8 @@ sub create_menubar()
         -accelerator => $config{key_retilehosts},
       ],
       [ "command", "Capture Terminal", -command => \&capture_terminal, ],
-			[ "command", "Toggle active state", -command => \&toggle_active_state, ],
+    	[ "command", "Toggle active state", -command => \&toggle_active_state, ],
+    	[ "command", "Close inactive sessions", -command => \&close_inactive_sessions, ],
       [
         "command",
         "Add Host",
@@ -1863,13 +1893,16 @@ authentication if you encounter this problem.
 
 =item *
 
-If client windows fail to open, try running "cssh -d <single host name>".  
-This will output a command to run which will test the method used by cssh
-to open client windows.  If you copy-and-paste this command into a window
-and it fails, this is the issue.  It is most likely due to the "-xrm" option
-which enables "AllowSendEvents" in the terminal.  Some terminal do not 
-require this option, other terminals have another method for enabling it.  
-See your terminal documention for further information.
+If client windows fail to open, try running:
+
+C<< cssh -e {single host name} >>
+
+This will test the mechanisms used to open windows to hosts.  This could 
+be due to either the C<-xrm> terminal option which enables C<AllowSendEvents> 
+(some terminal do not require this option, other terminals have another 
+method for enabling it - see your terminal documention) or the 
+C<ConnectTimeout> ssh option (see the configuration option C<-o> or file 
+C<csshrc> below to resolve this).
 
 =back
 
