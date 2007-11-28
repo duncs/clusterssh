@@ -168,6 +168,7 @@ sub load_config_defaults() {
   $config{key_quit}                   = "Control-q";
   $config{key_addhost}                = "Control-plus";
   $config{key_clientname}             = "Alt-n";
+  $config{key_history}                = "Alt-h";
   $config{key_retilehosts}            = "Alt-r";
   $config{key_paste}                  = "Control-v";
   $config{mouse_paste}                = "Button-2";
@@ -608,10 +609,22 @@ sub change_main_window_title() {
   $windows{main_window}->title( $config{title} . " [$number]" );
 }
 
+sub show_history() {
+  if ( $config{show_history} ) {
+    $windows{history}->packForget();
+    $config{show_history} = 0;
+  }
+  else {
+    $windows{history}->pack(
+      -fill   => "x",
+      -expand => 1,
+    );
+    $config{show_history} = 1;
+  }
+}
+
 sub update_display_text($) {
   my $char = shift;
-
-  warn("config{show_history}=$config{show_history}");
 
   return if ( !$config{show_history} );
 
@@ -1375,19 +1388,21 @@ sub create_windows() {
     -expand => 1,
     );
 
+  $windows{history} = $windows{main_window}->Scrolled(
+    "ROText",
+    -insertborderwidth => 4,
+    -width             => $config{history_width},
+    -height            => $config{history_height},
+    -state             => 'normal',
+    -takefocus         => 0,
+  );
+  $windows{history}->bindtags(undef);
+
   if ( $config{show_history} ) {
-    $windows{history} = $windows{main_window}->Scrolled(
-      "ROText",
-      -insertborderwidth => 4,
-      -width             => $config{history_width},
-      -height            => $config{history_height},
-      -state             => 'normal',
-      -takefocus         => 0,
-    )->pack(
+    $windows{history}->pack(
       -fill   => "x",
       -expand => 1,
     );
-    $windows{history}->bindtags(undef);
   }
 
   $windows{main_window}->bind( '<Destroy>' => \&exit_prog );
@@ -1588,6 +1603,7 @@ sub key_event {
           send_clientname()     if ( $hotkey eq "key_clientname" );
           add_host_by_name()    if ( $hotkey eq "key_addhost" );
           retile_hosts("force") if ( $hotkey eq "key_retilehosts" );
+          show_history()        if ( $hotkey eq "key_history" );
           exit_prog()           if ( $hotkey eq "key_quit" );
         }
         return;
@@ -1637,6 +1653,12 @@ sub create_menubar() {
   $menus{file} = $menus{bar}->cascade(
     -label     => 'File',
     -menuitems => [
+      [
+        "command",
+        "Show History",
+        -command     => \&show_history,
+        -accelerator => $config{key_history},
+      ],
       [
         "command",
         "Exit",
