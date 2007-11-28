@@ -162,7 +162,7 @@ sub load_config_defaults() {
   $config{terminal_args}      = "";
   $config{terminal_title_opt} = "-T";
   $config{terminal_allow_send_events} =
-    "-xrm 'XTerm.VT100.allowSendEvents:true'";
+    "-xrm '*.VT100.allowSendEvents:true'";
   $config{terminal_font}           = "6x13";
   $config{terminal_size}           = "80x24";
   $config{use_hotkeys}             = "yes";
@@ -2196,7 +2196,7 @@ decreased when resizing terminals for tiling, not the number of characters (80))
 
 Option used with C<terminal> to set the title of the window
 
-=item terminal_allow_send_events = -xrm 'XTerm.VT100.allowSendEvents:true'
+=item terminal_allow_send_events = -xrm '*.VT100.allowSendEvents:true'
 
 Option required by the terminal to allow XSendEvents to be received
 
