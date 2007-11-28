@@ -158,24 +158,23 @@ sub logmsg($@) {
 
 # set some application defaults
 sub load_config_defaults() {
-  $config{terminal}           = "xterm";
-  $config{terminal_args}      = "";
-  $config{terminal_title_opt} = "-T";
-  $config{terminal_allow_send_events} =
-    "-xrm '*.VT100.allowSendEvents:true'";
-  $config{terminal_font}           = "6x13";
-  $config{terminal_size}           = "80x24";
-  $config{use_hotkeys}             = "yes";
-  $config{key_quit}                = "Control-q";
-  $config{key_addhost}             = "Control-plus";
-  $config{key_clientname}          = "Alt-n";
-  $config{key_retilehosts}         = "Alt-r";
-  $config{key_paste}               = "Control-v";
-  $config{mouse_paste}             = "Button-2";
-  $config{auto_quit}               = "yes";
-  $config{window_tiling}           = "yes";
-  $config{window_tiling_direction} = "right";
-  $config{console_position}        = "";
+  $config{terminal}                   = "xterm";
+  $config{terminal_args}              = "";
+  $config{terminal_title_opt}         = "-T";
+  $config{terminal_allow_send_events} = "-xrm '*.VT100.allowSendEvents:true'";
+  $config{terminal_font}              = "6x13";
+  $config{terminal_size}              = "80x24";
+  $config{use_hotkeys}                = "yes";
+  $config{key_quit}                   = "Control-q";
+  $config{key_addhost}                = "Control-plus";
+  $config{key_clientname}             = "Alt-n";
+  $config{key_retilehosts}            = "Alt-r";
+  $config{key_paste}                  = "Control-v";
+  $config{mouse_paste}                = "Button-2";
+  $config{auto_quit}                  = "yes";
+  $config{window_tiling}              = "yes";
+  $config{window_tiling_direction}    = "right";
+  $config{console_position}           = "";
 
   $config{ignore_host_errors} = "no";
 
@@ -212,9 +211,9 @@ sub load_config_defaults() {
 
   $config{unmap_on_redraw} = "no";    # Debian #329440
 
-  $config{show_history} = 0;
-  $config{history_width} = 40,
-  $config{history_height} = 10,
+  $config{show_history}   = 0;
+  $config{history_width}  = 40;
+  $config{history_height} = 10;
 }
 
 # load in config file settings
@@ -225,9 +224,9 @@ sub parse_config_file($) {
 
   open( CFG, $config_file ) or die("Couldnt open $config_file: $!");
   while (<CFG>) {
-    next if ( /^\s*$/ || /^#/ );      # ignore blank lines & commented lines
-    s/#.*//;                          # remove comments from remaining lines
-    s/\s*$//;                         # remove trailing whitespace
+    next if ( /^\s*$/ || /^#/ );    # ignore blank lines & commented lines
+    s/#.*//;                        # remove comments from remaining lines
+    s/\s*$//;                       # remove trailing whitespace
     chomp();
 
     #my ($key, $value) = split(/[ 	]*=[ 	]*/);
@@ -419,33 +418,42 @@ sub load_keyboard_map() {
   logmsg( 1, "Loading keymaps and keycodes" );
 
   foreach ( 0 .. $#keyboard ) {
-    if ( defined( $keycodetosym{ $keyboard[$_][0] } ) ) {
-      $keyboardmap{ $keycodetosym{ $keyboard[$_][0] } } = 'n' . ( $_ + $min );
+    if ( defined $keyboard[$_][0] ) {
+      if ( defined( $keycodetosym{ $keyboard[$_][0] } ) ) {
+        $keyboardmap{ $keycodetosym{ $keyboard[$_][0] } } = 'n' . ( $_ + $min );
+      }
+      else {
+        logmsg( 2, "Unknown keycode ", $keyboard[$_][0] )
+          if ( $keyboard[$_][0] != 0 );
+      }
     }
-    else {
-      logmsg( 2, "Unknown keycode ", $keyboard[$_][0] )
-        if ( $keyboard[$_][0] != 0 );
+    if ( defined $keyboard[$_][1] ) {
+      if ( defined( $keycodetosym{ $keyboard[$_][1] } ) ) {
+        $keyboardmap{ $keycodetosym{ $keyboard[$_][1] } } = 's' . ( $_ + $min );
+      }
+      else {
+        logmsg( 2, "Unknown keycode ", $keyboard[$_][1] )
+          if ( $keyboard[$_][1] != 0 );
+      }
     }
-    if ( defined( $keycodetosym{ $keyboard[$_][1] } ) ) {
-      $keyboardmap{ $keycodetosym{ $keyboard[$_][1] } } = 's' . ( $_ + $min );
+    if ( defined $keyboard[$_][2] ) {
+      if ( defined( $keycodetosym{ $keyboard[$_][2] } ) ) {
+        $keyboardmap{ $keycodetosym{ $keyboard[$_][2] } } = 'a' . ( $_ + $min );
+      }
+      else {
+        logmsg( 2, "Unknown keycode ", $keyboard[$_][2] )
+          if ( $keyboard[$_][2] != 0 );
+      }
     }
-    else {
-      logmsg( 2, "Unknown keycode ", $keyboard[$_][1] )
-        if ( $keyboard[$_][1] != 0 );
-    }
-    if ( defined( $keycodetosym{ $keyboard[$_][2] } ) ) {
-      $keyboardmap{ $keycodetosym{ $keyboard[$_][2] } } = 'a' . ( $_ + $min );
-    }
-    else {
-      logmsg( 2, "Unknown keycode ", $keyboard[$_][2] )
-        if ( $keyboard[$_][2] != 0 );
-    }
-    if ( defined( $keycodetosym{ $keyboard[$_][3] } ) ) {
-      $keyboardmap{ $keycodetosym{ $keyboard[$_][3] } } = 'sa' . ( $_ + $min );
-    }
-    else {
-      logmsg( 2, "Unknown keycode ", $keyboard[$_][3] )
-        if ( $keyboard[$_][3] != 0 );
+    if ( defined $keyboard[$_][3] ) {
+      if ( defined( $keycodetosym{ $keyboard[$_][3] } ) ) {
+        $keyboardmap{ $keycodetosym{ $keyboard[$_][3] } } =
+          'sa' . ( $_ + $min );
+      }
+      else {
+        logmsg( 2, "Unknown keycode ", $keyboard[$_][3] )
+          if ( $keyboard[$_][3] != 0 );
+      }
     }
 
     # dont know these two key combs yet...
@@ -603,36 +611,36 @@ sub change_main_window_title() {
 sub update_display_text($) {
   my $char = shift;
 
-warn("config{show_history}=$config{show_history}");
+  warn("config{show_history}=$config{show_history}");
 
-  return if(!$config{show_history});
+  return if ( !$config{show_history} );
 
-  logmsg( 2, "Dropping :$char: into display");
+  logmsg( 2, "Dropping :$char: into display" );
 
-  SWITCH: {
-    foreach ( $char ) {
+SWITCH: {
+    foreach ($char) {
       /^Return$/ && do {
-        $windows{history}->insert('end', "\n");
+        $windows{history}->insert( 'end', "\n" );
         last SWITCH;
       };
-  
+
       /^BackSpace$/ && do {
         $windows{history}->delete('end - 2 chars');
         last SWITCH;
       };
-  
+
       /^(:?Shift|Control|Alt)_(:?R|L)$/ && do {
         last SWITCH;
       };
 
-      length( $char ) > 1 && do {
-        $windows{history}->insert('end', chr( $keysymtocode{$char} ) ) 
-         if ($keysymtocode{$char} );
+      length($char) > 1 && do {
+        $windows{history}->insert( 'end', chr( $keysymtocode{$char} ) )
+          if ( $keysymtocode{$char} );
         last SWITCH;
       };
 
       do {
-        $windows{history}->insert('end',$char);
+        $windows{history}->insert( 'end', $char );
         last SWITCH;
       };
     }
@@ -1368,7 +1376,8 @@ sub create_windows() {
     );
 
   if ( $config{show_history} ) {
-    $windows{history} = $windows{main_window}->Scrolled("ROText",
+    $windows{history} = $windows{main_window}->Scrolled(
+      "ROText",
       -insertborderwidth => 4,
       -width             => $config{history_width},
       -height            => $config{history_height},
@@ -1589,7 +1598,7 @@ sub key_event {
   # look for a <Control>-d and no hosts, so quit
   exit_prog() if ( $state =~ /Control/ && $keysym eq "d" and !%servers );
 
-  update_display_text( $keycodetosym{$keysymdec} ) 
+  update_display_text( $keycodetosym{$keysymdec} )
     if ( $event eq "KeyPress" && $keycodetosym{$keysymdec} );
 
   # for all servers

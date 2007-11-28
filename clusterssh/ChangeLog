@@ -1,6 +1,7 @@
 ???? Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.22-1
 
 * Update X resources class to allow use of terms other than XTerm
+* Apply patch from Harald Weidner to stop error messages in Debian Etch
 
 2008-11-28 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.21-1
 
