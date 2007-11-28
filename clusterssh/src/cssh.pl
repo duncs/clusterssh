@@ -69,6 +69,7 @@ use File::Temp qw/:POSIX/;
 use Fcntl;
 use Tk 800.022;
 use Tk::Xlib;
+use Tk::ROText;
 require Tk::Dialog;
 require Tk::LabEntry;
 use X11::Protocol;
@@ -84,7 +85,7 @@ use Net::hostent;
 my $scriptname = $0;
 $scriptname =~ s!.*/!!;    # get the script name, minus the path
 
-my $options = 'dDv?hHuqQgGit:T:c:l:o:e:';    # Command line options list
+my $options = 'dDv?hHuqQgGist:T:c:l:o:e:';    # Command line options list
 my %options;
 my %config;
 my $debug = 0;
@@ -210,6 +211,10 @@ sub load_config_defaults() {
   $config{extra_cluster_file} = "";
 
   $config{unmap_on_redraw} = "no";    # Debian #329440
+
+  $config{show_history} = 0;
+  $config{history_width} = 40,
+  $config{history_height} = 10,
 }
 
 # load in config file settings
@@ -331,6 +336,8 @@ sub check_config() {
   get_font_size();
 
   $config{extra_cluster_file} =~ s/\s+//g;
+
+  $config{show_history} = 1 if $options{s};
 }
 
 sub load_configfile() {
@@ -593,6 +600,45 @@ sub change_main_window_title() {
   $windows{main_window}->title( $config{title} . " [$number]" );
 }
 
+sub update_display_text($) {
+  my $char = shift;
+
+warn("config{show_history}=$config{show_history}");
+
+  return if(!$config{show_history});
+
+  logmsg( 2, "Dropping :$char: into display");
+
+  SWITCH: {
+    foreach ( $char ) {
+      /^Return$/ && do {
+        $windows{history}->insert('end', "\n");
+        last SWITCH;
+      };
+  
+      /^BackSpace$/ && do {
+        $windows{history}->delete('end - 2 chars');
+        last SWITCH;
+      };
+  
+      /^(:?Shift|Control|Alt)_(:?R|L)$/ && do {
+        last SWITCH;
+      };
+
+      length( $char ) > 1 && do {
+        $windows{history}->insert('end', chr( $keysymtocode{$char} ) ) 
+         if ($keysymtocode{$char} );
+        last SWITCH;
+      };
+
+      do {
+        $windows{history}->insert('end',$char);
+        last SWITCH;
+      };
+    }
+  }
+}
+
 sub send_text($@) {
   my $svr = shift;
   my $text = join( "", @_ );
@@ -703,9 +749,9 @@ sub setup_helper_script() {
 			);
 			sleep 5;
 		}
-		if(\$port) {
+		if(\$user) {
 			unless("$config{comms}" eq "telnet") {
-				\$user = \$user ? "-l \$user" : "";
+				\$user = \$user ? "-l \$user " : "";
 				\$command .= \$user;
 			}
 		}
@@ -1100,7 +1146,9 @@ sub retile_hosts {
 sub capture_terminal() {
   logmsg( 0, "Stub for capturing a terminal window" );
 
-  return if ( $debug < 2 );
+  return if ( $debug < 6 );
+
+  # should never see this - all experimental anyhow
 
   foreach my $server ( keys(%servers) ) {
     foreach my $data ( keys( %{ $servers{$server} } ) ) {
@@ -1319,6 +1367,20 @@ sub create_windows() {
     -expand => 1,
     );
 
+  if ( $config{show_history} ) {
+    $windows{history} = $windows{main_window}->Scrolled("ROText",
+      -insertborderwidth => 4,
+      -width             => $config{history_width},
+      -height            => $config{history_height},
+      -state             => 'normal',
+      -takefocus         => 0,
+    )->pack(
+      -fill   => "x",
+      -expand => 1,
+    );
+    $windows{history}->bindtags(undef);
+  }
+
   $windows{main_window}->bind( '<Destroy>' => \&exit_prog );
 
   # remove all Paste events so we set them up cleanly
@@ -1351,6 +1413,8 @@ sub create_windows() {
       }
 
       logmsg( 2, "Got text :", $paste_text, ":" );
+
+      update_display_text($paste_text);
 
       # now sent it on
       foreach my $svr ( keys(%servers) ) {
@@ -1481,6 +1545,7 @@ sub key_event {
   my $keysymdec = $Tk::event->N;
   my $keysym    = $Tk::event->K;
   my $state     = $Tk::event->s || 0;
+
   $menus{entrytext} = "";
 
   logmsg( 3, "=========" );
@@ -1523,6 +1588,9 @@ sub key_event {
 
   # look for a <Control>-d and no hosts, so quit
   exit_prog() if ( $state =~ /Control/ && $keysym eq "d" and !%servers );
+
+  update_display_text( $keycodetosym{$keysymdec} ) 
+    if ( $event eq "KeyPress" && $keycodetosym{$keysymdec} );
 
   # for all servers
   foreach ( keys(%servers) ) {
@@ -1884,6 +1952,11 @@ Specify arguments to be passed to ssh or rsh when making the connection.
 NOTE: any "generic" change to the method (i.e. specifying the ssh port to use)
 should be done in the medium's own config file (see L<ssh_config> and 
 F<$HOME/.ssh/config>).
+
+=item -s
+
+IN BETA: Show history within console window.  This code is still being 
+worked upon, but may help some users.
 
 =item -t ""
 

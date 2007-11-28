@@ -1,5 +1,5 @@
 Name:          clusterssh
-Version:       3.20
+Version:       3.21
 Release:       1%{?dist}
 Summary:       Secure concurrent multi-server terminal control
 
@@ -66,6 +66,9 @@ rm -rf %{buildroot}
 %{_datadir}/applications/fedora-%{name}.desktop
 
 %changelog
+
+* Wed Nov 28 2008 Duncan Ferguson  <duncan_ferguson@users.sf.net> - 3.21-1
+- See ChangeLog
 
 * Mon Nov 26 2008 Duncan Ferguson  <duncan_ferguson@users.sf.net> - 3.20-1
 - Updates and fixes - see ChangeLog

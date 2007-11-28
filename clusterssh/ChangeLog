@@ -1,3 +1,8 @@
+2008-11-28 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.21-1
+
+* Implement a basic history window in the console (option -s)
+* Fixed bug whereby username@ wasn't being used correctly
+
 2008-11-26 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.20-1
 
 * Move source repository frmo CVS to SVN on sourceforge
