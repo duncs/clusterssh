@@ -3,6 +3,8 @@
 * Update X resources class to allow use of terms other than XTerm
 * Apply patch from Harald Weidner to stop error messages in Debian Etch
 * Add in key shortcut (alt-h) to toggle history window
+* Tidy up pod a little to highlight notes better
+* Check terminal_font config for quotes and remove
 
 2008-11-28 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.21-1
 

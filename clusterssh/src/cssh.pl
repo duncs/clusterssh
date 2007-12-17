@@ -237,6 +237,9 @@ sub parse_config_file($) {
     logmsg( 3, "$key=$value" );
   }
   close(CFG);
+
+  # tidy up entries, just in case
+  $config{terminal_font} =~ s/['"]//g;
 }
 
 sub find_binary($) {
@@ -1968,7 +1971,7 @@ Use supplied file as additional cluster file (see also L<"FILES">)
 =item -l $LOGNAME
 
 Specify the default username to use for connections (if different from the
-currently logged in user).  NOTE: will be overridden by <user>@<host>
+currently logged in user).  B<NOTE:> will be overridden by <user>@<host>
 
 =item -T "CSSH"
 
@@ -1980,7 +1983,7 @@ Specify the initial part of the title used in the console and client windows
 
 Specify arguments to be passed to ssh or rsh when making the connection.  
 
-NOTE: any "generic" change to the method (i.e. specifying the ssh port to use)
+B<NOTE:> any "generic" change to the method (i.e. specifying the ssh port to use)
 should be done in the medium's own config file (see L<ssh_config> and 
 F<$HOME/.ssh/config>).
 
@@ -2085,6 +2088,15 @@ This file contains configuration overrides - the defaults are as marked.
 Default options are overwritten first by the global file, and then by the
 user file.
 
+B<NOTE:> values for entries do not need to be quoted unless it is required 
+for passing arguments, i.e.
+
+  terminal_allow_send_events="-xrm '*.VT100.allowSendEvents:true'"
+
+should be written as 
+
+  terminal_allow_send_events=-xrm '*.VT100.allowSendEvents:true'
+
 =over
 
 =item always_tile = yes
@@ -2168,9 +2180,9 @@ See below notes on shortcuts.
 Sets any arguments to be used with the communication method (defaults to ssh
 arguments).  
 
-NOTE: The given defaults are based on OpenSSH, not commercial ssh software.
+B<NOTE:> The given defaults are based on OpenSSH, not commercial ssh software.
 
-NOTE: Any "generic" change to the method (i.e. specifying the ssh port to use)
+B<NOTE:> Any "generic" change to the method (i.e. specifying the ssh port to use)
 should be done in the medium's own config file (see L<ssh_config> and 
 F<$HOME/.ssh/config>).
 
@@ -2262,7 +2274,7 @@ left and then up
 
 =back
 
-NOTE: The key shortcut modifiers must be in the form "Control", "Alt", or 
+B<NOTE:> The key shortcut modifiers must be in the form "Control", "Alt", or 
 "Shift", i.e. with the first letter capitalised and the rest lower case.  Keys
 may also be disabled individually by setting to the work "null".
 
