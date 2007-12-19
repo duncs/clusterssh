@@ -97,6 +97,7 @@ my %servers;     # hash of server cx info
 my $helper_script = "";
 my $xdisplay;
 my %keyboardmap;
+my $sysconfigdir = "/etc";
 
 # Fudge to get X11::Keysyms working
 %keysymtocode = %main::keysymtocode;
@@ -177,8 +178,6 @@ sub load_config_defaults() {
   $config{window_tiling_direction}    = "right";
   $config{console_position}           = "";
 
-  $config{ignore_host_errors} = "no";
-
   $config{screen_reserve_top}    = 0;
   $config{screen_reserve_bottom} = 40;
   $config{screen_reserve_left}   = 0;
@@ -194,6 +193,7 @@ sub load_config_defaults() {
 
   ( $config{comms} = basename($0) ) =~ s/^.//;
   $config{comms} =~ s/.pl$//;    # for when testing directly out of cvs
+  $config{method} = $config{comms};
 
   $config{title} = "C" . uc( $config{comms} );
 
@@ -333,8 +333,6 @@ sub check_config() {
       "-xrm '$1.VT100.allowSendEvents:true'";
   }
 
-  $config{ignore_host_errors} = "yes" if ( $options{i} );
-
   $config{internal_previous_state} = "";    # set to default
   get_font_size();
 
@@ -344,7 +342,7 @@ sub check_config() {
 }
 
 sub load_configfile() {
-  parse_config_file('/etc/csshrc');
+  parse_config_file( $sysconfigdir . '/csshrc' );
   parse_config_file( $ENV{HOME} . '/.csshrc' );
   check_config();
 }
@@ -768,8 +766,6 @@ sub setup_helper_script() {
 		{
 			\$svr =~ s/==\$//;
 			warn("\\nWARNING: failed to resolve IP address for \$svr.\\n\\n"
-				. "Either 'ignore_host_errors' or -i is set.  "
-				. "This connection may hang\\n\\n"
 			);
 			sleep 5;
 		}
@@ -800,6 +796,27 @@ sub setup_helper_script() {
   logmsg( 2, "Helper script done" );
 }
 
+sub check_host($) {
+  my $host = shift;
+  if ( $config{method} eq "ssh" ) {
+    my $command="$config{ssh} $config{ssh_args} -q -n $host";
+    logmsg( 3, "Attempting name resolution via ssh, using: $command" );
+    if (
+      open( HOSTCHECK, "-|", $command ) )
+    {
+      close(HOSTCHECK);
+      return $! >> 8 == 0 ? $host : undef;
+    }
+    else {
+      logmsg( 1, "Failed to check host (falling back to gethost): $!" );
+      return gethost($host);
+    }
+  }
+  else {
+    return gethost($host);
+  }
+}
+
 sub open_client_windows(@) {
   foreach (@_) {
     next unless ($_);
@@ -827,14 +844,11 @@ sub open_client_windows(@) {
     }
 
     # see if we can find the hostname - if not, drop it
-    my $gethost = gethost("$_");
+    my $gethost = check_host($_);
     if ( !$gethost ) {
-      my $text =
-"WARNING: unknown host $_ (see -i switch, or ignore_host_errors in .csshrc)";
-      $text .= " - ignoring" unless ( $config{ignore_host_errors} =~ /yes/i );
-      $text .= "\n";
+      my $text = "WARNING: unknown host $_ - ignoring\n";
       warn($text);
-      next unless ( $config{ignore_host_errors} =~ /yes/i );
+      next;
     }
 
     $servers{$server}{realname} = $_;
@@ -1998,9 +2012,8 @@ Specify arguments to be passed to terminals being used
 
 =item -i
 
-Ignore errors from unresolvable host names (i.e. because the name is an alias
-within an ssh config file or similar) (see also "ignore_host_errors" in 
-L<"FILES">)
+THIS OPTION IS DEPRECATED.  It has been left in so current systems continue 
+to function as expected.
 
 =item -e [user@]<hostname>[:port]
 
@@ -2139,11 +2152,10 @@ as a to reference the users home directory, i.e.
 
  extra_cluster_file = ~/clusters, $HOME/clus
 
-=item ignore_host_errors = "no"
+=item ignore_host_errors
 
-If set to "yes", ignore errors from host names that cannot be resolved 
-and attempt to connect anyway (i.e. because they are aliased in an ssh 
-config file) - see also "-i"
+THIS OPTION IS DEPRECATED.  It has been left in so current systems continue 
+to function as expected.
 
 =item key_addhost = Control-plus
 

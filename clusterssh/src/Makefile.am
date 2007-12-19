@@ -23,7 +23,7 @@ EXTRA_DIST = cssh.pl
 cssh: $(srcdir)/cssh.pl
 	rm -f cssh
 	echo "#!"$(PERL) > cssh
-	cat $(srcdir)/cssh.pl >> cssh
+	sed 's!$$sysconfigdir = "/etc";!$$sysconfigdir = "$(sysconfdir)";!' $(srcdir)/cssh.pl >> cssh
 	chmod ugo+x cssh
 
 cssh.1: $(srcdir)/cssh.pl

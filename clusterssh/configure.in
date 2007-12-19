@@ -18,6 +18,9 @@
 AC_INIT
 AM_INIT_AUTOMAKE(clusterssh,3.21)
 AC_PATH_PROGS(PERL, perl perl5)
+if test ${sysconfdir} = '${prefix}/etc'; then
+	sysconfdir=/etc
+fi
 AC_OUTPUT([Makefile src/Makefile])
 #
 # $Id$
