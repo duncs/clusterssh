@@ -1,4 +1,4 @@
-???? Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.22-1
+2008-01-23 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.22-1
 
 * Update X resources class to allow use of terms other than XTerm
 * Apply patch from Harald Weidner to stop error messages in Debian Etch
@@ -7,13 +7,15 @@
 * Check terminal_font config for quotes and remove
 * Enable use of "configure --sysconfdir=", defaults to /etc
 * Revise host checking algorithm to take ssh_config files into account
+* Revise username check used as part of host id to accept more chars
+* Correct year value for previous two entries from 2008 to 2007
 
-2008-11-28 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.21-1
+2007-11-28 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.21-1
 
 * Implement a basic history window in the console (option -s)
 * Fixed bug whereby username@ wasn't being used correctly
 
-2008-11-26 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.20-1
+2007-11-26 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.20-1
 
 * Move source repository frmo CVS to SVN on sourceforge
 * Remove last digit of version number since not required with SVN

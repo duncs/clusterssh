@@ -1,5 +1,5 @@
 Name:          clusterssh
-Version:       3.21
+Version:       3.22
 Release:       1%{?dist}
 Summary:       Secure concurrent multi-server terminal control
 
@@ -67,10 +67,13 @@ rm -rf %{buildroot}
 
 %changelog
 
-* Wed Nov 28 2008 Duncan Ferguson  <duncan_ferguson@users.sf.net> - 3.21-1
+* Wed Jan 23 2008 Duncan Ferguson  <duncan_ferguson@users.sf.net> - 3.22-1
+- Updates and fixed - see ChangeLog
+
+* Wed Nov 28 2007 Duncan Ferguson  <duncan_ferguson@users.sf.net> - 3.21-1
 - See ChangeLog
 
-* Mon Nov 26 2008 Duncan Ferguson  <duncan_ferguson@users.sf.net> - 3.20-1
+* Mon Nov 26 2007 Duncan Ferguson  <duncan_ferguson@users.sf.net> - 3.20-1
 - Updates and fixes - see ChangeLog
 
 * Tue Aug 15 2006 Duncan Ferguson <duncan_ferguson@users.sf.net> - 3.19.1-2
