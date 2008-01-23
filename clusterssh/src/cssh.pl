@@ -98,6 +98,7 @@ my $helper_script = "";
 my $xdisplay;
 my %keyboardmap;
 my $sysconfigdir = "/etc";
+my %ssh_hostnames;
 
 # Fudge to get X11::Keysyms working
 %keysymtocode = %main::keysymtocode;
@@ -356,10 +357,35 @@ sub dump_config {
   print("# Configuration dump produced by 'cssh -u'\n");
 
   foreach ( sort( keys(%config) ) ) {
-    next if ( $_ =~ /^internal/ && $debug == 0 );  # do not output internal vars
+    next
+      if ( $_ =~ /^internal/ && $debug == 0 );    # do not output internal vars
     print "$_=$config{$_}\n";
   }
   exit_prog if ( !$noexit );
+}
+
+sub check_ssh_hostnames {
+  return unless ( $config{method} eq "ssh" );
+
+  my $ssh_config = "$ENV{HOME}/.ssh/config";
+
+  if ( -r $ssh_config && open( SSHCFG, "<", $ssh_config ) ) {
+    while (<SSHCFG>) {
+      next unless (m/^\s*host\s+([\w\.-]+)/);
+      $ssh_hostnames{$1} = 1;
+    }
+    close(SSHCFG);
+  }
+
+  if ( $debug > 1 ) {
+    if (%ssh_hostnames) {
+      logmsg( 2, "Parsed these ssh config hosts:" );
+      logmsg( 2, "- $_" ) foreach ( sort( keys(%ssh_hostnames) ) );
+    }
+    else {
+      logmsg( 2, "No hostnames parsed from user ssh config file" );
+    }
+  }
 }
 
 sub evaluate_commands {
@@ -367,10 +393,9 @@ sub evaluate_commands {
 
   # break apart the given host string to check for user or port configs
   print "{e}=$options{e}\n";
-  $user = $1 if ( $options{e} =~ m/^(\w+)@\w+/ );
-  $port = $1 if ( $options{e} =~ s/:(\d+)// );
+  $user = $1 if ( $options{e} =~ s/^(.*)@// );
+  $port = $1 if ( $options{e} =~ s/:(\w+)$// );
   $host = $options{e};
-  $host =~ s/^(?:\w+@)(\w+)(?::\d+)$/$1/;
 
   $user = $user ? "-l $user" : "";
   $port = $port ? "-p $port" : "" unless ( $config{comms} eq "telnet" );
@@ -799,13 +824,9 @@ sub setup_helper_script() {
 sub check_host($) {
   my $host = shift;
   if ( $config{method} eq "ssh" ) {
-    my $command="$config{ssh} $config{ssh_args} -q -n $host";
-    logmsg( 3, "Attempting name resolution via ssh, using: $command" );
-    if (
-      open( HOSTCHECK, "-|", $command ) )
-    {
-      close(HOSTCHECK);
-      return $! >> 8 == 0 ? $host : undef;
+    logmsg( 1, "Attempting name resolution via user ssh config file" );
+    if ( $ssh_hostnames{$host} ) {
+      return 1;
     }
     else {
       logmsg( 1, "Failed to check host (falling back to gethost): $!" );
@@ -827,13 +848,11 @@ sub open_client_windows(@) {
     my $port_nb;
 
     # split off any provided hostname and port
-    if ( $_ =~ /([\w:]+)@/ ) {
+    if ( $_ =~ s/^(.*)@// ) {
       $username = $1;
-      $_ =~ s/.*@//;
     }
-    if ( $_ =~ /:(\w+)/ ) {
+    if ( $_ =~ s/:(\w+)$// ) {
       $port_nb = $1;
-      $_ =~ s/:.*//;
     }
 
     my $count  = 1;
@@ -846,8 +865,13 @@ sub open_client_windows(@) {
     # see if we can find the hostname - if not, drop it
     my $gethost = check_host($_);
     if ( !$gethost ) {
-      my $text = "WARNING: unknown host $_ - ignoring\n";
-      warn($text);
+      my $text = "WARNING: '$_' unknown";
+
+      if (%ssh_hostnames) {
+        $text .= " (unable to resolve and not in user ssh config file)";
+      }
+
+      warn( $text, $/ );
       next;
     }
 
@@ -860,7 +884,8 @@ sub open_client_windows(@) {
     $servers{$server}{pipenm} = tmpnam();
 
     logmsg( 2, "Set temp name to: $servers{$server}{pipenm}" );
-    mkfifo( $servers{$server}{pipenm}, 0600 ) or die("Cannot create pipe: $!");
+    mkfifo( $servers{$server}{pipenm}, 0600 )
+      or die("Cannot create pipe: $!");
 
     # NOTE: the pid is re-fetched from the xterm window (via helper_script)
     # later as it changes and we need an accurate PID as it is widely used
@@ -1459,7 +1484,8 @@ sub create_windows() {
 
       # now sent it on
       foreach my $svr ( keys(%servers) ) {
-        send_text( $svr, $paste_text ) if ( $servers{$svr}{active} == 1 );
+        send_text( $svr, $paste_text )
+          if ( $servers{$svr}{active} == 1 );
       }
     }
   );
@@ -1598,7 +1624,8 @@ sub key_event {
   logmsg( 3, "codetosym=$keycodetosym{$keysymdec}" )
     if ( $keycodetosym{$keysymdec} );
   logmsg( 3, "symtocode=$keysymtocode{$keysym}" );
-  logmsg( 3, "keyboard =$keyboardmap{ $keysym }" ) if ( $keyboardmap{$keysym} );
+  logmsg( 3, "keyboard =$keyboardmap{ $keysym }" )
+    if ( $keyboardmap{$keysym} );
 
   #warn("debug stop point here");
   if ( $config{use_hotkeys} eq "yes" ) {
@@ -1786,6 +1813,8 @@ logmsg( 2, "VERSION: $VERSION" );
 load_config_defaults();
 load_configfile();
 dump_config() if ( $options{u} );
+
+check_ssh_hostnames();
 
 evaluate_commands() if ( $options{e} );
 
