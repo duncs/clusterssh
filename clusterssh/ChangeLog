@@ -1,3 +1,8 @@
+2008-01-23 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.23-1
+
+* Apply bugfix supplied by Jima
+- Ensure loading of hosts from user ssh config file is case insensitive
+
 2008-01-23 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.22-1
 
 * Update X resources class to allow use of terms other than XTerm

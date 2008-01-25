@@ -371,7 +371,7 @@ sub check_ssh_hostnames {
 
   if ( -r $ssh_config && open( SSHCFG, "<", $ssh_config ) ) {
     while (<SSHCFG>) {
-      next unless (m/^\s*host\s+([\w\.-]+)/);
+      next unless (m/^\s*host\s+([\w\.-]+)/i);
       $ssh_hostnames{$1} = 1;
     }
     close(SSHCFG);
