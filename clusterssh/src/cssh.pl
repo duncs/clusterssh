@@ -823,6 +823,10 @@ sub setup_helper_script() {
 
 sub check_host($) {
   my $host = shift;
+  if ( $host =~ m/^(\d{1,3}\.?){4}$/ ) {
+    logmsg( 2, "Not resolving IP address '$host'" );
+    return 1;
+  }
   if ( $config{method} eq "ssh" ) {
     logmsg( 1, "Attempting name resolution via user ssh config file" );
     if ( $ssh_hostnames{$host} ) {

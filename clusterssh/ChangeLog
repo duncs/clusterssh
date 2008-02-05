@@ -1,3 +1,7 @@
+??? Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.24-1
+
+* Do not attempt to re-resolve IP addresses
+
 2008-01-23 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.23-1
 
 * Apply bugfix supplied by Jima
