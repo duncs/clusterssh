@@ -1,6 +1,10 @@
 ??? Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.24-1
 
 * Do not attempt to re-resolve IP addresses
+* Apply patch from Dan Wallis
+- Add '-C <file>' command to load in specific config file
+- Typo correct in pod
+- Cope with random/strange config files better
 
 2008-01-23 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.23-1
 
@@ -26,7 +30,7 @@
 
 2007-11-26 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.20-1
 
-* Move source repository frmo CVS to SVN on sourceforge
+* Move source repository from CVS to SVN on sourceforge
 * Remove last digit of version number since not required with SVN
 * Add in host menu option to close inactive windows
 * Apply bugfixes suppled by Tony Mancill
@@ -37,7 +41,7 @@
 * Slight rewording of man page
 * Add in option to use telnet as comms command (use 'ctel' to invoke script)
 * Run through perltidy -b -i=2
-* Appy patches frmo Klaus Ethgen
+* Appy patches from Klaus Ethgen
 - Client dies when cannot write to pipe
 - Sleeping and flushing in window manager to allow time to draw windows
 - Fix pipe reading to not use undefined values

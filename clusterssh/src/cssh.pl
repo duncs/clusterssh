@@ -85,7 +85,7 @@ use Net::hostent;
 my $scriptname = $0;
 $scriptname =~ s!.*/!!;    # get the script name, minus the path
 
-my $options = 'dDv?hHuqQgGist:T:c:l:o:e:';    # Command line options list
+my $options = 'dDv?hHuqQgGist:T:c:l:o:e:C:';    # Command line options list
 my %options;
 my %config;
 my $debug = 0;
@@ -231,8 +231,7 @@ sub parse_config_file($) {
     s/\s*$//;                       # remove trailing whitespace
     chomp();
 
-    #my ($key, $value) = split(/[ 	]*=[ 	]*/);
-    /(\w+)[   ]*=[  ]*(.*)/;
+    next unless m/\s*(\S+)\s*=\s*(.*)\s*/;
     my ( $key, $value ) = ( $1, $2 );
     $config{$key} = $value;
     logmsg( 3, "$key=$value" );
@@ -345,6 +344,9 @@ sub check_config() {
 sub load_configfile() {
   parse_config_file( $sysconfigdir . '/csshrc' );
   parse_config_file( $ENV{HOME} . '/.csshrc' );
+  if ( $options{C} && -r $options{C} ) {
+    parse_config_file( "$options{C}" );
+  }
   check_config();
 }
 
@@ -2015,6 +2017,10 @@ Enable|Disable window tiling (overriding the config file)
 
 Use supplied file as additional cluster file (see also L<"FILES">)
 
+=item -C <file>
+
+Use supplied file as additional configuration file (see also L<"FILES">)
+
 =item -l $LOGNAME
 
 Specify the default username to use for connections (if different from the
@@ -2321,7 +2327,7 @@ left and then up
 
 B<NOTE:> The key shortcut modifiers must be in the form "Control", "Alt", or 
 "Shift", i.e. with the first letter capitalised and the rest lower case.  Keys
-may also be disabled individually by setting to the work "null".
+may also be disabled individually by setting to the word "null".
 
 =back
 
