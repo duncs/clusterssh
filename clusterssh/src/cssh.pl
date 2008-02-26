@@ -345,7 +345,7 @@ sub load_configfile() {
   parse_config_file( $sysconfigdir . '/csshrc' );
   parse_config_file( $ENV{HOME} . '/.csshrc' );
   if ( $options{C} && -r $options{C} ) {
-    parse_config_file( "$options{C}" );
+    parse_config_file( $options{C} );
   }
   check_config();
 }
@@ -1329,7 +1329,7 @@ sub add_host_by_name() {
 sub build_hosts_menu() {
   logmsg( 2, "Building hosts menu" );
 
-  # first, emtpy the hosts menu from the 4th entry on
+  # first, empty the hosts menu from the 4th entry on
   my $menu = $menus{bar}->entrycget( 'Hosts', -menu );
   $menu->delete( 6, 'end' );
 
@@ -1411,6 +1411,23 @@ sub setup_repeat() {
     }
   );
   logmsg( 2, "Repeat setup" );
+}
+
+sub write_default_user_config() {
+  return if ( !$ENV{HOME} || -e "$ENV{HOME}/.csshrc" );
+
+  if ( open( CONFIG, ">", "$ENV{HOME}/.csshrc" ) ) {
+    foreach ( sort( keys(%config) ) ) {
+
+      # do not output internal vars
+      next if ( $_ =~ /^internal/ );
+      print CONFIG "$_=$config{$_}\n";
+    }
+    close(CONFIG);
+  }
+  else {
+    logmsg( 1, "Unable to write default $ENV{HOME}/.csshrc file" );
+  }
 }
 
 ### Window and menu definitions ###
@@ -1524,7 +1541,7 @@ sub create_windows() {
   $windows{addhost} = $windows{main_window}->DialogBox(
     -popover        => $windows{main_window},
     -popanchor      => 'n',
-    -title          => "Add Host",
+    -title          => "Add Host(s) or Cluster(s)",
     -buttons        => [ 'Add', 'Cancel' ],
     -default_button => 'Add',
   );
@@ -1725,11 +1742,12 @@ sub create_menubar() {
     -menuitems => [
       [
         "command",
-        "Retile Hosts",
+        "Retile Windows",
         -command     => \&retile_hosts,
         -accelerator => $config{key_retilehosts},
       ],
-      [ "command", "Capture Terminal",    -command => \&capture_terminal, ],
+
+#         [ "command", "Capture Terminal",    -command => \&capture_terminal, ],
       [ "command", "Toggle active state", -command => \&toggle_active_state, ],
       [
         "command",
@@ -1738,7 +1756,7 @@ sub create_menubar() {
       ],
       [
         "command",
-        "Add Host",
+        "Add Host(s) or Cluster(s)",
         -command     => \&add_host_by_name,
         -accelerator => $config{key_addhost},
       ],
@@ -1865,6 +1883,9 @@ $windows{main_window}->positionfrom('user')
 logmsg( 2, "Setting up repeat" );
 setup_repeat();
 
+logmsg( 2, "Writing default user configuration" );
+write_default_user_config();
+
 # Start event loop
 logmsg( 2, "Starting MainLoop" );
 MainLoop();
@@ -1939,14 +1960,6 @@ communications protocol instead of ssh.
 
 =item *
 
-Starting the utility will be much faster with a configuration file (as this
-prevents searching for required files).  Generate one containing all default
-entries with:
-
-C<< cssh -u > $HOME/.csshrc >>
-
-=item *
-
 When using cssh on a large number of systems to connect back to a single
 system (e.g. you issue a command to the cluster to scp a file from a given
 location) and when these connections require authentication (i.e. you are
@@ -2007,7 +2020,8 @@ Enable|Disable automatically quiting after the last client window has closed
 
 =item -u
 
-Output configuration in the format used by the F<$HOME/.csshrc> file
+Output the current configuration in the same format used by the 
+F<$HOME/.csshrc> file.
 
 =item -g|-G 
 
@@ -2093,7 +2107,8 @@ Quit the program and close all connections and windows
 
 =item Control-+
 
-Open the Add Host dialogue box
+Open the 'Add Host(s) or Cluster(s)' dialogue box.  Mutiple host or cluster names 
+can be entered, separated by spaces.
 
 =item Alt-n
 

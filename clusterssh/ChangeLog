@@ -5,6 +5,10 @@
 - Add '-C <file>' command to load in specific config file
 - Typo correct in pod
 - Cope with random/strange config files better
+* Correct some minor typos
+* Create the .csshrc file if it doesnt already exist and amend pod
+* Amend host menu items to be a little more descriptive
+* Remove 'Catpure Terminal' from Hosts menu as it doesnt do anything useful
 
 2008-01-23 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.23-1
 
