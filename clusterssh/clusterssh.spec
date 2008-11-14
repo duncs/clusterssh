@@ -1,5 +1,5 @@
 Name:          clusterssh
-Version:       3.22
+Version:       3.24
 Release:       1%{?dist}
 Summary:       Secure concurrent multi-server terminal control
 
