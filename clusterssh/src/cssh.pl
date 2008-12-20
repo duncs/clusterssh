@@ -855,12 +855,12 @@ sub check_host($) {
       return 1;
     }
     else {
-      logmsg( 1, "Failed to check host (falling back to gethost): $!" );
-      return gethost($host);
+      logmsg( 1, "Failed to check host (falling back to gethostbyname): $!" );
+      return gethostbyname($host);
     }
   }
   else {
-    return gethost($host);
+    return gethostbyname($host);
   }
 }
 
