@@ -116,6 +116,24 @@ binmode STDOUT, ":utf8";
 
 ### all sub-routines ###
 
+# Pick a color based on a string.
+sub pick_color
+{
+	my($string) = @_;
+	my @components = qw(AA BB CC EE);
+	my $color = 0;
+	for (my $i=0; $i<length($string); $i++) {
+		$color += ord(substr($string, $i, 1));
+	}
+
+	srand($color);
+	my $ans = '\\#';
+	$ans .= $components[int(4 * rand())];
+	$ans .= $components[int(4 * rand())];
+	$ans .= $components[int(4 * rand())];
+	return $ans;
+}
+
 # close a specific host session
 sub terminate_host($) {
   my $svr = shift;
@@ -163,6 +181,8 @@ sub load_config_defaults() {
   $config{terminal}                   = "xterm";
   $config{terminal_args}              = "";
   $config{terminal_title_opt}         = "-T";
+  $config{terminal_colorize}          = 1;
+  $config{terminal_bg_style}          = 'dark';
   $config{terminal_allow_send_events} = "-xrm '*.VT100.allowSendEvents:true'";
   $config{terminal_font}              = "6x13";
   $config{terminal_size}              = "80x24";
@@ -881,6 +901,16 @@ sub open_client_windows(@) {
       next;
     }
 
+    my $color = '';
+    if ($config{terminal_colorize}) {
+	    my $c = pick_color($server);
+	    if ($config{terminal_bg_style} eq 'dark') {
+		    $color = "-bg \\#000000 -fg $c";
+	    } else {
+		    $color = "-fg \\#000000 -bg $c";
+	    }
+    }
+
     $servers{$server}{realname} = $_;
     $servers{$server}{username} = $username;
     $servers{$server}{port_nb}  = $port_nb || '';
@@ -907,7 +937,7 @@ sub open_client_windows(@) {
       # affecting the main program
       $servers{$server}{realname} .= "==" if ( !$gethost );
       my $exec =
-"$config{terminal} $config{terminal_args} $config{terminal_allow_send_events} $config{terminal_title_opt} '$config{title}:$server' -font $config{terminal_font} -e \"$^X\" \"-e\" '$helper_script' '$servers{$server}{pipenm}' '$servers{$server}{realname}' '$servers{$server}{username}' '$servers{$server}{port_nb}'";
+"$config{terminal} $color $config{terminal_args} $config{terminal_allow_send_events} $config{terminal_title_opt} '$config{title}:$server' -font $config{terminal_font} -e \"$^X\" \"-e\" '$helper_script' '$servers{$server}{pipenm}' '$servers{$server}{realname}' '$servers{$server}{username}' '$servers{$server}{port_nb}'";
       logmsg( 2, "Terminal exec line:\n$exec\n" );
       exec($exec) == 0 or warn("Failed: $!");
     }

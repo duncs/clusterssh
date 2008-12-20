@@ -1,3 +1,7 @@
+??? Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.25-1
+
+* Add patch from David F. Skoll for adding colour to terminals
+
 2008-11-14 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.24-1
 
 * Do not attempt to re-resolve IP addresses
