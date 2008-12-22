@@ -2326,6 +2326,22 @@ Number of pixels from the terminal side to reserve when calculating screen
 geometry for tiling.  Setting these will help keep cssh from positioning 
 windows over your scroll and title bars
 
+=item terminal_colorize = 1
+
+If set to 1 (the default), then "-bg" and "-fg" arguments will be added
+to the terminal invocation command-line.  The terminal will be colored
+in a pseudo-random way based on the host name; while the color of a terminal
+is not easily predicted, it will always be the same color for a given host
+name.  After a while, you will recognize hosts by their characteristic
+terminal color.
+
+=item terminal_bg_style = dark
+
+If set to dark, the the terminal background will be set to black and
+the foreground to the pseudo-random color.  If set to light, then the
+foreground will be black and the background the pseudo-random color.  If
+terminal_colorize is zero, then this option has no effect.
+
 =item terminal_size = 80x24
 
 Initial size of terminals to use (note: the number of lines (24) will be 
