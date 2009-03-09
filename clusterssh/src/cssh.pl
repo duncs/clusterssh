@@ -242,7 +242,7 @@ sub load_config_defaults() {
 sub parse_config_file($) {
     my $config_file = shift;
     logmsg( 2, "Reading in from config file $config_file" );
-    return if ( !-e $config_file !-r $config_file );
+    return if ( !-e $config_file || !-r $config_file );
 
     open( CFG, $config_file ) or die("Couldnt open $config_file: $!");
     while (<CFG>) {
@@ -2187,6 +2187,40 @@ would replace the <Alt-n> with the client's name in all the client windows
 =item Alt-r
 
 Retile all the client windows
+
+=back
+
+=head1 EXAMPLES
+
+=over
+
+=item Open up a session to 3 servers
+
+S<$ cssh server1 server2 server3>
+
+=item Open up a session to a cluster of servers identified by the tag 'farm1' 
+and give the controlling window a specific title, where the cluster is defined 
+in one of the default configuration files
+
+S<$ cssh -T 'Web Farm Cluster 1' farm1>
+
+=item Connect to different servers using different login names.  NOTE: this can 
+also be achieved by setting up appropriate options in the F<.ssh/config> file.
+Do not close cssh when last terminal exits.
+
+S<$ cssh -Q user1@server1 admin@server2>
+
+=item Open up a cluster defined in a non-default configuration file
+
+S<$ cssh -c $HOME/cssh.config db_cluster>
+
+=item Use telnet instead of ssh
+
+S<$ ctel server1 server2 >
+
+=item Use rsh instead of ssh
+
+S<$ crsh server1 server2 >
 
 =back
 

@@ -3,6 +3,7 @@
 * Add patch from David F. Skoll for adding colour to terminals
 * Apply fix from Bogdan Pintea for DNS failing to resolve IPs
 * Allow the configuration files to be symlinks (debian bug 518196)
+* Add an 'EXAMPLES' section to the cssh documentation
 
 2008-11-14 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.24-1
 
