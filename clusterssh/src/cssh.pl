@@ -242,7 +242,7 @@ sub load_config_defaults() {
 sub parse_config_file($) {
     my $config_file = shift;
     logmsg( 2, "Reading in from config file $config_file" );
-    return if ( !-f $config_file );
+    return if ( !-e $config_file !-r $config_file );
 
     open( CFG, $config_file ) or die("Couldnt open $config_file: $!");
     while (<CFG>) {
