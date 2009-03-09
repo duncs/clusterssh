@@ -1960,6 +1960,9 @@ MainLoop();
 exit_prog();
 
 __END__
+
+=pod
+
 # man/perldoc/pod page
 
 =head1 NAME
@@ -2059,17 +2062,13 @@ Default options are shown as appropriate.
 
 =over
 
-=item -h|-?
+=item -c <file>
 
-Show basic help text, and exit
+Use supplied file as additional cluster file (see also L<"FILES">)
 
-=item -H
+=item -C <file>
 
-Show full help test (the man page), and exit
-
-=item -v
-
-Show version information and exit
+Use supplied file as additional configuration file (see also L<"FILES">)
 
 =item -d 
 
@@ -2079,36 +2078,32 @@ Enable basic debugging mode (can be combined with -D)
 
 Enable extended debugging mode (can be combined with -d)
 
-=item -q|-Q
+=item -e [user@]<hostname>[:port]
 
-Enable|Disable automatically quiting after the last client window has closed
-(overriding the config file)
-
-=item -u
-
-Output the current configuration in the same format used by the 
-F<$HOME/.csshrc> file.
+Display and evaluate the terminal and connection arguments so display any
+potential errors.  The <hostname> is required to aid the evaluation.  
 
 =item -g|-G 
 
 Enable|Disable window tiling (overriding the config file)
 
-=item -c <file>
+=item -h|-?
 
-Use supplied file as additional cluster file (see also L<"FILES">)
+Show basic help text, and exit
 
-=item -C <file>
+=item -H
 
-Use supplied file as additional configuration file (see also L<"FILES">)
+Show full help test (the man page), and exit
+
+=item -i
+
+THIS OPTION IS DEPRECATED.  It has been left in so current systems continue 
+to function as expected.
 
 =item -l $LOGNAME
 
 Specify the default username to use for connections (if different from the
 currently logged in user).  B<NOTE:> will be overridden by <user>@<host>
-
-=item -T "CSSH"
-
-Specify the initial part of the title used in the console and client windows
 
 =item -o "-x -o ConnectTimeout=10" - for ssh connections
 
@@ -2120,6 +2115,11 @@ B<NOTE:> any "generic" change to the method (i.e. specifying the ssh port to use
 should be done in the medium's own config file (see L<ssh_config> and 
 F<$HOME/.ssh/config>).
 
+=item -q|-Q
+
+Enable|Disable automatically quiting after the last client window has closed
+(overriding the config file)
+
 =item -s
 
 IN BETA: Show history within console window.  This code is still being 
@@ -2129,15 +2129,18 @@ worked upon, but may help some users.
 
 Specify arguments to be passed to terminals being used
 
-=item -i
+=item -T "CSSH"
 
-THIS OPTION IS DEPRECATED.  It has been left in so current systems continue 
-to function as expected.
+Specify the initial part of the title used in the console and client windows
 
-=item -e [user@]<hostname>[:port]
+=item -u
 
-Display and evaluate the terminal and connection arguments so display any
-potential errors.  The <hostname> is required to aid the evaluation.  
+Output the current configuration in the same format used by the 
+F<$HOME/.csshrc> file.
+
+=item -v
+
+Show version information and exit
 
 =back
 
