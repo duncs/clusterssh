@@ -85,7 +85,7 @@ use Net::hostent;
 my $scriptname = $0;
 $scriptname =~ s!.*/!!;    # get the script name, minus the path
 
-my $options = 'dDv?hHuqQgGist:T:c:l:o:e:C:';    # Command line options list
+my $options = 'dDv?hHuqQgGist:T:c:l:o:e:C:p:';    # Command line options list
 my %options;
 my %config;
 my $debug = 0;
@@ -421,7 +421,12 @@ sub evaluate_commands {
     $host = $options{e};
 
     $user = $user ? "-l $user" : "";
-    $port = $port ? "-p $port" : "" unless ( $config{comms} eq "telnet" );
+    if ( $config{comms} eq "telnet" ) {
+        $port = $port ? " $port" : "";
+    }
+    else {
+        $port = $port ? "-p $port" : "";
+    }
 
     print STDERR "Testing terminal - running command:\n";
 
@@ -816,6 +821,7 @@ sub send_resizemove($$$$$) {
 
 sub setup_helper_script() {
     logmsg( 2, "Setting up helper script" );
+    my $defaultport = ( defined $options{p} ) ? $options{p} : "";
     $helper_script = <<"	HERE";
 		my \$pipe=shift;
 		my \$svr=shift;
@@ -839,16 +845,12 @@ sub setup_helper_script() {
 				\$command .= \$user;
 			}
 		}
-		if(\$port) {
-			if("$config{comms}" eq "telnet") {
-				\$port = \$port ? "\$port" : "";
-				\$command .= "\$svr \$port";
-			} else {
-				\$port = \$port ? "-p \$port" : "";
-				\$command .= "\$port \$svr";
-			}
+		if($config{comms} eq "telnet") {
+			\$port = \$port ? "\$port" : "$defaultport";
+			\$command .= "\$svr \$port";
 		} else {
-			\$command .= "\$svr";
+			\$port = \$port ? "-p \$port" : "-p $defaultport";
+			\$command .= "\$port \$svr";
 		}
 		\$command .= " || sleep 5";
 #		warn("Running:\$command\\n"); # for debug purposes
@@ -2115,6 +2117,10 @@ B<NOTE:> any "generic" change to the method (i.e. specifying the ssh port to use
 should be done in the medium's own config file (see L<ssh_config> and 
 F<$HOME/.ssh/config>).
 
+=item -p <port>
+
+Specify an alternate port for connections.
+
 =item -q|-Q
 
 Enable|Disable automatically quiting after the last client window has closed
@@ -2217,9 +2223,9 @@ S<$ cssh -Q user1@server1 admin@server2>
 
 S<$ cssh -c $HOME/cssh.config db_cluster>
 
-=item Use telnet instead of ssh
+=item Use telnet on port 2022 instead of ssh
 
-S<$ ctel server1 server2 >
+S<$ ctel -p 2022 server1 server2 >
 
 =item Use rsh instead of ssh
 

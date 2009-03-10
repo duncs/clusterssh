@@ -5,6 +5,7 @@
 * Allow the configuration files to be symlinks (debian bug 518196)
 * Add an 'EXAMPLES' section to the cssh documentation
 * List options alphabetically in documentation
+* Apply patch from Gerfried Fuchs/Tony Mancill for ports on the command line
 
 2008-11-14 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.24-1
 
