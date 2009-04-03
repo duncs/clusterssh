@@ -923,7 +923,8 @@ sub open_client_windows(@) {
             }
 
             warn( $text, $/ );
-            #next;  # Debian bug 499935 - ignore warnings about hostname resolution
+
+       #next;  # Debian bug 499935 - ignore warnings about hostname resolution
         }
 
         my $color = '';
