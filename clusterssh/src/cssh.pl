@@ -1965,11 +1965,10 @@ MainLoop();
 # make sure we leave program in an expected way
 exit_prog();
 
+# man/perldoc/pod page
 __END__
 
 =pod
-
-# man/perldoc/pod page
 
 =head1 NAME
 

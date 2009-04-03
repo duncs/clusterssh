@@ -4,6 +4,7 @@
 * Fix warning from 'mandb' (Tony Mancill)
 * Continue connecting to unresolvable hosts (debian bug 499935) (Tony Mancill)
 * Correct bug with unset default ports (Tony Mancill)
+* Rearrange pod documentation to remove extraenous comment (Tony Mancill)
 
 2009-03-26 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.25-1
 
