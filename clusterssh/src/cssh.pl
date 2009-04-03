@@ -849,8 +849,12 @@ sub setup_helper_script() {
 			\$port = \$port ? "\$port" : "$defaultport";
 			\$command .= "\$svr \$port";
 		} else {
-			\$port = \$port ? "-p \$port" : "-p $defaultport";
-			\$command .= "\$port \$svr";
+      if ((\$port) || ("$defaultport" ne "")) {
+			  \$port = \$port ? "-p \$port" : "-p $defaultport";
+			  \$command .= "\$port \$svr";
+      } else {
+			  \$command .= "\$svr";
+      }
 		}
 		\$command .= " || sleep 5";
 #		warn("Running:\$command\\n"); # for debug purposes
