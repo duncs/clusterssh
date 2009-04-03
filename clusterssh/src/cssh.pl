@@ -222,9 +222,9 @@ sub load_config_defaults() {
 
     $config{ $config{comms} } = $config{comms};
 
-    $config{ssh_args} = $options{o} if ( $options{o} );
-    $config{ssh_args} .= " -x -o ConnectTimeout=10"
+    $config{ssh_args} = " -x -o ConnectTimeout=10"
         if ( $config{ $config{comms} } =~ /ssh$/ );
+    $config{ssh_args} = $options{o} if ( $options{o} );
     $config{rsh_args} = "";
 
     $config{telnet_args} = "";
