@@ -1969,7 +1969,7 @@ __END__
 
 =head1 NAME
 
-cssh (crsh, ctel) - Cluster administration tool
+cssh, crsh, ctel - Cluster administration tool
 
 =head1 SYNOPSIS
 
