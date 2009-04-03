@@ -919,7 +919,7 @@ sub open_client_windows(@) {
             }
 
             warn( $text, $/ );
-            next;
+            #next;  # Debian bug 499935 - ignore warnings about hostname resolution
         }
 
         my $color = '';
