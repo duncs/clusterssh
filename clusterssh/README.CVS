@@ -18,5 +18,6 @@ Update version in configure.in
 When all is ok, modify "cluster.spec" as necssary 
 	NOTE: always check "Release:" and "Version:" and "%changelog"
 Run "make dist" and release as appropriate.
+Also create tag for the release
 
 $Id$
