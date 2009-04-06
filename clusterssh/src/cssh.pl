@@ -363,6 +363,8 @@ sub check_config() {
 
     $config{extra_cluster_file} =~ s/\s+//g;
 
+    $config{ssh_args} = $options{o} if ( $options{o} );
+
     $config{show_history} = 1 if $options{s};
 }
 
@@ -900,8 +902,8 @@ sub split_hostname {
             our $seen_error;
             warn 'Potentially ambiguous IPv6 address/port definition: ',
                 $server, $/;
-            warn 'Assuming it is an IPv6 address only.',   $/;
-            if(! $seen_error) {
+            warn 'Assuming it is an IPv6 address only.', $/;
+            if ( !$seen_error ) {
                 warn '*** See documenation for more information.', $/;
                 $seen_error = 1;
             }
