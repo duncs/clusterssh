@@ -80,6 +80,7 @@ use X11::Keysyms '%keysymtocode', 'MISCELLANY', 'XKB_KEYS', '3270', 'LATIN1',
     'TECHNICAL', 'SPECIAL', 'PUBLISHING', 'APL', 'HEBREW', 'THAI', 'KOREAN';
 use File::Basename;
 use Net::hostent;
+use Carp;
 
 ### all global variables ###
 my $scriptname = $0;
@@ -168,6 +169,10 @@ sub exit_prog() {
 # $2 .. $n = list to pass to print
 sub logmsg($@) {
     my $level = shift;
+
+    if ( $level > 3 ) {
+        croak('requested debug level should not be above 3');
+    }
 
     if ( $level <= $debug ) {
         print( strftime( "%H:%M:%S: ", localtime ) ) if ( $debug > 1 );
@@ -866,8 +871,54 @@ sub setup_helper_script() {
     logmsg( 2, "Helper script done" );
 }
 
+sub split_hostname {
+    my ($server) = @_;
+
+    logmsg( 3, 'split_hostname: server=' . $server );
+
+    my $username = q{};
+    $username = $config{user} if ( $config{user} );
+
+    if ( $server =~ s/^(.*)@// ) {
+        $username = $1;
+    }
+
+    # try to cope with IPv6 addresses
+    # if $server contains '::' assume this is IPv6 address
+    # if there are 8 : in the address then can say its IPv6 + port
+    # otherwise how can you reliably tell its IPv6 + port when last
+    # octect is number, i.e. is 2001:db8::1428:2323 a host with
+    # port 2323 or a full IPv6 address?
+    my $port = q{};
+    if ( $server !~ m/::/ || ( $server =~ tr/:// ) == 7 ) {
+        if ( $server =~ s/:(\d+)$// ) {
+            $port = $1;
+        }
+    }
+    else {
+        if ( $server =~ m/:(\d+)$/ ) {
+            our $seen_error;
+            warn 'Potentially ambiguous IPv6 address/port definition: ',
+                $server, $/;
+            warn 'Assuming it is an IPv6 address only.',   $/;
+            if(! $seen_error) {
+                warn '*** See documenation for more information.', $/;
+                $seen_error = 1;
+            }
+        }
+    }
+
+    logmsg( 3, "username=$username, server=$server, port=$port" );
+
+    return ( $username, $server, $port );
+}
+
 sub check_host($) {
     my $host = shift;
+    if ( $host =~ m/:/ ) {
+        logmsg( 2, "Not resolving IPv6 address '$host'" );
+        return 1;
+    }
     if ( $host =~ m/^(\d{1,3}\.?){4}$/ ) {
         logmsg( 2, "Not resolving IP address '$host'" );
         return 1;
@@ -892,28 +943,10 @@ sub open_client_windows(@) {
     foreach (@_) {
         next unless ($_);
 
-        my $username = "";
-        $username = $config{user} if ( $config{user} );
-
-        my $port_nb;
-
-        # split off any provided hostname and port
-        if ( $_ =~ s/^(.*)@// ) {
-            $username = $1;
-        }
-        if ( $_ =~ s/:(\w+)$// ) {
-            $port_nb = $1;
-        }
-
-        my $count  = 1;
-        my $server = $_;
-
-        while ( defined( $servers{$server} ) ) {
-            $server = $_ . " " . $count++;
-        }
+        my ( $username, $server, $port_nb ) = split_hostname($_);
 
         # see if we can find the hostname - if not, drop it
-        my $gethost = check_host($_);
+        my $gethost = check_host($server);
         if ( !$gethost ) {
             my $text = "WARNING: '$_' unknown";
 
@@ -937,6 +970,12 @@ sub open_client_windows(@) {
                 $color = "-fg \\#000000 -bg $c";
             }
         }
+
+        my $count = q{};
+        while ( defined( $servers{ $server . q{ } . $count } ) ) {
+            $count++;
+        }
+        $server .= q{ } . $count;
 
         $servers{$server}{realname} = $_;
         $servers{$server}{username} = $username;
@@ -964,7 +1003,7 @@ sub open_client_windows(@) {
           # affecting the main program
             $servers{$server}{realname} .= "==" if ( !$gethost );
             my $exec
-                = "$config{terminal} $color $config{terminal_args} $config{terminal_allow_send_events} $config{terminal_title_opt} '$config{title}:$server' -font $config{terminal_font} -e \"$^X\" \"-e\" '$helper_script' '$servers{$server}{pipenm}' '$servers{$server}{realname}' '$servers{$server}{username}' '$servers{$server}{port_nb}'";
+                = "$config{terminal} $color $config{terminal_args} $config{terminal_allow_send_events} $config{terminal_title_opt} '$config{title}: $server' -font $config{terminal_font} -e \"$^X\" \"-e\" '$helper_script' '$servers{$server}{pipenm}' '$servers{$server}{realname}' '$servers{$server}{username}' '$servers{$server}{port_nb}'";
             logmsg( 2, "Terminal exec line:\n$exec\n" );
             exec($exec) == 0 or warn("Failed: $!");
         }
@@ -1433,9 +1472,9 @@ sub setup_repeat() {
                 if ( $config{internal_count} > 60000 );    # reset if too high
             $config{internal_count}++;
             my $build_menu = 0;
-            logmsg( 4, "Running repeat (count=$config{internal_count})" );
+            logmsg( 3, "Running repeat (count=$config{internal_count})" );
 
-     #logmsg( 4, "Number of servers in hash is: ", scalar( keys(%servers) ) );
+     #logmsg( 3, "Number of servers in hash is: ", scalar( keys(%servers) ) );
 
             foreach my $svr ( keys(%servers) ) {
                 if ( defined( $servers{$svr}{pid} ) ) {
@@ -1454,12 +1493,12 @@ sub setup_repeat() {
             # get current number of clients
             $config{internal_total} = int( keys(%servers) );
 
-            #logmsg( 4, "Number after tidy is: ", $config{internal_total} );
+            #logmsg( 3, "Number after tidy is: ", $config{internal_total} );
 
             # get current number of clients
             $config{internal_total} = int( keys(%servers) );
 
-            #logmsg( 4, "Number after tidy is: ", $config{internal_total} );
+            #logmsg( 3, "Number after tidy is: ", $config{internal_total} );
 
             # If there are no hosts in the list and we are set to autoquit
             if (   $config{internal_total} == 0
@@ -1479,7 +1518,7 @@ sub setup_repeat() {
             # clean out text area, anyhow
             $menus{entrytext} = "";
 
-            #logmsg( 4, "repeat completed" );
+            #logmsg( 3, "repeat completed" );
         }
     );
     logmsg( 2, "Repeat setup" );
@@ -1977,12 +2016,9 @@ cssh, crsh, ctel - Cluster administration tool
 
 =head1 SYNOPSIS
 
-S<< cssh [options] [[user@]<server>|<tag>] [...] >>
-S<< crsh [options] [[user@]<server>|<tag>] [...] >>
 S<< cssh [options] [[user@]<server>[:port]|<tag>] [...] >>
 S<< crsh [options] [[user@]<server>[:port]|<tag>] [...] >>
-S<< ctel [options] [<server>|<tag>] [...] >>
-S<< ctel [options] [<server>|<tag>] [...] >>
+S<< ctel [options] [<server>[:port]|<tag>] [...] >>
 
 =head1 DESCRIPTION
 
@@ -2007,6 +2043,8 @@ Better to search for the specific line to be changed and double-check before
 changes are committed.
 
 =head2 Further Notes
+
+Please also see L<KNOWN BUGS>.
 
 =over
 
@@ -2475,24 +2513,49 @@ may also be disabled individually by setting to the word "null".
 
 =back
 
-=head1 AUTHOR
-
-Duncan Ferguson
-
-=head1 CREDITS
-
-clusterssh is distributed under the GNU public license.  See the file
-F<LICENSE> for details.
-
-A web site for comments, requests, bug reports and bug fixes/patches is
-available at L<http://clusterssh.sourceforge.net/>
-
 =head1 KNOWN BUGS
 
-Swapping virtual desktops can can a redraw of all the terminal windows.  This
+=over 4
+
+=item 1.
+
+Catering for IPv6 addresses is minimal.  This is due to a conflict 
+between IPv6 addresses and port numbers within the same 
+server definition since they both use the same seperator, i.e. is the 
+following just an IPv6 address, or an address + port number of 2323?
+
+    2001:db8::1428:2323
+
+Exactly - I cannot tell either.  the IPv6 address without a port is assumed
+in those cases where it cannot be determined and a warning is issued.
+
+Possible work arounds include:
+
+=over 4
+
+=item a.
+
+Use the full IPv6 address if also using a port number - the 8th colon
+is assumed to be the port seperator.
+
+=item b.
+
+Define the IPv6 address in your /etc/hosts file, DNS or other name service 
+lookup mechanism and use the hostname instead of the address.
+
+=back
+
+=item 2. 
+
+Swapping virtual desktops can a redraw of all the terminal windows.  This
 is due to a lack of distinction within Tk between switching desktops and 
 minimising/maximising windows.  Until Tk can tell the difference between the 
 two events, there is no fix (apart from rewriting everything directly in X)
+
+=back
+
+Anyone with any good ideas to fix the above bugs is more than welcome to get
+in touch and/or provide a patch.
 
 =head1 REPORTING BUGS
 
@@ -2549,5 +2612,17 @@ L<ssh>,
 L<Tk::overview>,
 L<X11::Protocol>,
 L<perl>
+
+=head1 AUTHOR
+
+Duncan Ferguson
+
+=head1 CREDITS
+
+clusterssh is distributed under the GNU public license.  See the file
+F<LICENSE> for details.
+
+A web site for comments, requests, bug reports and bug fixes/patches is
+available at L<http://clusterssh.sourceforge.net/>
 
 =cut
