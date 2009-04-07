@@ -874,41 +874,66 @@ sub setup_helper_script() {
 }
 
 sub split_hostname {
-    my ($server) = @_;
+    my ($connect_string) = @_;
 
-    logmsg( 3, 'split_hostname: server=' . $server );
+    my ( $server, $username, $port );
 
-    my $username = q{};
+    logmsg( 3, 'split_hostname: connect_string=' . $connect_string );
+
     $username = $config{user} if ( $config{user} );
 
-    if ( $server =~ s/^(.*)@// ) {
+    if ( $connect_string =~ s/^(.*)@// ) {
         $username = $1;
     }
 
-    # try to cope with IPv6 addresses
-    # if $server contains '::' assume this is IPv6 address
-    # if there are 8 : in the address then can say its IPv6 + port
-    # otherwise how can you reliably tell its IPv6 + port when last
-    # octect is number, i.e. is 2001:db8::1428:2323 a host with
-    # port 2323 or a full IPv6 address?
-    my $port = q{};
-    if ( $server !~ m/::/ || ( $server =~ tr/:// ) == 7 ) {
-        if ( $server =~ s/:(\d+)$// ) {
-            $port = $1;
-        }
+    # cope with IPv6 addresses
+
+    # check for correct syntax of using [<IPv6 address>]
+    # See http://tools.ietf.org/html/rfc2732 for more details
+    if ( $connect_string =~ m/^\[([\w:]+)\](?::(\d+))?$/xsm ) {
+        logmsg( 3, 'connect_string contains IPv6 address' );
+        $server = $1;
+        $port   = $2;
     }
     else {
-        if ( $server =~ m/:(\d+)$/ ) {
-            our $seen_error;
-            warn 'Potentially ambiguous IPv6 address/port definition: ',
-                $server, $/;
-            warn 'Assuming it is an IPv6 address only.', $/;
-            if ( !$seen_error ) {
-                warn '*** See documenation for more information.', $/;
-                $seen_error = 1;
+
+        my $colon_count = $connect_string =~ tr/://;
+
+        # See if there are exactly 7 colons - if so, assume pure IPv6
+        if ( $colon_count == 7 ) {
+            $server = $connect_string;
+        }
+        else {
+
+            # if more than 1 but less than 8 colons and last octect is
+            # numbers only, warn about ambiguity
+            if (   $colon_count > 1
+                && $colon_count < 8
+                && $connect_string =~ m/:(\d+)$/ )
+            {
+                our $seen_error;
+                warn 'Potentially ambiguous IPv6 address/port definition: ',
+                    $connect_string, $/;
+                warn 'Assuming it is an IPv6 address only.', $/;
+                $server = $connect_string;
+                if ( !$seen_error ) {
+                    warn '*** See documenation for more information.', $/;
+                    $seen_error = 1;
+                }
+            }
+            else {
+
+               # split out port from end of connect string
+               # could have an invalid IPv6 address here, but the connect
+               # method will warn # it cannot connect anyhow
+               # However, this also catchs IPv4 addresses, possibly with ports
+                ( $server, $port ) = $connect_string =~ m/(.*)(?::(\d+))?$/;
             }
         }
     }
+
+    $port     ||= q{};
+    $username ||= q{};
 
     logmsg( 3, "username=$username, server=$server, port=$port" );
 
@@ -945,7 +970,7 @@ sub open_client_windows(@) {
     foreach (@_) {
         next unless ($_);
 
-        my ( $username, $server, $port_nb ) = split_hostname($_);
+        my ( $username, $server, $port ) = split_hostname($_);
 
         # see if we can find the hostname - if not, drop it
         my $gethost = check_host($server);
@@ -973,15 +998,18 @@ sub open_client_windows(@) {
             }
         }
 
-        my $count = q{};
+        my $count;
         while ( defined( $servers{ $server . q{ } . $count } ) ) {
             $count++;
         }
-        $server .= q{ } . $count;
+        if ($count) {
+            $server .= q{ } . $count;
+        }
 
-        $servers{$server}{realname} = $_;
-        $servers{$server}{username} = $username;
-        $servers{$server}{port_nb}  = $port_nb || '';
+        $servers{$server}{connect_string} = $_;
+        $servers{$server}{realname}       = $server;
+        $servers{$server}{username}       = $username;
+        $servers{$server}{port}           = $port || '';
 
         logmsg( 2, "Working on server $server for $_" );
 
@@ -1005,7 +1033,7 @@ sub open_client_windows(@) {
           # affecting the main program
             $servers{$server}{realname} .= "==" if ( !$gethost );
             my $exec
-                = "$config{terminal} $color $config{terminal_args} $config{terminal_allow_send_events} $config{terminal_title_opt} '$config{title}: $server' -font $config{terminal_font} -e \"$^X\" \"-e\" '$helper_script' '$servers{$server}{pipenm}' '$servers{$server}{realname}' '$servers{$server}{username}' '$servers{$server}{port_nb}'";
+                = "$config{terminal} $color $config{terminal_args} $config{terminal_allow_send_events} $config{terminal_title_opt} '$config{title}: $servers{$server}{connect_string}' -font $config{terminal_font} -e \"$^X\" \"-e\" '$helper_script' '$servers{$server}{pipenm}' '$servers{$server}{realname}' '$servers{$server}{username}' '$servers{$server}{port}'";
             logmsg( 2, "Terminal exec line:\n$exec\n" );
             exec($exec) == 0 or warn("Failed: $!");
         }
@@ -2537,10 +2565,18 @@ Possible work arounds include:
 
 =item a.
 
+Use square brackets around the IPv6 address, i.e. 
+    [2001:db8::1428]:2323
+or
+    [2001:db8::1428:2323]
+as appropriate so there is no ambiguity
+
+=item b.
+
 Use the full IPv6 address if also using a port number - the 8th colon
 is assumed to be the port seperator.
 
-=item b.
+=item c.
 
 Define the IPv6 address in your /etc/hosts file, DNS or other name service 
 lookup mechanism and use the hostname instead of the address.
