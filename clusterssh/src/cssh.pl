@@ -828,7 +828,6 @@ sub send_resizemove($$$$$) {
 
 sub setup_helper_script() {
     logmsg( 2, "Setting up helper script" );
-    my $defaultport = ( defined $options{p} ) ? $options{p} : "";
     $helper_script = <<"	HERE";
 		my \$pipe=shift;
 		my \$svr=shift;
@@ -852,16 +851,14 @@ sub setup_helper_script() {
 				\$command .= \$user;
 			}
 		}
-		if($config{comms} eq "telnet") {
-			\$port = \$port ? "\$port" : "$defaultport";
+		if("$config{comms}" eq "telnet") {
 			\$command .= "\$svr \$port";
 		} else {
-      if ((\$port) || ("$defaultport" ne "")) {
-			  \$port = \$port ? "-p \$port" : "-p $defaultport";
-			  \$command .= "\$port \$svr";
-      } else {
+			if (\$port) {
+				\$command .= "-p \$port \$svr";
+			} else {
 			  \$command .= "\$svr";
-      }
+			}
 		}
 		\$command .= " || sleep 5";
 #		warn("Running:\$command\\n"); # for debug purposes
@@ -932,7 +929,7 @@ sub split_hostname {
         }
     }
 
-    $port     ||= q{};
+    $port     ||=  defined $options{p} ? $options{p} : q{};
     $username ||= q{};
 
     logmsg( 3, "username=$username, server=$server, port=$port" );
