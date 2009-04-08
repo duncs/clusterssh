@@ -944,16 +944,16 @@ sub check_host($) {
     my $host = shift;
     if ( $host =~ m/:/ ) {
         logmsg( 2, "Not resolving IPv6 address '$host'" );
-        return 1;
+        return $host;
     }
     if ( $host =~ m/^(\d{1,3}\.?){4}$/ ) {
         logmsg( 2, "Not resolving IP address '$host'" );
-        return 1;
+        return $host;
     }
     if ( $config{method} eq "ssh" ) {
         logmsg( 1, "Attempting name resolution via user ssh config file" );
         if ( $ssh_hostnames{$host} ) {
-            return 1;
+            return $host;
         }
         else {
             logmsg( 1,
@@ -973,8 +973,8 @@ sub open_client_windows(@) {
         my ( $username, $server, $port ) = split_hostname($_);
 
         # see if we can find the hostname - if not, drop it
-        my $gethost = check_host($server);
-        if ( !$gethost ) {
+        my $realname = check_host($server);
+        if ( !$realname ) {
             my $text = "WARNING: '$_' unknown";
 
             if (%ssh_hostnames) {
@@ -998,16 +998,14 @@ sub open_client_windows(@) {
             }
         }
 
-        my $count;
+        my $count = q{};
         while ( defined( $servers{ $server . q{ } . $count } ) ) {
             $count++;
         }
-        if ($count) {
-            $server .= q{ } . $count;
-        }
+        $server .= q{ } . $count;
 
         $servers{$server}{connect_string} = $_;
-        $servers{$server}{realname}       = $server;
+        $servers{$server}{realname}       = $realname;
         $servers{$server}{username}       = $username;
         $servers{$server}{port}           = $port || '';
 
@@ -1031,7 +1029,7 @@ sub open_client_windows(@) {
           # this is the child
           # Since this is the child, we can mark any server unresolved without
           # affecting the main program
-            $servers{$server}{realname} .= "==" if ( !$gethost );
+            $servers{$server}{realname} .= "==" if ( !$realname );
             my $exec
                 = "$config{terminal} $color $config{terminal_args} $config{terminal_allow_send_events} $config{terminal_title_opt} '$config{title}: $servers{$server}{connect_string}' -font $config{terminal_font} -e \"$^X\" \"-e\" '$helper_script' '$servers{$server}{pipenm}' '$servers{$server}{realname}' '$servers{$server}{username}' '$servers{$server}{port}'";
             logmsg( 2, "Terminal exec line:\n$exec\n" );
