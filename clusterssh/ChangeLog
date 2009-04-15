@@ -8,6 +8,8 @@
 * Cope better with IPv6 addresses
 * Fix bug with passing arguments from command line to comms method binary
 * Rework defaultport code
+* Add new "-a 'command'" option for running a command in each terminal
+* Fix bug with some host lookups failing
 
 2009-03-26 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.25-1
 

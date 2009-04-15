@@ -86,7 +86,7 @@ use Carp;
 my $scriptname = $0;
 $scriptname =~ s!.*/!!;    # get the script name, minus the path
 
-my $options = 'dDv?hHuqQgGist:T:c:l:o:e:C:p:';    # Command line options list
+my $options = 'dDv?hHuqQgGist:T:c:l:o:e:C:p:a:';   # Command line options list
 my %options;
 my %config;
 my $debug = 0;
@@ -229,7 +229,6 @@ sub load_config_defaults() {
 
     $config{ssh_args} = " -x -o ConnectTimeout=10"
         if ( $config{ $config{comms} } =~ /ssh$/ );
-    $config{ssh_args} = $options{o} if ( $options{o} );
     $config{rsh_args} = "";
 
     $config{telnet_args} = "";
@@ -241,6 +240,8 @@ sub load_config_defaults() {
     $config{show_history}   = 0;
     $config{history_width}  = 40;
     $config{history_height} = 10;
+
+    $config{command} = q{};
 }
 
 # load in config file settings
@@ -366,6 +367,8 @@ sub check_config() {
     $config{ssh_args} = $options{o} if ( $options{o} );
 
     $config{show_history} = 1 if $options{s};
+
+    $config{command} = $options{a} if ( $options{a} );
 }
 
 sub load_configfile() {
@@ -860,7 +863,7 @@ sub setup_helper_script() {
 			  \$command .= "\$svr";
 			}
 		}
-		\$command .= " || sleep 5";
+		\$command .= " $config{command} || sleep 5";
 #		warn("Running:\$command\\n"); # for debug purposes
 		exec(\$command);
 	HERE
@@ -929,7 +932,7 @@ sub split_hostname {
         }
     }
 
-    $port     ||=  defined $options{p} ? $options{p} : q{};
+    $port ||= defined $options{p} ? $options{p} : q{};
     $username ||= q{};
 
     logmsg( 3, "username=$username, server=$server, port=$port" );
@@ -955,11 +958,11 @@ sub check_host($) {
         else {
             logmsg( 1,
                 "Failed to check host (falling back to gethostbyname): $!" );
-            return gethostbyname($host);
+            return gethostbyname($host)->name();
         }
     }
     else {
-        return gethostbyname($host);
+        return gethostbyname($host)->name();
     }
 }
 
@@ -2130,6 +2133,12 @@ Some of these options may also be defined within the configuration file.
 Default options are shown as appropriate.
 
 =over
+
+=item -a '<command>'
+
+Run the command in each session, i.e. C<-a 'vi /etc/hosts'> to drop straight
+into a vi session.  NOTE: not all communications methods support this (ssh 
+and rsh should, telnet will not).
 
 =item -c <file>
 
