@@ -205,13 +205,13 @@ sub load_config_defaults() {
     $config{console_position}        = "";
 
     $config{screen_reserve_top}    = 0;
-    $config{screen_reserve_bottom} = 40;
+    $config{screen_reserve_bottom} = 60;
     $config{screen_reserve_left}   = 0;
     $config{screen_reserve_right}  = 0;
 
-    $config{terminal_reserve_top}    = 0;
+    $config{terminal_reserve_top}    = 5;
     $config{terminal_reserve_bottom} = 0;
-    $config{terminal_reserve_left}   = 0;
+    $config{terminal_reserve_left}   = 5;
     $config{terminal_reserve_right}  = 0;
 
     $config{terminal_decoration_height} = 10;
@@ -813,8 +813,8 @@ sub send_resizemove($$$$$) {
         32,
         'Replace',
 
-        # dark magic - create data struct on fly - to set required flags
-        pack( "L" . "x[i]" x 17, 3 ),
+        # create data struct on fly to set bitwise flags
+        pack( 'LLLLL' . 'x[L]' x 12, 1 | 2, $x_pos, $y_pos, $x_siz, $y_siz ),
     );
 
     $xdisplay->req(
@@ -2089,6 +2089,16 @@ that host.  Re-selecting it will plug it back in.
 
 =item *
 
+If your window manager menu bars are obscured by terminal windows see
+the C<screen_reserve_XXXXX> options in the F<csshrc> file (see L<"FILES">).
+
+=item *
+
+If the terminals overlap too much see the C<terminal_reserve_XXXXX> 
+options in the F<csshrc> file (see L<"FILES">).
+
+=item *
+
 If the code is called as crsh instead of cssh (i.e. a symlink called
 crsh points to the cssh file or the file is renamed) rsh is used as the
 communications protocol instead of ssh.
@@ -2301,11 +2311,11 @@ S<$ cssh -c $HOME/cssh.config db_cluster>
 
 =item Use telnet on port 2022 instead of ssh
 
-S<$ ctel -p 2022 server1 server2 >
+S<$ ctel -p 2022 server1 server2>
 
 =item Use rsh instead of ssh
 
-S<$ crsh server1 server2 >
+S<$ crsh server1 server2>
 
 =back
 
@@ -2437,9 +2447,9 @@ B<NOTE:> Any "generic" change to the method (i.e. specifying the ssh port to use
 should be done in the medium's own config file (see L<ssh_config> and 
 F<$HOME/.ssh/config>).
 
-=item screen_reserve_top = 25
+=item screen_reserve_top = 0
 
-=item screen_reserve_bottom = 30
+=item screen_reserve_bottom = 60
 
 =item screen_reserve_left = 0
 
@@ -2469,17 +2479,18 @@ from F<$HOME/.Xdefaults> or $<$HOME/.Xresources> file.
 
 Font to use in the terminal windows.  Use standard X font notation.
 
-=item terminal_reserve_top = 0
+=item terminal_reserve_top = 5
 
 =item terminal_reserve_bottom = 0
 
-=item terminal_reserve_left = 0
+=item terminal_reserve_left = 5
 
 =item terminal_reserve_right = 0
 
 Number of pixels from the terminal side to reserve when calculating screen 
 geometry for tiling.  Setting these will help keep cssh from positioning 
-windows over your scroll and title bars
+windows over your scroll and title bars or otherwise overlapping the windows
+too much.
 
 =item terminal_colorize = 1
 

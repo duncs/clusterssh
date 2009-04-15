@@ -10,6 +10,11 @@
 * Rework defaultport code
 * Add new "-a 'command'" option for running a command in each terminal
 * Fix bug with some host lookups failing
+* Set window hints on terminals slightly differently to help with tiling
+* Reserve 5 pixels on top and left hand side of terminals for better tiling
+* Increase reserve of screen from bottom from 40 pixels to 60
+* Better notes in docs for screen/terminal reserving
+* Minor fixup to docs formatting
 
 2009-03-26 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.25-1
 
