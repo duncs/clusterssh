@@ -15,6 +15,7 @@
 * Increase reserve of screen from bottom from 40 pixels to 60
 * Better notes in docs for screen/terminal reserving
 * Minor fixup to docs formatting
+* Correct pasting mechanism into control window
 
 2009-03-26 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.25-1
 

@@ -483,24 +483,14 @@ sub load_keyboard_map() {
     logmsg( 1, "Loading keymaps and keycodes" );
 
     foreach ( 0 .. $#keyboard ) {
-        if ( defined $keyboard[$_][0] ) {
-            if ( defined( $keycodetosym{ $keyboard[$_][0] } ) ) {
-                $keyboardmap{ $keycodetosym{ $keyboard[$_][0] } }
-                    = 'n' . ( $_ + $min );
+        if ( defined $keyboard[$_][3] ) {
+            if ( defined( $keycodetosym{ $keyboard[$_][3] } ) ) {
+                $keyboardmap{ $keycodetosym{ $keyboard[$_][3] } }
+                    = 'sa' . ( $_ + $min );
             }
             else {
-                logmsg( 2, "Unknown keycode ", $keyboard[$_][0] )
-                    if ( $keyboard[$_][0] != 0 );
-            }
-        }
-        if ( defined $keyboard[$_][1] ) {
-            if ( defined( $keycodetosym{ $keyboard[$_][1] } ) ) {
-                $keyboardmap{ $keycodetosym{ $keyboard[$_][1] } }
-                    = 's' . ( $_ + $min );
-            }
-            else {
-                logmsg( 2, "Unknown keycode ", $keyboard[$_][1] )
-                    if ( $keyboard[$_][1] != 0 );
+                logmsg( 2, "Unknown keycode ", $keyboard[$_][3] )
+                    if ( $keyboard[$_][3] != 0 );
             }
         }
         if ( defined $keyboard[$_][2] ) {
@@ -513,14 +503,24 @@ sub load_keyboard_map() {
                     if ( $keyboard[$_][2] != 0 );
             }
         }
-        if ( defined $keyboard[$_][3] ) {
-            if ( defined( $keycodetosym{ $keyboard[$_][3] } ) ) {
-                $keyboardmap{ $keycodetosym{ $keyboard[$_][3] } }
-                    = 'sa' . ( $_ + $min );
+        if ( defined $keyboard[$_][1] ) {
+            if ( defined( $keycodetosym{ $keyboard[$_][1] } ) ) {
+                $keyboardmap{ $keycodetosym{ $keyboard[$_][1] } }
+                    = 's' . ( $_ + $min );
             }
             else {
-                logmsg( 2, "Unknown keycode ", $keyboard[$_][3] )
-                    if ( $keyboard[$_][3] != 0 );
+                logmsg( 2, "Unknown keycode ", $keyboard[$_][1] )
+                    if ( $keyboard[$_][1] != 0 );
+            }
+        }
+        if ( defined $keyboard[$_][0] ) {
+            if ( defined( $keycodetosym{ $keyboard[$_][0] } ) ) {
+                $keyboardmap{ $keycodetosym{ $keyboard[$_][0] } }
+                    = 'n' . ( $_ + $min );
+            }
+            else {
+                logmsg( 2, "Unknown keycode ", $keyboard[$_][0] )
+                    if ( $keyboard[$_][0] != 0 );
             }
         }
 
