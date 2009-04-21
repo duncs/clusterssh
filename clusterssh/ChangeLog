@@ -16,6 +16,9 @@
 * Better notes in docs for screen/terminal reserving
 * Minor fixup to docs formatting
 * Correct pasting mechanism into control window
+* Allow use of long options (swap Getopt::Std to Getopt::Long)
+* Remove deprecated '-i' option
+* Deprecate -d and -D, replaced with --debug
 
 2009-03-26 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.25-1
 

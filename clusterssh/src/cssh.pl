@@ -63,7 +63,7 @@ use warnings;
 
 use 5.006_000;
 use Pod::Usage;
-use Getopt::Std;
+use Getopt::Long qw(:config no_ignore_case bundling no_auto_abbrev);
 use POSIX qw/:sys_wait_h strftime mkfifo/;
 use File::Temp qw/:POSIX/;
 use Fcntl;
@@ -86,10 +86,32 @@ use Carp;
 my $scriptname = $0;
 $scriptname =~ s!.*/!!;    # get the script name, minus the path
 
-my $options = 'dDv?hHuqQgGist:T:c:l:o:e:C:p:a:';   # Command line options list
+# Command line options list
+my @options_spec = (
+    'debug:+',
+    'd',           # backwards compatibility - DEPRECATED
+    'D',           # backwards compatibility - DEPRECATED
+    'version|v',
+    'help|h|?',
+    'man|H',
+    'action|a=s',  
+    'cluster-file|c=s',
+    'config-file|C=s',
+    'evaluate|e=s',
+    'tile|g',
+    'no-tile|G',
+    'username|l=s',
+    'options|o=s',
+    'port|p=i',
+    'autoquit|q',
+    'no-autoquit|Q',
+    'history|s',
+    'term-args|t=s',
+    'title|T=s',
+    'output-config|u',
+);
 my %options;
 my %config;
-my $debug = 0;
 my %clusters;    # hash for resolving cluster names
 my %windows;     # hash for all window definitions
 my %menus;       # hash for all menu definitions
@@ -174,8 +196,8 @@ sub logmsg($@) {
         croak('requested debug level should not be above 3');
     }
 
-    if ( $level <= $debug ) {
-        print( strftime( "%H:%M:%S: ", localtime ) ) if ( $debug > 1 );
+    if ( $level <= $options{debug} ) {
+        print( strftime( "%H:%M:%S: ", localtime ) ) if ( $options{debug} > 1 );
         print @_, $/;
     }
 }
@@ -307,7 +329,7 @@ sub find_binary($) {
         warn(
             "Terminal binary not found ($binary) - please amend \$PATH or the cssh config file\n"
         );
-        die unless ( $options{u} );
+        die unless ( $options{'output-config'} );
     }
 
     chomp($path);
@@ -331,10 +353,10 @@ sub check_config() {
         if ( $config{comms} !~ /^(:?[rs]sh|telnet)$/ );
 
     # Set any extra config options given on command line
-    $config{title} = $options{T} if ( $options{T} );
+    $config{title} = $options{title} if ( $options{title} );
 
-    $config{auto_quit} = "yes" if $options{q};
-    $config{auto_quit} = "no"  if $options{Q};
+    $config{auto_quit} = "yes" if $options{autoquit};
+    $config{auto_quit} = "no"  if $options{'no-autoquit'};
 
     # backwards compatibility & tidyup
     if ( $config{always_tile} ) {
@@ -348,11 +370,11 @@ sub check_config() {
         }
         delete( $config{always_tile} );
     }
-    $config{window_tiling} = "yes" if $options{g};
-    $config{window_tiling} = "no"  if $options{G};
+    $config{window_tiling} = "yes" if $options{tile};
+    $config{window_tiling} = "no"  if $options{'no-tile'};
 
-    $config{user}          = $options{l} if ( $options{l} );
-    $config{terminal_args} = $options{t} if ( $options{t} );
+    $config{user}          = $options{username} if ( $options{username} );
+    $config{terminal_args} = $options{'term-args'} if ( $options{'term-args'} );
 
     if ( $config{terminal_args} =~ /-class (\w+)/ ) {
         $config{terminal_allow_send_events}
@@ -364,18 +386,18 @@ sub check_config() {
 
     $config{extra_cluster_file} =~ s/\s+//g;
 
-    $config{ssh_args} = $options{o} if ( $options{o} );
+    $config{ssh_args} = $options{options} if ( $options{options} );
 
-    $config{show_history} = 1 if $options{s};
+    $config{show_history} = 1 if $options{'show-history'};
 
-    $config{command} = $options{a} if ( $options{a} );
+    $config{command} = $options{action} if ( $options{action} );
 }
 
 sub load_configfile() {
     parse_config_file( $sysconfigdir . '/csshrc' );
     parse_config_file( $ENV{HOME} . '/.csshrc' );
-    if ( $options{C} && -r $options{C} ) {
-        parse_config_file( $options{C} );
+    if ( $options{'config-file'} ) {
+        parse_config_file( $options{'config-file'} );
     }
     check_config();
 }
@@ -390,7 +412,7 @@ sub dump_config {
 
     foreach ( sort( keys(%config) ) ) {
         next
-            if ( $_ =~ /^internal/ && $debug == 0 )
+            if ( $_ =~ /^internal/ && $options{debug} == 0 )
             ;    # do not output internal vars
         print "$_=$config{$_}\n";
     }
@@ -410,7 +432,7 @@ sub check_ssh_hostnames {
         close(SSHCFG);
     }
 
-    if ( $debug > 1 ) {
+    if ( $options{debug} > 1 ) {
         if (%ssh_hostnames) {
             logmsg( 2, "Parsed these ssh config hosts:" );
             logmsg( 2, "- $_" ) foreach ( sort( keys(%ssh_hostnames) ) );
@@ -425,10 +447,10 @@ sub evaluate_commands {
     my ( $return, $user, $port, $host );
 
     # break apart the given host string to check for user or port configs
-    print "{e}=$options{e}\n";
-    $user = $1 if ( $options{e} =~ s/^(.*)@// );
-    $port = $1 if ( $options{e} =~ s/:(\w+)$// );
-    $host = $options{e};
+    print "{evaluate}=$options{evaluate}\n";
+    $user = $1 if ( $options{evaluate} =~ s/^(.*)@// );
+    $port = $1 if ( $options{evaluate} =~ s/:(\w+)$// );
+    $host = $options{evaluate};
 
     $user = $user ? "-l $user" : "";
     if ( $config{comms} eq "telnet" ) {
@@ -617,11 +639,11 @@ sub get_clusters() {
     }
 
     # and any clusters defined within the config file or on the command line
-    if ( $config{extra_cluster_file} || $options{c} ) {
+    if ( $config{extra_cluster_file} || $options{'cluster-file'} ) {
 
         # check for multiple entries and push it through glob to catch ~'s
         foreach my $item ( split( /,/, $config{extra_cluster_file} ),
-            $options{c} )
+            $options{'cluster-file'} )
         {
             next unless ($item);
 
@@ -932,7 +954,7 @@ sub split_hostname {
         }
     }
 
-    $port ||= defined $options{p} ? $options{p} : q{};
+    $port ||= defined $options{port} ? $options{port} : q{};
     $username ||= q{};
 
     logmsg( 3, "username=$username, server=$server, port=$port" );
@@ -1232,7 +1254,7 @@ sub retile_hosts {
         );
     }
 
-    #dump_config("noexit") if($debug > 1);
+    dump_config("noexit") if($options{debug} > 1);
 
     # now we have the info, plot first window position
     my @hosts;
@@ -1350,7 +1372,7 @@ sub retile_hosts {
 sub capture_terminal() {
     logmsg( 0, "Stub for capturing a terminal window" );
 
-    return if ( $debug < 6 );
+    return if ( $options{debug} < 6 );
 
     # should never see this - all experimental anyhow
 
@@ -1941,14 +1963,16 @@ sub create_menubar() {
 
 # Note: getopts returned "" if it finds any options it doesnt recognise
 # so use this to print out basic help
-pod2usage( -verbose => 1 ) unless ( getopts( $options, \%options ) );
-pod2usage( -verbose => 1 ) if ( $options{'?'} || $options{h} );
-pod2usage( -verbose => 2 ) if ( $options{H} );
+pod2usage( -verbose => 1 ) if ( ! GetOptions( \%options, @options_spec ) );
+pod2usage( -verbose => 1 ) if ( $options{'?'} || $options{help} );
+pod2usage( -verbose => 2 ) if ( $options{H} || $options{man} );
 
-if ( $options{v} ) {
+if ( $options{version} ) {
     print "Version: $VERSION\n";
     exit 0;
 }
+
+$options{debug} ||= 0;
 
 # only get xdisplay if we got past usage and help stuff
 $xdisplay = X11::Protocol->new();
@@ -1967,20 +1991,30 @@ sub REAPER {
 }
 $SIG{CHLD} = \&REAPER;
 
-$debug += 1 if ( $options{d} );
-$debug += 2 if ( $options{D} );
+if( $options{d} && $options{D} ) {
+    $options{debug} += 3;
+    logmsg(0, 'NOTE: -d and -D are deprecated - use "--debug 3" instead');
+} elsif( $options{d} ) {
+    $options{debug} += 1;
+    logmsg(0, 'NOTE: -d is deprecated - use "--debug 1" instead');
+} elsif( $options{D} ) {
+    $options{debug} += 2;
+    logmsg(0, 'NOTE: -D is deprecated - use "--debug 2" instead');
+}
 
-#warn("forcing high debug\n"); $debug +=4;
+# restrict to max level
+$options{debug} = 4 if ( $options{debug} && $options{debug} > 4 ); 
 
 logmsg( 2, "VERSION: $VERSION" );
 
 load_config_defaults();
 load_configfile();
-dump_config() if ( $options{u} );
+
+dump_config() if ( $options{'output-config'} );
 
 check_ssh_hostnames();
 
-evaluate_commands() if ( $options{e} );
+evaluate_commands() if ( $options{evaluate} );
 
 load_keyboard_map();
 
@@ -2144,58 +2178,58 @@ Default options are shown as appropriate.
 
 =over
 
-=item -a '<command>'
+=item --action,-a '<command>'
 
 Run the command in each session, i.e. C<-a 'vi /etc/hosts'> to drop straight
 into a vi session.  NOTE: not all communications methods support this (ssh 
 and rsh should, telnet will not).
 
-=item -c <file>
+=item --cluster-file,-c <file>
 
 Use supplied file as additional cluster file (see also L<"FILES">)
 
-=item -C <file>
+=item --config-file,-C <file>
 
 Use supplied file as additional configuration file (see also L<"FILES">)
 
 =item -d 
 
-Enable basic debugging mode (can be combined with -D)
+DEPRECATED.  See '--debug'.
 
 =item -D 
 
-Enable extended debugging mode (can be combined with -d)
+DEPRECATED.  See '--debug'.
 
-=item -e [user@]<hostname>[:port]
+=item --debug [number].
+
+Enable debugging.  Either a level can be provided or the option can be
+repeated multiple times.  Maximum level is 4.
+
+=item --evaluate,-e [user@]<hostname>[:port]
 
 Display and evaluate the terminal and connection arguments so display any
 potential errors.  The <hostname> is required to aid the evaluation.  
 
-=item -g|-G 
+=item --tile,-g|--no-tile,-G 
 
 Enable|Disable window tiling (overriding the config file)
 
-=item -h|-?
+=item --help,-h|-?
 
 Show basic help text, and exit
 
-=item -H
+=item --man,-H
 
 Show full help test (the man page), and exit
 
-=item -i
-
-THIS OPTION IS DEPRECATED.  It has been left in so current systems continue 
-to function as expected.
-
-=item -l $LOGNAME
+=item --username,-l $LOGNAME
 
 Specify the default username to use for connections (if different from the
 currently logged in user).  B<NOTE:> will be overridden by <user>@<host>
 
-=item -o "-x -o ConnectTimeout=10" - for ssh connections
+=item --options,-o "-x -o ConnectTimeout=10" - for ssh connections
 
-=item -o ""                        - for rsh connections
+=item --options,-o ""                        - for rsh connections
 
 Specify arguments to be passed to ssh or rsh when making the connection.  
 
@@ -2203,34 +2237,34 @@ B<NOTE:> any "generic" change to the method (i.e. specifying the ssh port to use
 should be done in the medium's own config file (see L<ssh_config> and 
 F<$HOME/.ssh/config>).
 
-=item -p <port>
+=item --port,-p <port>
 
 Specify an alternate port for connections.
 
-=item -q|-Q
+=item --autoquit,-q|--no-autoquit,-Q
 
 Enable|Disable automatically quiting after the last client window has closed
 (overriding the config file)
 
-=item -s
+=item --show-history,-s
 
 IN BETA: Show history within console window.  This code is still being 
 worked upon, but may help some users.
 
-=item -t ""
+=item --term-args,-t ""
 
 Specify arguments to be passed to terminals being used
 
-=item -T "CSSH"
+=item --title,-T "CSSH"
 
 Specify the initial part of the title used in the console and client windows
 
-=item -u
+=item --output-config,-u
 
 Output the current configuration in the same format used by the 
 F<$HOME/.csshrc> file.
 
-=item -v
+=item --version,-v
 
 Show version information and exit
 
