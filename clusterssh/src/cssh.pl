@@ -89,12 +89,12 @@ $scriptname =~ s!.*/!!;    # get the script name, minus the path
 # Command line options list
 my @options_spec = (
     'debug:+',
-    'd',           # backwards compatibility - DEPRECATED
-    'D',           # backwards compatibility - DEPRECATED
+    'd',                   # backwards compatibility - DEPRECATED
+    'D',                   # backwards compatibility - DEPRECATED
     'version|v',
     'help|h|?',
     'man|H',
-    'action|a=s',  
+    'action|a=s',
     'cluster-file|c=s',
     'config-file|C=s',
     'evaluate|e=s',
@@ -197,7 +197,8 @@ sub logmsg($@) {
     }
 
     if ( $level <= $options{debug} ) {
-        print( strftime( "%H:%M:%S: ", localtime ) ) if ( $options{debug} > 1 );
+        print( strftime( "%H:%M:%S: ", localtime ) )
+            if ( $options{debug} > 1 );
         print @_, $/;
     }
 }
@@ -373,8 +374,9 @@ sub check_config() {
     $config{window_tiling} = "yes" if $options{tile};
     $config{window_tiling} = "no"  if $options{'no-tile'};
 
-    $config{user}          = $options{username} if ( $options{username} );
-    $config{terminal_args} = $options{'term-args'} if ( $options{'term-args'} );
+    $config{user} = $options{username} if ( $options{username} );
+    $config{terminal_args} = $options{'term-args'}
+        if ( $options{'term-args'} );
 
     if ( $config{terminal_args} =~ /-class (\w+)/ ) {
         $config{terminal_allow_send_events}
@@ -1254,7 +1256,7 @@ sub retile_hosts {
         );
     }
 
-    dump_config("noexit") if($options{debug} > 1);
+    dump_config("noexit") if ( $options{debug} > 1 );
 
     # now we have the info, plot first window position
     my @hosts;
@@ -1963,9 +1965,9 @@ sub create_menubar() {
 
 # Note: getopts returned "" if it finds any options it doesnt recognise
 # so use this to print out basic help
-pod2usage( -verbose => 1 ) if ( ! GetOptions( \%options, @options_spec ) );
+pod2usage( -verbose => 1 ) if ( !GetOptions( \%options, @options_spec ) );
 pod2usage( -verbose => 1 ) if ( $options{'?'} || $options{help} );
-pod2usage( -verbose => 2 ) if ( $options{H} || $options{man} );
+pod2usage( -verbose => 2 ) if ( $options{H}   || $options{man} );
 
 if ( $options{version} ) {
     print "Version: $VERSION\n";
@@ -1991,19 +1993,21 @@ sub REAPER {
 }
 $SIG{CHLD} = \&REAPER;
 
-if( $options{d} && $options{D} ) {
+if ( $options{d} && $options{D} ) {
     $options{debug} += 3;
-    logmsg(0, 'NOTE: -d and -D are deprecated - use "--debug 3" instead');
-} elsif( $options{d} ) {
+    logmsg( 0, 'NOTE: -d and -D are deprecated - use "--debug 3" instead' );
+}
+elsif ( $options{d} ) {
     $options{debug} += 1;
-    logmsg(0, 'NOTE: -d is deprecated - use "--debug 1" instead');
-} elsif( $options{D} ) {
+    logmsg( 0, 'NOTE: -d is deprecated - use "--debug 1" instead' );
+}
+elsif ( $options{D} ) {
     $options{debug} += 2;
-    logmsg(0, 'NOTE: -D is deprecated - use "--debug 2" instead');
+    logmsg( 0, 'NOTE: -D is deprecated - use "--debug 2" instead' );
 }
 
 # restrict to max level
-$options{debug} = 4 if ( $options{debug} && $options{debug} > 4 ); 
+$options{debug} = 4 if ( $options{debug} && $options{debug} > 4 );
 
 logmsg( 2, "VERSION: $VERSION" );
 
