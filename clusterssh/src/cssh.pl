@@ -264,7 +264,8 @@ sub load_config_defaults() {
     $config{history_width}  = 40;
     $config{history_height} = 10;
 
-    $config{command} = q{};
+    $config{command}             = q{};
+    $config{max_host_menu_items} = 30;
 }
 
 # load in config file settings
@@ -1492,7 +1493,8 @@ sub build_hosts_menu() {
 
     # first, empty the hosts menu from the 4th entry on
     my $menu = $menus{bar}->entrycget( 'Hosts', -menu );
-    $menu->delete( 6, 'end' );
+    my $host_menu_static_items = 5;
+    $menu->delete( $host_menu_static_items, 'end' );
 
     logmsg( 3, "Menu deleted" );
 
@@ -1500,12 +1502,21 @@ sub build_hosts_menu() {
     $menus{hosts}->separator;
 
     logmsg( 3, "Parsing list" );
+
+    my $menu_item_counter = $host_menu_static_items;
     foreach my $svr ( sort( keys(%servers) ) ) {
         logmsg( 3, "Checking $svr and restoring active value" );
+        my $colbreak = 0;
+        if ( $menu_item_counter > $config{max_host_menu_items} ) {
+            $colbreak          = 1;
+            $menu_item_counter = 1;
+        }
         $menus{hosts}->checkbutton(
-            -label    => $svr,
-            -variable => \$servers{$svr}{active},
+            -label       => $svr,
+            -variable    => \$servers{$svr}{active},
+            -columnbreak => $colbreak,
         );
+        $menu_item_counter++;
     }
     logmsg( 3, "Changing window title" );
     change_main_window_title();
@@ -2466,6 +2477,10 @@ See below notes on shortcuts.
 =item key_retilehosts = Alt-r
 
 Default key sequence to retile host windows.  See below notes on shortcuts.
+
+=item max_host_menu_items = 30
+
+Maximum number of hosts to put into the host menu before starting a new column
 
 =item mouse_paste = Button-2 (middle mouse button)
 

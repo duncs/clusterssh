@@ -19,6 +19,9 @@
 * Allow use of long options (swap Getopt::Std to Getopt::Long)
 * Remove deprecated '-i' option
 * Deprecate -d and -D, replaced with --debug
+* Allow for configurable max number of hosts within hosts menu before
+  starting a new column - see .csshrc doc for "max_host_menu_items".
+  This is until Tk allows for scrollable menus
 
 2009-03-26 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.25-1
 
