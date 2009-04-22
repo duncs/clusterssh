@@ -950,9 +950,9 @@ sub split_hostname {
 
                # split out port from end of connect string
                # could have an invalid IPv6 address here, but the connect
-               # method will warn # it cannot connect anyhow
+               # method will warn if it cannot connect anyhow
                # However, this also catchs IPv4 addresses, possibly with ports
-                ( $server, $port ) = $connect_string =~ m/(.*)(?::(\d+))?$/;
+                ( $server, $port ) = $connect_string =~ m/^([\w.-]+)(?::(\d+))?$/xsm;
             }
         }
     }
@@ -2316,16 +2316,17 @@ Quit the program and close all connections and windows
 
 =item Control-+
 
-Open the 'Add Host(s) or Cluster(s)' dialogue box.  Mutiple host or cluster names 
-can be entered, separated by spaces.
+Open the 'Add Host(s) or Cluster(s)' dialogue box.  Mutiple host or cluster 
+names can be entered, separated by spaces.
 
 =item Alt-n
 
-Paste in the correct client name to all clients, i.e.
+Paste in the specific connection server name to each client, minus any 
+username or port, i.e.
 
 C<< scp /etc/hosts server:files/<Alt-n>.hosts >>
 
-would replace the <Alt-n> with the client's name in all the client windows
+would replace the <Alt-n> with the client's name in each window
 
 =item Alt-r
 

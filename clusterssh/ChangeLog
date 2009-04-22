@@ -22,6 +22,7 @@
 * Allow for configurable max number of hosts within hosts menu before
   starting a new column - see .csshrc doc for "max_host_menu_items".
   This is until Tk allows for scrollable menus
+* Amend default key_addhost from 'Control-plus' to 'Control-Shift-plus'
 
 2009-03-26 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.25-1
 
