@@ -192,8 +192,8 @@ sub exit_prog() {
 sub logmsg($@) {
     my $level = shift;
 
-    if ( $level > 3 ) {
-        croak('requested debug level should not be above 3');
+    if ( $level > 6 ) {
+        croak('requested debug level should not be above 6');
     }
 
     if ( $level <= $options{debug} ) {
@@ -216,7 +216,7 @@ sub load_config_defaults() {
     $config{terminal_size}           = "80x24";
     $config{use_hotkeys}             = "yes";
     $config{key_quit}                = "Control-q";
-    $config{key_addhost}             = "Control-plus";
+    $config{key_addhost}             = "Control-Shift-plus";
     $config{key_clientname}          = "Alt-n";
     $config{key_history}             = "Alt-h";
     $config{key_retilehosts}         = "Alt-r";
@@ -1535,7 +1535,7 @@ sub setup_repeat() {
                 if ( $config{internal_count} > 60000 );    # reset if too high
             $config{internal_count}++;
             my $build_menu = 0;
-            logmsg( 3, "Running repeat (count=$config{internal_count})" );
+            logmsg( 5, "Running repeat (count=$config{internal_count})" );
 
      #logmsg( 3, "Number of servers in hash is: ", scalar( keys(%servers) ) );
 
@@ -1842,7 +1842,6 @@ sub key_event {
             next if ( $key eq "null" );    # ignore disabled keys
 
             logmsg( 3, "key=:$key:" );
-            logmsg( 3, "combo=$combo" );
             if ( $combo =~ /^$key$/ ) {
                 if ( $event eq "KeyRelease" ) {
                     logmsg( 2, "Received hotkey: $hotkey" );
@@ -2455,7 +2454,7 @@ as a to reference the users home directory, i.e.
 THIS OPTION IS DEPRECATED.  It has been left in so current systems continue 
 to function as expected.
 
-=item key_addhost = Control-plus
+=item key_addhost = Control-Shift-plus
 
 Default key sequence to open AddHost menu.  See below notes on shortcuts.
 
