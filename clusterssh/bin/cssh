@@ -1,0 +1,75 @@
+#!/usr/bin/perl
+#
+# $Id: cssh.pl 219 2007-12-19 09:53:42Z duncan_ferguson $
+#
+
+use strict;
+use warnings;
+
+use ClusterSSH;
+
+use Data::Dumper qw/ Dumper /;
+
+print Dumper \%ARGV;
+
+__END__
+
+=head1 NAME
+
+cssh
+
+=head1 VERSION
+
+This document describes cssh version 3.99_01
+
+=head1 USAGE
+
+=head1 DESCRIPTION
+
+THis is a description
+
+=head1 OPTIONAL ARGUMENTS
+
+=over 2
+
+=item -q | --quit | -Q | --QUIT
+
+Enable/Disable automatically quitting after the last client window has
+closed (overriding the config file)
+
+=for Euclid:
+  false: -Q | --QUIT
+
+
+=item [identifier]...
+
+List of hosts or cluster tags to open connections to.
+
+Identifiers are either a cluster name or a hostname of the format
+
+  [username@]<hostname>[:<port>]
+
+=cut
+
+=for Euclid:
+  identifier.type: /(?:(.*?)@)?(?:[\w\.-]*)(?::(`d+))?
+
+=back
+
+=head1 DIAGNOSTICS
+ 
+
+=head1 CONFIGURATION AND ENVIRONMENT
+
+
+=head1 DEPENDANCIES
+
+
+=head1 INCOMPATIBILITIES
+
+
+=head1 BUGS AND LIMItAtIONS
+
+=head1 AUTHOR
+
+Duncan Ferguson  C<< <duncan_j_ferguson@yahoo.co.uk> >>
