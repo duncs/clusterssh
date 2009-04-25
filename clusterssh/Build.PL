@@ -19,6 +19,8 @@ my $build = Module::Build->new(
         'Test::PerlTidy'      => '0',
         'Test::Trap'          => '0.2.0',
         'Test::Exception'     => '0.27',
+        'Test::Pod'           => '0',
+        'Test::Pod::Coverage' => '0',
     },
     script_files => 'bin',
 );
