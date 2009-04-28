@@ -4,10 +4,13 @@ use warnings;
 use FindBin qw($Bin);
 use lib "$Bin/../lib";
 
-use Test::More tests => 54;
+use Test::More tests => 57;
 use Test::Trap;
 
 BEGIN { use_ok( "ClusterSSH::Base", qw/ ident / ) }
+
+# force default language for tests
+ClusterSSH::Base->set_lang( undef, 'en' );
 
 eval { ident ''; };
 like( $@, qr/^Reference not passed to ident/, 'Picked up exception' );
@@ -53,12 +56,20 @@ for my $level ( 0 .. 9 ) {
         'checking for expected debug output' );
 }
 
+trap {
+    $base->set_debug_level();
+};
+is( $trap->stderr, '', 'Expecting no STDERR' );
+is( $trap->stdout, '', 'Expecting no STDOUT' );
+like( $trap->die, qr/^Debug level not provided at/,
+    'Got correct croak text' );
+
 $base->set_debug_level(10);
 is( $base->debug_level(), 9, 'checking debug_level reset to 9' );
 
 $base = undef;
 trap {
-    $base = ClusterSSH::Base->new( { debug => 7 } );
+    $base = ClusterSSH::Base->new( { debug => 7, } );
 };
 isa_ok( $base, 'ClusterSSH::Base' );
 is( $trap->stderr, '', 'Expecting no STDERR' );

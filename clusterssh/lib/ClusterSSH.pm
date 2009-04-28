@@ -65,6 +65,13 @@ This document describes ClusterSSH version 3.30 (alpha 01)
     exported, or methods that may be called on objects belonging to the
     classes provided by the module.
 
+=over 4
+
+=item new
+
+to be sorted
+
+=back
 
 =head1 DIAGNOSTICS
 

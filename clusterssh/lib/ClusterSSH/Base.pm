@@ -6,6 +6,7 @@ use strict;
 use Carp;
 use Scalar::Util qw(refaddr);
 require Exporter;
+use ClusterSSH::L10N;
 
 use base qw( Exporter );
 
@@ -17,6 +18,7 @@ our @EXPORT_OK = qw/ ident /;
 
 {
     my $debug_level = 0;
+    our $language_handle;
 
     sub new {
         my ( $class, $args_ref ) = @_;
@@ -24,11 +26,19 @@ our @EXPORT_OK = qw/ ident /;
         my $self = bless \do { my $anon_scalar; $anon_scalar }, $class;
 
         if ( $args_ref->{debug} ) {
-            $debug_level = $args_ref->{debug};
+            $self->set_debug_level( $args_ref->{debug} );
         }
 
-        $self->debug( 6, 'Arguments to ',
-            $class, '->new(): ', $self->_dump_args_hash($args_ref) );
+        if ( $args_ref->{lang} ) {
+            $self->set_lang( $args_ref->{lang} );
+        }
+
+        $self->debug(
+            6,
+            translate('Arguments to '),
+            $class . '->new():',
+            $self->_dump_args_hash($args_ref)
+        );
 
         return $self;
     }
@@ -49,10 +59,31 @@ our @EXPORT_OK = qw/ ident /;
         return ident($self);
     }
 
+    sub translate {
+        if ( !$language_handle ) {
+            $language_handle = ClusterSSH::L10N->get_handle();
+        }
+
+        return $language_handle->maketext(@_);
+    }
+
+    sub loc {
+        my ( $self, @args ) = @_;
+
+        return translate(@args);
+    }
+
+    sub set_lang {
+        my ( $self, $lang ) = @_;
+        $language_handle = ClusterSSH::L10N->get_handle($lang)
+            || croak( 'No such language: ', $lang );
+        return $self;
+    }
+
     sub set_debug_level {
         my ( $self, $level ) = @_;
         if ( !defined $level ) {
-            croak('debug level not provided');
+            croak( translate('Debug level not provided') );
         }
         if ( $level > 9 ) {
             $level = 9;
@@ -87,7 +118,7 @@ sub ident {
     my $reference = refaddr( $_[0] );
 
     if ( !defined($reference) ) {
-        croak('Reference not passed to ident');
+        croak( translate('Reference not passed to ident') );
     }
     return $reference;
 }
