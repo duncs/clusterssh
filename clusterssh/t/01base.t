@@ -10,7 +10,7 @@ use Test::Trap;
 BEGIN { use_ok( "ClusterSSH::Base", qw/ ident / ) }
 
 # force default language for tests
-ClusterSSH::Base->set_lang( undef, 'en' );
+ClusterSSH::Base->set_lang('en');
 
 eval { ident ''; };
 like( $@, qr/^Reference not passed to ident/, 'Picked up exception' );

@@ -18,6 +18,7 @@ our @EXPORT_OK = qw/ ident /;
 
 {
     my $debug_level = 0;
+    our $language = 'en';
     our $language_handle;
 
     sub new {
@@ -33,12 +34,8 @@ our @EXPORT_OK = qw/ ident /;
             $self->set_lang( $args_ref->{lang} );
         }
 
-        $self->debug(
-            6,
-            _translate('Arguments to '),
-            $class . '->new():',
-            $self->_dump_args_hash($args_ref)
-        );
+        $self->debug( 6, 'Arguments to ',
+            $class, '->new():', $self->_dump_args_hash($args_ref) );
 
         return $self;
     }
@@ -62,7 +59,7 @@ our @EXPORT_OK = qw/ ident /;
     sub _translate {
         my @args = @_;
         if ( !$language_handle ) {
-            $language_handle = ClusterSSH::L10N->get_handle();
+            $language_handle = ClusterSSH::L10N->get_handle($language);
         }
 
         return $language_handle->maketext(@args);
@@ -70,14 +67,15 @@ our @EXPORT_OK = qw/ ident /;
 
     sub loc {
         my ( $self, @args ) = @_;
-
         return _translate(@args);
     }
 
     sub set_lang {
         my ( $self, $lang ) = @_;
-        $language_handle = ClusterSSH::L10N->get_handle($lang)
-            || croak( 'No such language: ', $lang );
+        $language = $lang;
+        if ($self) {
+            $self->debug( 6, 'Setting language to ', $lang );
+        }
         return $self;
     }
 
