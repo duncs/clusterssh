@@ -22,30 +22,35 @@ our @EXPORT_OK = qw/ ident /;
     our $language_handle;
 
     sub new {
-        my ( $class, $args_ref ) = @_;
+        my ( $class, $arg_ref ) = @_;
 
         my $self = bless \do { my $anon_scalar; $anon_scalar }, $class;
 
-        if ( $args_ref->{debug} ) {
-            $self->set_debug_level( $args_ref->{debug} );
+        if ( $arg_ref->{debug} ) {
+            $self->set_debug_level( $arg_ref->{debug} );
         }
 
-        if ( $args_ref->{lang} ) {
-            $self->set_lang( $args_ref->{lang} );
+        if ( $arg_ref->{lang} ) {
+            $self->set_lang( $arg_ref->{lang} );
         }
 
         $self->debug( 6, 'Arguments to ',
-            $class, '->new():', $self->_dump_args_hash($args_ref) );
+            $class, '->new():', $self->_dump_args_hash($arg_ref) );
 
         return $self;
     }
 
     sub _dump_args_hash {
-        my ( $class, $args_ref ) = @_;
+        my ( $class, $arg_ref ) = @_;
         my $string = $/;
 
-        $string .= "\t$_ => $args_ref->{$_}" . $/
-            foreach ( sort( keys(%$args_ref) ) );
+        foreach ( sort( keys(%$arg_ref) ) ) {
+            $string .= "\t";
+            $string .= $_;
+            $string .= ' => ';
+            $string .= $arg_ref->{$_};
+            $string .= $/;
+        }
         chomp($string);
 
         return $string;
