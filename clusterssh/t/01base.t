@@ -7,26 +7,26 @@ use lib "$Bin/../lib";
 use Test::More tests => 57;
 use Test::Trap;
 
-BEGIN { use_ok( "ClusterSSH::Base", qw/ ident / ) }
+BEGIN { use_ok( "ClusterSSH::Base", qw/ _ident / ) }
 
 # force default language for tests
 ClusterSSH::Base->set_lang('en');
 
-eval { ident ''; };
-like( $@, qr/^Reference not passed to ident/, 'Picked up exception' );
+eval { _ident ''; };
+like( $@, qr/^Reference not passed to _ident/, 'Picked up exception' );
 
 my $scalar;
-eval { ident $scalar; };
-like( $@, qr/^Reference not passed to ident/, 'Picked up exception' );
+eval { _ident $scalar; };
+like( $@, qr/^Reference not passed to _ident/, 'Picked up exception' );
 
-like( ident( \$scalar ), qr/^\d+$/, 'ident returned OK' );
+like( _ident( \$scalar ), qr/^\d+$/, '_ident returned OK' );
 
 my $base;
 
 $base = ClusterSSH::Base->new();
 isa_ok( $base, 'ClusterSSH::Base' );
 
-is( ident($base), $base->id, 'id works correctly' );
+is( _ident($base), $base->id, 'id works correctly' );
 
 diag('testing output') if ( $ENV{TEST_VERBOSE} );
 trap {

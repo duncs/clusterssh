@@ -14,7 +14,7 @@ use base qw( Exporter );
 use version;
 our $VERSION = version->new('0.01');
 
-our @EXPORT_OK = qw/ ident /;
+our @EXPORT_OK = qw/ _ident /;
 
 {
     my $debug_level = 0;
@@ -58,7 +58,7 @@ our @EXPORT_OK = qw/ ident /;
 
     sub id {
         my ($self) = @_;
-        return ident($self);
+        return _ident($self);
     }
 
     sub _translate {
@@ -116,166 +116,100 @@ our @EXPORT_OK = qw/ ident /;
     }
 }
 
-# instead of pulling new module to get one function, alias ident
+# instead of pulling new module to get one function, alias _ident
 # to a core module function
-sub ident {
+sub _ident {
     my ($id) = @_;
     my $reference = refaddr($id);
 
     if ( !defined($reference) ) {
-        croak( _translate('Reference not passed to ident') );
+        croak( _translate('Reference not passed to _ident') );
     }
     return $reference;
 }
 
 1;
 
-__END__
+=pod
 
-=head1 NAME
+=head1 
 
-ClusterSSH - [One line description of module's purpose here]
-
-
-=head1 VERSION
-
-This document describes ClusterSSH version 0.0.1
-
+ClusterSSH::Base
 
 =head1 SYNOPSIS
 
-    use ClusterSSH;
+    use base qw/ ClusterSSH::Base /;
 
-=for author to fill in:
-    Brief code example(s) here showing commonest usage(s).
-    This section will be as far as many users bother reading
-    so make it as educational and exeplary as possible.
-  
-  
+    # in object new method
+    sub new {
+        ( $class, $arg_ref ) = @_;
+        my $self = $class->SUPER::new($arg_ref);
+        return $self;
+    }
+
 =head1 DESCRIPTION
 
-=for author to fill in:
-    Write a full description of the module and its features here.
-    Use subsections (=head2, =head3) as appropriate.
+Base object to provide some utility functions on objects - should not be 
+used directly
 
+=head1 METHODS
 
-=head1 SUBROUTINES/METHODS
+These extra methods are provided on the object
 
-=for author to fill in:
-    Write a separate section listing the public components of the modules
-    interface. These normally consist of either subroutines that may be
-    exported, or methods that may be called on objects belonging to the
-    classes provided by the module.
+=over 4
 
+=item $obj->new({ arg => val, })
 
-=head1 DIAGNOSTICS
+Creates object.  In higher debug levels the args are printed out.
 
-=for author to fill in:
-    List every single error and warning message that the module can
-    generate (even the ones that will "never happen"), with a full
-    explanation of each problem, one or more likely causes, and any
-    suggested remedies.
+=item $obj->id 
 
-=over
+Return the unique id of the object for use in subclasses, such as
 
-=item C<< Error message here, perhaps with %s placeholders >>
+    $info_for{ $self->id } = $info
 
-[Description of error here]
+=item $obj->debug_level();
 
-=item C<< Another error message here >>
+Returns current debug level
 
-[Description of error here]
+=item $obj->set_debug_level( n )
 
-[Et cetera, et cetera]
+Set debug level to 'n' for all child objects.
+
+=item $obj->debug($level, @text)
+
+Output @text on STDOUT if $level is the same or lower that debug_level
+
+=item $obj->set_lang
+
+Set the Locale::Maketext language.  Defaults to 'en'.  Expects the 
+ClusterSSH/L10N/{lang}.pm module to exist and contain all relevant 
+translations, else defaults to English.
+
+=item $obj->loc('text to translate [_1]')
+
+Using the ClusterSSH/L10N/{lang}.pm module convert the  given text to 
+appropriate language.  See L<ClusterSSH::L10N> for more details.  Essentially 
+a wrapper to maketext in Locale::Maketext
+
+=item $obj->output(@);
+
+Output text on STDOUT.
 
 =back
 
-
-=head1 CONFIGURATION AND ENVIRONMENT
-
-=for author to fill in:
-    A full explanation of any configuration system(s) used by the
-    module, including the names and locations of any configuration
-    files, and the meaning of any environment variables or properties
-    that can be set. These descriptions must also include details of any
-    configuration language used.
-  
-ClusterSSH requires no configuration files or environment variables.
-
-
-=head1 DEPENDENCIES
-
-=for author to fill in:
-    A list of all the other modules that this module relies upon,
-    including any restrictions on versions, and an indication whether
-    the module is part of the standard Perl distribution, part of the
-    module's distribution, or must be installed separately. ]
-
-None.
-
-
-=head1 INCOMPATIBILITIES
-
-=for author to fill in:
-    A list of any modules that this module cannot be used in conjunction
-    with. This may be due to name conflicts in the interface, or
-    competition for system or program resources, or due to internal
-    limitations of Perl (for example, many modules that use source code
-    filters are mutually incompatible).
-
-None reported.
-
-
-=head1 BUGS AND LIMITATIONS
-
-=for author to fill in:
-    A list of known problems with the module, together with some
-    indication Whether they are likely to be fixed in an upcoming
-    release. Also a list of restrictions on the features the module
-    does provide: data types that cannot be handled, performance issues
-    and the circumstances in which they may arise, practical
-    limitations on the size of data sets, special cases that are not
-    (yet) handled, etc.
-
-No bugs have been reported.
-
-Please report any bugs or feature requests to
-C<bug-clusterssh@rt.cpan.org>, or through the web interface at
-L<http://rt.cpan.org>.
-
-
 =head1 AUTHOR
 
-Duncan Ferguson  C<< <duncan_j_ferguson@yahoo.co.uk> >>
-
+Duncan Ferguson (<duncan_j_ferguson (at) yahoo.co.uk>)
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (c) 2008, Duncan Ferguson C<< <duncan_j_ferguson@yahoo.co.uk> >>. All rights reserved.
+Copyright (c) 2009 Duncan Ferguson (<duncan_j_ferguson (at) yahoo.co.uk>). 
+All rights reserved
 
 This module is free software; you can redistribute it and/or
-modify it under the same terms as Perl itself. See L<perlartistic>.
+modify it under the same terms as Perl itself.  See L<perlartistic>.
 
-
-=head1 DISCLAIMER OF WARRANTY
-
-BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
-FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
-OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
-PROVIDE THE SOFTWARE "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER
-EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE
-ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE SOFTWARE IS WITH
-YOU. SHOULD THE SOFTWARE PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL
-NECESSARY SERVICING, REPAIR, OR CORRECTION.
-
-IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
-WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR
-REDISTRIBUTE THE SOFTWARE AS PERMITTED BY THE ABOVE LICENCE, BE
-LIABLE TO YOU FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL,
-OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE
-THE SOFTWARE (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA BEING
-RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A
-FAILURE OF THE SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE), EVEN IF
-SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF
-SUCH DAMAGES.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.

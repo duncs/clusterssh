@@ -9,7 +9,7 @@ our $VERSION = version->new(qw$Revision: 1$);
 use Carp;
 use English qw( -no_match_vars );
 
-use ClusterSSH::Base qw/ ident /;
+use ClusterSSH::Base qw/ _ident /;
 
 {
     my %hostname_of;
@@ -41,7 +41,7 @@ use ClusterSSH::Base qw/ ident /;
 
             foreach (@ssh_config) {
                 if (m/^\s*host\s+([\w\.-]+)/mxi) {
-                    $hostname_of{ ident $new_object}{$1} = 1;
+                    $hostname_of{ _ident $new_object}{$1} = 1;
                 }
                 else {
                     next;
@@ -59,7 +59,7 @@ use ClusterSSH::Base qw/ ident /;
 
     sub is_valid_hostname {
         my ( $self, $hostname ) = @_;
-        return defined $hostname_of{ ident $self}{$hostname} ? 1 : 0;
+        return defined $hostname_of{ _ident $self}{$hostname} ? 1 : 0;
     }
 }
 
