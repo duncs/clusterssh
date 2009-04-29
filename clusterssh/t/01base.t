@@ -30,7 +30,7 @@ is( ident($base), $base->id, 'id works correctly' );
 
 diag('testing output') if ( $ENV{TEST_VERBOSE} );
 trap {
-    $base->print('testing');
+    $base->output('testing');
 };
 is( $trap->stderr, '', 'Expecting no STDERR' );
 is( $trap->stdout =~ tr/\n//, 1, 'got correct number of print lines' );

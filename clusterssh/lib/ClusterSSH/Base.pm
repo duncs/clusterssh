@@ -35,7 +35,7 @@ our @EXPORT_OK = qw/ ident /;
 
         $self->debug(
             6,
-            translate('Arguments to '),
+            _translate('Arguments to '),
             $class . '->new():',
             $self->_dump_args_hash($args_ref)
         );
@@ -59,18 +59,19 @@ our @EXPORT_OK = qw/ ident /;
         return ident($self);
     }
 
-    sub translate {
+    sub _translate {
+        my @args = @_;
         if ( !$language_handle ) {
             $language_handle = ClusterSSH::L10N->get_handle();
         }
 
-        return $language_handle->maketext(@_);
+        return $language_handle->maketext(@args);
     }
 
     sub loc {
         my ( $self, @args ) = @_;
 
-        return translate(@args);
+        return _translate(@args);
     }
 
     sub set_lang {
@@ -83,7 +84,7 @@ our @EXPORT_OK = qw/ ident /;
     sub set_debug_level {
         my ( $self, $level ) = @_;
         if ( !defined $level ) {
-            croak( translate('Debug level not provided') );
+            croak( _translate('Debug level not provided') );
         }
         if ( $level > 9 ) {
             $level = 9;
@@ -97,7 +98,7 @@ our @EXPORT_OK = qw/ ident /;
         return $debug_level;
     }
 
-    sub print {
+    sub output {
         my ( $self, @text ) = @_;
         print @text, $/;
         return $self;
@@ -106,7 +107,7 @@ our @EXPORT_OK = qw/ ident /;
     sub debug {
         my ( $self, $level, @text ) = @_;
         if ( $level < $debug_level ) {
-            $self->print(@text);
+            $self->output(@text);
         }
         return $self;
     }
@@ -115,10 +116,11 @@ our @EXPORT_OK = qw/ ident /;
 # instead of pulling new module to get one function, alias ident
 # to a core module function
 sub ident {
-    my $reference = refaddr( $_[0] );
+    my ($id) = @_;
+    my $reference = refaddr($id);
 
     if ( !defined($reference) ) {
-        croak( translate('Reference not passed to ident') );
+        croak( _translate('Reference not passed to ident') );
     }
     return $reference;
 }
