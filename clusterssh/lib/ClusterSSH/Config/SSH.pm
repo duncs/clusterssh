@@ -9,7 +9,7 @@ our $VERSION = version->new(qw$Revision: 1$);
 use Carp;
 use English qw( -no_match_vars );
 
-use ClusterSSH::Base qw/ _ident /;
+use base qw/ ClusterSSH::Base /;
 
 {
     my %hostname_of;
@@ -17,7 +17,8 @@ use ClusterSSH::Base qw/ _ident /;
 
     sub new {
         my ( $class, $arg_ref ) = @_;
-        my $new_object = bless \do { my $anon_scalar; $anon_scalar }, $class;
+
+        my $self = $class->SUPER::new($arg_ref);
 
         if ( $arg_ref->{filename} ) {
             $filename = $arg_ref->{filename};
@@ -41,7 +42,7 @@ use ClusterSSH::Base qw/ _ident /;
 
             foreach (@ssh_config) {
                 if (m/^\s*host\s+([\w\.-]+)/mxi) {
-                    $hostname_of{ _ident $new_object}{$1} = 1;
+                    $hostname_of{ $self->id }{$1} = 1;
                 }
                 else {
                     next;
@@ -49,7 +50,7 @@ use ClusterSSH::Base qw/ _ident /;
             }
         }
 
-        return $new_object;
+        return $self;
     }
 
     sub get_filename {
@@ -59,7 +60,7 @@ use ClusterSSH::Base qw/ _ident /;
 
     sub is_valid_hostname {
         my ( $self, $hostname ) = @_;
-        return defined $hostname_of{ _ident $self}{$hostname} ? 1 : 0;
+        return defined $hostname_of{ $self->id }{$hostname} ? 1 : 0;
     }
 }
 
