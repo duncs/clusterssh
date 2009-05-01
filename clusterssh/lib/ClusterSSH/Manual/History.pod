@@ -46,9 +46,11 @@ always control the terminals.
 So, about a year later, I rewrote some of the fundamental terminal control 
 code and called it Version 2 (instead of keeping tweaking it).  Some of my 
 colleges found out about it and started using it and giving feedback.  One 
-of them suggested I put it on sourceforge as it seemed such as useful tool.
-I bundled it up with some GNU tools to make it easier to install and let it
-loose upon the world.
+of them suggested I put it on SourceForge as it seemed such as useful tool.
+I tried to grab the 'cssh' project, but that was already taken by the 
+C<C Sharp Shell> so I came up with the current project name.  I bundled it 
+up with some GNU tools to make it easier to install and let it loose upon 
+the world.
 
 This is when more people started using it outside of Solaris and raised
 quite a few new problems.  I managed to fix some of them but realised the
