@@ -1,0 +1,25 @@
+=head1 NAME
+
+ClusterSSH::Manual
+
+=head1 DESCRIPTION
+
+This is the L<ClusterSSH> users manual.  ClusterSSH is a utility for
+connecting to multiple unix-like servers and running commands in them
+symultaenously.
+
+=head1 SECTIONS
+
+=head2 ClusterSSH::Manual::FAQ
+
+Questions and answers relating this this version of ClusterSSH.
+
+=head2 ClusterSSH::Manual::Examples
+
+Some example usage of the command line interfaces.
+
+=head2 ClusterSSH::Manual::History
+
+A history of the the philosophy behind the ClusterSSH code.
+
+=cut
