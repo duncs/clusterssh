@@ -41,11 +41,12 @@ those two modules.
 
 Version 1 was pretty much a perl version of a ksh script with some gui code
 thrown in.  It just about worked, but wasnt very well written and couldn't
-always control the terminals.
+always control the terminals.  It also had to have root Setuid permissions
+which I knew the IT Security team wouldn't like,
 
-So, about a year later, I rewrote some of the fundamental terminal control 
-code and called it Version 2 (instead of keeping tweaking it).  Some of my 
-colleges found out about it and started using it and giving feedback.  One 
+So, a while later, I rewrote some of the fundamental terminal control 
+code and called it Version 2.  Some of my colleges had found out about it 
+and had started using it, giving feedback for improvements.  One 
 of them suggested I put it on SourceForge as it seemed such as useful tool.
 I tried to grab the 'cssh' project, but that was already taken by the 
 C<C Sharp Shell> so I came up with the current project name.  I bundled it 
