@@ -1,7 +1,7 @@
 # $Id: ClusterSSH.pm 231 2008-11-22 11:25:43Z duncan_ferguson $
 package ClusterSSH;
 
-use 5.006001;
+use 5.008001;
 use warnings;
 use strict;
 use Carp;
