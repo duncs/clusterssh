@@ -4,7 +4,7 @@ use warnings;
 use FindBin qw($Bin);
 use lib "$Bin/../lib";
 
-use Test::More tests => 149;
+use Test::More tests => 151;
 use Test::Trap;
 
 BEGIN { use_ok("ClusterSSH::Host") }
@@ -288,6 +288,8 @@ trap {
     $host = ClusterSSH::Host->parse_host_string(
         '2001:0db8:85a3::8a2e:0370:7334');
 };
+is( $trap->leaveby, 'return', 'returned ok' );
+is( $trap->die,     undef,    'returned ok' );
 isa_ok( $host, "ClusterSSH::Host" );
 is( $host, '2001:0db8:85a3::8a2e:0370:7334', 'stringify works' );
 
