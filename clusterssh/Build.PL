@@ -21,6 +21,8 @@ my $build = Module::Build->new(
         'Test::Exception'     => '0.27',
         'Test::Pod'           => '0',
         'Test::Pod::Coverage' => '0',
+        'Test::Deep'          => '0',
+        'Perl::Critic::Bangs' => '1.02',
     },
     script_files => 'bin',
 );
