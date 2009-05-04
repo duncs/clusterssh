@@ -4,7 +4,7 @@ use warnings;
 use FindBin qw($Bin);
 use lib "$Bin/../lib";
 
-use Test::More tests => 57;
+use Test::More tests => 82;
 use Test::Trap;
 
 BEGIN { use_ok( "ClusterSSH::Base", qw/ _ident / ) }
@@ -32,7 +32,9 @@ diag('testing output') if ( $ENV{TEST_VERBOSE} );
 trap {
     $base->output('testing');
 };
-is( $trap->stderr, '', 'Expecting no STDERR' );
+is( $trap->leaveby, 'return', 'returned ok' );
+is( $trap->die,     undef,    'returned ok' );
+is( $trap->stderr,  '',       'Expecting no STDERR' );
 is( $trap->stdout =~ tr/\n//, 1, 'got correct number of print lines' );
 like( $trap->stdout, qr/\Atesting\n\Z/xsm,
     'checking for expected print output' );
@@ -49,7 +51,9 @@ for my $level ( 0 .. 9 ) {
         }
     };
 
-    is( $trap->stderr, '', 'Expecting no STDERR' );
+    is( $trap->leaveby, 'return', 'returned ok' );
+    is( $trap->die,     undef,    'returned ok' );
+    is( $trap->stderr,  '',       'Expecting no STDERR' );
     is( $trap->stdout =~ tr/\n//,
         $level, 'got correct number of debug lines' );
     like( $trap->stdout, qr/(?:test\n){$level}/xsm,
@@ -59,8 +63,9 @@ for my $level ( 0 .. 9 ) {
 trap {
     $base->set_debug_level();
 };
-is( $trap->stderr, '', 'Expecting no STDERR' );
-is( $trap->stdout, '', 'Expecting no STDOUT' );
+is( $trap->leaveby, 'die', 'returned ok' );
+is( $trap->stderr,  '',    'Expecting no STDERR' );
+is( $trap->stdout,  '',    'Expecting no STDOUT' );
 like( $trap->die, qr/^Debug level not provided at/,
     'Got correct croak text' );
 
@@ -72,7 +77,9 @@ trap {
     $base = ClusterSSH::Base->new( { debug => 7, } );
 };
 isa_ok( $base, 'ClusterSSH::Base' );
-is( $trap->stderr, '', 'Expecting no STDERR' );
+is( $trap->leaveby, 'return', 'returned ok' );
+is( $trap->die,     undef,    'returned ok' );
+is( $trap->stderr,  '',       'Expecting no STDERR' );
 is( $trap->stdout =~ tr/\n//, 2, 'got new() debug output lines' );
 like(
     $trap->stdout,
