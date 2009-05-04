@@ -54,6 +54,11 @@ use base qw/ ClusterSSH::Base /;
         my ($self) = @_;
         return $filename_for{ $self->id };
     }
+
+    sub _get_config_hash {
+        my ($self) = @_;
+        croak( $self->loc('This method should have been replaced') );
+    }
 }
 
 1;

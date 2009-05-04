@@ -64,3 +64,12 @@ is( $trap->die,            undef,      'not died' );
 is( $trap->stderr,         '',         'Expecting no STDERR' );
 is( $trap->stdout,         '',         'Expecting no STDOUT' );
 is( $config->get_filename, $test_file, "filename is correct" );
+
+trap {
+    $config->_get_config_hash();
+};
+is( $trap->leaveby, 'die', 'died ok' );
+like(
+    $trap->die, qr/^This method should have been replaced/, 'die message ok');
+is( $trap->stderr, '', 'Expecting no STDERR' );
+is( $trap->stdout, '', 'Expecting no STDOUT' );
