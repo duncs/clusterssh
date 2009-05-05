@@ -158,7 +158,7 @@ These extra methods are provided on the object
 
 =over 4
 
-=item $obj->new({ arg => val, })
+=item $obj = ClusterSSH::Base->new({ arg => val, });
 
 Creates object.  In higher debug levels the args are printed out.
 
