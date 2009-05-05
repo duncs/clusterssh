@@ -1,0 +1,8 @@
+key_history    = Alt-h
+key_retilehosts= Alt-r
+auto_quit      = yes
+key_paste      = Control-v
+key_addhost    = Control-Shift-plus
+key_clientname = Alt-n
+command        = 
+key_quit       = Control-q
