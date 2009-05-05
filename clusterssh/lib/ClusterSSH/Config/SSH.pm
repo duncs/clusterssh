@@ -9,53 +9,43 @@ our $VERSION = version->new(qw$Revision: 1$);
 use Carp;
 use English qw( -no_match_vars );
 
-use base qw/ ClusterSSH::Base /;
+use base qw/ ClusterSSH::Config::Base /;
 
 {
     my %hostname_of;
-    my $filename = $ENV{HOME} . '/.ssh/config';
 
     sub new {
         my ( $class, $arg_ref ) = @_;
 
-        my $self = $class->SUPER::new($arg_ref);
-
-        if ( $arg_ref->{filename} ) {
-            $filename = $arg_ref->{filename};
+        if ( !$arg_ref->{filename} ) {
+            $arg_ref->{filename} = $ENV{HOME} . '/.ssh/config';
         }
 
-        if ( -e $filename ) {
-            if ( !-f $filename ) {
-                carp( 'Unable to read ', $filename );
-                return;
-            }
-            if ( !-r $filename ) {
-                carp( 'Unable to read ', $filename );
-                return;
-            }
-            open my $ssh_config_fh, '<', $filename
-                or croak( 'Unable to read ', $filename, ': ', $ERRNO );
+        my $self = $class->SUPER::new($arg_ref);
 
-            my @ssh_config = <$ssh_config_fh>;
-            close $ssh_config_fh
-                or croak 'Could not close ', $filename, ': ', $ERRNO;
+        open my $ssh_config_fh, '<', $self->get_filename
+            or croak( 'Unable to read ', $self->get_filename, ': ', $ERRNO );
 
-            foreach (@ssh_config) {
-                if (m/^\s*host\s+([\w\.-]+)/mxi) {
-                    $hostname_of{ $self->id }{$1} = 1;
-                }
-                else {
-                    next;
-                }
+        my @ssh_config = <$ssh_config_fh>;
+        close $ssh_config_fh
+            or croak 'Could not close ', $self->get_filename, ': ', $ERRNO;
+
+        foreach (@ssh_config) {
+            if (m/^\s*host\s+([\w\.-]+)/mxi) {
+                $hostname_of{ $self->id }{$1} = 1;
+            }
+            else {
+                next;
             }
         }
 
         return $self;
     }
 
-    sub get_filename {
-        my ($self) = @_;
-        return $filename;
+    sub DESTROY {
+        my ( $self, $arg_ref, ) = @_;
+        delete $hostname_of{ $self->id };
+        return;
     }
 
     sub is_valid_hostname {
@@ -65,3 +55,59 @@ use base qw/ ClusterSSH::Base /;
 }
 
 1;
+
+__END__
+
+=pod
+
+=head1 
+
+ClusterSSH::Config::SSH
+
+=head1 SYNOPSIS
+
+    $obj = ClusterSSH::Config::SSH({ filename => '/path/to/file' });
+    my $filename=$obj->get_filename;
+
+=head1 DESCRIPTION
+
+Read the given file and parse for configuration options.  See also 
+L<ClusterSSH::Config::Base>.
+
+=head1 METHODS
+
+These extra methods are provided on the object
+
+=over 4
+
+=item $obj = ClusterSSH::Config::SSH->new({ filename => '/path/to/file' });
+
+Reads the file for configuation options.  Filename is optional and defaults to
+F<$HOME/.ssh/ssh_config>
+
+=item $obj->get_filename();
+
+Returns filename parsed for data.
+
+=item if( $obj->is_valid_hostname( $hostname ) ....
+
+Return true or false value (0 or 1) on whether or not the given hostname
+is in the ssh configuration file.
+
+=back
+
+=head1 AUTHOR
+
+Duncan Ferguson (<duncan_j_ferguson (at) yahoo.co.uk>)
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright (c) 2009 Duncan Ferguson (<duncan_j_ferguson (at) yahoo.co.uk>). 
+All rights reserved
+
+This module is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.  See L<perlartistic>.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
