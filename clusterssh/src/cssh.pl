@@ -1773,41 +1773,41 @@ sub capture_map_events() {
         }
     );
 
-    $windows{main_window}->bind(
-        '<Unmap>' => sub {
-            logmsg( 3, "Entering UNMAP" );
-
-            my $state = $windows{main_window}->state();
-            logmsg( 3,
-                "state=$state previous=$config{internal_previous_state}" );
-
-            if ( $config{internal_previous_state} eq $state ) {
-                logmsg( 3, "repeating the same" );
-            }
-
-            if ( $config{internal_previous_state} eq "mid-change" ) {
-                logmsg( 3, "dropping out as mid-change" );
-                return;
-            }
-
-            if ( $config{internal_previous_state} eq "normal" ) {
-                logmsg( 3, "withdrawing all windows" );
-                foreach my $server ( reverse( keys(%servers) ) ) {
-                    $xdisplay->req( 'UnmapWindow', $servers{$server}{wid} );
-                    if ( $config{unmap_on_redraw} =~ /yes/i ) {
-                        $xdisplay->req( 'UnmapWindow',
-                            $servers{$server}{wid} );
-                    }
-                }
-                $xdisplay->flush();
-            }
-
-            if ( $config{internal_previous_state} ne $state ) {
-                logmsg( 3, "resetting prev_state" );
-                $config{internal_previous_state} = $state;
-            }
-        }
-    );
+#    $windows{main_window}->bind(
+#        '<Unmap>' => sub {
+#            logmsg( 3, "Entering UNMAP" );
+#
+#            my $state = $windows{main_window}->state();
+#            logmsg( 3,
+#                "state=$state previous=$config{internal_previous_state}" );
+#
+#            if ( $config{internal_previous_state} eq $state ) {
+#                logmsg( 3, "repeating the same" );
+#            }
+#
+#            if ( $config{internal_previous_state} eq "mid-change" ) {
+#                logmsg( 3, "dropping out as mid-change" );
+#                return;
+#            }
+#
+#            if ( $config{internal_previous_state} eq "normal" ) {
+#                logmsg( 3, "withdrawing all windows" );
+#                foreach my $server ( reverse( keys(%servers) ) ) {
+#                    $xdisplay->req( 'UnmapWindow', $servers{$server}{wid} );
+#                    if ( $config{unmap_on_redraw} =~ /yes/i ) {
+#                        $xdisplay->req( 'UnmapWindow',
+#                            $servers{$server}{wid} );
+#                    }
+#                }
+#                $xdisplay->flush();
+#            }
+#
+#            if ( $config{internal_previous_state} ne $state ) {
+#                logmsg( 3, "resetting prev_state" );
+#                $config{internal_previous_state} = $state;
+#            }
+#        }
+#    );
 }
 
 # for all key event, event hotkeys so there is only 1 key binding
