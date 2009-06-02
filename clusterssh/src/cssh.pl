@@ -815,7 +815,7 @@ sub send_text($@) {
 
 sub send_clientname() {
     foreach my $svr ( keys(%servers) ) {
-        send_text( $svr, $servers{$svr}{realname} )
+        send_text( $svr, $servers{$svr}{givenname} )
             if ( $servers{$svr}{active} == 1 );
     }
 }
@@ -997,6 +997,7 @@ sub open_client_windows(@) {
         next unless ($_);
 
         my ( $username, $server, $port ) = split_hostname($_);
+        my $given_server_name = $server;
 
         # see if we can find the hostname - if not, drop it
         my $realname = check_host($server);
@@ -1031,6 +1032,7 @@ sub open_client_windows(@) {
         $server .= q{ } . $count;
 
         $servers{$server}{connect_string} = $_;
+        $servers{$server}{givenname}      = $given_server_name;
         $servers{$server}{realname}       = $realname;
         $servers{$server}{username}       = $username;
         $servers{$server}{port}           = $port || '';
@@ -2329,8 +2331,8 @@ names can be entered, separated by spaces.
 
 =item Alt-n
 
-Paste in the specific connection server name to each client, minus any 
-username or port, i.e.
+Paste in the hostname part of the specific connection string to each 
+client, minus any username or port, i.e.
 
 C<< scp /etc/hosts server:files/<Alt-n>.hosts >>
 
