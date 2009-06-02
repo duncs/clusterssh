@@ -1,4 +1,4 @@
-??? Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.26-1
+2009-06-02 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.26-1
 
 * Allow user to set a different ConnectTimeout and -o string (Tony Mancill)
 * Fix warning from 'mandb' (Tony Mancill)
