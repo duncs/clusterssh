@@ -952,7 +952,8 @@ sub split_hostname {
                # could have an invalid IPv6 address here, but the connect
                # method will warn if it cannot connect anyhow
                # However, this also catchs IPv4 addresses, possibly with ports
-                ( $server, $port ) = $connect_string =~ m/^([\w.-]+)(?::(\d+))?$/xsm;
+                ( $server, $port )
+                    = $connect_string =~ m/^([\w.-]+)(?::(\d+))?$/xsm;
             }
         }
     }
@@ -2034,7 +2035,14 @@ load_keyboard_map();
 
 get_clusters();
 
-@servers = resolve_names(@ARGV);
+if (@ARGV) {
+    @servers = resolve_names(@ARGV);
+}
+else {
+    if ( $clusters{default} ) {
+        @servers = resolve_names( split( /\s+/, $clusters{default} ) );
+    }
+}
 
 create_windows();
 create_menubar();
@@ -2392,6 +2400,10 @@ nested, but be aware of recursive tags which are not checked for.
 Clusters may also be specified either directly (see C<clusters> configuration
 options) or indirectly (see C<extra_cluster_file> configuration option) 
 in the users F<$HOME/.csshrc> file.
+
+NOTE: there is a special cluster tag called C<default> - any tags or hosts
+included within this tag will be automatically opened if no other tags
+are specified on the command line.
 
 =item F</etc/csshrc> & F<$HOME/.csshrc>
 
