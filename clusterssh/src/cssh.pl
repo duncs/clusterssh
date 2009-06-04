@@ -266,6 +266,8 @@ sub load_config_defaults() {
 
     $config{command}             = q{};
     $config{max_host_menu_items} = 30;
+
+    $config{max_addhost_menu_cluster_items} = 6;
 }
 
 # load in config file settings
@@ -1474,10 +1476,17 @@ sub add_host_by_name() {
         return;
     }
 
-    logmsg( 2, "host=$menus{host_entry}" );
+    if ( $menus{host_entry} ) {
+        logmsg( 2, "host=", $menus{host_entry} );
+        open_client_windows(
+            resolve_names( split( /\s+/, $menus{host_entry} ) ) );
+    }
 
-    open_client_windows(
-        resolve_names( split( /\s+/, $menus{host_entry} ) ) );
+    if ( $menus{listbox}->curselection() ) {
+        my @hosts = $menus{listbox}->get( $menus{listbox}->curselection() );
+        logmsg( 2, "host=", join( ' ', @hosts ) );
+        open_client_windows( resolve_names(@hosts) );
+    }
 
     build_hosts_menu();
     $menus{host_entry} = "";
@@ -1671,7 +1680,9 @@ sub create_windows() {
             my $paste_text = '';
 
             # SelectionGet is fatal if no selection is given
-            Tk::catch { $paste_text = $windows{main_window}->SelectionGet };
+            Tk::catch {
+                $paste_text = $windows{main_window}->SelectionGet;
+            };
 
             if ( !length($paste_text) ) {
                 warn("Got empty paste event\n");
@@ -1724,6 +1735,27 @@ sub create_windows() {
         -default_button => 'Add',
     );
 
+    if ( $config{max_addhost_menu_cluster_items}
+        && scalar keys %clusters )
+    {
+        if ( scalar keys %clusters < $config{max_addhost_menu_cluster_items} )
+        {
+            $menus{listbox} = $windows{addhost}->Listbox(
+                -selectmode => 'extended',
+                -height     => scalar keys %clusters,
+            )->pack();
+        }
+        else {
+            $menus{listbox} = $windows{addhost}->Scrolled(
+                'Listbox',
+                -scrollbars => 'e',
+                -selectmode => 'extended',
+                -height     => $config{max_addhost_menu_cluster_items},
+            )->pack();
+        }
+        $menus{listbox}->insert( 'end', sort keys %clusters );
+    }
+
     $windows{host_entry} = $windows{addhost}->add(
         'LabEntry',
         -textvariable => \$menus{host_entry},
@@ -1773,41 +1805,41 @@ sub capture_map_events() {
         }
     );
 
-#    $windows{main_window}->bind(
-#        '<Unmap>' => sub {
-#            logmsg( 3, "Entering UNMAP" );
-#
-#            my $state = $windows{main_window}->state();
-#            logmsg( 3,
-#                "state=$state previous=$config{internal_previous_state}" );
-#
-#            if ( $config{internal_previous_state} eq $state ) {
-#                logmsg( 3, "repeating the same" );
-#            }
-#
-#            if ( $config{internal_previous_state} eq "mid-change" ) {
-#                logmsg( 3, "dropping out as mid-change" );
-#                return;
-#            }
-#
-#            if ( $config{internal_previous_state} eq "normal" ) {
-#                logmsg( 3, "withdrawing all windows" );
-#                foreach my $server ( reverse( keys(%servers) ) ) {
-#                    $xdisplay->req( 'UnmapWindow', $servers{$server}{wid} );
-#                    if ( $config{unmap_on_redraw} =~ /yes/i ) {
-#                        $xdisplay->req( 'UnmapWindow',
-#                            $servers{$server}{wid} );
-#                    }
-#                }
-#                $xdisplay->flush();
-#            }
-#
-#            if ( $config{internal_previous_state} ne $state ) {
-#                logmsg( 3, "resetting prev_state" );
-#                $config{internal_previous_state} = $state;
-#            }
-#        }
-#    );
+ #    $windows{main_window}->bind(
+ #        '<Unmap>' => sub {
+ #            logmsg( 3, "Entering UNMAP" );
+ #
+ #            my $state = $windows{main_window}->state();
+ #            logmsg( 3,
+ #                "state=$state previous=$config{internal_previous_state}" );
+ #
+ #            if ( $config{internal_previous_state} eq $state ) {
+ #                logmsg( 3, "repeating the same" );
+ #            }
+ #
+ #            if ( $config{internal_previous_state} eq "mid-change" ) {
+ #                logmsg( 3, "dropping out as mid-change" );
+ #                return;
+ #            }
+ #
+ #            if ( $config{internal_previous_state} eq "normal" ) {
+ #                logmsg( 3, "withdrawing all windows" );
+ #                foreach my $server ( reverse( keys(%servers) ) ) {
+ #                    $xdisplay->req( 'UnmapWindow', $servers{$server}{wid} );
+ #                    if ( $config{unmap_on_redraw} =~ /yes/i ) {
+ #                        $xdisplay->req( 'UnmapWindow',
+ #                            $servers{$server}{wid} );
+ #                    }
+ #                }
+ #                $xdisplay->flush();
+ #            }
+ #
+ #            if ( $config{internal_previous_state} ne $state ) {
+ #                logmsg( 3, "resetting prev_state" );
+ #                $config{internal_previous_state} = $state;
+ #            }
+ #        }
+ #    );
 }
 
 # for all key event, event hotkeys so there is only 1 key binding
@@ -1848,11 +1880,14 @@ sub key_event {
             if ( $combo =~ /^$key$/ ) {
                 if ( $event eq "KeyRelease" ) {
                     logmsg( 2, "Received hotkey: $hotkey" );
-                    send_clientname()     if ( $hotkey eq "key_clientname" );
-                    add_host_by_name()    if ( $hotkey eq "key_addhost" );
-                    retile_hosts("force") if ( $hotkey eq "key_retilehosts" );
-                    show_history()        if ( $hotkey eq "key_history" );
-                    exit_prog()           if ( $hotkey eq "key_quit" );
+                    send_clientname()
+                        if ( $hotkey eq "key_clientname" );
+                    add_host_by_name()
+                        if ( $hotkey eq "key_addhost" );
+                    retile_hosts("force")
+                        if ( $hotkey eq "key_retilehosts" );
+                    show_history() if ( $hotkey eq "key_history" );
+                    exit_prog()    if ( $hotkey eq "key_quit" );
                 }
                 return;
             }
@@ -1860,7 +1895,8 @@ sub key_event {
     }
 
     # look for a <Control>-d and no hosts, so quit
-    exit_prog() if ( $state =~ /Control/ && $keysym eq "d" and !%servers );
+    exit_prog()
+        if ( $state =~ /Control/ && $keysym eq "d" and !%servers );
 
     update_display_text( $keycodetosym{$keysymdec} )
         if ( $event eq "KeyPress" && $keycodetosym{$keysymdec} );
@@ -1978,7 +2014,8 @@ sub create_menubar() {
 
 # Note: getopts returned "" if it finds any options it doesnt recognise
 # so use this to print out basic help
-pod2usage( -verbose => 1 ) if ( !GetOptions( \%options, @options_spec ) );
+pod2usage( -verbose => 1 )
+    if ( !GetOptions( \%options, @options_spec ) );
 pod2usage( -verbose => 1 ) if ( $options{'?'} || $options{help} );
 pod2usage( -verbose => 2 ) if ( $options{H}   || $options{man} );
 
@@ -2491,6 +2528,11 @@ See below notes on shortcuts.
 =item key_retilehosts = Alt-r
 
 Default key sequence to retile host windows.  See below notes on shortcuts.
+
+=item max_addhost_menu_cluster_items = 6
+
+Maximum number of entries in the 'Add Host' menu cluster list before 
+scrollbars are used
 
 =item max_host_menu_items = 30
 
