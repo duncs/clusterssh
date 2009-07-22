@@ -986,12 +986,11 @@ sub check_host($) {
         else {
             logmsg( 1,
                 "Failed to check host (falling back to gethostbyname): $!" );
-            return gethostbyname($host)->name();
         }
     }
-    else {
-        return gethostbyname($host)->name();
-    }
+
+    my $gethost_obj = gethostbyname($host);
+    return defined($gethost_obj) ? $gethost_obj->name() : $host;
 }
 
 sub open_client_windows(@) {
