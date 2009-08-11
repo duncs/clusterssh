@@ -1,0 +1,93 @@
+=head1 NAME
+
+ClusterSSH::Manual::History
+
+=head1 DESCRIPTION
+
+This document outlines the history and pilosophy behind ClusterSSH.  It 
+should provde some insight into why it has been coded this way.
+
+=head2 History
+
+During Early 2000 I (Duncan Ferguson) was working for a major UK internet 
+based primarily on Solaris where I was a Solaris sysadmin, looking after
+several hundred simiarl Solaris servers.
+
+Some of the tasks performed had to be done on several servers,
+although not necessaily at the same time.  We were using a tool written by
+Sun called C<Cluster Console> (or c<cconsole>) which included utilities
+called C<crsh> and C<ctelnet>.  These opened up a small gui which could 
+control a number of terminals at the same time and was based on the 
+rsh  and telnet protocols.
+
+At around this time I was comfortably using shell scripting to help me avoid 
+having to repeat the same tasks.  I had heard of perl, thought I wanted to 
+learn it but didnt actually have any projects to use it against at the time.
+
+At one point, the IT Security team made a decree (perfectly reasonably) that 
+all communicate between servers had to be encrypted, so out went C<crsh> and
+C<ctelnet>.  I did contact Sun at the time to ask about an ssh version of the
+utilities but they wouldn't give me any answer about when or even if they 
+would provide one.
+
+So, here was my first 'little' project to learn perl.  I started it off at 
+home, writing some code when I could, taking it to work, seeing how it went
+with real world usage, modified at home again, tested at work, etc.
+
+I eventually managed to get something running using perl Tk and X11::Protocol.  
+I couldn't use much more than that as the IT Security team would allow 
+anything that was 'unknown' to be used and I had enough of a fight with just 
+those two modules.
+
+Version 1 was pretty much a perl version of a ksh script with some gui code
+thrown in.  It just about worked, but wasnt very well written and couldn't
+always control the terminals.  It also had to have root Setuid permissions
+which I knew the IT Security team wouldn't like,
+
+So, a while later, I rewrote some of the fundamental terminal control 
+code and called it Version 2.  Some of my colleges had found out about it 
+and had started using it, giving feedback for improvements.  One 
+of them suggested I put it on SourceForge as it seemed such as useful tool.
+I tried to grab the 'cssh' project, but that was already taken by the 
+C<C Sharp Shell> so I came up with the current project name.  I bundled it 
+up with some GNU tools to make it easier to install and let it loose upon 
+the world.
+
+This is when more people started using it outside of Solaris and raised
+quite a few new problems.  I managed to fix some of them but realised the
+code wasnt particularly maintainable.
+
+This is when I start on Version 3 - a complete re-write.  Still using Tk and
+X11::Protocol, the GNU tools and not much else.  It was still a normal perl 
+script, but by this time I had written quite a few pieces of perl code so 
+had a much better idea of what I wanted to do - and I was still using it as 
+a learning tool to get a better handle on how to do other tasks at work.  And
+dropped into subversion  on sourceforge so I could learn how to use that 
+instead of CVS.
+
+So now it comes to the point that I want to learn about object-oriented
+code.  I have seen enough of other people's perl OO code to see how its done
+but I want to do it myself - not just to learn but also to improve ClusterSSH.
+One of the biggest drawbacks of version 3 is if I make a change I have to test
+as much as I can by hand, but I generally miss something.  At least with OO
+I can automated a lot of the testing and also get people to test on their 
+servers to, so I can compare results.  And it also means i can use more
+common code to create a C<cscp> utility too.
+
+It also means I am dropping the GNU tools (the perl Make::Install module is
+much easier to use for this sort of thing) and move the source code into a git
+repository.  So much more to learn...
+
+And so, this is where the story of Version 4 begins.
+
+=head2 Philosophy
+
+Given the restricted beginnings of ClusterSSH I still aim to use as few
+extra modules as possible - so no Moose as this is still perl 5 based (perl 6
+will be a different story for Version 5 I am sure...).
+
+However, will GTK2 be better than Tk? Is there something better or different
+to X11::Protocol?  These are things I still need to work out.  I'll get the
+basic non-gui side sorted first and take it frmo there.
+
+=cut

@@ -1,0 +1,18 @@
+=head1 NAME
+
+ClusterSSH::Manual::FAQ - Frequently Asked Questions
+
+=head1 DESCRIPTION
+
+This document lsits some frequently asked questions about this version of
+ClusterSSH.
+
+=head1 FAQs
+
+=head2 Q1
+
+=head2 Q2
+
+=head2 Q3
+
+=cut
