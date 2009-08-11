@@ -268,6 +268,8 @@ sub load_config_defaults() {
     $config{max_host_menu_items} = 30;
 
     $config{max_addhost_menu_cluster_items} = 6;
+    $config{menu_send_autotearoff}          = 0;
+    $config{menu_host_autotearoff}          = 0;
 }
 
 # load in config file settings
@@ -1160,6 +1162,15 @@ sub show_console() {
 
     # Sleep for a moment to give WM time to bring console back
     select( undef, undef, undef, 0.5 );
+
+    if ( $config{menu_send_autotearoff} ) {
+        $menus{send}->menu->tearOffMenu()->raise;
+    }
+
+    if ( $config{menu_host_autotearoff} ) {
+        $menus{hosts}->menu->tearOffMenu()->raise;
+    }
+
     $windows{main_window}->deiconify;
     $windows{main_window}->raise;
     $windows{main_window}->focus( -force );
@@ -2536,6 +2547,13 @@ scrollbars are used
 =item max_host_menu_items = 30
 
 Maximum number of hosts to put into the host menu before starting a new column
+
+=item menu_host_autotearoff = 0
+
+=item menu_send_autotearoff = 0
+
+When set to non-0 will automatically tear-off the host or send menu at 
+program start
 
 =item mouse_paste = Button-2 (middle mouse button)
 
