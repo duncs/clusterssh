@@ -1,0 +1,5 @@
+blib/
+_build/
+Build
+cover_db/
+*.swp
