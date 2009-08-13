@@ -1,8 +1,8 @@
-Working from CVS
-================
+Notes on performing a release
+=============================
 
 This file gives a brief overview of using this package after pulling 
-it directly from CVS.
+it directly from the code repository
 
 The GNU autotools are used for building this package (for ease of 
 end-user use and building RPM's).
@@ -20,4 +20,9 @@ When all is ok, modify "cluster.spec" as necssary
 Run "make dist" and release as appropriate.
 Also create tag for the release
 
-$Id$
+Announce the release
+====================
+Announce the releases on the mailing list
+Update the mediawiki front page
+Announce news article via project page
+Update FreshMeat
