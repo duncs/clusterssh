@@ -6,6 +6,8 @@
   - thanks to Sami Kerola
 * Add in config for auto-tearoff of send and host menus
   - thanks to James Chernikov for the idea
+* Add in send menu xml definition file
+  - thanks to James Chernikov for the idea
 
 2009-06-02 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.26-1
 

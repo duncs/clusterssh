@@ -81,6 +81,8 @@ use X11::Keysyms '%keysymtocode', 'MISCELLANY', 'XKB_KEYS', '3270', 'LATIN1',
 use File::Basename;
 use Net::hostent;
 use Carp;
+use Sys::Hostname;
+use English;
 
 ### all global variables ###
 my $scriptname = $0;
@@ -270,6 +272,8 @@ sub load_config_defaults() {
     $config{max_addhost_menu_cluster_items} = 6;
     $config{menu_send_autotearoff}          = 0;
     $config{menu_host_autotearoff}          = 0;
+
+    $config{send_menu_xml_file} = $ENV{HOME} . '/.csshrc_send_menu';
 }
 
 # load in config file settings
@@ -773,9 +777,26 @@ sub send_text($@) {
     my $svr = shift;
     my $text = join( "", @_ );
 
-    #logmsg( 2, "Sending to $svr text:$text:" );
-
     logmsg( 2, "servers{$svr}{wid}=$servers{$svr}{wid}" );
+    logmsg( 3, "Sending to '$svr' text:$text:" );
+
+    # command macro substitution
+
+    # $svr contains a trailing space here, so ensure its stripped off
+    {
+        my $servername = $svr;
+        $servername =~ s/\s+//;
+        $text       =~ s/%s/$servername/xsm;
+    }
+    $text =~ s/%h/hostname()/xsme;
+
+    # use connection username, else default to current username
+    {
+        my $username = $servers{$svr}{username};
+        $username ||= getpwuid($UID);
+        $text =~ s/%u/$username/xsm;
+    }
+    $text =~ s/%n/\n/xsm;
 
     foreach my $char ( split( //, $text ) ) {
         next if ( !defined($char) );
@@ -817,9 +838,11 @@ sub send_text($@) {
     $xdisplay->flush();
 }
 
-sub send_clientname() {
+sub send_text_to_all_servers {
+    my $text = join( '', @_ );
+
     foreach my $svr ( keys(%servers) ) {
-        send_text( $svr, $servers{$svr}{givenname} )
+        send_text( $svr, $text )
             if ( $servers{$svr}{active} == 1 );
     }
 }
@@ -1890,7 +1913,7 @@ sub key_event {
             if ( $combo =~ /^$key$/ ) {
                 if ( $event eq "KeyRelease" ) {
                     logmsg( 2, "Received hotkey: $hotkey" );
-                    send_clientname()
+                    send_text_to_all_servers('%s')
                         if ( $hotkey eq "key_clientname" );
                     add_host_by_name()
                         if ( $hotkey eq "key_addhost" );
@@ -1989,17 +2012,7 @@ sub create_menubar() {
         ],
     );
 
-    $menus{send} = $menus{bar}->cascade(
-        -label     => 'Send',
-        -menuitems => [
-            [   "command",
-                "Hostname",
-                -command     => \&send_clientname,
-                -accelerator => $config{key_clientname},
-            ],
-        ],
-        -tearoff => 1,
-    );
+    $menus{send} = create_send_menu();
 
     $menus{help} = $menus{bar}->cascade(
         -label     => 'Help',
@@ -2018,6 +2031,81 @@ sub create_menubar() {
     $windows{main_window}->bind( '<KeyPress>'   => \&key_event, );
     $windows{main_window}->bind( '<KeyRelease>' => \&key_event, );
     logmsg( 2, "create_menubar: completed" );
+}
+
+sub create_send_menu_entries_from_xml {
+    my ($menu_xml) = @_;
+    my $menu_items;
+
+    foreach my $menu_ref ( @{ $menu_xml->{menu} } ) {
+        my @menu_entry;
+        if ( $menu_ref->{menu} ) {
+            push( @menu_entry, 'cascade' );
+            push( @menu_entry, $menu_ref->{title} );
+            push( @menu_entry,
+                '-menuitems' => create_send_menu_entries_from_xml($menu_ref)
+            );
+        }
+        else {
+            push( @menu_entry, 'command' );
+            push( @menu_entry, $menu_ref->{title} );
+            if ( $menu_ref->{command} ) {
+                push(
+                    @menu_entry,
+                    '-command',
+                    [   sub {
+                            send_text_to_all_servers(
+                                $menu_ref->{command}[0] );
+                            }
+                    ]
+                );
+            }
+            if ( $menu_ref->{accelerator} ) {
+                push( @menu_entry,
+                    '-accelerator', $menu_ref->{accelerator}[0] );
+            }
+        }
+        push( @$menu_items, [@menu_entry] );
+    }
+
+    return $menu_items;
+}
+
+sub create_send_menu {
+    my @menu_items = ();
+    if ( !-r $config{send_menu_xml_file} ) {
+        logmsg( 2, 'Using default send menu' );
+
+        @menu_items = [
+            [   "command"    => "Hostname",
+                -command     => [ \&send_text_to_all_servers, '%s' ],
+                -accelerator => $config{key_clientname},
+            ],
+        ];
+    }
+    else {
+        logmsg(
+            2,
+            'Using xml send menu definition from ',
+            $config{send_menu_xml_file}
+        );
+
+        eval { require XML::Simple; };
+        die 'Cannot load XML::Simple - has it been installed?  ', $@ if ($@);
+
+        my $xml = XML::Simple->new( ForceArray => 1, );
+        my $xml_data = $xml->XMLin( $config{send_menu_xml_file} );
+
+        logmsg( 3, 'xml send menu: ', $/, $xml->XMLout($xml_data) );
+
+        @menu_items = create_send_menu_entries_from_xml($xml_data);
+    }
+
+    return $menus{bar}->cascade(
+        -label     => 'Send',
+        -menuitems => @menu_items,
+        -tearoff   => 1,
+    );
 }
 
 ### main ###
@@ -2429,7 +2517,7 @@ S<$ crsh server1 server2>
 
 =over
 
-=item /etc/clusters
+=item F</etc/clusters>
 
 This file contains a list of tags to server names mappings.  When any name
 is used on the command line it is checked to see if it is a tag.
@@ -2681,6 +2769,66 @@ left and then up
 B<NOTE:> The key shortcut modifiers must be in the form "Control", "Alt", or 
 "Shift", i.e. with the first letter capitalised and the rest lower case.  Keys
 may also be disabled individually by setting to the word "null".
+
+=item F<$HOME/.csshrc_send_menu>
+
+This (optional) file contains items to populate the send menu.  The
+default entry could be written as:
+
+  <send_menu>
+    <menu title="Hostname">
+        <command>%s</command>
+        <accelerator>ALT-n</accelerator>
+    </menu>
+  </send_menu>
+
+Submenus can also be specified as follows:
+
+  <send_menu>
+    <menu title="Default Entries">
+      <menu title="Hostname">
+          <command>%s</command>
+          <accelerator>ALT-n</accelerator>
+      </menu>
+    </menu>
+  </send_menu>
+
+B<Caveats:> 
+
+=over 4
+
+=item There is currently no strict format checking of this file.
+
+=item The format of the file may change in the future
+
+=item If the file exists the default entry (Hostname) is not added
+
+=back
+
+The following replacement macros are available:
+
+=over 4
+
+=item %s 
+
+Hostname part of the specific connection string to each client, minus any 
+username or port
+
+=item %u
+
+Username part of the connection string to each client
+
+=item %h 
+
+Hostname of server where cssh is being run from
+
+=item %n
+
+<RETURN> code
+
+=back
+
+B<NOTE:> requires L<XML::Simple> to be installed
 
 =back
 
