@@ -2012,7 +2012,12 @@ sub create_menubar() {
         ],
     );
 
-    $menus{send} = create_send_menu();
+    $menus{send} = $menus{bar}->cascade(
+        -label   => 'Send',
+        -tearoff => 1,
+    );
+
+    populate_send_menu();
 
     $menus{help} = $menus{bar}->cascade(
         -label     => 'Help',
@@ -2033,55 +2038,54 @@ sub create_menubar() {
     logmsg( 2, "create_menubar: completed" );
 }
 
-sub create_send_menu_entries_from_xml {
-    my ($menu_xml) = @_;
-    my $menu_items;
+sub populate_send_menu_entries_from_xml {
+    my ( $menu, $menu_xml ) = @_;
 
     foreach my $menu_ref ( @{ $menu_xml->{menu} } ) {
-        my @menu_entry;
         if ( $menu_ref->{menu} ) {
-            push( @menu_entry, 'cascade' );
-            push( @menu_entry, $menu_ref->{title} );
-            push( @menu_entry,
-                '-menuitems' => create_send_menu_entries_from_xml($menu_ref)
+            $menus{ $menu_ref->{title} }
+                = $menu->cascade( -label => $menu_ref->{title}, );
+            populate_send_menu_entries_from_xml( 
+                $menus{ $menu_ref->{title} },
+                $menu_ref,
             );
+            if ( $menu_ref->{detach} && $menu_ref->{detach} =~ m/y/i ) {
+                $menus{ $menu_ref->{title} }->menu->tearOffMenu()->raise;
+            }
         }
         else {
-            push( @menu_entry, 'command' );
-            push( @menu_entry, $menu_ref->{title} );
+            my $command     = undef;
+            my $accelerator = undef;
             if ( $menu_ref->{command} ) {
-                push(
-                    @menu_entry,
-                    '-command',
-                    [   sub {
-                            send_text_to_all_servers(
-                                $menu_ref->{command}[0] );
-                            }
-                    ]
-                );
+                $command = sub {
+                    send_text_to_all_servers( $menu_ref->{command}[0] );
+                };
             }
             if ( $menu_ref->{accelerator} ) {
-                push( @menu_entry,
-                    '-accelerator', $menu_ref->{accelerator}[0] );
+                $accelerator = $menu_ref->{accelerator};
             }
+            $menu->command(
+                -label       => $menu_ref->{title},
+                -command     => $command,
+                -accelerator => $accelerator,
+            );
         }
-        push( @$menu_items, [@menu_entry] );
     }
 
-    return $menu_items;
+    return;
 }
 
-sub create_send_menu {
-    my @menu_items = ();
+sub populate_send_menu {
+
+    #    my @menu_items = ();
     if ( !-r $config{send_menu_xml_file} ) {
         logmsg( 2, 'Using default send menu' );
 
-        @menu_items = [
-            [   "command"    => "Hostname",
-                -command     => [ \&send_text_to_all_servers, '%s' ],
-                -accelerator => $config{key_clientname},
-            ],
-        ];
+        $menus{send}->command(
+            -label       => 'Hostname',
+            -command     => [ \&send_text_to_all_servers, '%s' ],
+            -accelerator => $config{key_clientname},
+        );
     }
     else {
         logmsg(
@@ -2098,14 +2102,10 @@ sub create_send_menu {
 
         logmsg( 3, 'xml send menu: ', $/, $xml->XMLout($xml_data) );
 
-        @menu_items = create_send_menu_entries_from_xml($xml_data);
+        populate_send_menu_entries_from_xml( $menus{send}, $xml_data );
     }
 
-    return $menus{bar}->cascade(
-        -label     => 'Send',
-        -menuitems => @menu_items,
-        -tearoff   => 1,
-    );
+    return;
 }
 
 ### main ###
@@ -2786,6 +2786,7 @@ Submenus can also be specified as follows:
 
   <send_menu>
     <menu title="Default Entries">
+      <detach>yes</detach>
       <menu title="Hostname">
           <command>%s</command>
           <accelerator>ALT-n</accelerator>
