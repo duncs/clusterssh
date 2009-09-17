@@ -2045,10 +2045,8 @@ sub populate_send_menu_entries_from_xml {
         if ( $menu_ref->{menu} ) {
             $menus{ $menu_ref->{title} }
                 = $menu->cascade( -label => $menu_ref->{title}, );
-            populate_send_menu_entries_from_xml( 
-                $menus{ $menu_ref->{title} },
-                $menu_ref,
-            );
+            populate_send_menu_entries_from_xml( $menus{ $menu_ref->{title} },
+                $menu_ref, );
             if ( $menu_ref->{detach} && $menu_ref->{detach} =~ m/y/i ) {
                 $menus{ $menu_ref->{title} }->menu->tearOffMenu()->raise;
             }
@@ -2098,11 +2096,15 @@ sub populate_send_menu {
         die 'Cannot load XML::Simple - has it been installed?  ', $@ if ($@);
 
         my $xml = XML::Simple->new( ForceArray => 1, );
-        my $xml_data = $xml->XMLin( $config{send_menu_xml_file} );
+        my $menu_xml = $xml->XMLin( $config{send_menu_xml_file} );
 
-        logmsg( 3, 'xml send menu: ', $/, $xml->XMLout($xml_data) );
+        logmsg( 3, 'xml send menu: ', $/, $xml->XMLout($menu_xml) );
 
-        populate_send_menu_entries_from_xml( $menus{send}, $xml_data );
+        if ( $menu_xml->{detach} && $menu_xml->{detach} =~ m/y/i ) {
+            $menus{send}->menu->tearOffMenu()->raise;
+        }
+
+        populate_send_menu_entries_from_xml( $menus{send}, $menu_xml );
     }
 
     return;
