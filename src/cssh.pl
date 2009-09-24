@@ -50,12 +50,7 @@
 #     http://www.opensource.org/licenses/gpl-license.php
 #
 ############################################################################
-my $VERSION = '$Revision$ ($Date$)';
-
-# Now tidy it up, but in such as way cvs doesn't kill the tidy up stuff
-$VERSION =~ s/\$Revision: //;
-$VERSION =~ s/\$Date: //;
-$VERSION =~ s/ \$//g;
+my $VERSION = '3.27';
 
 ### all use statements ###
 use strict;

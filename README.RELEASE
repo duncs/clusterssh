@@ -14,7 +14,7 @@ Run "./reconf"
 Run "./configure"
 Run "make distcheck" to ensure the package builds correctly
 Modify "ChangeLog" as necessary
-Update version in configure.in
+Update version in configure.in and src/cssh.pl
 When all is ok, modify "cluster.spec" as necssary 
 	NOTE: always check "Release:" and "Version:" and "%changelog"
 Run "make dist" and release as appropriate.
