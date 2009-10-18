@@ -1,3 +1,8 @@
+0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.28
+
+* Look for usernames when adding clusters
+- Thanks to Kristian Lyngstol for the patch
+
 2009-09-24 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.27
 
 * Add in list of clusters to 'Add Host' window 

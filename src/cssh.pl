@@ -689,10 +689,18 @@ sub resolve_names(@) {
     my @servers = @_;
 
     foreach (@servers) {
+        my $dirty = $_;
+        my $username = "";
+        my $node;
         logmsg( 3, "Found server $_" );
 
-        if ( $clusters{$_} ) {
-            push( @servers, split( / /, $clusters{$_} ) );
+        if ( $dirty =~ s/^(.*)@// ) {
+            $username = $1;
+        }
+        if ( $clusters{$dirty} ) {
+            foreach $node (split( / /, $clusters{$dirty})) {
+                push( @servers, $username . "@" . $node );
+            }
             $_ = "";
         }
     }
