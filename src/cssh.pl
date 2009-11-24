@@ -433,7 +433,8 @@ sub check_ssh_hostnames {
     if ( -r $ssh_config && open( SSHCFG, "<", $ssh_config ) ) {
         while (<SSHCFG>) {
             next unless (m/^\s*host\s+([\w\.-]+)/i);
-            $ssh_hostnames{$1} = 1;
+            # account for multiple declarations of hosts
+            $ssh_hostnames{$_} = 1 foreach (split(/\s+/, $1) );
         }
         close(SSHCFG);
     }
