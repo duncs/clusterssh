@@ -433,8 +433,9 @@ sub check_ssh_hostnames {
     if ( -r $ssh_config && open( SSHCFG, "<", $ssh_config ) ) {
         while (<SSHCFG>) {
             next unless (m/^\s*host\s+([\w\.-]+)/i);
+
             # account for multiple declarations of hosts
-            $ssh_hostnames{$_} = 1 foreach (split(/\s+/, $1) );
+            $ssh_hostnames{$_} = 1 foreach ( split( /\s+/, $1 ) );
         }
         close(SSHCFG);
     }
@@ -690,7 +691,7 @@ sub resolve_names(@) {
     my @servers = @_;
 
     foreach (@servers) {
-        my $dirty = $_;
+        my $dirty    = $_;
         my $username = "";
         my $node;
         logmsg( 3, "Found server $_" );
@@ -699,7 +700,7 @@ sub resolve_names(@) {
             $username = $1;
         }
         if ( $clusters{$dirty} ) {
-            foreach $node (split( / /, $clusters{$dirty})) {
+            foreach $node ( split( / /, $clusters{$dirty} ) ) {
                 push( @servers, $username . "@" . $node );
             }
             $_ = "";
