@@ -4,6 +4,8 @@
 - Thanks to Kristian Lyngstol for the patch
 * Account for multiple host definitions within ssh configuration file
 - Thanks to anonymous for the patch
+* Allow for long line continuation in config files with a backslash
+- Thanks to Mike Loseke for the patch
 
 2009-09-24 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.27
 

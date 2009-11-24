@@ -278,13 +278,20 @@ sub parse_config_file($) {
     return if ( !-e $config_file || !-r $config_file );
 
     open( CFG, $config_file ) or die("Couldnt open $config_file: $!");
-    while (<CFG>) {
-        next if ( /^\s*$/ || /^#/ );    # ignore blank lines & commented lines
-        s/#.*//;                        # remove comments from remaining lines
-        s/\s*$//;                       # remove trailing whitespace
-        chomp();
+    my $l;
+    while ( defined( $l = <CFG> ) ) {
+        next
+            if ( $l =~ /^\s*$/ || $l =~ /^#/ )
+            ;    # ignore blank lines & commented lines
+        $l =~ s/#.*//;     # remove comments from remaining lines
+        $l =~ s/\s*$//;    # remove trailing whitespace
+        chomp $l;
+        if ( $l =~ s/\\\s*$// ) {
+            $l .= <CFG>;
+            redo unless eof(CFG);
+        }
 
-        next unless m/\s*(\S+)\s*=\s*(.*)\s*/;
+        next unless $l =~ m/\s*(\S+)\s*=\s*(.*)\s*/;
         my ( $key, $value ) = ( $1, $2 );
         $config{$key} = $value;
         logmsg( 3, "$key=$value" );
@@ -609,11 +616,17 @@ sub get_clusters() {
     if ( -f $cluster_file ) {
         logmsg( 2, "Loading clusters in from $cluster_file" );
         open( CLUSTERS, $cluster_file ) || die("Couldnt read $cluster_file");
-        while (<CLUSTERS>) {
+        my $l;
+        while ( defined( $l = <CLUSTERS> ) ) {
             next
-                if ( /^\s*$/ || /^#/ ); # ignore blank lines & commented lines
-            chomp();
-            my @line = split(/\s/);
+                if ( $l =~ /^\s*$/ || $l =~ /^#/ )
+                ;    # ignore blank lines & commented lines
+            chomp $l;
+            if ( $l =~ s/\\\s*$// ) {
+                $l .= <CLUSTER>;
+                redo unless eof(CLUSTERS);
+            }
+            my @line = split( /\s/, $l );
 
         #s/^([\w-]+)\s*//;               # remote first word and stick into $1
 
@@ -623,7 +636,7 @@ sub get_clusters() {
                 join( " ", @line[ 1 .. $#line ] )
             );
             $clusters{ $line[0] } = join( " ", @line[ 1 .. $#line ] )
-                ;                       # Now bung in rest of line
+                ;    # Now bung in rest of line
         }
         close(CLUSTERS);
     }
@@ -665,11 +678,16 @@ sub get_clusters() {
                 logmsg( 2, "Loading clusters in from '$file'" );
 
                 open( CLUSTERS, $file ) || die("Couldnt read '$file': $!\n");
-                while (<CLUSTERS>) {
-                    next if ( /^\s*$/ || /^#/ );
-                    chomp;
+                my $l;
+                while ( defined( $l = <CLUSTERS> ) ) {
+                    next if ( $l =~ /^\s*$/ || $l =~ /^#/ );
+                    chomp $l;
+                    if ( $l =~ s/\\\s*$// ) {
+                        $l .= <CLUSTER>;
+                        redo unless eof(CLUSTERS);
+                    }
 
-                    my @line = split(/\s/);
+                    my @line = split( /\s/, $l );
                     logmsg(
                         3,
                         "cluster $line[0] = ",
