@@ -705,38 +705,36 @@ sub get_clusters() {
 }
 
 sub resolve_names(@) {
-    logmsg( 2, "Resolving cluster names: started" );
+    logmsg( 2, 'Resolving cluster names: started' );
     my @servers = @_;
 
     foreach (@servers) {
         my $dirty    = $_;
-        my $username = "";
-        my $node;
-        logmsg( 3, "Found server $_" );
+        my $username = q{};
+        logmsg( 3, 'Checking tag ',$_ );
 
         if ( $dirty =~ s/^(.*)@// ) {
             $username = $1;
         }
         if ( $clusters{$dirty} ) {
-            foreach $node ( split( / /, $clusters{$dirty} ) ) {
-                push( @servers, $username . "@" . $node );
+            logmsg( 3, '... it is a cluster' );
+            foreach my $node ( split( / /, $clusters{$dirty} ) ) {
+                if($username) {
+                    $node =~ s/^(.*)@//;
+                    $node = $username . '@' . $node;
+                }
+                push( @servers, $node );
             }
-            $_ = "";
+            $_ = q{};
         }
     }
 
-    my @cleanarray;
-
     # now clean the array up
-    foreach (@servers) {
-        push( @cleanarray, $_ ) if ( $_ !~ /^$/ );
-    }
+    @servers = grep { $_ !~ m/^$/} @servers;
 
-    foreach (@cleanarray) {
-        logmsg( 3, "leaving with $_" );
-    }
-    logmsg( 2, "Resolving cluster names: completed" );
-    return (@cleanarray);
+    logmsg( 3, 'leaving with ', $_ ) foreach (@servers);
+    logmsg( 2, 'Resolving cluster names: completed' );
+    return (@servers);
 }
 
 sub change_main_window_title() {
@@ -2470,6 +2468,9 @@ on standard port (e.g not listening on port 22) and ssh_config cannot be used.
 
 Open a series of xterms defined by <tag> within either /etc/clusters or
 F<$HOME/.csshrc> (see L<"FILES">).
+
+Note: specifying a username on a cluster tag will override any usernames 
+defined in the cluster
 
 =back
 

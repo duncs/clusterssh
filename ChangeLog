@@ -2,6 +2,7 @@
 
 * Look for usernames when adding clusters
 - Thanks to Kristian Lyngstol for the patch
+* Allow username@cluster to override all usernames in the cluster
 * Account for multiple host definitions within ssh configuration file
 - Thanks to anonymous for the patch
 * Allow for long line continuation in config files with a backslash
