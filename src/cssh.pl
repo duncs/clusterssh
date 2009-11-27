@@ -307,7 +307,7 @@ sub find_binary($) {
 
     logmsg( 2, "Looking for $binary" );
     my $path;
-    if ( !-x $binary ) {
+    if ( !-x $binary || substr($binary, 0, 1) ne '/' ) {
 
        # search the users $PATH and then a few other places to find the binary
        # just in case $PATH isnt set up right
@@ -326,7 +326,7 @@ sub find_binary($) {
         {
             logmsg( 3, "Looking in $_" );
 
-            if ( -x $_ . '/' . $binary ) {
+            if ( -f $_ . '/' . $binary && -x $_ . '/' . $binary ) {
                 $path = $_ . '/' . $binary;
                 logmsg( 2, "Found at $path" );
                 last;

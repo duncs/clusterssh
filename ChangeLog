@@ -6,6 +6,10 @@
 - Thanks to anonymous for the patch
 * Allow for long line continuation in config files with a backslash
 - Thanks to Mike Loseke for the patch
+* Improve binary search to 
+  - ignore directories of the same name, and 
+  - always search for the binary if it is not fully qualified
+- Thanks to Ian Marsh for the patch
 
 2009-09-24 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.27
 
