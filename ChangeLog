@@ -11,6 +11,7 @@
   - ignore directories of the same name, and 
   - always search for the binary if it is not fully qualified
 - Thanks to Ian Marsh for the patch
+* Always use the given host name, not the resolved host name, when opening the ssh connection (Debian bug 533406)
 
 2009-09-24 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.27
 
