@@ -7,6 +7,8 @@ license: gpl
 resources:
   license: http://www.gnu.org/licenses/old-licenses/gpl-1.0.txt
 requires:
+  Tk: 800.022
+  X11::Protocol: 0
   version: 0
 provides:
   App::ClusterSSH:
