@@ -1,62 +1,52 @@
-Introduction
-============
+App-ClusterSSH
 
-This utility allows multiple terminal sessions to be controlled from
-a single "console".  This allows for performing the same action on 
-multiple hosts concurrently.
+The README is used to introduce the module and provide instructions on
+how to install the module, any machine dependencies it may have (for
+example C compilers and installed libraries) and any other information
+that should be provided before the module is installed.
 
-Quick Install Guide
-===================
+A README file is required for CPAN modules since CPAN extracts the README
+file from a module distribution so that people browsing the archive
+can use it to get an idea of the module's uses. It is usually a good idea
+to provide version information here so that people can decide whether
+fixes for the module are worth downloading.
 
-Ensure you have the pre-requisite perl modules installed.  Required 
-modules are:
 
-	Tk
-	X11::Protocol
+INSTALLATION
 
-For each of these modules, run the following command.  If it fails, 
-either install from your apt-get or yum repositories, or download 
-and install the module from http://search.cpan.org/
+To install this module, run the following commands:
 
-	$ perl -M<module> -e "print"
-i.e.
-	$ perl -MTk -e "print"
+	perl Build.PL
+	./Build
+	./Build test
+	./Build install
 
-If all modules are present, perform the following:
+SUPPORT AND DOCUMENTATION
 
-	$ ./configure
-	$ make
-	$ make install
+After installing, you can find documentation for this module with the
+perldoc command.
 
-For more advanced options, refer to the INSTALL file.
+    perldoc App::ClusterSSH
 
-You should now be able to run
-	$ cssh <server1> <server2>
+You can also look for information at:
 
-Read the documentation for further information.
+    RT, CPAN's request tracker
+        http://rt.cpan.org/NoAuth/Bugs.html?Dist=App-ClusterSSH
 
-Documentation
-=============
+    AnnoCPAN, Annotated CPAN documentation
+        http://annocpan.org/dist/App-ClusterSSH
 
-All documentation is held within cssh itself.  Access the man page 
-by
-	$ perldoc cssh
-Further documentation and a FAQ are avaialble from the homepage
+    CPAN Ratings
+        http://cpanratings.perl.org/d/App-ClusterSSH
 
-Announcements & New Version
-===========================
+    Search CPAN
+        http://search.cpan.org/dist/App-ClusterSSH/
 
-Please subscribe to the new announcements mailing list here
-	http://lists.sourceforge.net/lists/listinfo/clusterssh-announce
 
-Web Homepage
-===============
+COPYRIGHT AND LICENCE
 
-	http://clusterssh.sourceforge.net/
+Copyright (C) 2009 Duncan Ferguson
 
-Further Support and Bugs/Featuer Requests
-=========================================
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
 
-Please log all requests for help in the forums on the web site.
-
-$Id$
