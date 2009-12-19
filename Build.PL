@@ -7,7 +7,9 @@ my $build = Module::Build->new(
     module_name  => 'App::ClusterSSH',
     license      => 'gpl',
     requires     => {
-        'version'  => '0',
+        'version'       => '0',
+        'Tk'            => 800.022,
+        'X11::Protocol' => 0,
     },
     build_requires => {
     },
