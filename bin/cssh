@@ -1,4 +1,4 @@
-# - perl *-
+#!/usr/bin/perl
 # $Id$
 #
 # Script:
@@ -50,13 +50,11 @@
 #     http://www.opensource.org/licenses/gpl-license.php
 #
 ############################################################################
-my $VERSION = '3.28';
-
-### all use statements ###
 use strict;
 use warnings;
 
-use 5.006_000;
+use 5.008_004;
+
 use Pod::Usage;
 use Getopt::Long qw(:config no_ignore_case bundling no_auto_abbrev);
 use POSIX qw/:sys_wait_h strftime mkfifo/;
@@ -79,9 +77,15 @@ use Carp;
 use Sys::Hostname;
 use English;
 
+use FindBin;
+use lib $FindBin::Bin.'/../lib';
+use App::ClusterSSH;
+
 ### all global variables ###
 my $scriptname = $0;
 $scriptname =~ s!.*/!!;    # get the script name, minus the path
+
+my $VERSION=$App::ClusterSSH::VERSION;
 
 # Command line options list
 my @options_spec = (
