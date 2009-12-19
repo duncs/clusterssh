@@ -1,0 +1,18 @@
+---
+name: App-ClusterSSH
+version: 4.00_01
+author: []
+abstract: The great new App::ClusterSSH!
+license: gpl
+resources:
+  license: http://www.gnu.org/licenses/old-licenses/gpl-1.0.txt
+requires:
+  version: 0
+provides:
+  App::ClusterSSH:
+    file: lib/App/ClusterSSH.pm
+    version: 4.00_01
+generated_by: Module::Build version 0.33
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4

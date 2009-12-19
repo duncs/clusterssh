@@ -3,3 +3,4 @@ _build/
 Build
 cover_db/
 *.swp
+*.tar.gz
