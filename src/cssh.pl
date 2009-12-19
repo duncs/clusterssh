@@ -50,7 +50,7 @@
 #     http://www.opensource.org/licenses/gpl-license.php
 #
 ############################################################################
-my $VERSION = '3.27';
+my $VERSION = '3.28';
 
 ### all use statements ###
 use strict;

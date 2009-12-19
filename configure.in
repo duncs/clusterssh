@@ -16,7 +16,7 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 # 
 AC_INIT
-AM_INIT_AUTOMAKE(clusterssh,3.27)
+AM_INIT_AUTOMAKE(clusterssh,3.28)
 AC_PATH_PROGS(PERL, perl perl5)
 if test ${sysconfdir} = '${prefix}/etc'; then
 	sysconfdir=/etc
