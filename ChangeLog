@@ -1,3 +1,8 @@
+0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.29
+
+* Handle hostnames containing % properly (Debian bug  543368)
+- Thanks to Tony Mancill for the patch
+
 2009-12-19 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.28
 
 * Look for usernames when adding clusters

@@ -963,7 +963,7 @@ sub split_hostname {
 
     # check for correct syntax of using [<IPv6 address>]
     # See http://tools.ietf.org/html/rfc2732 for more details
-    if ( $connect_string =~ m/^\[([\w:]+)\](?::(\d+))?$/xsm ) {
+    if ( $connect_string =~ m/^\[([\w:%]+)\](?::(\d+))?$/xsm ) {
         logmsg( 3, 'connect_string contains IPv6 address' );
         $server = $1;
         $port   = $2;
@@ -1001,7 +1001,7 @@ sub split_hostname {
                # method will warn if it cannot connect anyhow
                # However, this also catchs IPv4 addresses, possibly with ports
                 ( $server, $port )
-                    = $connect_string =~ m/^([\w.-]+)(?::(\d+))?$/xsm;
+                    = $connect_string =~ m/^([\w%.-]+)(?::(\d+))?$/xsm;
             }
         }
     }
