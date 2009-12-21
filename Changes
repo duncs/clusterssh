@@ -1,4 +1,8 @@
-0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.29
+0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_01 - unrelased
+
+* Remove GNU tools and switch to Perl module layout using Module::Build
+
+0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.29 - unrelased
 
 * Handle hostnames containing % properly (Debian bug  543368)
 - Thanks to Tony Mancill for the patch
