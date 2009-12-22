@@ -3,12 +3,12 @@ name: App-ClusterSSH
 version: 4.00_01
 author: []
 abstract: The great new App::ClusterSSH!
-license: gpl
+license: perl
 resources:
-  license: http://www.gnu.org/licenses/old-licenses/gpl-1.0.txt
+  license: http://dev.perl.org/licenses/
 requires:
   Tk: 800.022
-  X11::Protocol: 0
+  X11::Protocol: 0.56
   version: 0
 provides:
   App::ClusterSSH:

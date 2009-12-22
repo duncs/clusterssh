@@ -8,8 +8,8 @@ my $build = Module::Build->new(
     license      => 'perl',
     requires     => {
         'version'       => '0',
-        'Tk'            => 800.022,
-        'X11::Protocol' => 0,
+        'Tk'            => '800.022',
+        'X11::Protocol' => '0.56',
     },
     build_requires => {
     },
