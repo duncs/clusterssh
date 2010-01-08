@@ -1,16 +1,20 @@
 App-ClusterSSH
 
-The README is used to introduce the module and provide instructions on
-how to install the module, any machine dependencies it may have (for
-example C compilers and installed libraries) and any other information
-that should be provided before the module is installed.
+The is the Perl application bundle for ClusterSSH (a.k.a cssh), formally
+a GNU tools based project.
 
-A README file is required for CPAN modules since CPAN extracts the README
-file from a module distribution so that people browsing the archive
-can use it to get an idea of the module's uses. It is usually a good idea
-to provide version information here so that people can decide whether
-fixes for the module are worth downloading.
+ClusterSSH is a tool for making the same change on multiple servers at 
+the same time.  The 'cssh' command opens an administration console and 
+an xterm to all specified hosts.  Any text typed into the administration 
+console is replicated to all windows.  All windows may also be typed into
+directly.
 
+This tool is intended for (but not limited to) cluster administration
+where the same configuration or commands must be run on each node
+within the cluster.  Performing these commands all at once via this
+tool ensures all nodes are kept in sync.
+
+For more information, go to http://clusterssh.sourceforge.net
 
 INSTALLATION
 
@@ -26,12 +30,20 @@ SUPPORT AND DOCUMENTATION
 After installing, you can find documentation for this module with the
 perldoc command.
 
-    perldoc App::ClusterSSH
+    perldoc cssh
+
+or (if your MANPATH is set up appropriately)
+
+    man cssh
 
 You can also look for information at:
 
-    RT, CPAN's request tracker
-        http://rt.cpan.org/NoAuth/Bugs.html?Dist=App-ClusterSSH
+    Web site and SourceForge project page
+        http://clusterssh.sourceforge.net
+        http://sourceforge.net/projects/clusterssh/
+
+    Project support area
+        https://sourceforge.net/projects/clusterssh/support
 
     AnnoCPAN, Annotated CPAN documentation
         http://annocpan.org/dist/App-ClusterSSH
