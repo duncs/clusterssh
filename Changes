@@ -1,4 +1,4 @@
-0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_01
+2010-01-08 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_01
 
 * Remove GNU tools and switch to Perl module layout using Module::Build
 
