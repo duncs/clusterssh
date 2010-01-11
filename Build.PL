@@ -19,7 +19,10 @@ my $build = Module::Build->new(
         'Tk'            => '800.022',
         'X11::Protocol' => '0.56',
     },
-    build_requires => {},
+    build_requires => {
+        'Test::Pod::Coverage' => 0,
+        'Test::Pod'           => 0,
+    },
     script_files   => 'bin',
 );
 
