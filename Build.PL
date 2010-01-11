@@ -15,9 +15,10 @@ my $build = Module::Build->new(
     module_name => 'App::ClusterSSH',
     license     => 'perl',
     requires    => {
-        'version'       => '0',
-        'Tk'            => '800.022',
-        'X11::Protocol' => '0.56',
+        'version'          => '0',
+        'Tk'               => '800.022',
+        'X11::Protocol'    => '0.56',
+        'Locale::Maketext' => 0,
     },
     build_requires => {
         'Test::Pod::Coverage' => 0,
