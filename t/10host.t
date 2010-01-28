@@ -130,8 +130,8 @@ $host = App::ClusterSSH::Host->parse_host_string('host%name');
 isa_ok( $host, "App::ClusterSSH::Host" );
 is( $host,               'host%name', 'stringify works' );
 is( $host->get_hostname, 'host%name', 'checking set works' );
-is( $host->get_port,     undef,      'checking set works' );
-is( $host->get_username, undef,      'username is undef' );
+is( $host->get_port,     undef,       'checking set works' );
+is( $host->get_username, undef,       'username is undef' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
@@ -147,8 +147,8 @@ $host = App::ClusterSSH::Host->parse_host_string('host%name:2323');
 isa_ok( $host, "App::ClusterSSH::Host" );
 is( $host,               'host%name', 'stringify works' );
 is( $host->get_hostname, 'host%name', 'checking set works' );
-is( $host->get_port,     2323,       'checking set works' );
-is( $host->get_username, undef,      'username is undef' );
+is( $host->get_port,     2323,        'checking set works' );
+is( $host->get_username, undef,       'username is undef' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
@@ -164,8 +164,8 @@ $host = App::ClusterSSH::Host->parse_host_string('username@host%name:2323');
 isa_ok( $host, "App::ClusterSSH::Host" );
 is( $host,               'host%name', 'stringify works' );
 is( $host->get_hostname, 'host%name', 'checking set works' );
-is( $host->get_port,     2323,       'checking set works' );
-is( $host->get_username, 'username', 'username is set' );
+is( $host->get_port,     2323,        'checking set works' );
+is( $host->get_username, 'username',  'username is set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
@@ -181,8 +181,8 @@ $host = App::ClusterSSH::Host->parse_host_string('username@host%name');
 isa_ok( $host, "App::ClusterSSH::Host" );
 is( $host,               'host%name', 'stringify works' );
 is( $host->get_hostname, 'host%name', 'checking set works' );
-is( $host->get_port,     undef,      'checking set works' );
-is( $host->get_username, 'username', 'username is set' );
+is( $host->get_port,     undef,       'checking set works' );
+is( $host->get_username, 'username',  'username is set' );
 
 diag('Parsing IPv4 IP address') if ( $ENV{TEST_VERBOSE} );
 
@@ -316,5 +316,57 @@ like( $trap->stderr, qr/Assuming you meant "\[2001:0db8:85a3::8a2e:0370:7334\]"?
 is( $host->get_hostname, '2001:0db8:85a3::8a2e:0370:7334', 'checking set works' );
 is( $host->get_port,     undef,                            'port is undef' );
 is( $host->get_username, undef,                            'username is undef' );
+
+$host = undef;
+is( $host, undef, 'starting afresh' );
+
+trap {
+    $host = App::ClusterSSH::Host->new( hostname => 'ssh_test', ssh_config => $Bin . '/10host_ssh_config', );
+};
+is( $trap->leaveby, 'return', 'returned ok' );
+is( $trap->die,     undef,    'returned ok' );
+isa_ok( $host, "App::ClusterSSH::Host" );
+is( $host,                     'ssh_test', 'stringify works' );
+is( $host->check_ssh_hostname, 0,         'check_ssh_hostname ok for ssh_test', );
+
+for my $hostname ( 'server1', 'server2', 'server3', 'server4', 'server-5', 'server5.domain.name', 'server-6.domain.name' ) {
+
+    $host = undef;
+    is( $host, undef, 'starting afresh for ssh hostname checks' );
+
+    trap {
+        $host = App::ClusterSSH::Host->new( hostname => $hostname, ssh_config => $Bin . '/10host_ssh_config', );
+    };
+    is( $trap->leaveby, 'return', 'returned ok' );
+    is( $trap->die,     undef,    'returned ok' );
+    isa_ok( $host, "App::ClusterSSH::Host" );
+    is( $host,                     $hostname, 'stringify works' );
+    is( $host->check_ssh_hostname, 1,         'check_ssh_hostname ok for '. $hostname );
+
+}
+
+#$host = undef;
+#is( $host, undef, ' starting afresh for ssh hostname checks ' );
+#
+#trap {
+#    $host = App::ClusterSSH::Host->new( hostname => ' ssh_text ', ssh_config => $Bin . ' / 10 host_ssh_config ' );
+#};
+#is( $trap->leaveby, ' return ', ' returned ok ' );
+#is( $trap->die,     undef,    ' returned ok ' );
+#isa_ok( $host, "App::ClusterSSH::Host" );
+#is( $host, ' ssh_text ', ' stringify works ' );
+#is( $host->check_ssh_hostname, 0, ' check_ssh_hostname ok ');
+#
+#$host = undef;
+#is( $host, undef, ' starting afresh for ssh hostname checks ' );
+#
+#trap {
+#    $host = App::ClusterSSH::Host->new( hostname => ' ssh_text ', ssh_config => $Bin . ' / 10 host_ssh_config ' );
+#};
+#is( $trap->leaveby, ' return ', ' returned ok ' );
+#is( $trap->die,     undef,    ' returned ok ' );
+#isa_ok( $host, "App::ClusterSSH::Host" );
+#is( $host, ' ssh_text ', ' stringify works ' );
+#is( $host->check_ssh_hostname, 0, ' check_ssh_hostname ok ');
 
 done_testing();

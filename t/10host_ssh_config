@@ -1,0 +1,6 @@
+host server1
+host server2 server3 server4
+host server-5 
+host server5.domain.name
+host server-6.domain.name
+#host server7
