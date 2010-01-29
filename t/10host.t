@@ -20,6 +20,7 @@ is( $host,               'hostname', 'stringify works' );
 is( $host->get_hostname, 'hostname', 'hostname set' );
 is( $host->get_port,     undef,      'checking set works' );
 is( $host->get_username, undef,      'username is undef' );
+is( $host->get_realname, 'hostname', 'realname set' );
 
 $host->set_port(2323);
 
@@ -27,12 +28,14 @@ is( $host,               'hostname', 'stringify works' );
 is( $host->get_hostname, 'hostname', 'checking set works' );
 is( $host->get_port,     2323,       'checking set works' );
 is( $host->get_username, undef,      'username is undef' );
+is( $host->get_realname, 'hostname', 'realname set' );
 
 $host->set_username('username');
 
 is( $host->get_hostname, 'hostname', 'checking set works' );
 is( $host->get_port,     2323,       'checking set works' );
 is( $host->get_username, 'username', 'username is undef' );
+is( $host->get_realname, 'hostname', 'realname set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
@@ -44,6 +47,7 @@ is( $host,               'hostname', 'stringify works' );
 is( $host->get_hostname, 'hostname', 'hostname set' );
 is( $host->get_port,     undef,      'checking set works' );
 is( $host->get_username, undef,      'username is undef' );
+is( $host->get_realname, 'hostname', 'realname set' );
 
 $host->set_port(2323);
 
@@ -51,12 +55,14 @@ is( $host,               'hostname', 'stringify works' );
 is( $host->get_hostname, 'hostname', 'checking set works' );
 is( $host->get_port,     2323,       'checking set works' );
 is( $host->get_username, undef,      'username is undef' );
+is( $host->get_realname, 'hostname', 'realname set' );
 
 $host->set_username('username');
 
 is( $host->get_hostname, 'hostname', 'checking set works' );
 is( $host->get_port,     2323,       'checking set works' );
 is( $host->get_username, 'username', 'username is undef' );
+is( $host->get_realname, 'hostname', 'realname set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
@@ -71,12 +77,14 @@ is( $host,               'hostname', 'stringify works' );
 is( $host->get_hostname, 'hostname', 'hostname set' );
 is( $host->get_port,     2323,       'checking set works' );
 is( $host->get_username, undef,      'username is undef' );
+is( $host->get_realname, 'hostname', 'realname set' );
 
 $host->set_username('username');
 
 is( $host->get_hostname, 'hostname', 'checking set works' );
 is( $host->get_port,     2323,       'checking set works' );
 is( $host->get_username, 'username', 'username is undef' );
+is( $host->get_realname, 'hostname', 'realname set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
@@ -91,12 +99,14 @@ is( $host,               'hostname', 'stringify works' );
 is( $host->get_hostname, 'hostname', 'hostname set' );
 is( $host->get_port,     undef,      'checking set works' );
 is( $host->get_username, 'username', 'username is set' );
+is( $host->get_realname, 'hostname', 'realname set' );
 
 $host->set_port(2323);
 
 is( $host->get_hostname, 'hostname', 'checking set works' );
 is( $host->get_port,     2323,       'checking set works' );
 is( $host->get_username, 'username', 'username is set' );
+is( $host->get_realname, 'hostname', 'realname set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
@@ -113,6 +123,7 @@ is( $host,               'hostname', 'stringify works' );
 is( $host->get_hostname, 'hostname', 'checking set works' );
 is( $host->get_port,     2323,       'checking set works' );
 is( $host->get_username, 'username', 'username is set' );
+is( $host->get_realname, 'hostname', 'realname set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
@@ -125,6 +136,7 @@ is( $host,               'hostname', 'stringify works' );
 is( $host->get_hostname, 'hostname', 'checking set works' );
 is( $host->get_port,     undef,      'checking set works' );
 is( $host->get_username, undef,      'username is undef' );
+is( $host->get_realname, 'hostname', 'realname set' );
 
 $host = App::ClusterSSH::Host->parse_host_string('host%name');
 isa_ok( $host, "App::ClusterSSH::Host" );
@@ -132,6 +144,7 @@ is( $host,               'host%name', 'stringify works' );
 is( $host->get_hostname, 'host%name', 'checking set works' );
 is( $host->get_port,     undef,       'checking set works' );
 is( $host->get_username, undef,       'username is undef' );
+is( $host->get_realname, 'host%name', 'realname set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
@@ -142,6 +155,7 @@ is( $host,               'hostname', 'stringify works' );
 is( $host->get_hostname, 'hostname', 'checking set works' );
 is( $host->get_port,     2323,       'checking set works' );
 is( $host->get_username, undef,      'username is undef' );
+is( $host->get_realname, 'hostname', 'realname set' );
 
 $host = App::ClusterSSH::Host->parse_host_string('host%name:2323');
 isa_ok( $host, "App::ClusterSSH::Host" );
@@ -149,6 +163,7 @@ is( $host,               'host%name', 'stringify works' );
 is( $host->get_hostname, 'host%name', 'checking set works' );
 is( $host->get_port,     2323,        'checking set works' );
 is( $host->get_username, undef,       'username is undef' );
+is( $host->get_realname, 'host%name', 'realname set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
@@ -159,6 +174,7 @@ is( $host,               'hostname', 'stringify works' );
 is( $host->get_hostname, 'hostname', 'checking set works' );
 is( $host->get_port,     2323,       'checking set works' );
 is( $host->get_username, 'username', 'username is set' );
+is( $host->get_realname, 'hostname', 'realname set' );
 
 $host = App::ClusterSSH::Host->parse_host_string('username@host%name:2323');
 isa_ok( $host, "App::ClusterSSH::Host" );
@@ -166,6 +182,7 @@ is( $host,               'host%name', 'stringify works' );
 is( $host->get_hostname, 'host%name', 'checking set works' );
 is( $host->get_port,     2323,        'checking set works' );
 is( $host->get_username, 'username',  'username is set' );
+is( $host->get_realname, 'host%name', 'realname set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
@@ -176,6 +193,7 @@ is( $host,               'hostname', 'stringify works' );
 is( $host->get_hostname, 'hostname', 'checking set works' );
 is( $host->get_port,     undef,      'checking set works' );
 is( $host->get_username, 'username', 'username is set' );
+is( $host->get_realname, 'hostname', 'realname set' );
 
 $host = App::ClusterSSH::Host->parse_host_string('username@host%name');
 isa_ok( $host, "App::ClusterSSH::Host" );
@@ -183,6 +201,7 @@ is( $host,               'host%name', 'stringify works' );
 is( $host->get_hostname, 'host%name', 'checking set works' );
 is( $host->get_port,     undef,       'checking set works' );
 is( $host->get_username, 'username',  'username is set' );
+is( $host->get_realname, 'host%name', 'realname set' );
 
 diag('Parsing IPv4 IP address') if ( $ENV{TEST_VERBOSE} );
 
@@ -192,6 +211,7 @@ is( $host,               '127.0.0.1', 'stringify works' );
 is( $host->get_hostname, '127.0.0.1', 'checking set works' );
 is( $host->get_port,     undef,       'checking set works' );
 is( $host->get_username, undef,       'username is undef' );
+is( $host->get_realname, '127.0.0.1', 'realname set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
@@ -203,6 +223,7 @@ is( $host,               '127.0.0.1', 'stringify works' );
 is( $host->get_hostname, '127.0.0.1', 'checking set works' );
 is( $host->get_port,     2323,        'checking set works' );
 is( $host->get_username, undef,       'username is undef' );
+is( $host->get_realname, '127.0.0.1', 'realname set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
@@ -213,6 +234,7 @@ is( $host,               '127.0.0.1', 'stringify works' );
 is( $host->get_hostname, '127.0.0.1', 'checking set works' );
 is( $host->get_port,     2323,        'checking set works' );
 is( $host->get_username, 'username',  'username is set' );
+is( $host->get_realname, '127.0.0.1', 'realname set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
@@ -224,6 +246,7 @@ is( $host,               '127.0.0.1', 'stringify works' );
 is( $host->get_hostname, '127.0.0.1', 'checking set works' );
 is( $host->get_port,     undef,       'checking set works' );
 is( $host->get_username, 'username',  'username is set' );
+is( $host->get_realname, '127.0.0.1', 'realname set' );
 
 diag('Checking IPv6 type addresses') if ( $ENV{TEST_VERBOSE} );
 
@@ -236,6 +259,7 @@ is( $host,               '::1', 'stringify works' );
 is( $host->get_hostname, '::1', 'checking set works' );
 is( $host->get_port,     undef, 'port is undef' );
 is( $host->get_username, undef, 'username is undef' );
+is( $host->get_realname, '::1', 'realname set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
@@ -246,6 +270,7 @@ is( $host,               '::1',      'stringify works' );
 is( $host->get_hostname, '::1',      'checking set works' );
 is( $host->get_port,     undef,      'port is undef' );
 is( $host->get_username, 'username', 'username is set' );
+is( $host->get_realname, '::1', 'realname set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
@@ -256,6 +281,7 @@ is( $host,               '::1', 'stringify works' );
 is( $host->get_hostname, '::1', 'checking set works' );
 is( $host->get_port,     undef, 'port is undef' );
 is( $host->get_username, undef, 'username is undef' );
+is( $host->get_realname, '::1', 'realname set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
@@ -266,6 +292,7 @@ is( $host,               '::1',      'stringify works' );
 is( $host->get_hostname, '::1',      'checking set works' );
 is( $host->get_port,     undef,      'port is undef' );
 is( $host->get_username, 'username', 'username is set' );
+is( $host->get_realname, '::1', 'realname set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
@@ -276,6 +303,7 @@ is( $host,               '::1', 'stringify works' );
 is( $host->get_hostname, '::1', 'checking set works' );
 is( $host->get_port,     22,    'checking port set' );
 is( $host->get_username, undef, 'username is undef' );
+is( $host->get_realname, '::1', 'realname set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
@@ -286,6 +314,7 @@ is( $host,               '::1',      'stringify works' );
 is( $host->get_hostname, '::1',      'checking set works' );
 is( $host->get_port,     22,         'checking port set' );
 is( $host->get_username, 'username', 'username is set' );
+is( $host->get_realname, '::1', 'realname set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
@@ -296,6 +325,7 @@ is( $host,               '2001:0db8:85a3:0000:0000:8a2e:0370:7334', 'stringify w
 is( $host->get_hostname, '2001:0db8:85a3:0000:0000:8a2e:0370:7334', 'checking set works' );
 is( $host->get_port,     undef,                                     'port is undef' );
 is( $host->get_username, undef,                                     'username is undef' );
+is( $host->get_realname, '2001:0db8:85a3:0000:0000:8a2e:0370:7334', 'realname set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
@@ -316,6 +346,7 @@ like( $trap->stderr, qr/Assuming you meant "\[2001:0db8:85a3::8a2e:0370:7334\]"?
 is( $host->get_hostname, '2001:0db8:85a3::8a2e:0370:7334', 'checking set works' );
 is( $host->get_port,     undef,                            'port is undef' );
 is( $host->get_username, undef,                            'username is undef' );
+is( $host->get_realname, '2001:0db8:85a3::8a2e:0370:7334', 'realname set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
@@ -342,6 +373,7 @@ for my $hostname ( 'server1', 'server2', 'server3', 'server4', 'server-5', 'serv
     isa_ok( $host, "App::ClusterSSH::Host" );
     is( $host,                     $hostname, 'stringify works' );
     is( $host->check_ssh_hostname, 1,         'check_ssh_hostname ok for '. $hostname );
+is( $host->get_realname, $hostname, 'realname set' );
 
 }
 
