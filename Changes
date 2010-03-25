@@ -1,3 +1,7 @@
+????-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_02
+
+* Add in bugtracker and homepage resources to Build.PL file
+
 2010-01-08 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_01
 
 * Remove GNU tools and switch to Perl module layout using Module::Build

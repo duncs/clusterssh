@@ -4,13 +4,15 @@ use warnings;
 use Module::Build;
 
 my $build = Module::Build->new(
-    meta_merge => { 
-        resources => { 
+    meta_merge => {
+        resources => {
             repository => [
                 'http://clusterssh.git.sourceforge.net/',
-                'http://github.com/duncs/clusterssh', 
+                'http://github.com/duncs/clusterssh',
             ],
-        }, 
+            bugtracker => 'http://sourceforge.net/tracker/?group_id=89139',
+            homepage   => 'http://clusterssh.sourceforge.net/',
+        },
     },
     module_name => 'App::ClusterSSH',
     license     => 'perl',
@@ -24,7 +26,7 @@ my $build = Module::Build->new(
         'Test::Pod::Coverage' => 0,
         'Test::Pod'           => 0,
     },
-    script_files   => 'bin',
+    script_files => 'bin',
 );
 
 $build->create_build_script;
