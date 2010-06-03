@@ -3,7 +3,51 @@ package App::ClusterSSH;
 use 5.008.004;
 use warnings;
 use strict;
-use version; our $VERSION = version->new('4.00_01');
+use version; our $VERSION = version->new('4.00_02');
+
+use Carp;
+
+use base qw/ App::ClusterSSH::Base /;
+
+use POSIX ":sys_wait_h";
+use App::ClusterSSH::Gui;
+
+# Notes on general order of processing
+#
+# parse cmd line options for extra config files
+# load system configuration files
+# load cfg files from options
+# overlay rest of cmd line args onto options
+# record all clusters
+# parse givwen tags/hostnames and resolve to connections
+# open terminals
+# optionally open console if required
+
+sub new {
+    my ( $class, %args ) = @_;
+
+    my $self = $class->SUPER::new(%args);
+
+    # catch and reap any zombies
+    $SIG{CHLD} = \&REAPER;
+
+    $self->{gui} = App::ClusterSSH::Gui->new();
+
+    return $self;
+}
+
+sub gui {
+    my ($self) = @_;
+    return $self->{gui};
+}
+
+sub REAPER {
+    my $kid;
+    do {
+        $kid = waitpid( -1, WNOHANG );
+        logmsg( 2, "REAPER currently returns: $kid" );
+    } until ( $kid == -1 || $kid == 0 );
+}
 
 1;
 
