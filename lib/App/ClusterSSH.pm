@@ -2209,29 +2209,107 @@ __END__
 
 =head1 NAME
 
-App::ClusterSSH - The great new App::ClusterSSH!
+App::ClusterSSH - Main module
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
-
-Perhaps a little code snippet.
-
-    use App::ClusterSSH;
-
-    my $foo = App::ClusterSSH->new();
-    ...
-
-=head1 EXPORT
-
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
-
 =head1 FUNCTIONS
 
-=head2 function1
+These functions are listed here to tidy up Pod::Coverage test reports but
+will most likely be moved into other modules.  There are some notes within 
+the code until this time.
 
-=head2 function2
+=over 2
+
+=item REAPER
+
+=item add_host_by_name
+
+=item build_hosts_menu
+
+=item capture_map_events
+
+=item capture_terminal
+
+=item change_main_window_title
+
+=item  check_config
+
+=item  check_ssh_hostnames
+
+=item  close_inactive_sessions
+
+=item  create_menubar
+
+=item  create_windows
+
+=item  dump_config
+
+=item  evaluate_commands
+
+=item  exit_prog
+
+=item  find_binary
+
+=item  get_clusters
+
+=item  get_font_size
+
+=item  get_keycode_state
+
+=item  key_event
+
+=item  load_config_defaults
+
+=item  load_configfile
+
+=item  load_keyboard_map
+
+=item  logmsg
+
+=item  new
+
+=item  open_client_windows
+
+=item  parse_config_file
+
+=item  pick_color
+
+=item  populate_send_menu
+
+=item  populate_send_menu_entries_from_xml
+
+=item  resolve_names
+
+=item  retile_hosts
+
+=item  run
+
+=item  send_resizemove
+
+=item  send_text
+
+=item  send_text_to_all_servers
+
+=item  setup_helper_script
+
+=item  setup_repeat
+
+=item  show_console
+
+=item  show_history
+
+=item  split_hostname
+
+=item  terminate_host
+
+=item  toggle_active_state
+
+=item  update_display_text
+
+=item  write_default_user_config
+                                           
+=back
 
 =head1 AUTHOR
 
@@ -2275,7 +2353,7 @@ L<http://search.cpan.org/dist/App-ClusterSSH/>
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2009 Duncan Ferguson, all rights reserved.
+Copyright 2010 Duncan Ferguson, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
