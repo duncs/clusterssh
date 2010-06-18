@@ -123,8 +123,6 @@ my %windows;     # hash for all window definitions
 my %menus;       # hash for all menu definitions
 my @servers;     # array of servers provided on cmdline
 my %servers;     # hash of server cx info
-my $helper_script = "";
-my $xdisplay;
 my %keyboardmap;
 my $sysconfigdir = "/etc";
 my %ssh_hostnames;
@@ -830,23 +828,23 @@ sub send_text($@) {
 
         for my $event (qw/KeyPress KeyRelease/) {
             logmsg( 2, "sending event=$event code=:$code: state=:$state:" );
-            $xdisplay->SendEvent(
+            $app->gui->xdisplay->SendEvent(
                 $servers{$svr}{wid},
                 0,
-                $xdisplay->pack_event_mask($event),
-                $xdisplay->pack_event(
+                $app->gui->xdisplay->pack_event_mask($event),
+                $app->gui->xdisplay->pack_event(
                     'name'        => $event,
                     'detail'      => $code,
                     'state'       => $state,
                     'time'        => time(),
                     'event'       => $servers{$svr}{wid},
-                    'root'        => $xdisplay->root(),
+                    'root'        => $app->gui->xdisplay->root(),
                     'same_screen' => 1,
                 ),
             );
         }
     }
-    $xdisplay->flush();
+    $app->gui->xdisplay->flush();
 }
 
 sub send_text_to_all_servers {
@@ -864,15 +862,15 @@ sub send_resizemove($$$$$) {
     logmsg( 3,
         "Moving window $win to x:$x_pos y:$y_pos (size x:$x_siz y:$y_siz)" );
 
-    #logmsg( 2, "resize move normal: ", $xdisplay->atom('WM_NORMAL_HINTS') );
-    #logmsg( 2, "resize move size:   ", $xdisplay->atom('WM_SIZE_HINTS') );
+    #logmsg( 2, "resize move normal: ", $app->gui->xdisplay->atom('WM_NORMAL_HINTS') );
+    #logmsg( 2, "resize move size:   ", $app->gui->xdisplay->atom('WM_SIZE_HINTS') );
 
     # set the window to have "user" set size & position, rather than "program"
-    $xdisplay->req(
+    $app->gui->xdisplay->req(
         'ChangeProperty',
         $win,
-        $xdisplay->atom('WM_NORMAL_HINTS'),
-        $xdisplay->atom('WM_SIZE_HINTS'),
+        $app->gui->xdisplay->atom('WM_NORMAL_HINTS'),
+        $app->gui->xdisplay->atom('WM_SIZE_HINTS'),
         32,
         'Replace',
 
@@ -880,7 +878,7 @@ sub send_resizemove($$$$$) {
         pack( 'LLLLL' . 'x[L]' x 12, 1 | 2, $x_pos, $y_pos, $x_siz, $y_siz ),
     );
 
-    $xdisplay->req(
+    $app->gui->xdisplay->req(
         'ConfigureWindow',
         $win,
         'x'      => $x_pos,
@@ -889,51 +887,7 @@ sub send_resizemove($$$$$) {
         'height' => $y_siz,
     );
 
-    #$xdisplay->flush(); # dont flush here, but after all tiling worked out
-}
-
-sub setup_helper_script() {
-    logmsg( 2, "Setting up helper script" );
-    $helper_script = <<"	HERE";
-		my \$pipe=shift;
-		my \$svr=shift;
-		my \$user=shift;
-		my \$port=shift;
-		my \$command="$config{$config{comms}} $config{$config{comms}."_args"} ";
-		open(PIPE, ">", \$pipe) or die("Failed to open pipe: \$!\\n");
-		print PIPE "\$\$:\$ENV{WINDOWID}" 
-			or die("Failed to write to pipe: $!\\n");
-		close(PIPE) or die("Failed to close pipe: $!\\n");
-		if(\$svr =~ m/==\$/)
-		{
-			\$svr =~ s/==\$//;
-			warn("\\nWARNING: failed to resolve IP address for \$svr.\\n\\n"
-			);
-			sleep 5;
-		}
-		if(\$user) {
-			unless("$config{comms}" eq "telnet") {
-				\$user = \$user ? "-l \$user " : "";
-				\$command .= \$user;
-			}
-		}
-		if("$config{comms}" eq "telnet") {
-			\$command .= "\$svr \$port";
-		} else {
-			if (\$port) {
-				\$command .= "-p \$port \$svr";
-			} else {
-			  \$command .= "\$svr";
-			}
-		}
-		\$command .= " $config{command} || sleep 5";
-#		warn("Running:\$command\\n"); # for debug purposes
-		exec(\$command);
-	HERE
-
-    #	eval $helper_script || die ($@); # for debug purposes
-    logmsg( 2, $helper_script );
-    logmsg( 2, "Helper script done" );
+    #$app->gui->xdisplay->flush(); # dont flush here, but after all tiling worked out
 }
 
 sub split_hostname {
@@ -1011,8 +965,9 @@ sub open_client_windows(@) {
         my $server = App::ClusterSSH::Host->parse_host_string($_);
 
         logmsg( 2, 'Working on server ', $server, ' for ', $_ );
-        my $terminal = App::ClusterSSH::Host->new( host => $server, );
+        my $terminal = App::ClusterSSH::Gui::Terminal->new( host => $server, comms => $config{ $config{comms} }, terminal => $config{terminal},);
         logmsg( 2, 'Terminal ID: ', $terminal->get_id, ' for ', $_ );
+
 
         my $color = '';
         if ( $config{terminal_colorize} ) {
@@ -1084,7 +1039,7 @@ sub show_console() {
     # fudge the counter to drop a redraw event;
     $config{internal_map_count} -= 4;
 
-    $xdisplay->flush();
+    $app->gui->xdisplay->flush();
     $windows{main_window}->update();
 
     select( undef, undef, undef, 0.2 );    #sleep for a mo
@@ -1122,9 +1077,9 @@ sub retile_hosts {
             "Not meant to be tiling; just reshow windows as they were" );
 
         foreach my $server ( reverse( keys(%servers) ) ) {
-            $xdisplay->req( 'MapWindow', $servers{$server}{wid} );
+            $app->gui->xdisplay->req( 'MapWindow', $servers{$server}{wid} );
         }
-        $xdisplay->flush();
+        $app->gui->xdisplay->flush();
         show_console();
         return;
     }
@@ -1155,8 +1110,8 @@ sub retile_hosts {
         + $config{terminal_decoration_height};
 
     # fetch screen size
-    $config{internal_screen_height} = $xdisplay->{height_in_pixels};
-    $config{internal_screen_width}  = $xdisplay->{width_in_pixels};
+    $config{internal_screen_height} = $app->gui->xdisplay->{height_in_pixels};
+    $config{internal_screen_width}  = $app->gui->xdisplay->{width_in_pixels};
 
     # Now, work out how many columns of terminals we can fit on screen
     $config{internal_columns} = int(
@@ -1242,10 +1197,10 @@ sub retile_hosts {
         logmsg( 3,
             "x:$current_x y:$current_y, r:$current_row c:$current_col" );
 
-        $xdisplay->req( 'UnmapWindow', $servers{$server}{wid} );
+        $app->gui->xdisplay->req( 'UnmapWindow', $servers{$server}{wid} );
 
         if ( $config{unmap_on_redraw} =~ /yes/i ) {
-            $xdisplay->req( 'UnmapWindow', $servers{$server}{wid} );
+            $app->gui->xdisplay->req( 'UnmapWindow', $servers{$server}{wid} );
         }
 
         logmsg( 2, "Moving $server window" );
@@ -1256,7 +1211,7 @@ sub retile_hosts {
             $config{internal_terminal_height}
         );
 
-        $xdisplay->flush();
+        $app->gui->xdisplay->flush();
         select( undef, undef, undef, 0.1 );    # sleep for a moment for the WM
 
         if ( $config{window_tiling_direction} =~ /right/i ) {
@@ -1295,20 +1250,20 @@ sub retile_hosts {
     if ( $config{window_tiling_direction} =~ /right/i ) {
         foreach my $server ( reverse(@hosts) ) {
             logmsg( 2, "Setting focus on $server" );
-            $xdisplay->req( 'MapWindow', $servers{$server}{wid} );
+            $app->gui->xdisplay->req( 'MapWindow', $servers{$server}{wid} );
 
             # flush every time and wait a moment (The WMs are so slow...)
-            $xdisplay->flush();
+            $app->gui->xdisplay->flush();
             select( undef, undef, undef, 0.1 );    # sleep for a mo
         }
     }
     else {
         foreach my $server (@hosts) {
             logmsg( 2, "Setting focus on $server" );
-            $xdisplay->req( 'MapWindow', $servers{$server}{wid} );
+            $app->gui->xdisplay->req( 'MapWindow', $servers{$server}{wid} );
 
             # flush every time and wait a moment (The WMs are so slow...)
-            $xdisplay->flush();
+            $app->gui->xdisplay->flush();
             select( undef, undef, undef, 0.1 );    # sleep for a mo
         }
     }
@@ -1334,16 +1289,16 @@ sub capture_terminal() {
 
     my %atoms;
 
-    for my $atom ( $xdisplay->req( 'ListProperties', $servers{loki}{wid} ) ) {
-        $atoms{ $xdisplay->atom_name($atom) }
-            = $xdisplay->req( 'GetProperty', $servers{loki}{wid},
+    for my $atom ( $app->gui->xdisplay->req( 'ListProperties', $servers{loki}{wid} ) ) {
+        $atoms{ $app->gui->xdisplay->atom_name($atom) }
+            = $app->gui->xdisplay->req( 'GetProperty', $servers{loki}{wid},
             $atom, "AnyPropertyType", 0, 200, 0 );
 
-        print $xdisplay->atom_name($atom), " ($atom) => ";
+        print $app->gui->xdisplay->atom_name($atom), " ($atom) => ";
         print "join here\n";
         print join(
             "\n",
-            $xdisplay->req(
+            $app->gui->xdisplay->req(
                 'GetProperty', $servers{loki}{wid},
                 $atom, "AnyPropertyType", 0, 200, 0
             )
@@ -1353,10 +1308,10 @@ sub capture_terminal() {
 
     print "list by number\n";
     for my $atom ( 1 .. 90 ) {
-        print "$atom: ", $xdisplay->req( 'GetAtomName', $atom ), "\n";
+        print "$atom: ", $app->gui->xdisplay->req( 'GetAtomName', $atom ), "\n";
         print join(
             "\n",
-            $xdisplay->req(
+            $app->gui->xdisplay->req(
                 'GetProperty', $servers{loki}{wid},
                 $atom, "AnyPropertyType", 0, 200, 0
             )
@@ -1368,7 +1323,7 @@ sub capture_terminal() {
     print "size hints\n";
     print join(
         "\n",
-        $xdisplay->req(
+        $app->gui->xdisplay->req(
             'GetProperty', $servers{loki}{wid},
             42, "AnyPropertyType", 0, 200, 0
         )
@@ -1381,10 +1336,10 @@ sub capture_terminal() {
     }
 
     print "geom\n";
-    print join " ", $xdisplay->req( 'GetGeometry', $servers{loki}{wid} ), $/;
+    print join " ", $app->gui->xdisplay->req( 'GetGeometry', $servers{loki}{wid} ), $/;
     print "attrib\n";
     print join " ",
-        $xdisplay->req( 'GetWindowAttributes', $servers{loki}{wid} ),
+        $app->gui->xdisplay->req( 'GetWindowAttributes', $servers{loki}{wid} ),
         $/;
 }
 
@@ -1850,23 +1805,23 @@ sub key_event {
                 "Sending event $event with code $keycode (state=$state) to window $servers{$_}{wid}"
             );
 
-            $xdisplay->SendEvent(
+            $app->gui->xdisplay->SendEvent(
                 $servers{$_}{wid},
                 0,
-                $xdisplay->pack_event_mask($event),
-                $xdisplay->pack_event(
+                $app->gui->xdisplay->pack_event_mask($event),
+                $app->gui->xdisplay->pack_event(
                     'name'        => $event,
                     'detail'      => $keycode,
                     'state'       => $state,
                     'time'        => time(),
                     'event'       => $servers{$_}{wid},
-                    'root'        => $xdisplay->root(),
+                    'root'        => $app->gui->xdisplay->root(),
                     'same_screen' => 1,
                 )
             ) || warn("Error returned from SendEvent: $!");
         }
     }
-    $xdisplay->flush();
+    $app->gui->xdisplay->flush();
 }
 
 sub create_menubar() {
@@ -2081,7 +2036,6 @@ change_main_window_title();
 logmsg( 2, "Capture map events" );
 capture_map_events();
 
-setup_helper_script();
 open_client_windows(@servers);
 
 # Check here if we are tiling windows.  Here instead of in func so

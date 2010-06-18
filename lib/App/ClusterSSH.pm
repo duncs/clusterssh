@@ -45,7 +45,7 @@ sub REAPER {
     my $kid;
     do {
         $kid = waitpid( -1, WNOHANG );
-        logmsg( 2, "REAPER currently returns: $kid" );
+        #logmsg( 2, "REAPER currently returns: $kid" );
     } until ( $kid == -1 || $kid == 0 );
 }
 

@@ -15,6 +15,9 @@ sub new {
 
     my $self = $class->SUPER::new(%args);
 
+use Data::Dump qw(dump);
+die dump  \%args;
+
     return $self;
 }
 
@@ -42,32 +45,38 @@ sub script() {
     my %o;
     getopts( "p:s:u:p:c:d:b:a:", \%o );
 
+#    print "%_ => $o{$_}",$/ foreach (keys %o);
+
     if($o{p}) {
         open( my $pipe, ">", $o{p} ) or die( "Failed to open pipe: ", $!, $/ );
-        print {$pipe} $$, ":", $ENV{WINDOWID}
+        print {$pipe} ($$, ":", $ENV{WINDOWID} || "ERROR")
             or die( "Failed to write to pipe: ", $!, $/ );
         close($pipe) or die( "Failed to close pipe: ", $!, $/ );
     }
 
-    my $command = join( " ", $o{b}, $o{a}, );
+    my $command = join( " ", $o{b}||" ", $o{a}||" ", );
 
     if ( $o{u} ) {
-        if ( $o{b} !~ /telnet$/ ) {
+        if ( $o{b} && $o{b} !~ /telnet$/ ) {
             $command .= join( " ", "-l", $o{u} );
         }
     }
 
-    if ( $o{b} =~ /telnet$/ ) {
+    if ( $o{b} && $o{b} =~ /telnet$/ ) {
         $command .= join( " ", $o{s}, $o{p} );
     }
     else {
         if ( $o{p} ) {
             $command .= join( " ", "-p", $o{p} );
         }
-        $command .= $o{s};
+        if($o{s}) {
+            $command .= $o{s};
+        }
     }
 
-    $command .= $o{c};
+    if($o{c}) {
+        $command .= $o{c};
+    }
 
     if ( $o{d} ) {
         warn( "Running: ", $command, $/ );
