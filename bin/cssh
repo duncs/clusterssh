@@ -78,19 +78,14 @@ use Sys::Hostname;
 use English;
 
 use FindBin;
-use lib $FindBin::Bin. '/../lib';
+use lib $FindBin::Bin.'/../lib';
 use App::ClusterSSH;
-use App::ClusterSSH::Host;
-use App::ClusterSSH::Gui::Terminal;
-
-warn 'data::dump';
-use Data::Dump qw(dump);
 
 ### all global variables ###
 my $scriptname = $0;
 $scriptname =~ s!.*/!!;    # get the script name, minus the path
 
-my $VERSION = $App::ClusterSSH::VERSION;
+my $VERSION=$App::ClusterSSH::VERSION;
 
 # Command line options list
 my @options_spec = (
@@ -128,7 +123,6 @@ my $xdisplay;
 my %keyboardmap;
 my $sysconfigdir = "/etc";
 my %ssh_hostnames;
-my $app;
 
 # Fudge to get X11::Keysyms working
 %keysymtocode = %main::keysymtocode;
@@ -317,7 +311,7 @@ sub find_binary($) {
 
     logmsg( 2, "Looking for $binary" );
     my $path;
-    if ( !-x $binary || substr( $binary, 0, 1 ) ne '/' ) {
+    if ( !-x $binary || substr($binary, 0, 1) ne '/' ) {
 
        # search the users $PATH and then a few other places to find the binary
        # just in case $PATH isnt set up right
@@ -405,13 +399,9 @@ sub check_config() {
     }
 
     $config{internal_previous_state} = "";    # set to default
-    %config = (
-        %config, $app->gui->xdisplay->get_font_size( $config{terminal_font} )
-    );
+    get_font_size();
 
-    if ( $config{extra_cluster_file} ) {
-        $config{extra_cluster_file} =~ s/\s+//g;
-    }
+    $config{extra_cluster_file} =~ s/\s+//g;
 
     $config{ssh_args} = $options{options} if ( $options{options} );
 
@@ -444,6 +434,32 @@ sub dump_config {
         print "$_=$config{$_}\n";
     }
     exit_prog if ( !$noexit );
+}
+
+sub check_ssh_hostnames {
+    return unless ( $config{method} eq "ssh" );
+
+    my $ssh_config = "$ENV{HOME}/.ssh/config";
+
+    if ( -r $ssh_config && open( SSHCFG, "<", $ssh_config ) ) {
+        while (<SSHCFG>) {
+            next unless (m/^\s*host\s+([\w\.-]+)/i);
+
+            # account for multiple declarations of hosts
+            $ssh_hostnames{$_} = 1 foreach ( split( /\s+/, $1 ) );
+        }
+        close(SSHCFG);
+    }
+
+    if ( $options{debug} > 1 ) {
+        if (%ssh_hostnames) {
+            logmsg( 2, "Parsed these ssh config hosts:" );
+            logmsg( 2, "- $_" ) foreach ( sort( keys(%ssh_hostnames) ) );
+        }
+        else {
+            logmsg( 2, "No hostnames parsed from user ssh config file" );
+        }
+    }
 }
 
 sub evaluate_commands {
@@ -493,11 +509,9 @@ sub evaluate_commands {
 sub load_keyboard_map() {
 
     # load up the keyboard map to convert keysyms to keyboardmap
-    my $min      = $app->gui->xdisplay->min_keycode;
-    #dump $app->gui->xdisplay;
-    dump $min;
-    my $count    = $app->gui->xdisplay->{max_keycode} - $min;
-    my @keyboard = $app->gui->xdisplay->GetKeyboardMapping( $min, $count );
+    my $min      = $xdisplay->{min_keycode};
+    my $count    = $xdisplay->{max_keycode} - $min;
+    my @keyboard = $xdisplay->GetKeyboardMapping( $min, $count );
 
     # @keyboard arry
     #  0 = plain key
@@ -701,7 +715,7 @@ sub resolve_names(@) {
     foreach (@servers) {
         my $dirty    = $_;
         my $username = q{};
-        logmsg( 3, 'Checking tag ', $_ );
+        logmsg( 3, 'Checking tag ',$_ );
 
         if ( $dirty =~ s/^(.*)@// ) {
             $username = $1;
@@ -709,7 +723,7 @@ sub resolve_names(@) {
         if ( $clusters{$dirty} ) {
             logmsg( 3, '... it is a cluster' );
             foreach my $node ( split( / /, $clusters{$dirty} ) ) {
-                if ($username) {
+                if($username) {
                     $node =~ s/^(.*)@//;
                     $node = $username . '@' . $node;
                 }
@@ -720,7 +734,7 @@ sub resolve_names(@) {
     }
 
     # now clean the array up
-    @servers = grep { $_ !~ m/^$/ } @servers;
+    @servers = grep { $_ !~ m/^$/} @servers;
 
     logmsg( 3, 'leaving with ', $_ ) foreach (@servers);
     logmsg( 2, 'Resolving cluster names: completed' );
@@ -1004,15 +1018,52 @@ sub split_hostname {
     return ( $username, $server, $port );
 }
 
+sub check_host($) {
+    my $host = shift;
+    if ( $host =~ m/:/ ) {
+        logmsg( 2, "Not resolving IPv6 address '$host'" );
+        return $host;
+    }
+    if ( $host =~ m/^(\d{1,3}\.?){4}$/ ) {
+        logmsg( 2, "Not resolving IP address '$host'" );
+        return $host;
+    }
+    if ( $config{method} eq "ssh" ) {
+        logmsg( 1, "Attempting name resolution via user ssh config file" );
+        if ( $ssh_hostnames{$host} ) {
+            return $host;
+        }
+        else {
+            logmsg( 1,
+                "Failed to check host (falling back to gethostbyname): $!" );
+        }
+    }
+
+    my $gethost_obj = gethostbyname($host);
+    return defined($gethost_obj) ? $gethost_obj->name() : $host;
+}
+
 sub open_client_windows(@) {
     foreach (@_) {
         next unless ($_);
 
-        my $server = App::ClusterSSH::Host->parse_host_string($_);
+        my ( $username, $server, $port ) = split_hostname($_);
+        my $given_server_name = $server;
 
-        logmsg( 2, 'Working on server ', $server, ' for ', $_ );
-        my $terminal = App::ClusterSSH::Host->new( host => $server, );
-        logmsg( 2, 'Terminal ID: ', $terminal->get_id, ' for ', $_ );
+        # see if we can find the hostname - if not, drop it
+        my $realname = check_host($server);
+        if ( !$realname ) {
+            my $text = "WARNING: '$_' unknown";
+
+            if (%ssh_hostnames) {
+                $text
+                    .= " (unable to resolve and not in user ssh config file)";
+            }
+
+            warn( $text, $/ );
+
+       #next;  # Debian bug 499935 - ignore warnings about hostname resolution
+        }
 
         my $color = '';
         if ( $config{terminal_colorize} ) {
@@ -1025,6 +1076,44 @@ sub open_client_windows(@) {
             }
         }
 
+        my $count = q{};
+        while ( defined( $servers{ $server . q{ } . $count } ) ) {
+            $count++;
+        }
+        $server .= q{ } . $count;
+
+        $servers{$server}{connect_string} = $_;
+        $servers{$server}{givenname}      = $given_server_name;
+        $servers{$server}{realname}       = $realname;
+        $servers{$server}{username}       = $username;
+        $servers{$server}{port}           = $port || '';
+
+        logmsg( 2, "Working on server $server for $_" );
+
+        $servers{$server}{pipenm} = tmpnam();
+
+        logmsg( 2, "Set temp name to: $servers{$server}{pipenm}" );
+        mkfifo( $servers{$server}{pipenm}, 0600 )
+            or die("Cannot create pipe: $!");
+
+       # NOTE: the pid is re-fetched from the xterm window (via helper_script)
+       # later as it changes and we need an accurate PID as it is widely used
+        $servers{$server}{pid} = fork();
+        if ( !defined( $servers{$server}{pid} ) ) {
+            die("Could not fork: $!");
+        }
+
+        if ( $servers{$server}{pid} == 0 ) {
+
+          # this is the child
+          # Since this is the child, we can mark any server unresolved without
+          # affecting the main program
+            $servers{$server}{realname} .= "==" if ( !$realname );
+            my $exec
+                = "$config{terminal} $color $config{terminal_args} $config{terminal_allow_send_events} $config{terminal_title_opt} '$config{title}: $servers{$server}{connect_string}' -font $config{terminal_font} -e \"$^X\" \"-e\" '$helper_script' '$servers{$server}{pipenm}' '$servers{$server}{givenname}' '$servers{$server}{username}' '$servers{$server}{port}'";
+            logmsg( 2, "Terminal exec line:\n$exec\n" );
+            exec($exec) == 0 or warn("Failed: $!");
+        }
     }
 
     # Now all the windows are open, get all their window id's
@@ -1074,6 +1163,35 @@ sub open_client_windows(@) {
     }
     logmsg( 2, "All client windows opened" );
     $config{internal_total} = int( keys(%servers) );
+}
+
+sub get_font_size() {
+    logmsg( 2, "Fetching font size" );
+
+    # get atom name<->number relations
+    my $quad_width = $xdisplay->atom("QUAD_WIDTH");
+    my $pixel_size = $xdisplay->atom("PIXEL_SIZE");
+
+    my $font = $xdisplay->new_rsrc;
+    $xdisplay->OpenFont( $font, $config{terminal_font} );
+
+    my %font_info;
+
+    eval { (%font_info) = $xdisplay->QueryFont($font); }
+        || die( "Fatal: Unrecognised font used ($config{terminal_font}).\n"
+            . "Please amend \$HOME/.csshrc with a valid font (see man page).\n"
+        );
+
+    $config{internal_font_width}  = $font_info{properties}{$quad_width};
+    $config{internal_font_height} = $font_info{properties}{$pixel_size};
+
+    if ( !$config{internal_font_width} || !$config{internal_font_height} ) {
+        die(      "Fatal: Unrecognised font used ($config{terminal_font}).\n"
+                . "Please amend \$HOME/.csshrc with a valid font (see man page).\n"
+        );
+    }
+
+    logmsg( 2, "Done with font size" );
 }
 
 sub show_console() {
@@ -2033,6 +2151,23 @@ if ( $options{version} ) {
 
 $options{debug} ||= 0;
 
+# only get xdisplay if we got past usage and help stuff
+$xdisplay = X11::Protocol->new();
+
+if ( !$xdisplay ) {
+    die("Failed to get X connection\n");
+}
+
+# catch and reap any zombies
+sub REAPER {
+    my $kid;
+    do {
+        $kid = waitpid( -1, WNOHANG );
+        logmsg( 2, "REAPER currently returns: $kid" );
+    } until ( $kid == -1 || $kid == 0 );
+}
+$SIG{CHLD} = \&REAPER;
+
 if ( $options{d} && $options{D} ) {
     $options{debug} += 3;
     logmsg( 0, 'NOTE: -d and -D are deprecated - use "--debug 3" instead' );
@@ -2047,16 +2182,16 @@ elsif ( $options{D} ) {
 }
 
 # restrict to max level
-$options{debug} = 9 if ( $options{debug} && $options{debug} > 9 );
+$options{debug} = 4 if ( $options{debug} && $options{debug} > 4 );
 
-$app = App::ClusterSSH->new( debug => $options{debug} );
-
-$app->debug( 2, $app->loc( 'VERSION: [_1]', $VERSION ) );
+logmsg( 2, "VERSION: $VERSION" );
 
 load_config_defaults();
 load_configfile();
 
 dump_config() if ( $options{'output-config'} );
+
+check_ssh_hostnames();
 
 evaluate_commands() if ( $options{evaluate} );
 
