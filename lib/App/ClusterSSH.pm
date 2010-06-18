@@ -8,6 +8,7 @@ use version; our $VERSION = version->new('4.00_02');
 use Carp;
 
 use base qw/ App::ClusterSSH::Base /;
+use App::ClusterSSH::Host;
 
 use POSIX ":sys_wait_h";
 use Pod::Usage;
@@ -61,10 +62,6 @@ sub REAPER {
         logmsg( 2, "REAPER currently returns: $kid" );
     } until ( $kid == -1 || $kid == 0 );
 }
-
-### all global variables ###
-my $scriptname = $0;
-$scriptname =~ s!.*/!!;    # get the script name, minus the path
 
 # Command line options list
 my @options_spec = (
@@ -995,40 +992,21 @@ sub split_hostname {
     return ( $username, $server, $port );
 }
 
-sub check_host($) {
-    my $host = shift;
-    if ( $host =~ m/:/ ) {
-        logmsg( 2, "Not resolving IPv6 address '$host'" );
-        return $host;
-    }
-    if ( $host =~ m/^(\d{1,3}\.?){4}$/ ) {
-        logmsg( 2, "Not resolving IP address '$host'" );
-        return $host;
-    }
-    if ( $config{method} eq "ssh" ) {
-        logmsg( 1, "Attempting name resolution via user ssh config file" );
-        if ( $ssh_hostnames{$host} ) {
-            return $host;
-        }
-        else {
-            logmsg( 1,
-                "Failed to check host (falling back to gethostbyname): $!" );
-        }
-    }
-
-    my $gethost_obj = gethostbyname($host);
-    return defined($gethost_obj) ? $gethost_obj->name() : $host;
-}
-
 sub open_client_windows(@) {
     foreach (@_) {
         next unless ($_);
 
-        my ( $username, $server, $port ) = split_hostname($_);
-        my $given_server_name = $server;
+        my $server_object = App::ClusterSSH::Host->parse_host_string($_);
+
+        my $username=$server_object->get_username();
+        my $port=$server_object->get_port();
+        my $server=$server_object->get_hostname();
+
+        #my ( $username, $server, $port ) = split_hostname($_);
+        my $given_server_name = $server_object->get_givenname();
 
         # see if we can find the hostname - if not, drop it
-        my $realname = check_host($server);
+        my $realname = $server_object->get_realname();
         if ( !$realname ) {
             my $text = "WARNING: '$_' unknown";
 
@@ -2113,6 +2091,7 @@ sub populate_send_menu {
 }
 
 sub run {
+    my ($self) = @_;
 ### main ###
 
     # Note: getopts returned "" if it finds any options it doesnt recognise
@@ -2152,6 +2131,7 @@ sub run {
 
     # restrict to max level
     $options{debug} = 4 if ( $options{debug} && $options{debug} > 4 );
+    $self->set_debug_level( $options{debug} );
 
     logmsg( 2, "VERSION: $VERSION" );
 
