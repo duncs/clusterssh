@@ -176,6 +176,11 @@ Run the command in each session, i.e. C<-a 'vi /etc/hosts'> to drop straight
 into a vi session.  NOTE: not all communications methods support this (ssh 
 and rsh should, telnet will not).
 
+=item --autoquit,-q|--no-autoquit,-Q
+
+Enable|Disable automatically quiting after the last client window has closed
+(overriding the config file)
+
 =item --cluster-file,-c <file>
 
 Use supplied file as additional cluster file (see also L<"FILES">)
@@ -206,10 +211,6 @@ potential errors.  The <hostname> is required to aid the evaluation.
 
 Specify the font to use in the terminal windows. Use standard X font notation.
 
-=item --tile,-g|--no-tile,-G 
-
-Enable|Disable window tiling (overriding the config file)
-
 =item --help,-h|-?
 
 Show basic help text, and exit
@@ -217,11 +218,6 @@ Show basic help text, and exit
 =item --man,-H
 
 Show full help test (the man page), and exit
-
-=item --username,-l $LOGNAME
-
-Specify the default username to use for connections (if different from the
-currently logged in user).  B<NOTE:> will be overridden by <user>@<host>
 
 =item --options,-o "-x -o ConnectTimeout=10" - for ssh connections
 
@@ -233,14 +229,14 @@ B<NOTE:> any "generic" change to the method (i.e. specifying the ssh port to use
 should be done in the medium's own config file (see L<ssh_config> and 
 F<$HOME/.ssh/config>).
 
+=item --output-config,-u
+
+Output the current configuration in the same format used by the 
+F<$HOME/.csshrc> file.
+
 =item --port,-p <port>
 
 Specify an alternate port for connections.
-
-=item --autoquit,-q|--no-autoquit,-Q
-
-Enable|Disable automatically quiting after the last client window has closed
-(overriding the config file)
 
 =item --show-history,-s
 
@@ -251,14 +247,18 @@ worked upon, but may help some users.
 
 Specify arguments to be passed to terminals being used
 
+=item --tile,-g|--no-tile,-G 
+
+Enable|Disable window tiling (overriding the config file)
+
 =item --title,-T "CSSH"
 
 Specify the initial part of the title used in the console and client windows
 
-=item --output-config,-u
+=item --username,-l $LOGNAME
 
-Output the current configuration in the same format used by the 
-F<$HOME/.csshrc> file.
+Specify the default username to use for connections (if different from the
+currently logged in user).  B<NOTE:> will be overridden by <user>@<host>
 
 =item --version,-v
 
