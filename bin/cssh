@@ -202,6 +202,10 @@ repeated multiple times.  Maximum level is 4.
 Display and evaluate the terminal and connection arguments so display any
 potential errors.  The <hostname> is required to aid the evaluation.  
 
+=item --font,-u "5x8"
+
+Specify the font to use in the terminal windows. Use standard X font notation.
+
 =item --tile,-g|--no-tile,-G 
 
 Enable|Disable window tiling (overriding the config file)

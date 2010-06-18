@@ -86,6 +86,7 @@ my @options_spec = (
     'term-args|t=s',
     'title|T=s',
     'output-config|u',
+    'font|f=s',
 );
 my %options;
 my %config;
@@ -373,6 +374,9 @@ sub check_config() {
     }
 
     $config{internal_previous_state} = "";    # set to default
+
+    # option font overrides config file font setting
+    config{terminal_font} = $options{font} if ( $options{font} );
     get_font_size();
 
     $config{extra_cluster_file} =~ s/\s+//g;
