@@ -53,7 +53,7 @@ sub new {
 
 sub get_givenname {
     my ($self) = @_;
-    return $self->{givenname};
+    return $self->{hostname};
 }
 
 sub get_hostname {
@@ -63,7 +63,7 @@ sub get_hostname {
 
 sub get_username {
     my ($self) = @_;
-    return $self->{username};
+    return $self->{username} || q{};
 }
 
 sub set_username {
@@ -74,7 +74,7 @@ sub set_username {
 
 sub get_port {
     my ($self) = @_;
-    return $self->{port};
+    return $self->{port} || q{};
 }
 
 sub set_port {
@@ -152,11 +152,11 @@ sub parse_host_string {
 
     # Check for unbracketed IPv6 addresses as best we can...
     # first, see if there is a username to grab
-    my $username;
+    my $username = q[];
     if ( $host_string =~ s/\A(?:(.*)@)// ) {
 
         # catch where @ is in host_string but no text before it
-        $username = $1 || undef;
+        $username = $1 || q{};
     }
 
     # use number of colons as a possible indicator
@@ -170,11 +170,10 @@ sub parse_host_string {
             parse_string => $parse_string,
             username     => $username,
             hostname     => $host_string,
-            port         => undef,
+            port         => q{},
             type         => 'ipv6',
         );
     }
-
     if (   $colon_count > 1
         && $colon_count < 8
         && $host_string =~ m/:(\d+)$/xsm )
@@ -184,16 +183,21 @@ sub parse_host_string {
 
         $self->debug( 5, $self->loc( 'Ambiguous IPv6 u=[_1] h=[_2] p=[_3]', $username, $host_string, '' ) );
 
+#warn "host_string=$host_string";
+#warn "username=$username";
+#warn $self->loc('some string to return');
+#warn 'debug done, returning';
+
         return __PACKAGE__->new(
             parse_string => $parse_string,
             username     => $username,
             hostname     => $host_string,
-            port         => undef,
+            port         => q{},
             type         => 'ipv6',
         );
     }
     else {
-        my $port;
+        my $port = q{};
         if ( $host_string =~ s/:(\d+)$// ) {
             $port = $1;
         }
@@ -281,9 +285,24 @@ Return specific details about the host
 
 Set specific details about the host after its been created.
 
+=item get_realname
+
+If the server name provided is not an IP address (either IPv4 or IPv6) 
+attempt to resolve it and retun the discovered names.
+
+=item get_givenname
+
+Alias to get_hostname, for use when C< get_realname > might return something
+different
+
 =item parse_host_string
 
 Given a host string, returns a host object.  Parses hosts such as
+
+=item check_ssh_hostname
+
+Check the objects hostname to see whether or not it may be configured within 
+the users F< $HOME/.ssh/config > configuration file
 
 =over 4
 
