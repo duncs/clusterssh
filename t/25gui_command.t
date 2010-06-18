@@ -18,8 +18,8 @@ my $obj;
 trap {
     $obj = App::ClusterSSH::Gui::Terminal::Command->new();
 };
-is( $trap->leaveby, 'return', 'returned ok' );
-is( $trap->die,     undef,    'returned ok' );
+is( $trap->leaveby, 'die', 'returned ok' );
+like( $trap->die, qr/command is undefined at /, 'Got appropriate croak message' );
 is( $trap->stderr, '', 'Expecting no STDERR' );
 is( $trap->stdout, '', 'Expecting no STDOUT' );
 
