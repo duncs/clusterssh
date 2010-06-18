@@ -18,3 +18,11 @@ generated_by: Module::Build version 0.33
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
   version: 1.4
+resources:
+  bugtracker: http://sourceforge.net/tracker/?group_id=89139
+  homepage: http://clusterssh.sourceforge.net/
+  license: http://dev.perl.org/licenses/
+  repository:
+    - http://clusterssh.git.sourceforge.net/
+    - http://github.com/duncs/clusterssh
+
