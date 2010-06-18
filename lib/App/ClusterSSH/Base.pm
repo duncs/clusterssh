@@ -63,6 +63,7 @@ sub _translate {
 
 sub loc {
     my ( $self, @args ) = @_;
+    $_ ||= q{} foreach (@args);
     return _translate(@args);
 }
 
