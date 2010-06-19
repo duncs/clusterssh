@@ -1,1 +1,9 @@
+^App-ClusterSSH-.*
+^blib/
+^_build/
+^Build$
+^.git/
+^.gitignore
+^MANIFEST\.bak$
 ^MYMETA.yml$
+.*\.swp$

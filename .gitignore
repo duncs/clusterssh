@@ -2,6 +2,7 @@ blib/
 _build/
 Build
 cover_db/
+MANIFEST.bak
+MYMETA.yml
 *.swp
 *.tar.gz
-MYMETA.yml
