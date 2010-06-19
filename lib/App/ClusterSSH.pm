@@ -3,7 +3,7 @@ package App::ClusterSSH;
 use 5.008.004;
 use warnings;
 use strict;
-use version; our $VERSION = version->new('4.00_02');
+use version; our $VERSION = version->new('4.00_03');
 
 use Carp;
 
@@ -376,7 +376,7 @@ sub check_config() {
     $config{internal_previous_state} = "";    # set to default
 
     # option font overrides config file font setting
-    config{terminal_font} = $options{font} if ( $options{font} );
+    $config{terminal_font} = $options{font} if ( $options{font} );
     get_font_size();
 
     $config{extra_cluster_file} =~ s/\s+//g;
