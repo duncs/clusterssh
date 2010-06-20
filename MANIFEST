@@ -24,3 +24,4 @@ t/boilerplate.t
 t/pod-coverage.t
 t/pod.t
 THANKS
+Makefile.PL
