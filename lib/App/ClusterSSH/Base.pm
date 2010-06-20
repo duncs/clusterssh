@@ -185,7 +185,7 @@ Duncan Ferguson (<duncan_j_ferguson (at) yahoo.co.uk>)
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (c) 2009 Duncan Ferguson (<duncan_j_ferguson (at) yahoo.co.uk>). 
+Copyright (c) 1999-2010 Duncan Ferguson (<duncan_j_ferguson (at) yahoo.co.uk>). 
 All rights reserved
 
 This module is free software; you can redistribute it and/or

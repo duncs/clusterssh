@@ -2357,7 +2357,7 @@ L<http://search.cpan.org/dist/App-ClusterSSH/>
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2010 Duncan Ferguson, all rights reserved.
+Copyright 1999-2010 Duncan Ferguson, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
