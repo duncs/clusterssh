@@ -1,9 +1,11 @@
 ---
-abstract: 'Main module'
-author: []
+abstract: 'A container for functions of the ClusterSSH programs'
+author:
+  - 'Duncan Ferguson <duncan_j_ferguson@yahoo.co.uk>'
 build_requires:
   Test::Pod: 0
   Test::Pod::Coverage: 0
+  Test::Trap: 0
 configure_requires:
   Module::Build: 0.36
 generated_by: 'Module::Build version 0.3603'
@@ -15,7 +17,7 @@ name: App-ClusterSSH
 provides:
   App::ClusterSSH:
     file: lib/App/ClusterSSH.pm
-    version: 4.00_04
+    version: 4.00_05
   App::ClusterSSH::Base:
     file: lib/App/ClusterSSH/Base.pm
     version: 0.01
@@ -38,4 +40,4 @@ resources:
   repository:
     - http://clusterssh.git.sourceforge.net/
     - http://github.com/duncs/clusterssh
-version: 4.00_04
+version: 4.00_05
