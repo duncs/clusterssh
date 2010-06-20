@@ -25,6 +25,7 @@ my $build = Module::Build->new(
     build_requires => {
         'Test::Pod::Coverage' => 0,
         'Test::Pod'           => 0,
+        'Test::Trap'          => 0,
     },
     script_files => 'bin',
 );
