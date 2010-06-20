@@ -14,9 +14,11 @@ my $build = Module::Build->new(
             homepage   => 'http://clusterssh.sourceforge.net/',
         },
     },
-    module_name => 'App::ClusterSSH',
-    license     => 'perl',
-    requires    => {
+    module_name       => 'App::ClusterSSH',
+    license           => 'perl',
+    dist_author       => q{Duncan Ferguson <duncan_j_ferguson@yahoo.co.uk>},
+    dist_version_from => 'lib/App/ClusterSSH.pm',
+    requires          => {
         'version'          => '0',
         'Tk'               => '800.022',
         'X11::Protocol'    => '0.56',
@@ -27,7 +29,9 @@ my $build = Module::Build->new(
         'Test::Pod'           => 0,
         'Test::Trap'          => 0,
     },
-    script_files => 'bin',
+    add_to_cleanup     => ['App-ClusterSSH-*'],
+    create_makefile_pl => 'traditional',
+    script_files       => 'bin',
 );
 
 $build->create_build_script;

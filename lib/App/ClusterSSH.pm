@@ -2211,15 +2211,25 @@ sub run {
 
 __END__
 
+=pod
+
 =head1 NAME
 
-App::ClusterSSH - Main module
+App::ClusterSSH - A container for functions of the ClusterSSH programs
 
 =head1 SYNOPSIS
 
-=head1 FUNCTIONS
+There is nothing in this module for public consumption.  See documentation
+for F<cssh>, F<crsh>, F<ctelnet>, or F<cscp> instead.
 
-These functions are listed here to tidy up Pod::Coverage test reports but
+=head1 DESCRIPTION
+
+THis is the core for App::ClusterSSH.  You should probably look at L<cssh> 
+instead.
+
+=head1 SUBROUTINES/METHODS
+
+These methods are listed here to tidy up Pod::Coverage test reports but
 will most likely be moved into other modules.  There are some notes within 
 the code until this time.
 
@@ -2315,10 +2325,6 @@ the code until this time.
                                            
 =back
 
-=head1 AUTHOR
-
-Duncan Ferguson, C<< <duncan_j_ferguson at yahoo.co.uk> >>
-
 =head1 BUGS
 
 Please report any bugs or feature requests to C<bug-app-clusterssh at rt.cpan.org>, or through
@@ -2355,12 +2361,22 @@ L<http://search.cpan.org/dist/App-ClusterSSH/>
 
 =head1 ACKNOWLEDGEMENTS
 
+Please see the THANKS file from the original distribution.
+
+=head1 AUTHOR
+
+Duncan Ferguson, C<< <duncan_j_ferguson at yahoo.co.uk> >>
+
 =head1 COPYRIGHT & LICENSE
 
 Copyright 1999-2010 Duncan Ferguson, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself.
+under the terms of either: the GNU General Public License as published
+by the Free Software Foundation; or the Artistic License.
+
+See http://dev.perl.org/licenses/ for more information.
 
 =cut
 
+1;

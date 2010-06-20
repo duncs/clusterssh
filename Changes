@@ -1,6 +1,9 @@
 ????-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_05
 
 * Tidy up pod for whatis errors
+* Amend copyright years and text to be consistent
+* Include missing buld prereq (Test::Trap)
+- Thanks to Tony Mancill for reporting these errors
 
 2010-06-20 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_04
 

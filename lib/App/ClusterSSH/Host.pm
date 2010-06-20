@@ -331,16 +331,18 @@ Use brackets to avoid seeing warning.
 
 =head1 AUTHOR
 
-Duncan Ferguson (<duncan_j_ferguson (at) yahoo.co.uk>)
+Duncan Ferguson, C<< <duncan_j_ferguson at yahoo.co.uk> >>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (c) 1999-2010 Duncan Ferguson (<duncan_j_ferguson (at) yahoo.co.uk>). 
-All rights reserved
+Copyright 1999-2010 Duncan Ferguson.
 
-This module is free software; you can redistribute it and/or
-modify it under the same terms as Perl itself.  See L<perlartistic>.
+This program is free software; you can redistribute it and/or modify it
+under the terms of either: the GNU General Public License as published
+by the Free Software Foundation; or the Artistic License.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See http://dev.perl.org/licenses/ for more information.
+
+=cut
+
+1;
