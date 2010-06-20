@@ -14,7 +14,7 @@ our %Lexicon = ( '_AUTO' => 1, );
 
 =pod
 
-=head1 
+=head1 NAME
 
 ClusterSSH::L10N - Base translations module
 

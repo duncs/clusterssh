@@ -7,7 +7,7 @@ use base 'App::ClusterSSH::L10N';
 
 =pod
 
-=head1 
+=head1 NAME
 
 App::ClusterSSH::L10N::en - Base English translations module
 

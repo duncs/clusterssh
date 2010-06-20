@@ -244,7 +244,7 @@ use overload (
 
 =pod
 
-=head1 
+=head1 NAME
 
 ClusterSSH::Host
 

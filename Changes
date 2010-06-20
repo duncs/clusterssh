@@ -1,3 +1,7 @@
+????-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_05
+
+* Tidy up pod for whatis errors
+
 2010-06-20 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_04
 
 * Update MANIFEST file to ensure all correct files are included in release

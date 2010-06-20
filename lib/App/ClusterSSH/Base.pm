@@ -113,7 +113,7 @@ sub debug {
 
 =pod
 
-=head1 
+=head1 NAME
 
 App::ClusterSSH::Base
 
