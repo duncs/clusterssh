@@ -7,17 +7,18 @@ use App::ClusterSSH::L10N;
 
 # Dont use SVN revision as it can cause problems
 use version;
-our $VERSION = version->new('0.01');
+our $VERSION = version->new('0.02');
 
 my $debug_level = 0;
 our $language = 'en';
 our $language_handle;
+our $app_configuration;
 
 sub new {
-    my ( $class, %args) = @_;
+    my ( $class, %args ) = @_;
 
     my $config = {
-        lang => 'en',
+        lang  => 'en',
         debug => 0,
         %args,
     };
@@ -27,8 +28,9 @@ sub new {
     $self->set_debug_level( $config->{debug} );
     $self->set_lang( $config->{lang} );
 
-    $self->debug( 7, 
-        $self->loc('Arguments to [_1]->new(): ', $class), 
+    $self->debug(
+        7,
+        $self->loc( 'Arguments to [_1]->new(): ', $class ),
         $self->_dump_args_hash(%args),
     );
 
@@ -69,11 +71,9 @@ sub loc {
 
 sub set_lang {
     my ( $self, $lang ) = @_;
-    $language=$lang;
+    $language = $lang;
     if ($self) {
-        $self->debug( 6, 
-            $self->loc('Setting language to "[_1]"', $lang ),
-        );
+        $self->debug( 6, $self->loc( 'Setting language to "[_1]"', $lang ), );
     }
     return $self;
 }
@@ -106,6 +106,34 @@ sub debug {
     if ( $level <= $debug_level ) {
         $self->output(@text);
     }
+    return $self;
+}
+
+sub config {
+    my ($self) = @_;
+
+    if ( !$app_configuration ) {
+        croak( _translate('config has not yet been set') );
+    }
+
+    return $app_configuration;
+}
+
+sub set_config {
+    my ( $self, $config ) = @_;
+
+    if ($app_configuration) {
+        croak( _translate('config has already been set') );
+    }
+
+    if(!$config) { 
+        croak( _translate('passed config is empty'));
+    }
+
+    $self->debug( 3, _translate('Setting app configuration') );
+
+    $app_configuration = $config;
+
     return $self;
 }
 
@@ -176,6 +204,15 @@ a wrapper to maketext in Locale::Maketext
 =item $obj->output(@);
 
 Output text on STDOUT.
+
+=item $config = $obj->config;
+
+Returns whatever configuration object has been set up.  Croaks if set_config
+hasnt been called
+
+=item $obj->set_config($config);
+
+Set the config to the given value - croaks if has already been called
 
 =back
 

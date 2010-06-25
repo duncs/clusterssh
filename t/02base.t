@@ -7,7 +7,7 @@ use lib "$Bin/../lib";
 use Test::More;
 use Test::Trap;
 
-BEGIN { use_ok( 'App::ClusterSSH::Base' ) }
+BEGIN { use_ok('App::ClusterSSH::Base') }
 
 # force default language for tests
 App::ClusterSSH::Base->set_lang('en');
@@ -36,7 +36,7 @@ for my $level ( 0 .. 9 ) {
 
     trap {
         for my $log_level ( 0 .. 9 ) {
-            $base->debug( $log_level, 'test');
+            $base->debug( $log_level, 'test' );
         }
     };
 
@@ -120,5 +120,82 @@ like(
     qr/^Setting\slanguage\sto\s"en".Arguments\sto\sApp::ClusterSSH::Base->new.*debug\s=>\s7,$/xsm,
     'got expected new() output'
 );
+
+# config tests
+$base = undef;
+my $get_config;
+my $object;
+trap {
+    $base = App::ClusterSSH::Base->new( debug => 3, );
+};
+isa_ok( $base, 'App::ClusterSSH::Base' );
+is( $trap->leaveby, 'return', 'returned ok' );
+is( $trap->die,     undef,    'returned ok' );
+is( $trap->stderr,  '',       'Expecting no STDERR' );
+is( $trap->stdout,  '',       'Expecting no STDOUT' );
+
+trap {
+    $get_config = $base->config();
+};
+is( $trap->leaveby, 'die', 'died ok' );
+like( $trap->die, qr/^config has not yet been set/,
+    'Got correct croak text' );
+is( $trap->stderr, '',    'Expecting no STDERR' );
+is( $trap->stdout, '',    'Expecting not STDOUT' );
+is( $get_config,   undef, 'config left empty' );
+
+trap {
+    $object = $base->set_config();
+};
+is( $trap->leaveby, 'die', 'died ok' );
+like( $trap->die, qr/^passed config is empty/, 'Got correct croak text' );
+is( $trap->stderr, '', 'Expecting no STDERR' );
+is( $trap->stdout, '', 'Expecting no STDOUT' );
+
+trap {
+    $object = $base->set_config('set to scalar');
+};
+is( $trap->leaveby, 'return', 'returned ok' );
+is( $trap->die,     undef,    'config set ok' );
+is( $trap->stderr,  '',       'Expecting no STDERR' );
+like(
+    $trap->stdout,
+    qr/^Setting\sapp\sconfiguration/xsm,
+    'Got expected STDOUT'
+);
+isa_ok( $object, 'App::ClusterSSH::Base' );
+
+trap {
+    $get_config = $base->config();
+};
+is( $trap->leaveby, 'return',        'returned ok' );
+is( $trap->die,     undef,           'returned ok' );
+is( $trap->stderr,  '',              'Expecting no STDERR' );
+is( $trap->stdout,  '',              'Expecting not STDOUT' );
+is( $get_config,    'set to scalar', 'config set as expected' );
+
+trap {
+    $object = $base->set_config('set to another scalar');
+};
+is( $trap->leaveby, 'die', 'died ok' );
+like(
+    $trap->die,
+    qr/^config\shas\salready\sbeen\sset/,
+    'config cannot be reset'
+);
+is( $trap->stderr, '', 'Expecting no STDERR' );
+is( $trap->stdout, '', 'Got expected STDOUT' );
+
+trap {
+    $object = $base->set_config();
+};
+is( $trap->leaveby, 'die', 'died ok' );
+like(
+    $trap->die,
+    qr/^config\shas\salready\sbeen\sset/,
+    'config cannot be reset'
+);
+is( $trap->stderr, '', 'Expecting no STDERR' );
+is( $trap->stdout, '', 'Got expected STDOUT' );
 
 done_testing();
