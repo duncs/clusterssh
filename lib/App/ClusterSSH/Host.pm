@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use version;
-our $VERSION = version->new(qw$Revision: 1$);
+our $VERSION = version->new('0.02');
 
 use Carp;
 
