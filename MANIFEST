@@ -13,7 +13,6 @@ lib/App/ClusterSSH/L10N/en.pm
 MANIFEST
 MANIFEST.SKIP
 META.yml
-NOTES
 README
 t/00-load.t
 t/01l10n.t
@@ -24,4 +23,5 @@ t/boilerplate.t
 t/pod-coverage.t
 t/pod.t
 THANKS
+TODO
 Makefile.PL
