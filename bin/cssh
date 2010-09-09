@@ -164,6 +164,10 @@ Specify the font to use in the terminal windows. Use standard X font notation.
 
 Show basic help text, and exit
 
+=item --list, -L
+
+List available cluster tags.
+
 =item --man,-H
 
 Show full help test (the man page), and exit

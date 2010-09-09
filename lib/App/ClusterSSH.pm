@@ -87,6 +87,7 @@ my @options_spec = (
     'title|T=s',
     'output-config|u',
     'font|f=s',
+    'list|L',
 );
 my %options;
 my %config;
@@ -412,6 +413,12 @@ sub dump_config {
         print "$_=$config{$_}\n";
     }
     exit_prog if ( !$noexit );
+}
+
+sub list_tags {
+    print('Available cluster tags:',$/);
+    print "\t", $_, $/ foreach (sort(keys(%clusters)));
+    exit_prog;
 }
 
 sub check_ssh_hostnames {
@@ -2152,6 +2159,8 @@ sub run {
 
     get_clusters();
 
+    list_tags() if ( $options{'list'} );
+
     if (@ARGV) {
         @servers = resolve_names(@ARGV);
     }
@@ -2258,6 +2267,8 @@ the code until this time.
 =item  create_windows
 
 =item  dump_config
+
+=item  list_tags
 
 =item  evaluate_commands
 
