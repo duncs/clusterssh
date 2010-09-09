@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use version;
-our $VERSION = version->new('0.02');
+our $VERSION = version->new('0.03');
 
 use Carp;
 
@@ -31,9 +31,9 @@ sub new {
     if ( !%ssh_hostname_for || !$ssh_configs_read{ $self->{ssh_config} } ) {
         $ssh_configs_read{ $self->{ssh_config} } = 1;
         if ( open( my $ssh_config_fh, '<', $self->{ssh_config} ) ) {
-            while ( my $_ = <$ssh_config_fh> ) {
-                chomp $_;
-                next unless (m/^\s*host\s+(.*)/i);
+            while ( my $line = <$ssh_config_fh> ) {
+                chomp $line;
+                next unless ($line =~ m/^\s*host\s+(.*)/i);
 
                 # account for multiple declarations of hosts
                 $ssh_hostname_for{$_} = 1 foreach ( split( /\s+/, $1 ) );

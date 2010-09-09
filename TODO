@@ -19,6 +19,10 @@ Getopts usage
 Set up similar to Nagios::Plugin where Getopts::Long is subclassed
 Sort out docs too
 
+Add in '-l' to list all available tags
+Add in '-l <tag>' to list all hosts for the given tag
+Idea from Markus Manzke
+
 Change way commands generated
 =============================
 
