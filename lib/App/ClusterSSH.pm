@@ -32,6 +32,7 @@ use Net::hostent;
 use Carp;
 use Sys::Hostname;
 use English;
+use Socket;
 
 # Notes on general order of processing
 #
@@ -88,6 +89,7 @@ my @options_spec = (
     'output-config|u',
     'font|f=s',
     'list|L',
+    'use_all_a_records|A',
 );
 my %options;
 my %config;
@@ -249,6 +251,8 @@ sub load_config_defaults() {
     $config{menu_host_autotearoff}          = 0;
 
     $config{send_menu_xml_file} = $ENV{HOME} . '/.csshrc_send_menu';
+
+    $config{use_all_a_records} = 0;
 }
 
 # load in config file settings
@@ -387,6 +391,10 @@ sub check_config() {
     $config{show_history} = 1 if $options{'show-history'};
 
     $config{command} = $options{action} if ( $options{action} );
+
+    if ( $options{use_all_a_records} ) {
+        $config{use_all_a_records} = !$config{use_all_a_records} || 0;
+    }
 }
 
 sub load_configfile() {
@@ -704,6 +712,22 @@ sub resolve_names(@) {
 
         if ( $dirty =~ s/^(.*)@// ) {
             $username = $1;
+        }
+        if (   $config{use_all_a_records}
+            && $dirty !~ m/^(\d{1,3}\.?){4}$/
+            && !defined( $clusters{$dirty} ) )
+        {
+            my $hostobj = gethostbyname($dirty);
+            if ( defined($hostobj) ) {
+                my @alladdrs = map { inet_ntoa($_) } @{ $hostobj->addr_list };
+                if ( $#alladdrs > 0 ) {
+                    $clusters{$dirty} = join ' ', @alladdrs;
+                    logmsg( 3, 'Expanded to ', $clusters{$dirty} );
+                }
+                else {
+                    logmsg( 3, 'Only one A record' );
+                }
+            }
         }
         if ( $clusters{$dirty} ) {
             logmsg( 3, '... it is a cluster' );

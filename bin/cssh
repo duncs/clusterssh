@@ -208,6 +208,11 @@ Enable|Disable window tiling (overriding the config file)
 
 Specify the initial part of the title used in the console and client windows
 
+=item --use_all_a_records,-A
+
+If a hostname resolves to multiple IP addresses, toggle whether or not to 
+connect to all of them, or just the first one (see also config file entry)
+
 =item --username,-l $LOGNAME
 
 Specify the default username to use for connections (if different from the
@@ -538,6 +543,11 @@ Tell Tk to use the UnmapWindow request before redrawing terminal windows.
 This defaults to "no" as it causes some problems with the FVWM window 
 manager.  If you are experiencing problems with redraws, you can set it to
 "yes" to allow the window to be unmapped before it is repositioned.
+
+=item use_all_a_records = no
+
+If a hostname resolves to multiple IP addresses, set to C<yes> to connect 
+to all of them, not just the first one found.
 
 =item use_hotkeys = yes
 
