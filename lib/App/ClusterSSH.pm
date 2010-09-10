@@ -1326,7 +1326,8 @@ sub retile_hosts {
         logmsg( 3,
             "x:$current_x y:$current_y, r:$current_row c:$current_col" );
 
-        $xdisplay->req( 'UnmapWindow', $servers{$server}{wid} );
+        # sf tracker 3061999
+        # $xdisplay->req( 'UnmapWindow', $servers{$server}{wid} );
 
         if ( $config{unmap_on_redraw} =~ /yes/i ) {
             $xdisplay->req( 'UnmapWindow', $servers{$server}{wid} );
