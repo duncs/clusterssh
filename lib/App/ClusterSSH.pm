@@ -66,8 +66,8 @@ sub REAPER {
 # Command line options list
 my @options_spec = (
     'debug:+',
-    'd',                   # backwards compatibility - DEPRECATED
-    'D',                   # backwards compatibility - DEPRECATED
+    'd',    # backwards compatibility - DEPRECATED
+    'D',    # backwards compatibility - DEPRECATED
     'version|v',
     'help|h|?',
     'man|H',
@@ -416,8 +416,8 @@ sub dump_config {
 }
 
 sub list_tags {
-    print('Available cluster tags:',$/);
-    print "\t", $_, $/ foreach (sort(keys(%clusters)));
+    print( 'Available cluster tags:', $/ );
+    print "\t", $_, $/ foreach ( sort( keys(%clusters) ) );
     exit_prog;
 }
 
@@ -1009,9 +1009,9 @@ sub open_client_windows(@) {
 
         my $server_object = App::ClusterSSH::Host->parse_host_string($_);
 
-        my $username=$server_object->get_username();
-        my $port=$server_object->get_port();
-        my $server=$server_object->get_hostname();
+        my $username = $server_object->get_username();
+        my $port     = $server_object->get_port();
+        my $server   = $server_object->get_hostname();
 
         #my ( $username, $server, $port ) = split_hostname($_);
         my $given_server_name = $server_object->get_givenname();
