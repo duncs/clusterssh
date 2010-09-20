@@ -17,13 +17,13 @@ name: App-ClusterSSH
 provides:
   App::ClusterSSH:
     file: lib/App/ClusterSSH.pm
-    version: 4.00_05
+    version: 4.00_06
   App::ClusterSSH::Base:
     file: lib/App/ClusterSSH/Base.pm
-    version: 0.01
+    version: 0.02
   App::ClusterSSH::Host:
     file: lib/App/ClusterSSH/Host.pm
-    version: v1.0.0
+    version: 0.03
   App::ClusterSSH::L10N:
     file: lib/App/ClusterSSH/L10N.pm
   App::ClusterSSH::L10N::en:
@@ -40,4 +40,4 @@ resources:
   repository:
     - http://clusterssh.git.sourceforge.net/
     - http://github.com/duncs/clusterssh
-version: 4.00_05
+version: 4.00_06

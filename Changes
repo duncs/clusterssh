@@ -1,4 +1,4 @@
-????-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_06
+2010-09-20 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_06
 * Fix test error on 5.8.8 (reported by Wei Wang)
 * Added '--list', '-L' to list available cluster tags (idea from Markus Manzke)
 * Fix terminal size only set on last windows (Sf bug 3061999)
