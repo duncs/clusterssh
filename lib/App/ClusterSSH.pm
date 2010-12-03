@@ -3,7 +3,7 @@ package App::ClusterSSH;
 use 5.008.004;
 use warnings;
 use strict;
-use version; our $VERSION = version->new('4.00_06');
+use version; our $VERSION = version->new('4.00_07');
 
 use Carp;
 
@@ -269,6 +269,8 @@ sub parse_config_file($) {
             ;    # ignore blank lines & commented lines
         $l =~ s/#.*//;     # remove comments from remaining lines
         $l =~ s/\s*$//;    # remove trailing whitespace
+
+        # look for continuation lines
         chomp $l;
         if ( $l =~ s/\\\s*$// ) {
             $l .= <CFG>;
@@ -277,8 +279,10 @@ sub parse_config_file($) {
 
         next unless $l =~ m/\s*(\S+)\s*=\s*(.*)\s*/;
         my ( $key, $value ) = ( $1, $2 );
-        $config{$key} = $value;
-        logmsg( 3, "$key=$value" );
+        if ( defined $key && defined $value ) {
+            $config{$key} = $value;
+            logmsg( 3, "$key=$value" );
+        }
     }
     close(CFG);
 
