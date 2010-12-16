@@ -1,3 +1,6 @@
+????-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_01
+* $HOME/.csshrc and $HOME/.csshrc_send_menu moved to $HOME/.clusterssh/
+
 ????-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_07
 * Fix for parsing config files with empty values (Stefan Steiner)
 
