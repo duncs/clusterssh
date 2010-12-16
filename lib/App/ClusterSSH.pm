@@ -28,6 +28,7 @@ use X11::Keysyms '%keysymtocode', 'MISCELLANY', 'XKB_KEYS', '3270', 'LATIN1',
     'LATIN2', 'LATIN3', 'LATIN4', 'KATAKANA', 'ARABIC', 'CYRILLIC', 'GREEK',
     'TECHNICAL', 'SPECIAL', 'PUBLISHING', 'APL', 'HEBREW', 'THAI', 'KOREAN';
 use File::Basename;
+use File::Copy;
 use Net::hostent;
 use Carp;
 use Sys::Hostname;
@@ -250,7 +251,7 @@ sub load_config_defaults() {
     $config{menu_send_autotearoff}          = 0;
     $config{menu_host_autotearoff}          = 0;
 
-    $config{send_menu_xml_file} = $ENV{HOME} . '/.csshrc_send_menu';
+    $config{send_menu_xml_file} = $ENV{HOME} . '/.clusterssh/send_menu';
 
     $config{use_all_a_records} = 0;
 }
@@ -401,9 +402,30 @@ sub check_config() {
     }
 }
 
+sub load_user_configfile() {
+    if( -d $ENV{HOME} . '/.clusterssh' ) {
+        parse_config_file( $ENV{HOME} . '/.clusterssh/config' );
+        return;
+    }
+
+    if( -e $ENV{HOME} . '/.csshrc' ) {
+        logmsg( 0, 'Copying $HOME/.csshrc to new configuration location' );
+        parse_config_file( $ENV{HOME} . '/.csshrc' );
+        if( ! -e $ENV{HOME} . '/.csshrc.disabled' ) {
+            move( $ENV{HOME} . '/.csshrc' ,  $ENV{HOME} . '/.csshrc.disabled' ) || die "Unable to move '$ENV{HOME}/.csshrc' to '$ENV{HOME}/.csshrc.disabled': $!", $/;
+        }
+    }
+    if( -e $ENV{HOME} . '/.csshrc_send_menu' ) {
+        logmsg( 0, 'Copying $HOME/.csshrc_send_menu to new configuration location' );
+        move( $ENV{HOME} . '/.csshrc_send_menu', $ENV{HOME} . '/.clusterssh/send_menu' ) || die "Unable to move '$ENV{HOME}/.csshrc_send_menu' to '$ENV{HOME}/.clusterssh/send_menu': $!", $/;
+    }
+}
+
+
 sub load_configfile() {
     parse_config_file( $sysconfigdir . '/csshrc' );
-    parse_config_file( $ENV{HOME} . '/.csshrc' );
+    parse_config_file( $sysconfigdir . '/clusterssh' );
+    load_user_configfile();
     if ( $options{'config-file'} ) {
         parse_config_file( $options{'config-file'} );
     }
@@ -643,14 +665,14 @@ sub get_clusters() {
     }
 
     # Now get any definitions out of %config
-    logmsg( 2, "Looking for csshrc" );
+    logmsg( 2, "Looking at user config file" );
     if ( $config{clusters} ) {
-        logmsg( 2, "Loading clusters in from csshrc" );
+        logmsg( 2, "Loading clusters in from user config file" );
 
         foreach ( split( /\s+/, $config{clusters} ) ) {
             if ( !$config{$_} ) {
                 warn(
-                    "WARNING: missing cluster definition in .csshrc file ($_)"
+                    "WARNING: missing cluster definition in .clusterssh/config file ($_)"
                 );
             }
             else {
@@ -1173,7 +1195,7 @@ sub get_font_size() {
 
     eval { (%font_info) = $xdisplay->QueryFont($font); }
         || die( "Fatal: Unrecognised font used ($config{terminal_font}).\n"
-            . "Please amend \$HOME/.csshrc with a valid font (see man page).\n"
+            . "Please amend \$HOME/.clusterssh/config with a valid font (see man page).\n"
         );
 
     $config{internal_font_width}  = $font_info{properties}{$quad_width};
@@ -1181,7 +1203,7 @@ sub get_font_size() {
 
     if ( !$config{internal_font_width} || !$config{internal_font_height} ) {
         die(      "Fatal: Unrecognised font used ($config{terminal_font}).\n"
-                . "Please amend \$HOME/.csshrc with a valid font (see man page).\n"
+                . "Please amend \$HOME/.clusterssh/config with a valid font (see man page).\n"
         );
     }
 
@@ -1653,9 +1675,14 @@ sub setup_repeat() {
 }
 
 sub write_default_user_config() {
-    return if ( !$ENV{HOME} || -e "$ENV{HOME}/.csshrc" );
+    return if ( !$ENV{HOME} || -e "$ENV{HOME}/.clusterssh/config" );
 
-    if ( open( CONFIG, ">", "$ENV{HOME}/.csshrc" ) ) {
+    if( ! -d "$ENV{HOME}/.clusterssh" ) {
+        mkdir "$ENV{HOME}/.clusterssh" 
+            || die "Unable to create directory '$ENV{HOME}/.clusterssh': $!", $/;
+    }
+
+    if ( open( CONFIG, ">", "$ENV{HOME}/.clusterssh/config" ) ) {
         foreach ( sort( keys(%config) ) ) {
 
             # do not output internal vars
@@ -1665,7 +1692,7 @@ sub write_default_user_config() {
         close(CONFIG);
     }
     else {
-        logmsg( 1, "Unable to write default $ENV{HOME}/.csshrc file" );
+        logmsg( 1, "Unable to write default $ENV{HOME}/.clusterssh/config file" );
     }
 }
 
@@ -1692,15 +1719,15 @@ sub create_windows() {
         -expand => 1,
         );
 
-    $windows{history} = $windows{main_window}->Scrolled(
-        "ROText",
-        -insertborderwidth => 4,
-        -width             => $config{history_width},
-        -height            => $config{history_height},
-        -state             => 'normal',
-        -takefocus         => 0,
-    );
-    $windows{history}->bindtags(undef);
+#    $windows{history} = $windows{main_window}->Scrolled(
+#        "ROText",
+#        -insertborderwidth => 4,
+#        -width             => $config{history_width},
+#        -height            => $config{history_height},
+#        -state             => 'normal',
+#        -takefocus         => 0,
+#    );
+#    $windows{history}->bindtags(undef);
 
     if ( $config{show_history} ) {
         $windows{history}->pack(
@@ -1775,10 +1802,10 @@ sub create_windows() {
     );
 
     my $manpage = `pod2text -l -q=\"\" $0`;
-    $windows{mantext}
-        = $windows{manpage}->Scrolled( "Text", )->pack( -fill => 'both' );
-    $windows{mantext}->insert( 'end', $manpage );
-    $windows{mantext}->configure( -state => 'disabled' );
+#    $windows{mantext}
+#        = $windows{manpage}->Scrolled( "Text", )->pack( -fill => 'both' );
+#    $windows{mantext}->insert( 'end', $manpage );
+#    $windows{mantext}->configure( -state => 'disabled' );
 
     $windows{addhost} = $windows{main_window}->DialogBox(
         -popover        => $windows{main_window},
