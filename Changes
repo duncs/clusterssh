@@ -1,4 +1,4 @@
-????-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_07
+2011-01-24 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_07
 * Fix for parsing config files with empty values (Stefan Steiner)
 * Reinstate acting on '-l username' option (reported by Ryan Brown)
 
