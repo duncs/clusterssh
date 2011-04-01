@@ -47,7 +47,7 @@ changes are committed.
 
 =head2 Further Notes
 
-Please also see L<KNOWN BUGS>.
+Please also see L</KNOWN BUGS>.
 
 =over
 
@@ -65,12 +65,12 @@ that host.  Re-selecting it will plug it back in.
 =item *
 
 If your window manager menu bars are obscured by terminal windows see
-the C<screen_reserve_XXXXX> options in the F<csshrc> file (see L<"FILES">).
+the C<screen_reserve_XXXXX> options in the F<csshrc> file (see L</"FILES">).
 
 =item *
 
 If the terminals overlap too much see the C<terminal_reserve_XXXXX> 
-options in the F<csshrc> file (see L<"FILES">).
+options in the F<csshrc> file (see L</"FILES">).
 
 =item *
 
@@ -132,11 +132,11 @@ Enable|Disable automatically quiting after the last client window has closed
 
 =item --cluster-file,-c <file>
 
-Use supplied file as additional cluster file (see also L<"FILES">)
+Use supplied file as additional cluster file (see also L</"FILES">)
 
 =item --config-file,-C <file>
 
-Use supplied file as additional configuration file (see also L<"FILES">)
+Use supplied file as additional configuration file (see also L</"FILES">)
 
 =item -d 
 
@@ -179,7 +179,7 @@ Show full help test (the man page), and exit
 Specify arguments to be passed to ssh or rsh when making the connection.  
 
 B<NOTE:> any "generic" change to the method (i.e. specifying the ssh port to use)
-should be done in the medium's own config file (see L<ssh_config> and 
+should be done in the medium's own config file (see C<ssh_config> and 
 F<$HOME/.ssh/config>).
 
 =item --output-config,-u
@@ -239,7 +239,7 @@ on standard port (e.g not listening on port 22) and ssh_config cannot be used.
 =item <tag> ...
 
 Open a series of xterms defined by <tag> within either /etc/clusters or
-F<$HOME/.csshrc> (see L<"FILES">).
+F<$HOME/.csshrc> (see L</"FILES">).
 
 Note: specifying a username on a cluster tag will override any usernames 
 defined in the cluster
@@ -456,7 +456,7 @@ arguments).
 B<NOTE:> The given defaults are based on OpenSSH, not commercial ssh software.
 
 B<NOTE:> Any "generic" change to the method (i.e. specifying the ssh port to use)
-should be done in the medium's own config file (see L<ssh_config> and 
+should be done in the medium's own config file (see C<ssh_config> and 
 F<$HOME/.ssh/config>).
 
 =item screen_reserve_top = 0
@@ -739,10 +739,10 @@ and child windows).
 =head1 SEE ALSO
 
 L<http://clusterssh.sourceforge.net/>,
-L<ssh>,
+C<ssh>,
 L<Tk::overview>,
 L<X11::Protocol>,
-L<perl>
+C<perl>
 
 =head1 CREDITS
 
