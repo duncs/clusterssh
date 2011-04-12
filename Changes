@@ -1,3 +1,6 @@
+????-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_09
+* Cater for missing 'pod2text' command (Thanks to Sami Kerola)
+
 2011-04-01 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_08
 * Amend all L<xx> links to prevent build breakage on cygwin (Sf bug 3115635)
 

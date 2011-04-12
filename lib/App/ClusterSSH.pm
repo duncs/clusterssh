@@ -3,7 +3,7 @@ package App::ClusterSSH;
 use 5.008.004;
 use warnings;
 use strict;
-use version; our $VERSION = version->new('4.00_08');
+use version; our $VERSION = version->new('4.00_09');
 
 use Carp;
 
@@ -1775,7 +1775,10 @@ sub create_windows() {
         -buttons    => ['Close'],
     );
 
-    my $manpage = `pod2text -l -q=\"\" $0`;
+    my $manpage = `pod2text -l -q=\"\" $0 2>/dev/null`;
+    if(!$manpage) {
+        $manpage = "Help is missing.\nSee that command 'pod2text' is installed and in PATH.";
+    }
     $windows{mantext}
         = $windows{manpage}->Scrolled( "Text", )->pack( -fill => 'both' );
     $windows{mantext}->insert( 'end', $manpage );
