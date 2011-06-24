@@ -1081,6 +1081,7 @@ sub open_client_windows(@) {
         $servers{$server}{realname}       = $realname;
         $servers{$server}{username}       = $config{user};
         $servers{$server}{username}       = $username if ($username);
+        $servers{$server}{username}       = $username || '';
         $servers{$server}{port}           = $port || '';
 
         logmsg( 2, "Working on server $server for $_" );
