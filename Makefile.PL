@@ -15,6 +15,7 @@ WriteMakefile
                          },
           'INSTALLDIRS' => 'site',
           'EXE_FILES' => [
+                           'bin/ccon',
                            'bin/crsh',
                            'bin/cscp',
                            'bin/cssh',

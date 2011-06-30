@@ -83,6 +83,17 @@ sub set_port {
     return $self;
 }
 
+sub get_master {
+    my ($self) = @_;
+    return $self->{master} || q{};
+}
+
+sub set_master {
+    my ( $self, $new_master ) = @_;
+    $self->{master} = $new_master;
+    return $self;
+}
+
 sub get_realname {
     my ($self) = @_;
 
@@ -277,11 +288,15 @@ Create a new host object.  'hostname' is a required arg, 'username' and
 
 =item $host->get_port
 
+=item $host->get_master
+
 Return specific details about the host
 
 =item $host->set_username
 
 =item $host->set_port
+
+=item $host->set_master
 
 Set specific details about the host after its been created.
 

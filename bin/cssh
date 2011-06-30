@@ -15,13 +15,14 @@ __END__
 
 =head1 NAME
 
-cssh, crsh, ctel - Cluster administration tool
+cssh, crsh, ctel, ccon - Cluster administration tool
 
 =head1 SYNOPSIS
 
 S<< cssh [options] [[user@]<server>[:port]|<tag>] [...] >>
 S<< crsh [options] [[user@]<server>[:port]|<tag>] [...] >>
 S<< ctel [options] [<server>[:port]|<tag>] [...] >>
+S<< ccon [options] [[user@]<server>[:port]|<tag>] [...] >>
 
 =head1 DESCRIPTION
 
@@ -37,7 +38,7 @@ nodes are kept in sync.
 Connections are opened via ssh so a correctly installed and configured
 ssh installation is required.  If, however, the program is called by "crsh"
 then the rsh protocol is used (and the communications channel is insecure),
-or by "ctel" then telnet is used.
+or by "ctel" then telnet is used, or by "ccon" then console is used.
 
 Extra caution should be taken when editing system files such as
 /etc/inet/hosts as lines may not necessarily be in the same order.  Assuming
@@ -86,6 +87,12 @@ communications protocol instead of ssh.
 
 =item *
 
+If the code is called as ccon instead of cssh (i.e. a symlink called
+ccon points to the cssh file or the file is renamed) console is used as the
+communications protocol instead of ssh.
+
+=item *
+
 When using cssh on a large number of systems to connect back to a single
 system (e.g. you issue a command to the cluster to scp a file from a given
 location) and when these connections require authentication (i.e. you are
@@ -123,7 +130,7 @@ Default options are shown as appropriate.
 
 Run the command in each session, i.e. C<-a 'vi /etc/hosts'> to drop straight
 into a vi session.  NOTE: not all communications methods support this (ssh 
-and rsh should, telnet will not).
+and rsh should, telnet and console will not).
 
 =item --autoquit,-q|--no-autoquit,-Q
 
@@ -171,6 +178,11 @@ List available cluster tags.
 =item --man,-H
 
 Show full help test (the man page), and exit
+
+=item --master,-M <master>
+
+The console client program polls master as the primary server, rather than the
+default set at compile time (typically ``console'').
 
 =item --options,-o "-x -o ConnectTimeout=10" - for ssh connections
 
@@ -308,6 +320,10 @@ S<$ ctel -p 2022 server1 server2>
 =item Use rsh instead of ssh
 
 S<$ crsh server1 server2>
+
+=item Use console with master as the primary server instead of ssh
+
+S<$ ccon -M master server1 server2>
 
 =back
 

@@ -26,7 +26,7 @@ Idea from Markus Manzke
 Change way commands generated
 =============================
 
-Each scrpt file (cssh, crsh, ctelnet, cscp, crsync) should define how 
+Each script file (cssh, crsh, ctel, ccon, cscp, crsync) should define how
 the command is created/used and also none-common options
 
 # Something like the following (needs refinement):
