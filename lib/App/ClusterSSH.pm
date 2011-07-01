@@ -172,9 +172,7 @@ sub exit_prog() {
 sub logmsg($@) {
     my $level = shift;
 
-    if ( $level > 6 ) {
-        croak('requested debug level should not be above 6');
-    }
+    $level = 6 if ( $level > 6 );
 
     if ( $level <= $options{debug} ) {
         print( strftime( "%H:%M:%S: ", localtime ) )
