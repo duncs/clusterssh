@@ -16,7 +16,13 @@ our %ssh_configs_read;
 sub new {
     my ( $class, %args ) = @_;
 
-    croak 'hostname is undefined' if ( !$args{hostname} );
+    if ( !$args{hostname} ) {
+        croak(
+            App::ClusterSSH::Exception->throw(
+                error => $class->loc('hostname is undefined')
+            )
+        );
+    }
 
     # remove any keys undef values - must be a better way...
     foreach my $remove (qw/ port username /) {
@@ -25,7 +31,8 @@ sub new {
         }
     }
 
-    my $self = $class->SUPER::new( ssh_config => "$ENV{HOME}/.ssh/config", %args );
+    my $self
+        = $class->SUPER::new( ssh_config => "$ENV{HOME}/.ssh/config", %args );
 
     # load in ssh hostname for later use
     if ( !%ssh_hostname_for || !$ssh_configs_read{ $self->{ssh_config} } ) {
@@ -33,7 +40,7 @@ sub new {
         if ( open( my $ssh_config_fh, '<', $self->{ssh_config} ) ) {
             while ( my $line = <$ssh_config_fh> ) {
                 chomp $line;
-                next unless ($line =~ m/^\s*host\s+(.*)/i);
+                next unless ( $line =~ m/^\s*host\s+(.*)/i );
 
                 # account for multiple declarations of hosts
                 $ssh_hostname_for{$_} = 1 foreach ( split( /\s+/, $1 ) );
@@ -41,10 +48,12 @@ sub new {
             close($ssh_config_fh);
 
             $self->debug( 5, 'Have the following ssh hostnames' );
-            $self->debug( 5, '  "', $_, '"' ) foreach ( sort keys %ssh_hostname_for );
+            $self->debug( 5, '  "', $_, '"' )
+                foreach ( sort keys %ssh_hostname_for );
         }
         else {
-            $self->debug( 3, 'Unable to read ', $self->{ssh_config}, ': ', $!, $/ );
+            $self->debug( 3, 'Unable to read ',
+                $self->{ssh_config}, ': ', $!, $/ );
         }
     }
 
@@ -105,7 +114,10 @@ sub get_realname {
             else {
                 my $gethost_obj = gethostbyname( $self->{hostname} );
 
-                $self->{realname} = defined($gethost_obj) ? $gethost_obj->name() : $self->{hostname};
+                $self->{realname}
+                    = defined($gethost_obj)
+                    ? $gethost_obj->name()
+                    : $self->{hostname};
             }
         }
         else {
@@ -131,7 +143,10 @@ sub parse_host_string {
         }xms
         )
     {
-        $self->debug( 5, $self->loc( 'bracketed IPv6: u=[_1] h=[_2] p=[_3]', $1, $2, $3 ), );
+        $self->debug(
+            5,
+            $self->loc( 'bracketed IPv6: u=[_1] h=[_2] p=[_3]', $1, $2, $3 ),
+        );
         return __PACKAGE__->new(
             parse_string => $parse_string,
             username     => $1,
@@ -151,7 +166,9 @@ sub parse_host_string {
         }xms
         )
     {
-        $self->debug( 5, $self->loc( 'std IPv4: u=[_1] h=[_2] p=[_3]', $1, $2, $3 ), );
+        $self->debug( 5,
+            $self->loc( 'std IPv4: u=[_1] h=[_2] p=[_3]', $1, $2, $3 ),
+        );
         return __PACKAGE__->new(
             parse_string => $parse_string,
             username     => $1,
@@ -176,7 +193,13 @@ sub parse_host_string {
     # if there are 7 colons assume its a full IPv6 address
     # also catch localhost address here
     if ( $colon_count == 7 || $host_string eq '::1' ) {
-        $self->debug( 5, $self->loc( 'IPv6: u=[_1] h=[_2] p=[_3]', $username, $host_string, '' ), );
+        $self->debug(
+            5,
+            $self->loc(
+                'IPv6: u=[_1] h=[_2] p=[_3]',
+                $username, $host_string, ''
+            ),
+        );
         return __PACKAGE__->new(
             parse_string => $parse_string,
             username     => $username,
@@ -192,12 +215,18 @@ sub parse_host_string {
         warn 'Ambiguous host string: "', $host_string, '"',   $/;
         warn 'Assuming you meant "[',    $host_string, ']"?', $/;
 
-        $self->debug( 5, $self->loc( 'Ambiguous IPv6 u=[_1] h=[_2] p=[_3]', $username, $host_string, '' ) );
+        $self->debug(
+            5,
+            $self->loc(
+                'Ambiguous IPv6 u=[_1] h=[_2] p=[_3]', $username,
+                $host_string,                          ''
+            )
+        );
 
-#warn "host_string=$host_string";
-#warn "username=$username";
-#warn $self->loc('some string to return');
-#warn 'debug done, returning';
+        #warn "host_string=$host_string";
+        #warn "username=$username";
+        #warn $self->loc('some string to return');
+        #warn 'debug done, returning';
 
         return __PACKAGE__->new(
             parse_string => $parse_string,
@@ -215,7 +244,13 @@ sub parse_host_string {
 
         my $hostname = $host_string;
 
-        $self->debug( 5, $self->loc( 'Default parse u=[_1] h=[_2] p=[_3]', $username, $hostname, $port ) );
+        $self->debug(
+            5,
+            $self->loc(
+                'Default parse u=[_1] h=[_2] p=[_3]',
+                $username, $hostname, $port
+            )
+        );
 
         return __PACKAGE__->new(
             parse_string => $parse_string,
@@ -226,14 +261,23 @@ sub parse_host_string {
         );
     }
 
+    # Due to above rules, we'll never get this far anyhow
+
     # if we got this far, we didnt parse the host_string properly
-    croak( 'Unable to parse hostname from "', $host_string, '"' );
+    croak(
+        App::ClusterSSH::Exception->throw(
+            error => $self->loc(
+                'Unable to parse hostname from "[_1]"', $host_string
+            )
+        )
+    );
 }
 
 sub check_ssh_hostname {
     my ( $self, ) = @_;
 
-    $self->debug( 4, 'Checking ssh hosts for hostname ', $self->get_hostname );
+    $self->debug( 4, 'Checking ssh hosts for hostname ',
+        $self->get_hostname );
 
     if ( $ssh_hostname_for{ $self->get_hostname } ) {
         return 1;
