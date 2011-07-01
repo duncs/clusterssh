@@ -5,6 +5,10 @@ use strict;
 use Carp;
 use App::ClusterSSH::L10N;
 
+use Exception::Class (
+    'App::ClusterSSH::Exception',
+);
+
 # Dont use SVN revision as it can cause problems
 use version;
 our $VERSION = version->new('0.02');
@@ -81,7 +85,7 @@ sub set_lang {
 sub set_debug_level {
     my ( $self, $level ) = @_;
     if ( !defined $level ) {
-        croak( _translate('Debug level not provided') );
+        croak( App::ClusterSSH::Exception->throw( error => _translate('Debug level not provided') ) );
     }
     if ( $level > 9 ) {
         $level = 9;
@@ -113,7 +117,7 @@ sub config {
     my ($self) = @_;
 
     if ( !$app_configuration ) {
-        croak( _translate('config has not yet been set') );
+        croak( App::ClusterSSH::Exception->throw( _translate('config has not yet been set') ) );
     }
 
     return $app_configuration;
@@ -123,11 +127,11 @@ sub set_config {
     my ( $self, $config ) = @_;
 
     if ($app_configuration) {
-        croak( _translate('config has already been set') );
+        croak( App::ClusterSSH::Exception->throw( _translate('config has already been set') ) );
     }
 
     if(!$config) { 
-        croak( _translate('passed config is empty'));
+        croak( App::ClusterSSH::Exception->throw( _translate('passed config is empty')) );
     }
 
     $self->debug( 3, _translate('Setting app configuration') );

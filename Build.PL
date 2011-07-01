@@ -23,6 +23,7 @@ my $build = Module::Build->new(
         'Tk'               => '800.022',
         'X11::Protocol'    => '0.56',
         'Locale::Maketext' => 0,
+        'Exception::Class' => '1.31',
     },
     build_requires => {
         'Test::Pod::Coverage' => 0,

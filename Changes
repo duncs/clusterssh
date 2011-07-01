@@ -1,3 +1,6 @@
+????-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_00
+* Start switching code to use Exception::Class
+
 2011-06-30 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_09
 * Cater for missing 'pod2text' command (Thanks to Sami Kerola)
 * Fix 'uninitialised variable' error
