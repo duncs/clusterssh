@@ -3,7 +3,7 @@ package App::ClusterSSH;
 use 5.008.004;
 use warnings;
 use strict;
-use version; our $VERSION = version->new('4.00_09');
+use version; our $VERSION = version->new('4.00_10');
 
 use Carp;
 
@@ -1099,7 +1099,7 @@ sub open_client_windows(@) {
         $servers{$server}{username}       = $username if ($username);
         $servers{$server}{username}       = $username || '';
         $servers{$server}{port}           = $port || '';
-        $servers{$server}{master}         = $config{mstr};
+        $servers{$server}{master}         = $config{mstr} || '';;
         $servers{$server}{master}         = $master if ($master);
 
         logmsg( 2, "Working on server $server for $_" );
