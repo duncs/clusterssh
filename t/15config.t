@@ -73,20 +73,36 @@ my $default_config = {
 
     # other bits inheritted from App::ClusterSSH::Base
     debug => 0,
-    lang => 'en',
+    lang  => 'en',
 
 };
-is_deeply($config, $default_config, 'default config is correct');
+is_deeply( $config, $default_config, 'default config is correct' );
 
 trap {
-    $config = $config->validate_args(doesnt_exist => 'whoops');
+    $config = $config->validate_args( 
+        whoops => 'not there',
+        doesnt_exist => 'whoops',
+    );
 };
-isa_ok($trap->die, 'App::ClusterSSH::Exception::Config');
-is($trap->die, 'Unknown configuration parameters: doesnt_exist', 'got correct error message');
-is_deeply( $trap->die->unknown_config, ['doesnt_exist'], 'Picked up unknown config array' );
+isa_ok( $trap->die, 'App::ClusterSSH::Exception::Config' );
+is( $trap->die,
+    'Unknown configuration parameters: doesnt_exist,whoops',
+    'got correct error message'
+);
+is_deeply( $trap->die->unknown_config,
+    ['doesnt_exist','whoops'], 'Picked up unknown config array' );
 
-
-
-
+$default_config->{extra_cluster_file}             = '/etc/filename';
+$default_config->{rsh_args}                       = 'some args';
+$default_config->{max_addhost_menu_cluster_items} = 120;
+trap {
+    $config = $config->validate_args(
+        extra_cluster_file             => '/etc/filename',
+        rsh_args                       => 'some args',
+        max_addhost_menu_cluster_items => 120,
+    );
+};
+is( $trap->die, undef, 'validated ok' );
+is_deeply( $config, $default_config, 'default config is correct' );
 
 done_testing();

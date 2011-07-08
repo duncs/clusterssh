@@ -73,9 +73,7 @@ sub new {
 
     my $self = $class->SUPER::new(%default_config);
 
-    my @unknown = $self->validate_args(%args);
-
-    return $self;
+    return $self->validate_args(%args);
 }
 
 sub validate_args {
@@ -84,16 +82,24 @@ sub validate_args {
     my @unknown_config = ();
 
     foreach my $config ( sort( keys(%args) ) ) {
-        if ( exists $self->{config} ) {
-            $self->config = $args{$config};
+        if ( exists $self->{$config} ) {
+            $self->{$config} = $args{$config};
         }
         else {
-            push(@unknown_config, $config);
+            push( @unknown_config, $config );
         }
     }
 
-    if(@unknown_config) {
-        croak( App::ClusterSSH::Exception::Config->throw( unknown_config => \@unknown_config, error => $self->loc('Unknown configuration parameters: [_1]', join(',',@unknown_config) ) ) );
+    if (@unknown_config) {
+        croak(
+            App::ClusterSSH::Exception::Config->throw(
+                unknown_config => \@unknown_config,
+                error          => $self->loc(
+                    'Unknown configuration parameters: [_1]',
+                    join( ',', @unknown_config )
+                )
+            )
+        );
     }
 
     return $self;
@@ -102,9 +108,40 @@ sub validate_args {
 sub parse_config_file {
     my ( $self, $config_file ) = @_;
 
-    $self->debug(2, 'Loading in config file: ', $config_file);
+    $self->debug( 2, 'Loading in config file: ', $config_file );
 
     return if ( !-e $config_file || !-r $config_file );
+
+    open( CFG, $config_file ) or die("Couldnt open $config_file: $!");
+    my $l;
+    my %read_config;
+    while ( defined( $l = <CFG> ) ) {
+        next
+            if ( $l =~ /^\s*$/ || $l =~ /^#/ )
+            ;    # ignore blank lines & commented lines
+        $l =~ s/#.*//;     # remove comments from remaining lines
+        $l =~ s/\s*$//;    # remove trailing whitespace
+
+        # look for continuation lines
+        chomp $l;
+        if ( $l =~ s/\\\s*$// ) {
+            $l .= <CFG>;
+            redo unless eof(CFG);
+        }
+
+        next unless $l =~ m/\s*(\S+)\s*=\s*(.*)\s*/;
+        my ( $key, $value ) = ( $1, $2 );
+        if ( defined $key && defined $value ) {
+            $read_config{$key} = $value;
+            logmsg( 3, "$key=$value" );
+        }
+    }
+    close(CFG);
+
+    # tidy up entries, just in case
+    $read_config{terminal_font} =~ s/['"]//g;
+
+    $self->validate_args(%read_config);
 }
 
 #use overload (
@@ -143,7 +180,7 @@ Read in configuration from given filename
 
 =item $config->validate_args();
 
-Validate all configuration loaded at this point
+Validate and apply all configuration loaded at this point
 
 =back
 
