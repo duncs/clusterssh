@@ -7,6 +7,9 @@ use App::ClusterSSH::L10N;
 
 use Exception::Class (
     'App::ClusterSSH::Exception',
+    'App::ClusterSSH::Exception::Config' => {
+        fields => 'unknown_config',
+    },
 );
 
 # Dont use SVN revision as it can cause problems

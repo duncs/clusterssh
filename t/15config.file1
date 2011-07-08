@@ -1,0 +1,3 @@
+comms=telnet
+method=telnet
+telnet=/usr/bin/telnet

@@ -1097,7 +1097,7 @@ sub open_client_windows(@) {
         $servers{$server}{username}       = $username if ($username);
         $servers{$server}{username}       = $username || '';
         $servers{$server}{port}           = $port || '';
-        $servers{$server}{master}         = $config{mstr} || '';;
+        $servers{$server}{master}         = $config{mstr} || '';
         $servers{$server}{master}         = $master if ($master);
 
         logmsg( 2, "Working on server $server for $_" );
@@ -1549,8 +1549,11 @@ sub add_host_by_name() {
 
     if ( $menus{host_entry} ) {
         logmsg( 2, "host=", $menus{host_entry} );
+        my @names = resolve_names( split( /\s+/, $menus{host_entry} ) );
+        logmsg( 0, 'Opening to: ', join(' ', @names) );
         open_client_windows(
-            resolve_names( split( /\s+/, $menus{host_entry} ) ) );
+            @names
+        );
     }
 
     if ( $menus{listbox}->curselection() ) {
@@ -2229,6 +2232,7 @@ sub run {
     capture_map_events();
 
     setup_helper_script();
+    logmsg( 0, 'Opening to: ', join(' ', @servers) );
     open_client_windows(@servers);
 
     # Check here if we are tiling windows.  Here instead of in func so
