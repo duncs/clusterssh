@@ -110,7 +110,15 @@ sub parse_config_file {
 
     $self->debug( 2, 'Loading in config file: ', $config_file );
 
-    return if ( !-e $config_file || !-r $config_file );
+    if ( !-e $config_file || !-r $config_file ){
+        croak(
+            App::ClusterSSH::Exception::Config->throw(
+                error          => $self->loc(
+                    'File [_1] does not exist or cannot be read', $config_file
+                ),
+            ),
+        );
+    }
 
     open( CFG, $config_file ) or die("Couldnt open $config_file: $!");
     my $l;

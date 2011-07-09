@@ -29,6 +29,7 @@ my $build = Module::Build->new(
         'Test::Pod::Coverage' => 0,
         'Test::Pod'           => 0,
         'Test::Trap'          => 0,
+        'Readonly'            => 0,
     },
     add_to_cleanup     => ['App-ClusterSSH-*'],
     create_makefile_pl => 'traditional',

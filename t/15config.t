@@ -1,11 +1,13 @@
 use strict;
 use warnings;
 
-use FindBin qw($Bin);
+use FindBin qw($Bin $Script);
 use lib "$Bin/../lib";
 
 use Test::More;
 use Test::Trap;
+
+use Readonly;
 
 BEGIN { use_ok("App::ClusterSSH::Config") }
 
@@ -14,7 +16,7 @@ my $config;
 $config = App::ClusterSSH::Config->new();
 isa_ok( $config, 'App::ClusterSSH::Config' );
 
-my $default_config = {
+Readonly::Hash my %default_config => {
     terminal                   => "xterm",
     terminal_args              => "",
     terminal_title_opt         => "-T",
@@ -76,11 +78,12 @@ my $default_config = {
     lang  => 'en',
 
 };
-is_deeply( $config, $default_config, 'default config is correct' );
+my %expected = %default_config;
+is_deeply( $config, \%expected, 'default config is correct' );
 
 trap {
-    $config = $config->validate_args( 
-        whoops => 'not there',
+    $config = $config->validate_args(
+        whoops       => 'not there',
         doesnt_exist => 'whoops',
     );
 };
@@ -89,12 +92,15 @@ is( $trap->die,
     'Unknown configuration parameters: doesnt_exist,whoops',
     'got correct error message'
 );
-is_deeply( $trap->die->unknown_config,
-    ['doesnt_exist','whoops'], 'Picked up unknown config array' );
+is_deeply(
+    $trap->die->unknown_config,
+    [ 'doesnt_exist', 'whoops' ],
+    'Picked up unknown config array'
+);
 
-$default_config->{extra_cluster_file}             = '/etc/filename';
-$default_config->{rsh_args}                       = 'some args';
-$default_config->{max_addhost_menu_cluster_items} = 120;
+$expected{extra_cluster_file}             = '/etc/filename';
+$expected{rsh_args}                       = 'some args';
+$expected{max_addhost_menu_cluster_items} = 120;
 trap {
     $config = $config->validate_args(
         extra_cluster_file             => '/etc/filename',
@@ -103,6 +109,18 @@ trap {
     );
 };
 is( $trap->die, undef, 'validated ok' );
-is_deeply( $config, $default_config, 'default config is correct' );
+is_deeply( $config, \%expected, 'default config is correct' );
+
+%expected = %default_config;
+
+my $file = "$Bin/$Script.doesntexist";
+trap {
+    $config = $config->parse_config_file( $file, );
+};
+isa_ok( $trap->die, 'App::ClusterSSH::Exception::Config' );
+is( $trap->die,
+    "File $file does not exist or cannot be read",
+    'got correct error message'
+);
 
 done_testing();
