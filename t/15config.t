@@ -114,7 +114,7 @@ is( $trap->die, undef, 'validated ok' );
 isa_ok( $config, "App::ClusterSSH::Config" );
 is_deeply( $config, \%expected, 'default config is correct' );
 
-$config = App::ClusterSSH::Config->new();
+$config   = App::ClusterSSH::Config->new();
 %expected = %default_config;
 
 my $file = "$Bin/$Script.doesntexist";
@@ -129,12 +129,12 @@ is( $trap->die,
 
 $file = "$Bin/$Script.file1";
 note("using $file");
-$config = App::ClusterSSH::Config->new();
-%expected = %default_config;
-$expected{screen_reserve_left}=100;
-$expected{screen_reserve_right}=100;
-$expected{screen_reserve_top}=100;
-$expected{screen_reserve_bottom}=160;
+$config                          = App::ClusterSSH::Config->new();
+%expected                        = %default_config;
+$expected{screen_reserve_left}   = 100;
+$expected{screen_reserve_right}  = 100;
+$expected{screen_reserve_top}    = 100;
+$expected{screen_reserve_bottom} = 160;
 trap {
     $config = $config->parse_config_file( $file, );
 };
@@ -147,16 +147,33 @@ is_deeply( $config, \%expected, 'amended config is correct' );
 
 $file = "$Bin/$Script.file2";
 note("using $file");
-$config = App::ClusterSSH::Config->new();
+$config   = App::ClusterSSH::Config->new();
 %expected = %default_config;
 trap {
     $config = $config->parse_config_file( $file, );
 };
 is( $trap->leaveby, 'die', 'died ok' );
 isa_ok( $trap->die, 'App::ClusterSSH::Exception::Config' );
-isa_ok( $config, "App::ClusterSSH::Config" );
+isa_ok( $config,    "App::ClusterSSH::Config" );
 is( $trap->stdout, q{}, 'Expecting no STDOUT' );
 is( $trap->stderr, q{}, 'Expecting no STDERR' );
 is_deeply( $config, \%expected, 'amended config is correct' );
+
+$file = "$Bin/$Script.file3";
+note("using $file");
+$config   = App::ClusterSSH::Config->new();
+%expected = %default_config;
+trap {
+    $config = $config->parse_config_file( $file, );
+};
+
+is( $trap->leaveby, 'return', 'returned ok' );
+is( $trap->die,     undef,    'returned ok' );
+isa_ok( $config, "App::ClusterSSH::Config" );
+is( $trap->stdout, q{}, 'Expecting no STDOUT' );
+{
+    local $TODO = "deal with cluster definitions in config file";
+    is( $trap->stderr, q{}, 'Expecting no STDERR' );
+}
 
 done_testing();

@@ -10,6 +10,8 @@ use Carp;
 
 use base qw/ App::ClusterSSH::Base /;
 
+my %clusters;
+my @app_specific = ( qw/ title comms method ssh rsh telnet ccon / );
 my %default_config = (
     terminal                   => "xterm",
     terminal_args              => "",
@@ -82,6 +84,8 @@ sub validate_args {
     my @unknown_config = ();
 
     foreach my $config ( sort( keys(%args) ) ) {
+        next if grep /$config/, @app_specific;
+
         if ( exists $self->{$config} ) {
             $self->{$config} = $args{$config};
         }
@@ -110,10 +114,10 @@ sub parse_config_file {
 
     $self->debug( 2, 'Loading in config file: ', $config_file );
 
-    if ( !-e $config_file || !-r $config_file ){
+    if ( !-e $config_file || !-r $config_file ) {
         croak(
             App::ClusterSSH::Exception::Config->throw(
-                error          => $self->loc(
+                error => $self->loc(
                     'File [_1] does not exist or cannot be read', $config_file
                 ),
             ),
@@ -146,8 +150,19 @@ sub parse_config_file {
     }
     close(CFG);
 
+    # grab any clusters from the config before validating it
+    if ( $read_config{clusters} ) {
+        carp("TODO - deal with clusters");
+        $self->debug( 3, "Picked up clusters defined in $config_file" );
+        foreach my $cluster ( sort split / /, $read_config{clusters} ) {
+            delete( $read_config{$cluster} );
+        }
+        delete( $read_config{clusters} );
+    }
+
     # tidy up entries, just in case
-    $read_config{terminal_font} =~ s/['"]//g if($read_config{terminal_font});
+    $read_config{terminal_font} =~ s/['"]//g
+        if ( $read_config{terminal_font} );
 
     $self->validate_args(%read_config);
 }
