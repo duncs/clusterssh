@@ -81,6 +81,7 @@ Readonly::Hash my %default_config => {
 my %expected = %default_config;
 is_deeply( $config, \%expected, 'default config is correct' );
 
+$config = App::ClusterSSH::Config->new();
 trap {
     $config = $config->validate_args(
         whoops       => 'not there',
@@ -97,6 +98,7 @@ is_deeply(
     [ 'doesnt_exist', 'whoops' ],
     'Picked up unknown config array'
 );
+isa_ok( $config, "App::ClusterSSH::Config" );
 
 $expected{extra_cluster_file}             = '/etc/filename';
 $expected{rsh_args}                       = 'some args';
@@ -109,8 +111,10 @@ trap {
     );
 };
 is( $trap->die, undef, 'validated ok' );
+isa_ok( $config, "App::ClusterSSH::Config" );
 is_deeply( $config, \%expected, 'default config is correct' );
 
+$config = App::ClusterSSH::Config->new();
 %expected = %default_config;
 
 my $file = "$Bin/$Script.doesntexist";
@@ -122,5 +126,37 @@ is( $trap->die,
     "File $file does not exist or cannot be read",
     'got correct error message'
 );
+
+$file = "$Bin/$Script.file1";
+note("using $file");
+$config = App::ClusterSSH::Config->new();
+%expected = %default_config;
+$expected{screen_reserve_left}=100;
+$expected{screen_reserve_right}=100;
+$expected{screen_reserve_top}=100;
+$expected{screen_reserve_bottom}=160;
+trap {
+    $config = $config->parse_config_file( $file, );
+};
+is( $trap->leaveby, 'return', 'returned ok' );
+is( $trap->die,     undef,    'returned ok' );
+isa_ok( $config, "App::ClusterSSH::Config" );
+is( $trap->stdout, q{}, 'Expecting no STDOUT' );
+is( $trap->stderr, q{}, 'Expecting no STDERR' );
+is_deeply( $config, \%expected, 'amended config is correct' );
+
+$file = "$Bin/$Script.file2";
+note("using $file");
+$config = App::ClusterSSH::Config->new();
+%expected = %default_config;
+trap {
+    $config = $config->parse_config_file( $file, );
+};
+is( $trap->leaveby, 'die', 'died ok' );
+isa_ok( $trap->die, 'App::ClusterSSH::Exception::Config' );
+isa_ok( $config, "App::ClusterSSH::Config" );
+is( $trap->stdout, q{}, 'Expecting no STDOUT' );
+is( $trap->stderr, q{}, 'Expecting no STDERR' );
+is_deeply( $config, \%expected, 'amended config is correct' );
 
 done_testing();

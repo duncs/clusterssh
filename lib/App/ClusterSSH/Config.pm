@@ -141,13 +141,13 @@ sub parse_config_file {
         my ( $key, $value ) = ( $1, $2 );
         if ( defined $key && defined $value ) {
             $read_config{$key} = $value;
-            logmsg( 3, "$key=$value" );
+            $self->debug( 3, "$key=$value" );
         }
     }
     close(CFG);
 
     # tidy up entries, just in case
-    $read_config{terminal_font} =~ s/['"]//g;
+    $read_config{terminal_font} =~ s/['"]//g if($read_config{terminal_font});
 
     $self->validate_args(%read_config);
 }
