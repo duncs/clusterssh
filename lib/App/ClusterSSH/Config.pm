@@ -11,7 +11,7 @@ use Carp;
 use base qw/ App::ClusterSSH::Base /;
 
 my %clusters;
-my @app_specific = ( qw/ title comms method ssh rsh telnet ccon / );
+my @app_specific   = (qw/ title comms method ssh rsh telnet ccon /);
 my %default_config = (
     terminal                   => "xterm",
     terminal_args              => "",
@@ -167,6 +167,64 @@ sub parse_config_file {
     $self->validate_args(%read_config);
 }
 
+# could use File::Which for some of this but we also search a few other places
+# just in case $PATH isnt set up right
+sub find_binary {
+    my ( $self, $binary ) = @_;
+
+    if ( !$binary ) {
+        croak(
+            App::ClusterSSH::Exception::Config->throw(
+                error => $self->loc('argument not provided'),
+            ),
+        );
+    }
+
+    $self->debug( 2, "Looking for $binary" );
+    my $path;
+    if ( !-x $binary || substr( $binary, 0, 1 ) ne '/' ) {
+
+        foreach (
+            split( /:/, $ENV{PATH} ), qw!
+            /bin
+            /sbin
+            /usr/sbin
+            /usr/bin
+            /usr/local/bin
+            /usr/local/sbin
+            /opt/local/bin
+            /opt/local/sbin
+            !
+            )
+        {
+            $self->debug( 3, "Looking in $_" );
+
+            if ( -f $_ . '/' . $binary && -x $_ . '/' . $binary ) {
+                $path = $_ . '/' . $binary;
+                $self->debug( 2, "Found at $path" );
+                last;
+            }
+        }
+    }
+    else {
+        $self->debug( 2, "Already configured OK" );
+        $path = $binary;
+    }
+    if ( !$path || !-f $path || !-x $path ) {
+        croak(
+            App::ClusterSSH::Exception::Config->throw(
+                error => $self->loc(
+                    '"[_1]" binary not found - please amend $PATH or the cssh config file',
+                    $binary
+                ),
+            ),
+        );
+    }
+
+    chomp($path);
+    return $path;
+}
+
 #use overload (
 #    q{""} => sub {
 #        my ($self) = @_;
@@ -197,13 +255,18 @@ Object representing application configuration
 
 Create a new configuration object.
 
-=item $config->parse_config_file('<filename');
+=item $config->parse_config_file('<filename>');
 
 Read in configuration from given filename
 
 =item $config->validate_args();
 
 Validate and apply all configuration loaded at this point
+
+=item $path = $self->find_binary('<name>');
+
+Locate the binary <name> and return the full path.  Doesn't just search 
+$PATH in case the environment isn't set up correctly
 
 =back
 

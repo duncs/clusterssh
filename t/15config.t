@@ -6,6 +6,7 @@ use lib "$Bin/../lib";
 
 use Test::More;
 use Test::Trap;
+use File::Which qw(which);
 
 use Readonly;
 
@@ -154,7 +155,11 @@ trap {
 };
 is( $trap->leaveby, 'die', 'died ok' );
 isa_ok( $trap->die, 'App::ClusterSSH::Exception::Config' );
-isa_ok( $config,    "App::ClusterSSH::Config" );
+is( $trap->die,
+    'Unknown configuration parameters: missing,rubbish',
+    'die message correct'
+);
+isa_ok( $config, "App::ClusterSSH::Config" );
 is( $trap->stdout, q{}, 'Expecting no STDOUT' );
 is( $trap->stderr, q{}, 'Expecting no STDERR' );
 is_deeply( $config, \%expected, 'amended config is correct' );
@@ -175,5 +180,43 @@ is( $trap->stdout, q{}, 'Expecting no STDOUT' );
     local $TODO = "deal with cluster definitions in config file";
     is( $trap->stderr, q{}, 'Expecting no STDERR' );
 }
+
+note('find_binary tests');
+my $path;
+$config = App::ClusterSSH::Config->new();
+trap {
+    $path = $config->find_binary();
+};
+is( $trap->leaveby, 'die', 'died ok' );
+isa_ok( $trap->die, 'App::ClusterSSH::Exception::Config' );
+isa_ok( $config,    "App::ClusterSSH::Config" );
+is( $trap->die, 'argument not provided', 'die message correct' );
+isa_ok( $config, "App::ClusterSSH::Config" );
+is( $trap->stdout, q{}, 'Expecting no STDOUT' );
+is( $trap->stderr, q{}, 'Expecting no STDERR' );
+is_deeply( $config, \%expected, 'amended config is correct' );
+
+trap {
+    $path = $config->find_binary('missing');
+};
+is( $trap->leaveby, 'die', 'died ok' );
+isa_ok( $trap->die, 'App::ClusterSSH::Exception::Config' );
+isa_ok( $config,    "App::ClusterSSH::Config" );
+is( $trap->die, '"missing" binary not found - please amend $PATH or the cssh config file', 'die message correct' );
+isa_ok( $config, "App::ClusterSSH::Config" );
+is( $trap->stdout, q{}, 'Expecting no STDOUT' );
+is( $trap->stderr, q{}, 'Expecting no STDERR' );
+is_deeply( $config, \%expected, 'amended config is correct' );
+
+trap {
+    $path = $config->find_binary('ls');
+};
+is( $trap->leaveby, 'return', 'returned ok' );
+isa_ok( $config,    "App::ClusterSSH::Config" );
+isa_ok( $config, "App::ClusterSSH::Config" );
+is( $trap->stdout, q{}, 'Expecting no STDOUT' );
+is( $trap->stderr, q{}, 'Expecting no STDERR' );
+is_deeply( $config, \%expected, 'amended config is correct' );
+is($path, which('ls'), 'Found correct path to "ls"');
 
 done_testing();

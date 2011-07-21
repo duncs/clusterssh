@@ -9,6 +9,7 @@ use Carp;
 
 use base qw/ App::ClusterSSH::Base /;
 use App::ClusterSSH::Host;
+use App::ClusterSSH::Config;
 
 use POSIX ":sys_wait_h";
 use Pod::Usage;
@@ -50,10 +51,17 @@ sub new {
 
     my $self = $class->SUPER::new(%args);
 
+    $self->{config} = App::ClusterSSH::Config->new();
+
     # catch and reap any zombies
     $SIG{CHLD} = \&REAPER;
 
     return $self;
+}
+
+sub config {
+    my ($self) = @_;
+    return $self->{config};
 }
 
 sub REAPER {
@@ -2315,6 +2323,8 @@ the code until this time.
 =item  check_ssh_hostnames
 
 =item  close_inactive_sessions
+
+=item  config
 
 =item  create_menubar
 

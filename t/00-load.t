@@ -7,4 +7,4 @@ BEGIN {
 	use_ok( 'App::ClusterSSH' );
 }
 
-diag( "Testing App::ClusterSSH $App::ClusterSSH::VERSION, Perl $], $^X" );
+note( "Testing App::ClusterSSH $App::ClusterSSH::VERSION, Perl $], $^X" );
