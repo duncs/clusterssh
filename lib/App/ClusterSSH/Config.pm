@@ -7,6 +7,7 @@ use version;
 our $VERSION = version->new('0.01');
 
 use Carp;
+use Try::Tiny;
 
 use base qw/ App::ClusterSSH::Base /;
 
@@ -54,7 +55,7 @@ my %default_config = (
 
     extra_cluster_file => "",
 
-    unmap_on_redraw => "no",
+    unmap_on_redraw => "no",    # Debian #329440
 
     show_history   => 0,
     history_width  => 40,
@@ -167,6 +168,68 @@ sub parse_config_file {
     $self->validate_args(%read_config);
 }
 
+sub load_configs {
+    my ($self, @configs) = @_;
+
+    if ( -e $ENV{HOME} . '/.csshrc' ) {
+        warn( $self->loc('[_1] is no longer used - please see documentation and remove', $ENV{HOME} . '/.csshrc'), $/);
+    }
+
+    for my $config ( '/etc/csshrc', $ENV{HOME} . '/.csshrc', $ENV{HOME} . '/.clusterssh/config', ) {
+        $self->parse_config_file($config) if( -e $config );
+    }
+
+    # write out default config file if necesasry
+    try {
+        $self->write_user_config_file();
+    } catch {
+        warn $_,$/;
+    };
+
+    # Attempt to load in provided config files.  Also look for anything 
+    # relative to config directory
+    for my $config ( @configs ) {
+        $self->parse_config_file($config) if( -e $config );
+
+        my $file = $ENV{HOME} . '/.clusterssh/config_'.$config;
+        $self->parse_config_file($file) if( -e $file );
+    }
+
+    return $self;
+}
+
+sub write_user_config_file {
+    my ($self) = @_;
+
+    return if ( -f "$ENV{HOME}/.clusterssh/config" );
+
+    if(! -d "$ENV{HOME}/.clusterssh" ) {
+        if(!mkdir("$ENV{HOME}/.clusterssh")) {
+        croak(
+            App::ClusterSSH::Exception::Config->throw(
+                error => $self->loc('Unable to create directory [_1]: [_2]', '$HOME/.clusterssh', $!),
+            ),
+        );
+            
+        }
+    }
+
+    if ( open( CONFIG, ">", "$ENV{HOME}/.clusterssh/config" ) ) {
+        foreach ( sort( keys(%$self) ) ) {
+            print CONFIG "$_=$self->{$_}\n";
+        }
+        close(CONFIG);
+    }
+    else {
+        croak(
+            App::ClusterSSH::Exception::Config->throw(
+                error => $self->loc('Unable to write default [_1]: [_2]', '$HOME/.clusterssh/config', $!),
+            ),
+        );
+    }
+    return $self;
+}
+
 # could use File::Which for some of this but we also search a few other places
 # just in case $PATH isnt set up right
 sub find_binary {
@@ -263,10 +326,20 @@ Read in configuration from given filename
 
 Validate and apply all configuration loaded at this point
 
-=item $path = $self->find_binary('<name>');
+=item $path = $config->find_binary('<name>');
 
 Locate the binary <name> and return the full path.  Doesn't just search 
 $PATH in case the environment isn't set up correctly
+
+=item $conifig->load_configs(@extra);
+
+Load up configuration from known locations (warn if .csshrc file found) and 
+load in option files as necessary.
+
+=item $config->write_user_config_file();
+
+Write out default $HOME/.clusterssh/config file (before option config files
+are loaded).
 
 =back
 

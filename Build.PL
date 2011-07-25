@@ -24,6 +24,7 @@ my $build = Module::Build->new(
         'X11::Protocol'    => '0.56',
         'Locale::Maketext' => 0,
         'Exception::Class' => '1.31',
+        'Try::Tiny'        => 0,
     },
     build_requires => {
         'Test::Pod::Coverage' => 0,
@@ -31,6 +32,7 @@ my $build = Module::Build->new(
         'Test::Trap'          => 0,
         'Readonly'            => 0,
         'File::Which'         => 0,
+        'File::Temp'          => 0,
     },
     add_to_cleanup     => ['App-ClusterSSH-*'],
     create_makefile_pl => 'traditional',
