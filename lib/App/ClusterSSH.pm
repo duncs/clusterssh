@@ -385,6 +385,7 @@ sub check_config() {
     $config{window_tiling} = "no"  if $options{'no-tile'};
 
     $config{user} = $options{username} if ( $options{username} );
+    $config{port} = $options{port}     if ( $options{port} );
 
     $config{mstr} = $options{master} if ( $options{master} );
 
@@ -984,74 +985,6 @@ sub setup_helper_script() {
     logmsg( 2, "Helper script done" );
 }
 
-sub split_hostname {
-    my ($connect_string) = @_;
-
-    my ( $server, $username, $port );
-
-    logmsg( 3, 'split_hostname: connect_string=' . $connect_string );
-
-    $username = $config{user} if ( $config{user} );
-
-    if ( $connect_string =~ s/^(.*)@// ) {
-        $username = $1;
-    }
-
-    # cope with IPv6 addresses
-
-    # check for correct syntax of using [<IPv6 address>]
-    # See http://tools.ietf.org/html/rfc2732 for more details
-    if ( $connect_string =~ m/^\[([\w:%]+)\](?::(\d+))?$/xsm ) {
-        logmsg( 3, 'connect_string contains IPv6 address' );
-        $server = $1;
-        $port   = $2;
-    }
-    else {
-
-        my $colon_count = $connect_string =~ tr/://;
-
-        # See if there are exactly 7 colons - if so, assume pure IPv6
-        if ( $colon_count == 7 ) {
-            $server = $connect_string;
-        }
-        else {
-
-            # if more than 1 but less than 8 colons and last octect is
-            # numbers only, warn about ambiguity
-            if (   $colon_count > 1
-                && $colon_count < 8
-                && $connect_string =~ m/:(\d+)$/ )
-            {
-                our $seen_error;
-                warn 'Potentially ambiguous IPv6 address/port definition: ',
-                    $connect_string, $/;
-                warn 'Assuming it is an IPv6 address only.', $/;
-                $server = $connect_string;
-                if ( !$seen_error ) {
-                    warn '*** See documenation for more information.', $/;
-                    $seen_error = 1;
-                }
-            }
-            else {
-
-               # split out port from end of connect string
-               # could have an invalid IPv6 address here, but the connect
-               # method will warn if it cannot connect anyhow
-               # However, this also catchs IPv4 addresses, possibly with ports
-                ( $server, $port )
-                    = $connect_string =~ m/^([\w%.-]+)(?::(\d+))?$/xsm;
-            }
-        }
-    }
-
-    $port ||= defined $options{port} ? $options{port} : q{};
-    $username ||= q{};
-
-    logmsg( 3, "username=$username, server=$server, port=$port" );
-
-    return ( $username, $server, $port );
-}
-
 sub open_client_windows(@) {
     foreach (@_) {
         next unless ($_);
@@ -1059,11 +992,12 @@ sub open_client_windows(@) {
         my $server_object = App::ClusterSSH::Host->parse_host_string($_);
 
         my $username = $server_object->get_username();
+        $username    = $config{user} if ( $config{user} );
         my $port     = $server_object->get_port();
+        $port        = $config{port} if ( $config{port} );
         my $server   = $server_object->get_hostname();
         my $master   = $server_object->get_master();
 
-        #my ( $username, $server, $port ) = split_hostname($_);
         my $given_server_name = $server_object->get_givenname();
 
         # see if we can find the hostname - if not, drop it
@@ -1080,6 +1014,8 @@ sub open_client_windows(@) {
 
        #next;  # Debian bug 499935 - ignore warnings about hostname resolution
         }
+
+        logmsg( 3, "username=$username, server=$server, port=$port" );
 
         my $color = '';
         if ( $config{terminal_colorize} ) {
