@@ -228,6 +228,7 @@ sub check_config() {
     $config{window_tiling} = "no"  if $options{'no-tile'};
 
     $config{user} = $options{username} if ( $options{username} );
+    $config{port} = $options{port}     if ( $options{port} );
 
     $config{mstr} = $options{master} if ( $options{master} );
 
@@ -734,6 +735,7 @@ sub send_resizemove($$$$$) {
 sub setup_helper_script() {
     my($self) = @_;
     logmsg( 2, "Setting up helper script" );
+<<<<<<< HEAD
     my $comms=$self->config->{comms};
     my $comms_args=$self->config->{$self->config->{comms}.'_args'} || '';
     my $command=$self->config->{command};
@@ -788,6 +790,50 @@ sub setup_helper_script() {
         warn("Running:$command\n"); # for debug purposes
         exec($command);
     };
+=======
+    $helper_script = <<"	HERE";
+		my \$pipe=shift;
+		my \$svr=shift;
+		my \$user=shift;
+		my \$port=shift;
+		my \$mstr=shift;
+		my \$command="$config{$config{comms}} $config{$config{comms}."_args"} ";
+		open(PIPE, ">", \$pipe) or die("Failed to open pipe: \$!\\n");
+		print PIPE "\$\$:\$ENV{WINDOWID}" 
+			or die("Failed to write to pipe: $!\\n");
+		close(PIPE) or die("Failed to close pipe: $!\\n");
+		if(\$svr =~ m/==\$/)
+		{
+			\$svr =~ s/==\$//;
+			warn("\\nWARNING: failed to resolve IP address for \$svr.\\n\\n"
+			);
+			sleep 5;
+		}
+		if(\$mstr) {
+			unless("$config{comms}" ne "console") {
+				\$mstr = \$mstr ? "-M \$mstr " : "";
+				\$command .= \$mstr;
+			}
+		}
+		if(\$user) {
+			unless("$config{comms}" eq "telnet") {
+				\$user = \$user ? "-l \$user " : "";
+				\$command .= \$user;
+			}
+		}
+		if("$config{comms}" eq "telnet") {
+			\$command .= "\$svr \$port";
+		} else {
+			if (\$port) {
+				\$command .= "-p \$port \$svr";
+			} else {
+			  \$command .= "\$svr";
+			}
+		}
+		\$command .= " $config{command} || sleep 5";
+#		warn("Running:\$command\\n"); # for debug purposes
+		exec(\$command);
+	HERE
 
     #	eval $helper_script || die ($@); # for debug purposes
     logmsg( 2, $helper_script );
@@ -804,7 +850,9 @@ sub open_client_windows(@) {
         my $server_object = App::ClusterSSH::Host->parse_host_string($_);
 
         my $username = $server_object->get_username();
+        $username    = $config{user} if ( $config{user} );
         my $port     = $server_object->get_port();
+        $port        = $config{port} if ( $config{port} );
         my $server   = $server_object->get_hostname();
         my $master   = $server_object->get_master();
 
@@ -824,6 +872,8 @@ sub open_client_windows(@) {
 
        #next;  # Debian bug 499935 - ignore warnings about hostname resolution
         }
+
+        logmsg( 3, "username=$username, server=$server, port=$port" );
 
         my $color = '';
         if ( $self->config->{terminal_colorize} ) {
