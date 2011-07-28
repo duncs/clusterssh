@@ -116,6 +116,12 @@ sub debug {
     return $self;
 }
 
+sub exit {
+    my ($self) = @_;
+
+    exit;
+}
+
 sub config {
     my ($self) = @_;
 
@@ -211,6 +217,10 @@ a wrapper to maketext in Locale::Maketext
 =item $obj->output(@);
 
 Output text on STDOUT.
+
+=item $obj->exit;
+
+Stub to allow program to exit neatly from wherever in the code
 
 =item $config = $obj->config;
 

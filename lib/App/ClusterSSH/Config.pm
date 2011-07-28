@@ -85,7 +85,10 @@ sub validate_args {
     my @unknown_config = ();
 
     foreach my $config ( sort( keys(%args) ) ) {
-        next if grep /$config/, @app_specific;
+        if (grep /$config/, @app_specific) {
+            $self->{$config} ||= 'unknown';
+            next;
+        }
 
         if ( exists $self->{$config} ) {
             $self->{$config} = $args{$config};
@@ -153,7 +156,7 @@ sub parse_config_file {
 
     # grab any clusters from the config before validating it
     if ( $read_config{clusters} ) {
-        carp("TODO - deal with clusters");
+        carp("TODO: deal with clusters");
         $self->debug( 3, "Picked up clusters defined in $config_file" );
         foreach my $cluster ( sort split / /, $read_config{clusters} ) {
             delete( $read_config{$cluster} );
@@ -172,7 +175,7 @@ sub load_configs {
     my ($self, @configs) = @_;
 
     if ( -e $ENV{HOME} . '/.csshrc' ) {
-        warn( $self->loc('[_1] is no longer used - please see documentation and remove', $ENV{HOME} . '/.csshrc'), $/);
+        warn( $self->loc('NOTICE: [_1] is no longer used - please see documentation and remove', $ENV{HOME} . '/.csshrc'), $/);
     }
 
     for my $config ( '/etc/csshrc', $ENV{HOME} . '/.csshrc', $ENV{HOME} . '/.clusterssh/config', ) {
@@ -189,6 +192,7 @@ sub load_configs {
     # Attempt to load in provided config files.  Also look for anything 
     # relative to config directory
     for my $config ( @configs ) {
+        next unless($config); # can be null when passed from Getopt::Long
         $self->parse_config_file($config) if( -e $config );
 
         my $file = $ENV{HOME} . '/.clusterssh/config_'.$config;
@@ -288,6 +292,19 @@ sub find_binary {
     return $path;
 }
 
+sub dump {
+    my ( $self, $no_exit, ) = @_;
+
+    $self->debug(3, 'Dumping config to STDOUT');
+    print('# Configuration dump produced by "cssh -u"',$/);
+
+    foreach my $key (keys %$self) {
+        print $key, '=', $self->{$key}, $/;
+    }
+
+    $self->exit if(!$no_exit);
+}
+
 #use overload (
 #    q{""} => sub {
 #        my ($self) = @_;
@@ -331,7 +348,7 @@ Validate and apply all configuration loaded at this point
 Locate the binary <name> and return the full path.  Doesn't just search 
 $PATH in case the environment isn't set up correctly
 
-=item $conifig->load_configs(@extra);
+=item $config->load_configs(@extra);
 
 Load up configuration from known locations (warn if .csshrc file found) and 
 load in option files as necessary.
@@ -340,6 +357,10 @@ load in option files as necessary.
 
 Write out default $HOME/.clusterssh/config file (before option config files
 are loaded).
+
+=item $config->dump()
+
+Write currently defined configuration to STDOUT
 
 =back
 

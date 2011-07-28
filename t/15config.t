@@ -254,7 +254,7 @@ isa_ok( $config,    "App::ClusterSSH::Config" );
 isa_ok( $config, "App::ClusterSSH::Config" );
 is( $trap->die, undef, 'die message correct' );
 is( $trap->stdout, q{}, 'Expecting no STDOUT' );
-is( $trap->stderr, $ENV{HOME}.'/.csshrc is no longer used - please see documentation and remove'.$/, 'Got correct STDERR output for .csshrc' );
+is( $trap->stderr, 'NOTICE: '.$ENV{HOME}.'/.csshrc is no longer used - please see documentation and remove'.$/, 'Got correct STDERR output for .csshrc' );
 ok( -d $ENV{HOME}.'/.clusterssh', '.clusterssh dir exists');
 ok( -f $ENV{HOME}.'/.clusterssh/config', '.clusterssh config file exists');
 is_deeply( $config, \%expected, 'amended config is correct' );
@@ -273,7 +273,7 @@ isa_ok( $config,    "App::ClusterSSH::Config" );
 isa_ok( $config, "App::ClusterSSH::Config" );
 is( $trap->die, undef, 'die message correct' );
 is( $trap->stdout, q{}, 'Expecting no STDOUT' );
-is( $trap->stderr, $ENV{HOME}.'/.csshrc is no longer used - please see documentation and remove'.$/, 'Got correct STDERR output for .csshrc' );
+is( $trap->stderr, 'NOTICE: '.$ENV{HOME}.'/.csshrc is no longer used - please see documentation and remove'.$/, 'Got correct STDERR output for .csshrc' );
 ok( -d $ENV{HOME}.'/.clusterssh', '.clusterssh dir exists');
 ok( -f $ENV{HOME}.'/.clusterssh/config', '.clusterssh config file exists');
 is_deeply( $config, \%expected, 'amended config is correct' );
@@ -376,7 +376,6 @@ trap {
     $config->load_configs();
 };
 is( $trap->leaveby, 'return', 'died ok' );
-isa_ok( $config,    "App::ClusterSSH::Config" );
 isa_ok( $config, "App::ClusterSSH::Config" );
 is( $trap->stdout, q{}, 'Expecting no STDOUT' );
 is( $trap->stderr, q{Unable to create directory $HOME/.clusterssh: File exists}.$/, 'Expecting no STDERR' );
@@ -389,10 +388,68 @@ $config = App::ClusterSSH::Config->new();
 trap {
     $config->load_configs();
 };
-is( $trap->leaveby, 'return', 'died ok' );
+is( $trap->leaveby, 'return', 'returned ok' );
 isa_ok( $config,    "App::ClusterSSH::Config" );
 isa_ok( $config, "App::ClusterSSH::Config" );
 is( $trap->stdout, q{}, 'Expecting no STDOUT' );
 is( $trap->stderr, q{Unable to write default $HOME/.clusterssh/config: Is a directory}.$/, 'Expecting no STDERR' );
+
+note('Checking dump');
+$config = App::ClusterSSH::Config->new();trap {
+    $config->dump();
+};
+my $expected=<<'EOF';
+# Configuration dump produced by "cssh -u"
+terminal_reserve_top=5
+terminal_bg_style=dark
+window_tiling_direction=right
+screen_reserve_left=0
+window_tiling=yes
+key_addhost=Control-Shift-plus
+max_addhost_menu_cluster_items=6
+key_clientname=Alt-n
+terminal_allow_send_events=-xrm '*.VT100.allowSendEvents:true'
+debug=0
+menu_host_autotearoff=0
+console_position=
+lang=en
+terminal_colorize=1
+unmap_on_redraw=no
+terminal_reserve_left=5
+screen_reserve_right=0
+key_retilehosts=Alt-r
+rsh_args=
+history_height=10
+key_quit=Control-q
+screen_reserve_top=0
+send_menu_xml_file=/home/dferguson/.csshrc_send_menu
+use_hotkeys=yes
+terminal_decoration_height=10
+menu_send_autotearoff=0
+terminal_args=
+terminal_decoration_width=8
+auto_quit=yes
+terminal=xterm
+command=
+telnet_args=
+mouse_paste=Button-2
+key_history=Alt-h
+terminal_reserve_right=0
+show_history=0
+terminal_font=6x13
+terminal_reserve_bottom=0
+history_width=40
+extra_cluster_file=
+ssh_args=
+terminal_title_opt=-T
+screen_reserve_bottom=60
+max_host_menu_items=30
+key_paste=Control-v
+terminal_size=80x24
+EOF
+isa_ok( $config, "App::ClusterSSH::Config" );
+is( $trap->die, undef, 'die message correct' );
+is( $trap->stdout, $expected, 'Expecting no STDOUT' );
+is( $trap->stderr, q{}, 'Expecting no STDERR' );
 
 done_testing();
