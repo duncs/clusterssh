@@ -735,7 +735,6 @@ sub send_resizemove($$$$$) {
 sub setup_helper_script() {
     my($self) = @_;
     logmsg( 2, "Setting up helper script" );
-<<<<<<< HEAD
     my $comms=$self->config->{comms};
     my $comms_args=$self->config->{$self->config->{comms}.'_args'} || '';
     my $command=$self->config->{command};
