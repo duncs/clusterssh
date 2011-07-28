@@ -1,3 +1,6 @@
+????-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_11
+* Fix '-l <username>' option (SF bug 3380675)
+
 2011-07-08 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_10
 * Fix 'uninitialised error' message
 
