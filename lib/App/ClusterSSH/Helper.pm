@@ -26,6 +26,57 @@ sub script {
     my $comms_args = $config->{$comms.'_args'};
     my $command = $config->{command};
 
+#    # P = pipe file
+#    # s = server
+#    # u = username
+#    # p = port
+#    # m = ccon master
+#    # c = comms command
+#    # a = command args
+#    # C = command to run
+#    my $lelehelper_script = q{
+#        use strict; 
+#        use warnings;
+#        use Getopt::Std;
+#        my %opts;
+#        getopts('PsupmcaC', \%opts);
+#        my $command="$opts{c} $opts{a}";
+#        open(PIPE, ">", $opts{P}) or die("Failed to open pipe: $!\n");
+#        print PIPE "$$:$ENV{WINDOWID}" 
+#            or die("Failed to write to pipe: $!\\n");
+#        close(PIPE) or die("Failed to close pipe: $!\\n");
+#        if($opts{s} =~ m/==$/)
+#        {
+#            $opts{s} =~ s/==$//;
+#            warn("\nWARNING: failed to resolve IP address for $opts{s}.\n\n");
+#            sleep 5;
+#        }
+#        if($opts{m}) {
+#            unless("$comms" ne "console") {
+#                $opts{m} = $opts{m} ? "-M $opts{m} " : "";
+#                $opts{c} .= $opts{m};
+#            }
+#        }
+#        if($opts{u}) {
+#            unless("$comms" eq "telnet") {
+#                $opts{u} = $opts{u} ? "-l $opts{u} " : "";
+#                $opts{c} .= $opts{u};
+#            }
+#        }
+#        if("$comms" eq "telnet") {
+#            $command .= "$opts{s} $opts{p}";
+#        } else {
+#            if ($opts{p}) {
+#              $opts{c} .= "-p $opts{p} $opts{s}";
+#            } else {
+#              $opts{c} .= "$opts{s}";
+#            }
+#        }
+#        #$command .= " $command || sleep 5";
+#        warn("Running:$command\n"); # for debug purposes
+#        exec($command);
+#    };
+
     my $script = <<"    HERE";
            my \$pipe=shift;
            my \$svr=shift;
