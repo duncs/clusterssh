@@ -1905,12 +1905,9 @@ sub create_menubar() {
         -tearoff => 0,
     );
 
-    #$windows{main_window}->bind(
-    #'<Key>' => \&key_event,
-    #);
-    warn 'TODO: fix key even binding';
-    #$windows{main_window}->bind( '<KeyPress>'   => \&{$self->key_event}, );
-    #$windows{main_window}->bind( '<KeyRelease>' => \&$self->key_event, );
+    $windows{main_window}->bind(
+        '<Key>' => [ $self => 'key_event' ],
+    );
     logmsg( 2, "create_menubar: completed" );
 }
 
@@ -2143,7 +2140,7 @@ the code until this time.
 
 =item  config
 
-=item  helper
+=item  config
 
 =item  create_menubar
 
