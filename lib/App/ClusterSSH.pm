@@ -10,6 +10,9 @@ use Carp;
 use base qw/ App::ClusterSSH::Base /;
 use App::ClusterSSH::Host;
 use App::ClusterSSH::Config;
+use App::ClusterSSH::Helper;
+
+use FindBin qw($Script);
 
 use POSIX ":sys_wait_h";
 use Pod::Usage;
@@ -52,6 +55,7 @@ sub new {
     my $self = $class->SUPER::new(%args);
 
     $self->{config} = App::ClusterSSH::Config->new();
+    $self->{helper} = App::ClusterSSH::Helper->new();
 
     # catch and reap any zombies
     $SIG{CHLD} = \&REAPER;
@@ -62,6 +66,11 @@ sub new {
 sub config {
     my ($self) = @_;
     return $self->{config};
+}
+
+sub helper {
+    my ($self) = @_;
+    return $self->{helper};
 }
 
 sub REAPER {
@@ -106,7 +115,6 @@ my %windows;     # hash for all window definitions
 my %menus;       # hash for all menu definitions
 my @servers;     # array of servers provided on cmdline
 my %servers;     # hash of server cx info
-my $helper_script = "";
 my $xdisplay;
 my %keyboardmap;
 my $sysconfigdir = "/etc";
@@ -732,113 +740,113 @@ sub send_resizemove($$$$$) {
     #$xdisplay->flush(); # dont flush here, but after all tiling worked out
 }
 
-sub setup_helper_script() {
-    my($self) = @_;
-    logmsg( 2, "Setting up helper script" );
-    my $comms=$self->config->{comms};
-    my $comms_args=$self->config->{$self->config->{comms}.'_args'} || '';
-    my $command=$self->config->{command};
-
-    # P = pipe file
-    # s = server
-    # u = username
-    # p = port
-    # m = ccon master
-    # c = comms command
-    # a = command args
-    # C = command to run
-    $helper_script = q{
-        use strict; 
-        use warnings;
-        use Getopt::Std;
-        my %opts;
-        getopts('PsupmcaC', \%opts);
-        my $command="$opts{c} $opts{a}";
-        open(PIPE, ">", $opts{P}) or die("Failed to open pipe: $!\n");
-        print PIPE "$$:$ENV{WINDOWID}" 
-            or die("Failed to write to pipe: $!\\n");
-        close(PIPE) or die("Failed to close pipe: $!\\n");
-        if($opts{s} =~ m/==$/)
-        {
-            $opts{s} =~ s/==$//;
-            warn("\nWARNING: failed to resolve IP address for $opts{s}.\n\n");
-            sleep 5;
-        }
-        if($opts{m}) {
-            unless("$comms" ne "console") {
-                $opts{m} = $opts{m} ? "-M $opts{m} " : "";
-                $opts{c} .= $opts{m};
-            }
-        }
-        if($opts{u}) {
-            unless("$comms" eq "telnet") {
-                $opts{u} = $opts{u} ? "-l $opts{u} " : "";
-                $opts{c} .= $opts{u};
-            }
-        }
-        if("$comms" eq "telnet") {
-            $command .= "$opts{s} $opts{p}";
-        } else {
-            if ($opts{p}) {
-              $opts{c} .= "-p $opts{p} $opts{s}";
-            } else {
-              $opts{c} .= "$opts{s}";
-            }
-        }
-        #$command .= " $command || sleep 5";
-        warn("Running:$command\n"); # for debug purposes
-        exec($command);
-    };
-#    $helper_script = <<"	HERE";
-#		my \$pipe=shift;
-#		my \$svr=shift;
-#		my \$user=shift;
-#		my \$port=shift;
-#		my \$mstr=shift;
-#		my \$command="$config{$config{comms}} $config{$config{comms}."_args"} ";
-#		open(PIPE, ">", \$pipe) or die("Failed to open pipe: \$!\\n");
-#		print PIPE "\$\$:\$ENV{WINDOWID}" 
-#			or die("Failed to write to pipe: $!\\n");
-#		close(PIPE) or die("Failed to close pipe: $!\\n");
-#		if(\$svr =~ m/==\$/)
-#		{
-#			\$svr =~ s/==\$//;
-#			warn("\\nWARNING: failed to resolve IP address for \$svr.\\n\\n"
-#			);
-#			sleep 5;
-#		}
-#		if(\$mstr) {
-#			unless("$config{comms}" ne "console") {
-#				\$mstr = \$mstr ? "-M \$mstr " : "";
-#				\$command .= \$mstr;
-#			}
-#		}
-#		if(\$user) {
-#			unless("$config{comms}" eq "telnet") {
-#				\$user = \$user ? "-l \$user " : "";
-#				\$command .= \$user;
-#			}
-#		}
-#		if("$config{comms}" eq "telnet") {
-#			\$command .= "\$svr \$port";
-#		} else {
-#			if (\$port) {
-#				\$command .= "-p \$port \$svr";
-#			} else {
-#			  \$command .= "\$svr";
-#			}
-#		}
-#		\$command .= " $config{command} || sleep 5";
-##		warn("Running:\$command\\n"); # for debug purposes
-#		exec(\$command);
-#	HERE
-
-    #	eval $helper_script || die ($@); # for debug purposes
-    logmsg( 2, $helper_script );
-    logmsg( 2, "Helper script done" );
-
-    return $self;
-}
+#sub setup_helper_script() {
+#    my($self) = @_;
+#    logmsg( 2, "Setting up helper script" );
+#    my $comms=$self->config->{comms};
+#    my $comms_args=$self->config->{$self->config->{comms}.'_args'} || '';
+#    my $command=$self->config->{command};
+#
+#    # P = pipe file
+#    # s = server
+#    # u = username
+#    # p = port
+#    # m = ccon master
+#    # c = comms command
+#    # a = command args
+#    # C = command to run
+#    my $lelehelper_script = q{
+#        use strict; 
+#        use warnings;
+#        use Getopt::Std;
+#        my %opts;
+#        getopts('PsupmcaC', \%opts);
+#        my $command="$opts{c} $opts{a}";
+#        open(PIPE, ">", $opts{P}) or die("Failed to open pipe: $!\n");
+#        print PIPE "$$:$ENV{WINDOWID}" 
+#            or die("Failed to write to pipe: $!\\n");
+#        close(PIPE) or die("Failed to close pipe: $!\\n");
+#        if($opts{s} =~ m/==$/)
+#        {
+#            $opts{s} =~ s/==$//;
+#            warn("\nWARNING: failed to resolve IP address for $opts{s}.\n\n");
+#            sleep 5;
+#        }
+#        if($opts{m}) {
+#            unless("$comms" ne "console") {
+#                $opts{m} = $opts{m} ? "-M $opts{m} " : "";
+#                $opts{c} .= $opts{m};
+#            }
+#        }
+#        if($opts{u}) {
+#            unless("$comms" eq "telnet") {
+#                $opts{u} = $opts{u} ? "-l $opts{u} " : "";
+#                $opts{c} .= $opts{u};
+#            }
+#        }
+#        if("$comms" eq "telnet") {
+#            $command .= "$opts{s} $opts{p}";
+#        } else {
+#            if ($opts{p}) {
+#              $opts{c} .= "-p $opts{p} $opts{s}";
+#            } else {
+#              $opts{c} .= "$opts{s}";
+#            }
+#        }
+#        #$command .= " $command || sleep 5";
+#        warn("Running:$command\n"); # for debug purposes
+#        exec($command);
+#    };
+##    $helper_script = <<"	HERE";
+##		my \$pipe=shift;
+##		my \$svr=shift;
+##		my \$user=shift;
+##		my \$port=shift;
+##		my \$mstr=shift;
+##		my \$command="$config{$config{comms}} $config{$config{comms}."_args"} ";
+##		open(PIPE, ">", \$pipe) or die("Failed to open pipe: \$!\\n");
+##		print PIPE "\$\$:\$ENV{WINDOWID}" 
+##			or die("Failed to write to pipe: $!\\n");
+##		close(PIPE) or die("Failed to close pipe: $!\\n");
+##		if(\$svr =~ m/==\$/)
+##		{
+##			\$svr =~ s/==\$//;
+##			warn("\\nWARNING: failed to resolve IP address for \$svr.\\n\\n"
+##			);
+##			sleep 5;
+##		}
+##		if(\$mstr) {
+##			unless("$config{comms}" ne "console") {
+##				\$mstr = \$mstr ? "-M \$mstr " : "";
+##				\$command .= \$mstr;
+##			}
+##		}
+##		if(\$user) {
+##			unless("$config{comms}" eq "telnet") {
+##				\$user = \$user ? "-l \$user " : "";
+##				\$command .= \$user;
+##			}
+##		}
+##		if("$config{comms}" eq "telnet") {
+##			\$command .= "\$svr \$port";
+##		} else {
+##			if (\$port) {
+##				\$command .= "-p \$port \$svr";
+##			} else {
+##			  \$command .= "\$svr";
+##			}
+##		}
+##		\$command .= " $config{command} || sleep 5";
+###		warn("Running:\$command\\n"); # for debug purposes
+##		exec(\$command);
+##	HERE
+#
+#    #	eval $helper_script || die ($@); # for debug purposes
+#    #logmsg( 2, $helper_script );
+#    #logmsg( 2, "Helper script done" );
+#
+#    return $self;
+#}
 
 sub open_client_windows(@) {
     my $self = shift;
@@ -930,12 +938,12 @@ sub open_client_windows(@) {
                 "'".$self->config->{title}.': '.$servers{$server}{connect_string}."'",
                 '-font '.$self->config->{terminal_font},
                 "-e ".$^X.' -e ',
-                "'".$helper_script."'",
-                "-P ".$servers{$server}{pipenm},
-                "-s ".$servers{$server}{givenname},
-                "-u '".$servers{$server}{username}."'",
-                "-p '".$servers{$server}{port}."'",
-                "-m '".$servers{$server}{master}."'",
+                "'".$self->helper->script($self->config)."'",
+                " ".$servers{$server}{pipenm},
+                " ".$servers{$server}{givenname},
+                " '".$servers{$server}{username}."'",
+                " '".$servers{$server}{port}."'",
+                " '".$servers{$server}{master}."'",
             );
             logmsg( 2, "Terminal exec line:\n$exec\n" );
             exec($exec) == 0 or warn("Failed: $!");
@@ -1073,7 +1081,7 @@ sub retile_hosts {
     my %config;
     warn 'Todo: retile hosts';
 
-    if ( $self->config->{window_tiling} ne "yes" && !$force ) {
+    #if ( $self->config->{window_tiling} ne "yes" && !$force ) {
         logmsg( 3,
             "Not meant to be tiling; just reshow windows as they were" );
 
@@ -1081,9 +1089,9 @@ sub retile_hosts {
             $xdisplay->req( 'MapWindow', $servers{$server}{wid} );
         }
         $xdisplay->flush();
-        show_console();
+        $self->show_console();
         return;
-    }
+    #}
 
     # ALL SIZES SHOULD BE IN PIXELS for consistency
 
@@ -2054,7 +2062,6 @@ sub run {
     logmsg( 2, "Capture map events" );
     $self->capture_map_events();
 
-    $self->setup_helper_script();
     logmsg( 0, 'Opening to: ', join(' ', @servers) );
     $self->open_client_windows(@servers);
 
@@ -2136,6 +2143,8 @@ the code until this time.
 
 =item  config
 
+=item  helper
+
 =item  create_menubar
 
 =item  create_windows
@@ -2189,8 +2198,6 @@ the code until this time.
 =item  send_text
 
 =item  send_text_to_all_servers
-
-=item  setup_helper_script
 
 =item  setup_repeat
 

@@ -9,10 +9,12 @@ our $VERSION = version->new('0.01');
 use Carp;
 use Try::Tiny;
 
+use FindBin qw($Script);
+
 use base qw/ App::ClusterSSH::Base /;
 
 my %clusters;
-my @app_specific   = (qw/ title comms method ssh rsh telnet ccon /);
+my @app_specific   = (qw/ command title comms method ssh rsh telnet ccon /);
 my %default_config = (
     terminal                   => "xterm",
     terminal_args              => "",
@@ -76,6 +78,16 @@ sub new {
 
     my $self = $class->SUPER::new(%default_config);
 
+    ( my $comms = $Script ) =~ s/^c//;
+    $self->{comms} = $comms;
+
+    # list of allowed comms methods
+    if ( 'ssh rsh telnet console' !~ m/\B$comms\B/ ) {
+        $self->{comms} = 'ssh';
+    }
+
+    $self->{title} = uc($Script);
+
     return $self->validate_args(%args);
 }
 
@@ -85,8 +97,9 @@ sub validate_args {
     my @unknown_config = ();
 
     foreach my $config ( sort( keys(%args) ) ) {
-        if (grep /$config/, @app_specific) {
-            $self->{$config} ||= 'unknown';
+        if ( grep /$config/, @app_specific ) {
+
+            #     $self->{$config} ||= 'unknown';
             next;
         }
 
@@ -172,31 +185,43 @@ sub parse_config_file {
 }
 
 sub load_configs {
-    my ($self, @configs) = @_;
+    my ( $self, @configs ) = @_;
 
     if ( -e $ENV{HOME} . '/.csshrc' ) {
-        warn( $self->loc('NOTICE: [_1] is no longer used - please see documentation and remove', $ENV{HOME} . '/.csshrc'), $/);
+        warn(
+            $self->loc(
+                'NOTICE: [_1] is no longer used - please see documentation and remove',
+                $ENV{HOME} . '/.csshrc'
+            ),
+            $/
+        );
     }
 
-    for my $config ( '/etc/csshrc', $ENV{HOME} . '/.csshrc', $ENV{HOME} . '/.clusterssh/config', ) {
-        $self->parse_config_file($config) if( -e $config );
+    for my $config (
+        '/etc/csshrc',
+        $ENV{HOME} . '/.csshrc',
+        $ENV{HOME} . '/.clusterssh/config',
+        )
+    {
+        $self->parse_config_file($config) if ( -e $config );
     }
 
     # write out default config file if necesasry
     try {
         $self->write_user_config_file();
-    } catch {
-        warn $_,$/;
+    }
+    catch {
+        warn $_, $/;
     };
 
-    # Attempt to load in provided config files.  Also look for anything 
+    # Attempt to load in provided config files.  Also look for anything
     # relative to config directory
-    for my $config ( @configs ) {
-        next unless($config); # can be null when passed from Getopt::Long
-        $self->parse_config_file($config) if( -e $config );
+    for my $config (@configs) {
+        next unless ($config);    # can be null when passed from Getopt::Long
+        $self->parse_config_file($config) if ( -e $config );
 
-        my $file = $ENV{HOME} . '/.clusterssh/config_'.$config;
-        $self->parse_config_file($file) if( -e $file );
+        my $file = $ENV{HOME} . '/.clusterssh/config_' . $config;
+        $self->parse_config_file($file) if ( -e $file );
     }
 
     return $self;
@@ -207,14 +232,17 @@ sub write_user_config_file {
 
     return if ( -f "$ENV{HOME}/.clusterssh/config" );
 
-    if(! -d "$ENV{HOME}/.clusterssh" ) {
-        if(!mkdir("$ENV{HOME}/.clusterssh")) {
-        croak(
-            App::ClusterSSH::Exception::Config->throw(
-                error => $self->loc('Unable to create directory [_1]: [_2]', '$HOME/.clusterssh', $!),
-            ),
-        );
-            
+    if ( !-d "$ENV{HOME}/.clusterssh" ) {
+        if ( !mkdir("$ENV{HOME}/.clusterssh") ) {
+            croak(
+                App::ClusterSSH::Exception::Config->throw(
+                    error => $self->loc(
+                        'Unable to create directory [_1]: [_2]',
+                        '$HOME/.clusterssh', $!
+                    ),
+                ),
+            );
+
         }
     }
 
@@ -227,7 +255,11 @@ sub write_user_config_file {
     else {
         croak(
             App::ClusterSSH::Exception::Config->throw(
-                error => $self->loc('Unable to write default [_1]: [_2]', '$HOME/.clusterssh/config', $!),
+                error => $self->loc(
+                    'Unable to write default [_1]: [_2]',
+                    '$HOME/.clusterssh/config',
+                    $!
+                ),
             ),
         );
     }
@@ -295,14 +327,17 @@ sub find_binary {
 sub dump {
     my ( $self, $no_exit, ) = @_;
 
-    $self->debug(3, 'Dumping config to STDOUT');
-    print('# Configuration dump produced by "cssh -u"',$/);
+    $self->debug( 3, 'Dumping config to STDOUT' );
+    print( '# Configuration dump produced by "cssh -u"', $/ );
 
-    foreach my $key (keys %$self) {
+    foreach my $key ( sort keys %$self ) {
+        if ( grep /$key/, @app_specific ) {
+            next;
+        }
         print $key, '=', $self->{$key}, $/;
     }
 
-    $self->exit if(!$no_exit);
+    $self->exit if ( !$no_exit );
 }
 
 #use overload (
