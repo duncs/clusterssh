@@ -274,6 +274,7 @@ sub list_tags {
 }
 
 sub evaluate_commands {
+    my ($self) = @_;
     my ( $return, $user, $port, $host );
 
     # break apart the given host string to check for user or port configs
@@ -283,36 +284,48 @@ sub evaluate_commands {
     $host = $options{evaluate};
 
     $user = $user ? "-l $user" : "";
-#    if ( $config{comms} eq "telnet" ) {
-#        $port = $port ? " $port" : "";
-#    }
-#    else {
-#        $port = $port ? "-p $port" : "";
-#    }
-#
-#    print STDERR "Testing terminal - running command:\n";
-#
-#    my $terminal_command
-#        = "$config{terminal} $config{terminal_allow_send_events} -e \"$^X\" \"-e\" 'print \"Working\\n\" ; sleep 5'";
-#
-#    print STDERR $terminal_command, $/;
-#
-#    system($terminal_command);
-#    print STDERR "\nTesting comms - running command:\n";
-#
-#    my $comms_command = $config{ $config{comms} } . " "
-#        . $config{ $config{comms} . "_args" };
-#
-#    if ( $config{comms} eq "telnet" ) {
-#        $comms_command .= " $host $port";
-#    }
-#    else {
-#        $comms_command .= " $user $port $host echo Working";
-#    }
-#
-#    print STDERR $comms_command, $/;
-#
-#    system($comms_command);
+    if ( $self->config->{comms} eq "telnet" ) {
+        $port = $port ? " $port" : "";
+    }
+    else {
+        $port = $port ? "-p $port" : "";
+    }
+
+    print STDERR "Testing terminal - running command:\n";
+
+    my $command = "$^X -e 'print \"Base terminal test\n\"; sleep 2'";
+
+    my $terminal_command = join( ' ',
+        $self->config->{terminal},
+        $self->config->{terminal_allow_send_events}, "-e " );
+
+    my $run_command = "$terminal_command $command";
+
+    print STDERR $run_command, $/;
+
+    system($run_command);
+    print STDERR "\nTesting comms - running command:\n";
+
+    my $comms_command = join( ' ',
+        $self->config->{ $self->config->{comms} },
+        $self->config->{ $self->config->{comms} . "_args" } );
+
+    if ( $self->config->{comms} eq "telnet" ) {
+        $comms_command .= " $host $port";
+    }
+    else {
+        $comms_command
+            .= " $user $port $host hostname ; echo Got hostname via ssh; sleep 2";
+    }
+
+    print STDERR $comms_command, $/;
+
+    system($comms_command);
+
+    $run_command = "$terminal_command '$comms_command'";
+    print STDERR $run_command, $/;
+
+    system($run_command);
 
     exit_prog;
 }
@@ -594,7 +607,7 @@ sub show_history() {
 }
 
 sub update_display_text($) {
-    my ($self, $char) = @_;
+    my ( $self, $char ) = @_;
 
     return if ( !$self->config->{show_history} );
 
@@ -748,11 +761,11 @@ sub open_client_windows(@) {
         my $server_object = App::ClusterSSH::Host->parse_host_string($_);
 
         my $username = $server_object->get_username();
-        $username    = $self->config->{user} if ( $self->config->{user} );
-        my $port     = $server_object->get_port();
-        $port        = $self->config->{port} if ( $self->config->{port} );
-        my $server   = $server_object->get_hostname();
-        my $master   = $server_object->get_master();
+        $username = $self->config->{user} if ( $self->config->{user} );
+        my $port = $server_object->get_port();
+        $port = $self->config->{port} if ( $self->config->{port} );
+        my $server = $server_object->get_hostname();
+        my $master = $server_object->get_master();
 
         my $given_server_name = $server_object->get_givenname();
 
@@ -821,21 +834,23 @@ sub open_client_windows(@) {
           # Since this is the child, we can mark any server unresolved without
           # affecting the main program
             $servers{$server}{realname} .= "==" if ( !$realname );
-            my $exec =  join(' ',
+            my $exec = join( ' ',
                 $self->config->{terminal},
                 $color,
                 $self->config->{terminal_args},
                 $self->config->{terminal_allow_send_events},
                 $self->config->{terminal_title_opt},
-                "'".$self->config->{title}.': '.$servers{$server}{connect_string}."'",
-                '-font '.$self->config->{terminal_font},
-                "-e ".$^X.' -e ',
-                "'".$self->helper->script($self->config)."'",
-                " ".$servers{$server}{pipenm},
-                " ".$servers{$server}{givenname},
-                " '".$servers{$server}{username}."'",
-                " '".$servers{$server}{port}."'",
-                " '".$servers{$server}{master}."'",
+                "'"
+                    . $self->config->{title} . ': '
+                    . $servers{$server}{connect_string} . "'",
+                '-font ' . $self->config->{terminal_font},
+                "-e " . $^X . ' -e ',
+                "'" . $self->helper->script( $self->config ) . "'",
+                " " . $servers{$server}{pipenm},
+                " " . $servers{$server}{givenname},
+                " '" . $servers{$server}{username} . "'",
+                " '" . $servers{$server}{port} . "'",
+                " '" . $servers{$server}{master} . "'",
             );
             logmsg( 2, "Terminal exec line:\n$exec\n" );
             exec($exec) == 0 or warn("Failed: $!");
@@ -901,7 +916,7 @@ sub get_font_size() {
     my $quad_width = $xdisplay->atom("QUAD_WIDTH");
     my $pixel_size = $xdisplay->atom("PIXEL_SIZE");
 
-    my $font = $xdisplay->new_rsrc;
+    my $font          = $xdisplay->new_rsrc;
     my $terminal_font = $self->config->{terminal_font};
     $xdisplay->OpenFont( $font, $terminal_font );
 
@@ -912,10 +927,14 @@ sub get_font_size() {
             . "Please amend \$HOME/.csshrc with a valid font (see man page).\n"
         );
 
-    $self->config->{internal_font_width}  = $font_info{properties}{$quad_width};
-    $self->onfig->{internal_font_height} = $font_info{properties}{$pixel_size};
+    $self->config->{internal_font_width}
+        = $font_info{properties}{$quad_width};
+    $self->onfig->{internal_font_height}
+        = $font_info{properties}{$pixel_size};
 
-    if ( !$self->config->{internal_font_width} || !$self->config->{internal_font_height} ) {
+    if (   !$self->config->{internal_font_width}
+        || !$self->config->{internal_font_height} )
+    {
         die(      "Fatal: Unrecognised font used ($terminal_font).\n"
                 . "Please amend \$HOME/.csshrc with a valid font (see man page).\n"
         );
@@ -966,7 +985,7 @@ sub show_console() {
 
 # leave function def open here so we can be flexible in how it called
 sub retile_hosts {
-    my ($self, $force) = @_;
+    my ( $self, $force ) = @_;
     $force ||= "";
     logmsg( 2, "Retiling windows" );
 
@@ -974,15 +993,15 @@ sub retile_hosts {
     warn 'Todo: retile hosts';
 
     #if ( $self->config->{window_tiling} ne "yes" && !$force ) {
-        logmsg( 3,
-            "Not meant to be tiling; just reshow windows as they were" );
+    logmsg( 3, "Not meant to be tiling; just reshow windows as they were" );
 
-        foreach my $server ( reverse( keys(%servers) ) ) {
-            $xdisplay->req( 'MapWindow', $servers{$server}{wid} );
-        }
-        $xdisplay->flush();
-        $self->show_console();
-        return;
+    foreach my $server ( reverse( keys(%servers) ) ) {
+        $xdisplay->req( 'MapWindow', $servers{$server}{wid} );
+    }
+    $xdisplay->flush();
+    $self->show_console();
+    return;
+
     #}
 
     # ALL SIZES SHOULD BE IN PIXELS for consistency
@@ -1276,10 +1295,8 @@ sub add_host_by_name() {
     if ( $menus{host_entry} ) {
         logmsg( 2, "host=", $menus{host_entry} );
         my @names = resolve_names( split( /\s+/, $menus{host_entry} ) );
-        logmsg( 0, 'Opening to: ', join(' ', @names) );
-        open_client_windows(
-            @names
-        );
+        logmsg( 0, 'Opening to: ', join( ' ', @names ) );
+        open_client_windows( @names );
     }
 
     if ( $menus{listbox}->curselection() ) {
@@ -1346,10 +1363,15 @@ sub setup_repeat() {
         500,
         sub {
             $self->config->{internal_count} = 0
-                if ( $self->config->{internal_count} > 60000 );    # reset if too high
+                if ( $self->config->{internal_count} > 60000 )
+                ;    # reset if too high
             $self->config->{internal_count}++;
             my $build_menu = 0;
-            logmsg( 5, "Running repeat;count=",$self->config->{internal_count} );
+            logmsg(
+                5,
+                "Running repeat;count=",
+                $self->config->{internal_count}
+            );
 
      #logmsg( 3, "Number of servers in hash is: ", scalar( keys(%servers) ) );
 
@@ -1450,14 +1472,17 @@ sub create_windows() {
     $windows{main_window}->eventDelete('<<Paste>>');
 
     # Set up paste events from scratch
-    if ( $self->config->{key_paste} && $self->config->{key_paste} ne "null" ) {
-        $windows{main_window}
-            ->eventAdd( '<<Paste>>' => '<' . $self->config->{key_paste} . '>' );
+    if ( $self->config->{key_paste} && $self->config->{key_paste} ne "null" )
+    {
+        $windows{main_window}->eventAdd(
+            '<<Paste>>' => '<' . $self->config->{key_paste} . '>' );
     }
 
-    if ( $self->config->{mouse_paste} && $self->config->{mouse_paste} ne "null" ) {
-        $windows{main_window}
-            ->eventAdd( '<<Paste>>' => '<' . $self->config->{mouse_paste} . '>' );
+    if (   $self->config->{mouse_paste}
+        && $self->config->{mouse_paste} ne "null" )
+    {
+        $windows{main_window}->eventAdd(
+            '<<Paste>>' => '<' . $self->config->{mouse_paste} . '>' );
     }
 
     $windows{main_window}->bind(
@@ -1510,8 +1535,9 @@ sub create_windows() {
     );
 
     my $manpage = `pod2text -l -q=\"\" $0 2>/dev/null`;
-    if(!$manpage) {
-        $manpage = "Help is missing.\nSee that command 'pod2text' is installed and in PATH.";
+    if ( !$manpage ) {
+        $manpage
+            = "Help is missing.\nSee that command 'pod2text' is installed and in PATH.";
     }
     $windows{mantext}
         = $windows{manpage}->Scrolled( "Text", )->pack( -fill => 'both' );
@@ -1529,7 +1555,8 @@ sub create_windows() {
     if ( $self->config->{max_addhost_menu_cluster_items}
         && scalar keys %clusters )
     {
-        if ( scalar keys %clusters < $self->config->{max_addhost_menu_cluster_items} )
+        if (scalar
+            keys %clusters < $self->config->{max_addhost_menu_cluster_items} )
         {
             $menus{listbox} = $windows{addhost}->Listbox(
                 -selectmode => 'extended',
@@ -1541,7 +1568,7 @@ sub create_windows() {
                 'Listbox',
                 -scrollbars => 'e',
                 -selectmode => 'extended',
-                -height     => $self->config->{max_addhost_menu_cluster_items},
+                -height => $self->config->{max_addhost_menu_cluster_items},
             )->pack();
         }
         $menus{listbox}->insert( 'end', sort keys %clusters );
@@ -1568,8 +1595,11 @@ sub capture_map_events() {
             logmsg( 3, "Entering MAP" );
 
             my $state = $windows{main_window}->state();
-            logmsg( 3,
-                "state=$state previous=", $self->config->{internal_previous_state} );
+            logmsg(
+                3,
+                "state=$state previous=",
+                $self->config->{internal_previous_state}
+            );
             logmsg( 3, "Entering MAP" );
 
             if ( $self->config->{internal_previous_state} eq $state ) {
@@ -1581,8 +1611,11 @@ sub capture_map_events() {
                 return;
             }
 
-            logmsg( 3,
-                "state=$state previous=", $self->config->{internal_previous_state} );
+            logmsg(
+                3,
+                "state=$state previous=",
+                $self->config->{internal_previous_state}
+            );
 
             if ( $self->config->{internal_previous_state} eq "iconic" ) {
                 logmsg( 3, "running retile" );
@@ -1640,12 +1673,12 @@ sub capture_map_events() {
 
 # for all key event, event hotkeys so there is only 1 key binding
 sub key_event {
-    my ($self) = @_;
+    my ($self)    = @_;
     my $event     = $Tk::event->T;
     my $keycode   = $Tk::event->k;
     my $keysymdec = $Tk::event->N;
     my $keysym    = $Tk::event->K;
-    my $state     = $Tk::event->s || 0;
+    my $state = $Tk::event->s || 0;
 
     $menus{entrytext} = "";
 
@@ -1669,7 +1702,7 @@ sub key_event {
 
         logmsg( 3, "combo=$combo" );
 
-        foreach my $hotkey ( grep( /key_/, keys(%{$self->config}) ) ) {
+        foreach my $hotkey ( grep( /key_/, keys( %{ $self->config } ) ) ) {
             my $key = $self->config->{$hotkey};
             next if ( $key eq "null" );    # ignore disabled keys
 
@@ -1797,9 +1830,7 @@ sub create_menubar() {
         -tearoff => 0,
     );
 
-    $windows{main_window}->bind(
-        '<Key>' => [ $self => 'key_event' ],
-    );
+    $windows{main_window}->bind( '<Key>' => [ $self => 'key_event' ], );
     logmsg( 2, "create_menubar: completed" );
 }
 
@@ -1810,8 +1841,8 @@ sub populate_send_menu_entries_from_xml {
         if ( $menu_ref->{menu} ) {
             $menus{ $menu_ref->{title} }
                 = $menu->cascade( -label => $menu_ref->{title}, );
-            $self->populate_send_menu_entries_from_xml( $menus{ $menu_ref->{title} },
-                $menu_ref, );
+            $self->populate_send_menu_entries_from_xml(
+                $menus{ $menu_ref->{title} }, $menu_ref, );
             if ( $menu_ref->{detach} && $menu_ref->{detach} =~ m/y/i ) {
                 $menus{ $menu_ref->{title} }->menu->tearOffMenu()->raise;
             }
@@ -1839,7 +1870,7 @@ sub populate_send_menu_entries_from_xml {
 }
 
 sub populate_send_menu {
-    my($self) = @_;
+    my ($self) = @_;
 
     #    my @menu_items = ();
     if ( !-r $self->config->{send_menu_xml_file} ) {
@@ -1921,12 +1952,11 @@ sub run {
 
     logmsg( 2, "VERSION: $VERSION" );
 
-    $self->config->load_configs($options{'config-file'});
+    $self->config->load_configs( $options{'config-file'} );
 
     $self->config->dump() if ( $options{'output-config'} );
 
-    warn 'TODO: redo evaluate commands';
-    #evaluate_commands() if ( $options{evaluate} );
+    $self->evaluate_commands() if ( $options{evaluate} );
 
     load_keyboard_map();
 
@@ -1951,7 +1981,7 @@ sub run {
     logmsg( 2, "Capture map events" );
     $self->capture_map_events();
 
-    logmsg( 0, 'Opening to: ', join(' ', @servers) );
+    logmsg( 0, 'Opening to: ', join( ' ', @servers ) );
     $self->open_client_windows(@servers);
 
     # Check here if we are tiling windows.  Here instead of in func so
