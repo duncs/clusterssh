@@ -56,6 +56,8 @@ Readonly::Hash my %default_config => {
     terminal_decoration_height => 10,
     terminal_decoration_width  => 8,
 
+    ssh => '/usr/bin/ssh',
+
     rsh_args    => "",
     telnet_args => "",
     ssh_args    => "",

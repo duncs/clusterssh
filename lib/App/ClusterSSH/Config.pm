@@ -86,6 +86,10 @@ sub new {
         $self->{comms} = 'ssh';
     }
 
+    if($self->{comms} && (! $self->{ $self->{comms} } || ! -e $self->{ $self->{comms} } ) ) {
+        $self->{ $self->{comms} } = $self->find_binary( $self->{ comms } );
+    }
+
     $self->{title} = uc($Script);
 
     return $self->validate_args(%args);
