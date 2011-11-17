@@ -2032,7 +2032,7 @@ the code until this time.
 
 =item  config
 
-=item  config
+=item  helper
 
 =item  create_menubar
 
