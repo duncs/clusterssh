@@ -252,7 +252,6 @@ sub check_config() {
 
     # option font overrides config file font setting
     $config{terminal_font} = $options{font} if ( $options{font} );
-    get_font_size();
 
     $config{extra_cluster_file} =~ s/\s+//g;
 
@@ -929,7 +928,7 @@ sub get_font_size() {
 
     $self->config->{internal_font_width}
         = $font_info{properties}{$quad_width};
-    $self->onfig->{internal_font_height}
+    $self->config->{internal_font_height}
         = $font_info{properties}{$pixel_size};
 
     if (   !$self->config->{internal_font_width}
@@ -990,9 +989,8 @@ sub retile_hosts {
     logmsg( 2, "Retiling windows" );
 
     my %config;
-    warn 'Todo: retile hosts';
 
-    #if ( $self->config->{window_tiling} ne "yes" && !$force ) {
+    if ( $self->config->{window_tiling} ne "yes" && !$force ) {
     logmsg( 3, "Not meant to be tiling; just reshow windows as they were" );
 
     foreach my $server ( reverse( keys(%servers) ) ) {
@@ -1001,8 +999,7 @@ sub retile_hosts {
     $xdisplay->flush();
     $self->show_console();
     return;
-
-    #}
+    }
 
     # ALL SIZES SHOULD BE IN PIXELS for consistency
 
@@ -1010,84 +1007,84 @@ sub retile_hosts {
 
     if ( $self->config->{internal_total} == 0 ) {
 
-        # If nothing to tile, done bother doing anything, just show console
+        # If nothing to tile, don't bother doing anything, just show console
         return $self->show_console();
     }
 
     # work out terminal pixel size from terminal size & font size
     # does not include any title bars or scroll bars - purely text area
-    $config{internal_terminal_cols}
-        = ( $config{terminal_size} =~ /(\d+)x.*/ )[0];
-    $config{internal_terminal_width}
-        = ( $config{internal_terminal_cols} * $config{internal_font_width} )
-        + $config{terminal_decoration_width};
+    $self->config->{internal_terminal_cols}
+        = ( $self->config->{terminal_size} =~ /(\d+)x.*/ )[0];
+    $self->config->{internal_terminal_width}
+        = ( $self->config->{internal_terminal_cols} * $self->config->{internal_font_width} )
+        + $self->config->{terminal_decoration_width};
 
-    $config{internal_terminal_rows}
-        = ( $config{terminal_size} =~ /.*x(\d+)/ )[0];
-    $config{internal_terminal_height}
-        = ( $config{internal_terminal_rows} * $config{internal_font_height} )
-        + $config{terminal_decoration_height};
+    $self->config->{internal_terminal_rows}
+        = ( $self->config->{terminal_size} =~ /.*x(\d+)/ )[0];
+    $self->config->{internal_terminal_height}
+        = ( $self->config->{internal_terminal_rows} * $self->config->{internal_font_height} )
+        + $self->config->{terminal_decoration_height};
 
     # fetch screen size
-    $config{internal_screen_height} = $xdisplay->{height_in_pixels};
-    $config{internal_screen_width}  = $xdisplay->{width_in_pixels};
+    $self->config->{internal_screen_height} = $xdisplay->{height_in_pixels};
+    $self->config->{internal_screen_width}  = $xdisplay->{width_in_pixels};
 
     # Now, work out how many columns of terminals we can fit on screen
-    $config{internal_columns} = int(
-        (         $config{internal_screen_width} 
-                - $config{screen_reserve_left}
-                - $config{screen_reserve_right}
+    $self->config->{internal_columns} = int(
+        (         $self->config->{internal_screen_width} 
+                - $self->config->{screen_reserve_left}
+                - $self->config->{screen_reserve_right}
         ) / (
-            $config{internal_terminal_width} 
-                + $config{terminal_reserve_left}
-                + $config{terminal_reserve_right}
+            $self->config->{internal_terminal_width} 
+                + $self->config->{terminal_reserve_left}
+                + $self->config->{terminal_reserve_right}
         )
     );
 
     # Work out the number of rows we need to use to fit everything on screen
-    $config{internal_rows} = int(
-        ( $config{internal_total} / $config{internal_columns} ) + 0.999 );
+    $self->config->{internal_rows} = int(
+        ( $self->config->{internal_total} / $self->config->{internal_columns} ) + 0.999 );
 
-    logmsg( 2, "Screen Columns: ", $config{internal_columns} );
-    logmsg( 2, "Screen Rows: ",    $config{internal_rows} );
+    logmsg( 2, "Screen Columns: ", $self->config->{internal_columns} );
+    logmsg( 2, "Screen Rows: ",    $self->config->{internal_rows} );
 
     # Now adjust the height of the terminal to either the max given,
     # or to get everything on screen
     {
         my $height = int(
-            (   (         $config{internal_screen_height}
-                        - $config{screen_reserve_top}
-                        - $config{screen_reserve_bottom}
+            (   (         $self->config->{internal_screen_height}
+                        - $self->config->{screen_reserve_top}
+                        - $self->config->{screen_reserve_bottom}
                 ) - (
-                    $config{internal_rows} * (
-                              $config{terminal_reserve_top}
-                            + $config{terminal_reserve_bottom}
+                    $self->config->{internal_rows} * (
+                              $self->config->{terminal_reserve_top}
+                            + $self->config->{terminal_reserve_bottom}
                     )
                 )
-            ) / $config{internal_rows}
+            ) / $self->config->{internal_rows}
         );
 
         logmsg( 2, "Terminal height=$height" );
 
-        $config{internal_terminal_height} = (
-              $height > $config{internal_terminal_height}
-            ? $config{internal_terminal_height}
+        $self->config->{internal_terminal_height} = (
+              $height > $self->config->{internal_terminal_height}
+            ? $self->config->{internal_terminal_height}
             : $height
         );
     }
 
-    $self->dump_config("noexit") if ( $options{debug} > 1 );
+    $self->config->dump("noexit") if ( $options{debug} > 1 );
 
     # now we have the info, plot first window position
     my @hosts;
     my ( $current_x, $current_y, $current_row, $current_col ) = 0;
-    if ( $config{window_tiling_direction} =~ /right/i ) {
+    if ( $self->config->{window_tiling_direction} =~ /right/i ) {
         logmsg( 2, "Tiling top left going bot right" );
         @hosts = sort( keys(%servers) );
         $current_x
-            = $config{screen_reserve_left} + $config{terminal_reserve_left};
+            = $self->config->{screen_reserve_left} + $self->config->{terminal_reserve_left};
         $current_y
-            = $config{screen_reserve_top} + $config{terminal_reserve_top};
+            = $self->config->{screen_reserve_top} + $self->config->{terminal_reserve_top};
         $current_row = 0;
         $current_col = 0;
     }
@@ -1095,18 +1092,18 @@ sub retile_hosts {
         logmsg( 2, "Tiling bot right going top left" );
         @hosts = reverse( sort( keys(%servers) ) );
         $current_x
-            = $config{screen_reserve_right} 
-            - $config{internal_screen_width}
-            - $config{terminal_reserve_right}
-            - $config{internal_terminal_width};
+            = $self->config->{screen_reserve_right} 
+            - $self->config->{internal_screen_width}
+            - $self->config->{terminal_reserve_right}
+            - $self->config->{internal_terminal_width};
         $current_y
-            = $config{screen_reserve_bottom} 
-            - $config{internal_screen_height}
-            - $config{terminal_reserve_bottom}
-            - $config{internal_terminal_height};
+            = $self->config->{screen_reserve_bottom} 
+            - $self->config->{internal_screen_height}
+            - $self->config->{terminal_reserve_bottom}
+            - $self->config->{internal_terminal_height};
 
-        $current_row = $config{internal_rows} - 1;
-        $current_col = $config{internal_columns} - 1;
+        $current_row = $self->config->{internal_rows} - 1;
+        $current_col = $self->config->{internal_columns} - 1;
     }
 
     # Unmap windows (hide them)
@@ -1119,7 +1116,7 @@ sub retile_hosts {
         # sf tracker 3061999
         # $xdisplay->req( 'UnmapWindow', $servers{$server}{wid} );
 
-        if ( $config{unmap_on_redraw} =~ /yes/i ) {
+        if ( $self->config->{unmap_on_redraw} =~ /yes/i ) {
             $xdisplay->req( 'UnmapWindow', $servers{$server}{wid} );
         }
 
@@ -1127,29 +1124,29 @@ sub retile_hosts {
         send_resizemove(
             $servers{$server}{wid},
             $current_x, $current_y,
-            $config{internal_terminal_width},
-            $config{internal_terminal_height}
+            $self->config->{internal_terminal_width},
+            $self->config->{internal_terminal_height}
         );
 
         $xdisplay->flush();
         select( undef, undef, undef, 0.1 );    # sleep for a moment for the WM
 
-        if ( $config{window_tiling_direction} =~ /right/i ) {
+        if ( $self->config->{window_tiling_direction} =~ /right/i ) {
 
             # starting top left, and move right and down
             $current_x
-                += $config{terminal_reserve_left}
-                + $config{terminal_reserve_right}
-                + $config{internal_terminal_width};
+                += $self->config->{terminal_reserve_left}
+                + $self->config->{terminal_reserve_right}
+                + $self->config->{internal_terminal_width};
 
             $current_col += 1;
-            if ( $current_col == $config{internal_columns} ) {
+            if ( $current_col == $self->config->{internal_columns} ) {
                 $current_y
-                    += $config{terminal_reserve_top}
-                    + $config{terminal_reserve_bottom}
-                    + $config{internal_terminal_height};
-                $current_x = $config{screen_reserve_left}
-                    + $config{terminal_reserve_left};
+                    += $self->config->{terminal_reserve_top}
+                    + $self->config->{terminal_reserve_bottom}
+                    + $self->config->{internal_terminal_height};
+                $current_x = $self->config->{screen_reserve_left}
+                    + $self->config->{terminal_reserve_left};
                 $current_row++;
                 $current_col = 0;
             }
@@ -1161,13 +1158,13 @@ sub retile_hosts {
             $current_col -= 1;
             if ( $current_col < 0 ) {
                 $current_row--;
-                $current_col = $config{internal_columns};
+                $current_col = $self->config->{internal_columns};
             }
         }
     }
 
     # Now remap in right order to get overlaps correct
-    if ( $config{window_tiling_direction} =~ /right/i ) {
+    if ( $self->config->{window_tiling_direction} =~ /right/i ) {
         foreach my $server ( reverse(@hosts) ) {
             logmsg( 2, "Setting focus on $server" );
             $xdisplay->req( 'MapWindow', $servers{$server}{wid} );
@@ -1957,6 +1954,8 @@ sub run {
     $self->config->dump() if ( $options{'output-config'} );
 
     $self->evaluate_commands() if ( $options{evaluate} );
+
+    $self->get_font_size();
 
     load_keyboard_map();
 
