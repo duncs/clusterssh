@@ -534,10 +534,8 @@ sub get_clusters() {
 }
 
 sub resolve_names(@) {
-    my %config;
-    warn 'TODO: rework resolve code';
+    my ( $self, @servers ) = @_;
     logmsg( 2, 'Resolving cluster names: started' );
-    my @servers = @_;
 
     foreach (@servers) {
         my $dirty    = $_;
@@ -547,7 +545,7 @@ sub resolve_names(@) {
         if ( $dirty =~ s/^(.*)@// ) {
             $username = $1;
         }
-        if (   $config{use_all_a_records}
+        if (   $self->config->{use_all_a_records}
             && $dirty !~ m/^(\d{1,3}\.?){4}$/
             && !defined( $clusters{$dirty} ) )
         {
@@ -991,14 +989,15 @@ sub retile_hosts {
     my %config;
 
     if ( $self->config->{window_tiling} ne "yes" && !$force ) {
-    logmsg( 3, "Not meant to be tiling; just reshow windows as they were" );
+        logmsg( 3,
+            "Not meant to be tiling; just reshow windows as they were" );
 
-    foreach my $server ( reverse( keys(%servers) ) ) {
-        $xdisplay->req( 'MapWindow', $servers{$server}{wid} );
-    }
-    $xdisplay->flush();
-    $self->show_console();
-    return;
+        foreach my $server ( reverse( keys(%servers) ) ) {
+            $xdisplay->req( 'MapWindow', $servers{$server}{wid} );
+        }
+        $xdisplay->flush();
+        $self->show_console();
+        return;
     }
 
     # ALL SIZES SHOULD BE IN PIXELS for consistency
@@ -1016,13 +1015,15 @@ sub retile_hosts {
     $self->config->{internal_terminal_cols}
         = ( $self->config->{terminal_size} =~ /(\d+)x.*/ )[0];
     $self->config->{internal_terminal_width}
-        = ( $self->config->{internal_terminal_cols} * $self->config->{internal_font_width} )
+        = (   $self->config->{internal_terminal_cols}
+            * $self->config->{internal_font_width} )
         + $self->config->{terminal_decoration_width};
 
     $self->config->{internal_terminal_rows}
         = ( $self->config->{terminal_size} =~ /.*x(\d+)/ )[0];
     $self->config->{internal_terminal_height}
-        = ( $self->config->{internal_terminal_rows} * $self->config->{internal_font_height} )
+        = (   $self->config->{internal_terminal_rows}
+            * $self->config->{internal_font_height} )
         + $self->config->{terminal_decoration_height};
 
     # fetch screen size
@@ -1031,11 +1032,11 @@ sub retile_hosts {
 
     # Now, work out how many columns of terminals we can fit on screen
     $self->config->{internal_columns} = int(
-        (         $self->config->{internal_screen_width} 
+        (         $self->config->{internal_screen_width}
                 - $self->config->{screen_reserve_left}
                 - $self->config->{screen_reserve_right}
         ) / (
-            $self->config->{internal_terminal_width} 
+            $self->config->{internal_terminal_width}
                 + $self->config->{terminal_reserve_left}
                 + $self->config->{terminal_reserve_right}
         )
@@ -1043,7 +1044,10 @@ sub retile_hosts {
 
     # Work out the number of rows we need to use to fit everything on screen
     $self->config->{internal_rows} = int(
-        ( $self->config->{internal_total} / $self->config->{internal_columns} ) + 0.999 );
+        (         $self->config->{internal_total}
+                / $self->config->{internal_columns}
+        ) + 0.999
+    );
 
     logmsg( 2, "Screen Columns: ", $self->config->{internal_columns} );
     logmsg( 2, "Screen Rows: ",    $self->config->{internal_rows} );
@@ -1080,11 +1084,11 @@ sub retile_hosts {
     my ( $current_x, $current_y, $current_row, $current_col ) = 0;
     if ( $self->config->{window_tiling_direction} =~ /right/i ) {
         logmsg( 2, "Tiling top left going bot right" );
-        @hosts = sort( keys(%servers) );
-        $current_x
-            = $self->config->{screen_reserve_left} + $self->config->{terminal_reserve_left};
-        $current_y
-            = $self->config->{screen_reserve_top} + $self->config->{terminal_reserve_top};
+        @hosts     = sort( keys(%servers) );
+        $current_x = $self->config->{screen_reserve_left}
+            + $self->config->{terminal_reserve_left};
+        $current_y = $self->config->{screen_reserve_top}
+            + $self->config->{terminal_reserve_top};
         $current_row = 0;
         $current_col = 0;
     }
@@ -1092,12 +1096,12 @@ sub retile_hosts {
         logmsg( 2, "Tiling bot right going top left" );
         @hosts = reverse( sort( keys(%servers) ) );
         $current_x
-            = $self->config->{screen_reserve_right} 
+            = $self->config->{screen_reserve_right}
             - $self->config->{internal_screen_width}
             - $self->config->{terminal_reserve_right}
             - $self->config->{internal_terminal_width};
         $current_y
-            = $self->config->{screen_reserve_bottom} 
+            = $self->config->{screen_reserve_bottom}
             - $self->config->{internal_screen_height}
             - $self->config->{terminal_reserve_bottom}
             - $self->config->{internal_terminal_height};
@@ -1123,7 +1127,8 @@ sub retile_hosts {
         logmsg( 2, "Moving $server window" );
         send_resizemove(
             $servers{$server}{wid},
-            $current_x, $current_y,
+            $current_x,
+            $current_y,
             $self->config->{internal_terminal_width},
             $self->config->{internal_terminal_height}
         );
@@ -1291,15 +1296,16 @@ sub add_host_by_name() {
 
     if ( $menus{host_entry} ) {
         logmsg( 2, "host=", $menus{host_entry} );
-        my @names = resolve_names( split( /\s+/, $menus{host_entry} ) );
+        my @names
+            = $self->resolve_names( split( /\s+/, $menus{host_entry} ) );
         logmsg( 0, 'Opening to: ', join( ' ', @names ) );
-        open_client_windows( @names );
+        open_client_windows(@names);
     }
 
     if ( $menus{listbox}->curselection() ) {
         my @hosts = $menus{listbox}->get( $menus{listbox}->curselection() );
         logmsg( 2, "host=", join( ' ', @hosts ) );
-        open_client_windows( resolve_names(@hosts) );
+        open_client_windows( $self->resolve_names(@hosts) );
     }
 
     build_hosts_menu();
@@ -1951,6 +1957,11 @@ sub run {
 
     $self->config->load_configs( $options{'config-file'} );
 
+    if ( $options{use_all_a_records} ) {
+        $self->config->{use_all_a_records}
+            = !$self->config->{use_all_a_records} || 0;
+    }
+
     $self->config->dump() if ( $options{'output-config'} );
 
     $self->evaluate_commands() if ( $options{evaluate} );
@@ -1964,11 +1975,12 @@ sub run {
     list_tags() if ( $options{'list'} );
 
     if (@ARGV) {
-        @servers = resolve_names(@ARGV);
+        @servers = $self->resolve_names(@ARGV);
     }
     else {
         if ( $clusters{default} ) {
-            @servers = resolve_names( split( /\s+/, $clusters{default} ) );
+            @servers
+                = $self->resolve_names( split( /\s+/, $clusters{default} ) );
         }
     }
 

@@ -79,6 +79,8 @@ Readonly::Hash my %default_config => {
     menu_send_autotearoff          => 0,
     menu_host_autotearoff          => 0,
 
+    use_all_a_records => 0,
+
     send_menu_xml_file => $ENV{HOME} . '/.csshrc_send_menu',
 
     # other bits inheritted from App::ClusterSSH::Base
@@ -477,6 +479,7 @@ terminal_reserve_top=5
 terminal_size=80x24
 terminal_title_opt=-T
 unmap_on_redraw=no
+use_all_a_records=0
 use_hotkeys=yes
 window_tiling=yes
 window_tiling_direction=right
