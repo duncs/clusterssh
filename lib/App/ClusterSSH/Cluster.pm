@@ -23,6 +23,81 @@ sub new {
     return $master_object_ref;
 }
 
+sub get_clusters {
+    my ($self) = @_;
+
+    $self->read_cluster_file('/etc/clusters');
+
+    return $self;
+}
+
+sub read_cluster_file {
+    my ( $self, $filename ) = @_;
+
+    if ( -f $filename ) {
+        $self->debug( 2, 'Reading clusters from file ', $filename );
+        open( my $fh, '<', $filename )
+            || croak(
+            App::ClusterSSH::Exception::Cluster->throw(
+                error => $self->loc(
+                    'Unable to read file [_1]: [_2]',
+                    $filename, $!
+                )
+            )
+            );
+
+        my $line;
+        while ( defined( $line = <$fh> ) ) {
+            next
+                if ( $line =~ /^\s*$/ || $line =~ /^#/ )
+                ;    # ignore blank lines & commented lines
+            chomp $line;
+            if ( $line =~ s/\\\s*$// ) {
+                $line .= <$fh>;
+                redo unless eof($fh);
+            }
+            my @line = split( /\s/, $line );
+
+        #s/^([\w-]+)\s*//;               # remote first word and stick into $1
+
+            $self->debug( 3, "read line: $line" );
+            $self->register_tag(@line);
+        }
+
+        close($fh);
+    }
+    return $self;
+}
+
+sub register_tag {
+    my ( $self, $tag, @nodes ) = @_;
+
+    $self->debug( 2, "Registering tag $tag: ", join( ' ', @nodes ) );
+
+    $self->{$tag} = \@nodes;
+
+    return $self;
+}
+
+sub get_tag {
+    my ( $self, $tag ) = @_;
+
+    if ( $self->{$tag} ) {
+        $self->debug( 2, "Retrieving tag $tag: ",
+            join( ' ', $self->{$tag} ) );
+        return $self->{$tag};
+    }
+
+    $self->debug( 2, "Tag $tag is not registered" );
+    return;
+}
+
+sub resolve_all_tags {
+    my ($self) = @_;
+
+    return $self;
+}
+
 #use overload (
 #    q{""} => sub {
 #        my ($self) = @_;
@@ -51,7 +126,7 @@ Object representing application configuration
 
 =item $host=ClusterSSH::Cluster->new();
 
-Create a new object.
+Create a new object.  Object should be common across all invocations.
 
 =back
 

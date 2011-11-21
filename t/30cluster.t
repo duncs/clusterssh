@@ -21,8 +21,44 @@ isa_ok( $cluster1, 'App::ClusterSSH::Cluster' );
 my $cluster2 = App::ClusterSSH::Cluster->new();
 isa_ok( $cluster2, 'App::ClusterSSH::Cluster' );
 
-$cluster1->{cluster} = 'fred';
+my @expected = ( 'pete', 'jo', 'fred' );
 
-ok( defined( $cluster2->{cluster} ), 'Shared cluster object' );
+$cluster1->register_tag( 'people', @expected );
+
+is_deeply( $cluster2->get_tag('people'), \@expected,
+    'Shared cluster object' );
+
+# should pass without issue
+trap {
+    $cluster1->read_cluster_file( $Bin . '/30cluster.doesnt exist' );
+};
+is( ! $trap, '', 'coped with missing file ok' );
+isa_ok( $cluster1, 'App::ClusterSSH::Cluster' );
+
+my $no_read=$Bin . '/30cluster.cannot_read';
+chmod 0000, $no_read;
+trap {
+    $cluster1->read_cluster_file( $no_read );
+};
+chmod 0644, $no_read;
+isa_ok( $trap->die, 'App::ClusterSSH::Exception::Cluster' );
+is( $trap->die, "Unable to read file $no_read: Permission denied", 'Error on reading an existing file ok');
+
+@expected = ('host1');
+$cluster1->read_cluster_file( $Bin . '/30cluster.file1' );
+is_deeply( $cluster1->get_tag('tag1'), \@expected, 'read simple file OK' );
+
+@expected = ('host1');
+$cluster1->read_cluster_file( $Bin . '/30cluster.file2' );
+is_deeply( $cluster1->get_tag('tag1'),
+    \@expected, 'read more complex file OK' );
+
+@expected = ('host2');
+is_deeply( $cluster1->get_tag('tag2'),
+    \@expected, 'read more complex file OK' );
+
+@expected = ( 'host3', 'host4' );
+is_deeply( $cluster1->get_tag('tag3'),
+    \@expected, 'read more complex file OK' );
 
 done_testing();

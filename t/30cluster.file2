@@ -1,0 +1,8 @@
+# a comment
+tag1 host1
+tag2        host2
+
+#line wrapped
+tag3 host3 \
+    host4
+
