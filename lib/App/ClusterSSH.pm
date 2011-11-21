@@ -1165,6 +1165,7 @@ sub capture_terminal() {
 }
 
 sub toggle_active_state() {
+    my ($self) = @_;
     logmsg( 2, "Toggling active state of all hosts" );
 
     foreach my $svr ( sort( keys(%servers) ) ) {
@@ -1173,12 +1174,13 @@ sub toggle_active_state() {
 }
 
 sub close_inactive_sessions() {
+    my ($self) = @_;
     logmsg( 2, "Closing all inactive sessions" );
 
     foreach my $svr ( sort( keys(%servers) ) ) {
         terminate_host($svr) if ( !$servers{$svr}{active} );
     }
-    build_hosts_menu();
+    $self->build_hosts_menu();
 }
 
 sub add_host_by_name() {
@@ -1207,7 +1209,7 @@ sub add_host_by_name() {
         $self->open_client_windows( $self->resolve_names(@hosts) );
     }
 
-    build_hosts_menu();
+    $self->build_hosts_menu();
     $menus{host_entry} = "";
 
     # retile, or bring console to front
@@ -1700,11 +1702,11 @@ sub create_menubar() {
 #         [ "command", "Capture Terminal",    -command => \&capture_terminal, ],
             [   "command",
                 "Toggle active state",
-                -command => \&toggle_active_state,
+                -command => sub{ $self->toggle_active_state() },
             ],
             [   "command",
                 "Close inactive sessions",
-                -command => \&close_inactive_sessions,
+                -command => sub{ $self->close_inactive_sessions() },
             ],
             [   "command",
                 "Add Host(s) or Cluster(s)",
