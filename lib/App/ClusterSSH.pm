@@ -1198,13 +1198,13 @@ sub add_host_by_name() {
         my @names
             = $self->resolve_names( split( /\s+/, $menus{host_entry} ) );
         logmsg( 0, 'Opening to: ', join( ' ', @names ) );
-        open_client_windows(@names);
+        $self->open_client_windows(@names);
     }
 
     if ( $menus{listbox}->curselection() ) {
         my @hosts = $menus{listbox}->get( $menus{listbox}->curselection() );
         logmsg( 2, "host=", join( ' ', @hosts ) );
-        open_client_windows( $self->resolve_names(@hosts) );
+        $self->open_client_windows( $self->resolve_names(@hosts) );
     }
 
     build_hosts_menu();
@@ -1522,7 +1522,7 @@ sub capture_map_events() {
             if ( $self->config->{internal_previous_state} eq "iconic" ) {
                 logmsg( 3, "running retile" );
 
-                retile_hosts();
+                $self->retile_hosts();
 
                 logmsg( 3, "done with retile" );
             }
@@ -1610,13 +1610,14 @@ sub key_event {
 
             logmsg( 3, "key=:$key:" );
             if ( $combo =~ /^$key$/ ) {
+                logmsg(3, "matched combo");
                 if ( $event eq "KeyRelease" ) {
                     logmsg( 2, "Received hotkey: $hotkey" );
                     send_text_to_all_servers('%s')
                         if ( $hotkey eq "key_clientname" );
-                    add_host_by_name()
+                    $self->add_host_by_name()
                         if ( $hotkey eq "key_addhost" );
-                    retile_hosts("force")
+                    $self->retile_hosts("force")
                         if ( $hotkey eq "key_retilehosts" );
                     show_history() if ( $hotkey eq "key_history" );
                     exit_prog()    if ( $hotkey eq "key_quit" );
@@ -1692,7 +1693,7 @@ sub create_menubar() {
         -menuitems => [
             [   "command",
                 "Retile Windows",
-                -command     => \&retile_hosts,
+                -command     => sub{ $self->retile_hosts },
                 -accelerator => $self->config->{key_retilehosts},
             ],
 
@@ -1707,7 +1708,7 @@ sub create_menubar() {
             ],
             [   "command",
                 "Add Host(s) or Cluster(s)",
-                -command     => \&add_host_by_name,
+                -command     => sub{ $self->add_host_by_name, },
                 -accelerator => $self->config->{key_addhost},
             ],
             '',
@@ -1732,7 +1733,8 @@ sub create_menubar() {
         -tearoff => 0,
     );
 
-    $windows{main_window}->bind( '<Key>' => [ $self => 'key_event' ], );
+    $windows{main_window}->bind( '<KeyPress>' => [ $self => 'key_event' ], );
+    $windows{main_window}->bind( '<KeyRelease>' => [ $self => 'key_event' ], );
     logmsg( 2, "create_menubar: completed" );
 }
 
