@@ -24,18 +24,21 @@ sub new {
 }
 
 sub get_clusters {
-    my ($self) = @_;
+    my ( $self, @files ) = @_;
 
-    $self->read_cluster_file('/etc/clusters');
+    for my $file ( '/etc/clusters', @files ) {
+        $self->debug(3, 'Loading in config from: ', $file);
+        $self->read_cluster_file($file);
+    }
 
     return $self;
 }
 
 sub read_cluster_file {
     my ( $self, $filename ) = @_;
+    $self->debug( 2, 'Reading clusters from file ', $filename );
 
     if ( -f $filename ) {
-        $self->debug( 2, 'Reading clusters from file ', $filename );
         open( my $fh, '<', $filename )
             || croak(
             App::ClusterSSH::Exception::Cluster->throw(
@@ -56,7 +59,7 @@ sub read_cluster_file {
                 $line .= <$fh>;
                 redo unless eof($fh);
             }
-            my @line = split( /\s/, $line );
+            my @line = split( /\s+/, $line );
 
         #s/^([\w-]+)\s*//;               # remote first word and stick into $1
 
@@ -65,6 +68,9 @@ sub read_cluster_file {
         }
 
         close($fh);
+    }
+    else {
+        $self->debug( 2, 'No file found to read');
     }
     return $self;
 }
@@ -85,11 +91,17 @@ sub get_tag {
     if ( $self->{$tag} ) {
         $self->debug( 2, "Retrieving tag $tag: ",
             join( ' ', $self->{$tag} ) );
-        return $self->{$tag};
+
+        return @{ $self->{$tag} };
     }
 
     $self->debug( 2, "Tag $tag is not registered" );
     return;
+}
+
+sub list_tags {
+    my ($self) = @_;
+    return keys(%$self);
 }
 
 sub resolve_all_tags {

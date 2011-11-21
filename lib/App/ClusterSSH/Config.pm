@@ -12,8 +12,9 @@ use Try::Tiny;
 use FindBin qw($Script);
 
 use base qw/ App::ClusterSSH::Base /;
+use App::ClusterSSH::Cluster;
 
-my %clusters;
+my $clusters;
 my @app_specific   = (qw/ command title comms method ssh rsh telnet ccon /);
 my %default_config = (
     terminal                   => "xterm",
@@ -93,6 +94,8 @@ sub new {
     }
 
     $self->{title} = uc($Script);
+
+    $clusters=App::ClusterSSH::Cluster->new();
 
     return $self->validate_args(%args);
 }
@@ -175,10 +178,12 @@ sub parse_config_file {
 
     # grab any clusters from the config before validating it
     if ( $read_config{clusters} ) {
-        carp("TODO: deal with clusters");
         $self->debug( 3, "Picked up clusters defined in $config_file" );
         foreach my $cluster ( sort split / /, $read_config{clusters} ) {
+            if($read_config{$cluster}) {
+                $clusters->register_tag($cluster,$read_config{$cluster});
             delete( $read_config{$cluster} );
+            }
         }
         delete( $read_config{clusters} );
     }

@@ -11,6 +11,7 @@ use base qw/ App::ClusterSSH::Base /;
 use App::ClusterSSH::Host;
 use App::ClusterSSH::Config;
 use App::ClusterSSH::Helper;
+use App::ClusterSSH::Cluster;
 
 use FindBin qw($Script);
 
@@ -54,8 +55,9 @@ sub new {
 
     my $self = $class->SUPER::new(%args);
 
-    $self->{config} = App::ClusterSSH::Config->new();
-    $self->{helper} = App::ClusterSSH::Helper->new();
+    $self->{config}  = App::ClusterSSH::Config->new();
+    $self->{helper}  = App::ClusterSSH::Helper->new();
+    $self->{cluster} = App::ClusterSSH::Cluster->new();
 
     # catch and reap any zombies
     $SIG{CHLD} = \&REAPER;
@@ -66,6 +68,11 @@ sub new {
 sub config {
     my ($self) = @_;
     return $self->{config};
+}
+
+sub cluster {
+    my ($self) = @_;
+    return $self->{cluster};
 }
 
 sub helper {
@@ -110,7 +117,6 @@ my @options_spec = (
     'use_all_a_records|A',
 );
 my %options;
-my %clusters;    # hash for resolving cluster names
 my %windows;     # hash for all window definitions
 my %menus;       # hash for all menu definitions
 my @servers;     # array of servers provided on cmdline
@@ -264,12 +270,6 @@ sub check_config() {
     if ( $options{use_all_a_records} ) {
         $config{use_all_a_records} = !$config{use_all_a_records} || 0;
     }
-}
-
-sub list_tags {
-    print( 'Available cluster tags:', $/ );
-    print "\t", $_, $/ foreach ( sort( keys(%clusters) ) );
-    exit_prog;
 }
 
 sub evaluate_commands {
@@ -432,107 +432,6 @@ SWITCH: for ($state) {
     return ( $state, $code );
 }
 
-# read in all cluster definitions
-sub get_clusters() {
-    my %config;
-    warn 'TODO: rework clusters code';
-
-    # first, read in global file
-    my $cluster_file = '/etc/clusters';
-
-    logmsg( 3, "Logging for $cluster_file" );
-
-    if ( -f $cluster_file ) {
-        logmsg( 2, "Loading clusters in from $cluster_file" );
-        open( CLUSTERS, $cluster_file ) || die("Couldnt read $cluster_file");
-        my $l;
-        while ( defined( $l = <CLUSTERS> ) ) {
-            next
-                if ( $l =~ /^\s*$/ || $l =~ /^#/ )
-                ;    # ignore blank lines & commented lines
-            chomp $l;
-            if ( $l =~ s/\\\s*$// ) {
-                $l .= <CLUSTER>;
-                redo unless eof(CLUSTERS);
-            }
-            my @line = split( /\s/, $l );
-
-        #s/^([\w-]+)\s*//;               # remote first word and stick into $1
-
-            logmsg(
-                3,
-                "cluster $line[0] = ",
-                join( " ", @line[ 1 .. $#line ] )
-            );
-            $clusters{ $line[0] } = join( " ", @line[ 1 .. $#line ] )
-                ;    # Now bung in rest of line
-        }
-        close(CLUSTERS);
-    }
-
-    # Now get any definitions out of %config
-    logmsg( 2, "Looking for csshrc" );
-    if ( $config{clusters} ) {
-        logmsg( 2, "Loading clusters in from csshrc" );
-
-        foreach ( split( /\s+/, $config{clusters} ) ) {
-            if ( !$config{$_} ) {
-                warn(
-                    "WARNING: missing cluster definition in .csshrc file ($_)"
-                );
-            }
-            else {
-                logmsg( 3, "cluster $_ = $config{$_}" );
-                $clusters{$_} = $config{$_};
-            }
-        }
-    }
-
-    # and any clusters defined within the config file or on the command line
-    if ( $config{extra_cluster_file} || $options{'cluster-file'} ) {
-
-        # check for multiple entries and push it through glob to catch ~'s
-        foreach my $item ( split( /,/, $config{extra_cluster_file} ),
-            $options{'cluster-file'} )
-        {
-            next unless ($item);
-
-            # cater for people using '$HOME'
-            $item =~ s/\$HOME/$ENV{HOME}/;
-            foreach my $file ( glob($item) ) {
-                if ( !-r $file ) {
-                    warn("Unable to read cluster file '$file': $!\n");
-                    next;
-                }
-                logmsg( 2, "Loading clusters in from '$file'" );
-
-                open( CLUSTERS, $file ) || die("Couldnt read '$file': $!\n");
-                my $l;
-                while ( defined( $l = <CLUSTERS> ) ) {
-                    next if ( $l =~ /^\s*$/ || $l =~ /^#/ );
-                    chomp $l;
-                    if ( $l =~ s/\\\s*$// ) {
-                        $l .= <CLUSTER>;
-                        redo unless eof(CLUSTERS);
-                    }
-
-                    my @line = split( /\s/, $l );
-                    logmsg(
-                        3,
-                        "cluster $line[0] = ",
-                        join( " ", @line[ 1 .. $#line ] )
-                    );
-                    $clusters{ $line[0] } = join( " ", @line[ 1 .. $#line ] )
-                        ;    # Now bung in rest of line
-                }
-            }
-
-        }
-    }
-
-    logmsg( 2, "Finished loading clusters" );
-}
-
 sub resolve_names(@) {
     my ( $self, @servers ) = @_;
     logmsg( 2, 'Resolving cluster names: started' );
@@ -547,23 +446,23 @@ sub resolve_names(@) {
         }
         if (   $self->config->{use_all_a_records}
             && $dirty !~ m/^(\d{1,3}\.?){4}$/
-            && !defined( $clusters{$dirty} ) )
+            && !defined( $self->cluster->get_tag($dirty) ) )
         {
             my $hostobj = gethostbyname($dirty);
             if ( defined($hostobj) ) {
                 my @alladdrs = map { inet_ntoa($_) } @{ $hostobj->addr_list };
                 if ( $#alladdrs > 0 ) {
-                    $clusters{$dirty} = join ' ', @alladdrs;
-                    logmsg( 3, 'Expanded to ', $clusters{$dirty} );
+                    $self->cluster->register_tag($dirty, @alladdrs);
+                    logmsg( 3, 'Expanded to ', $self->cluster->get_tag($dirty) );
                 }
                 else {
                     logmsg( 3, 'Only one A record' );
                 }
             }
         }
-        if ( $clusters{$dirty} ) {
+        if ( $self->cluster->get_tag($dirty) ) {
             logmsg( 3, '... it is a cluster' );
-            foreach my $node ( split( / /, $clusters{$dirty} ) ) {
+            foreach my $node ( $self->cluster->get_tag($dirty) ) {
                 if ($username) {
                     $node =~ s/^(.*)@//;
                     $node = $username . '@' . $node;
@@ -1556,14 +1455,14 @@ sub create_windows() {
     );
 
     if ( $self->config->{max_addhost_menu_cluster_items}
-        && scalar keys %clusters )
+        && scalar $self->cluster->list_tags()  )
     {
         if (scalar
-            keys %clusters < $self->config->{max_addhost_menu_cluster_items} )
+            scalar $self->cluster->list_tags() < $self->config->{max_addhost_menu_cluster_items} )
         {
             $menus{listbox} = $windows{addhost}->Listbox(
                 -selectmode => 'extended',
-                -height     => scalar keys %clusters,
+                -height     => scalar $self->cluster->list_tags(),
             )->pack();
         }
         else {
@@ -1574,7 +1473,7 @@ sub create_windows() {
                 -height => $self->config->{max_addhost_menu_cluster_items},
             )->pack();
         }
-        $menus{listbox}->insert( 'end', sort keys %clusters );
+        $menus{listbox}->insert( 'end', sort $self->cluster->list_tags() );
     }
 
     $windows{host_entry} = $windows{addhost}->add(
@@ -1970,17 +1869,41 @@ sub run {
 
     load_keyboard_map();
 
-    get_clusters();
+    # read in normal cluster files
+    $self->cluster->read_cluster_file('/etc/clusters');
+    if ( $self->config->{extra_cluster_file} || $options{'cluster-file'} ) {
+        foreach my $item ( split( /,/, $self->config->{extra_cluster_file} ),
+            $options{'cluster-file'} )
+        {
+            next unless ($item);
+            $item =~ s/\$HOME/$ENV{HOME}/;
+            foreach my $file ( glob($item) ) {
+                if ( !-r $file ) {
+                    warn("Unable to read cluster file '$file': $!\n");
+                    next;
+                }
 
-    list_tags() if ( $options{'list'} );
+                $self->cluster->read_cluster_file($file);
+
+            }
+        }
+    }
+
+    $self->cluster->get_clusters( $self->config->{extra_cluster_file} );
+
+    if ( $options{'list'} ) {
+        print( 'Available cluster tags:', $/ );
+        print "\t", $_, $/ foreach ( sort( $self->cluster->list_tags ) );
+        exit_prog();
+    }
 
     if (@ARGV) {
         @servers = $self->resolve_names(@ARGV);
     }
     else {
-        if ( $clusters{default} ) {
+        if ( $self->cluster->get_tag('default') ) {
             @servers
-                = $self->resolve_names( split( /\s+/, $clusters{default} ) );
+                = $self->resolve_names( $self->cluster->get_tag('default') );
         }
     }
 
