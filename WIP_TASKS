@@ -1,0 +1,4 @@
+get auto_close code working
+allow for multiple commands with -a 'echo ; echo ; echo'
+check all options work 
+create .clustersshrc/clusters from .csshrc entries

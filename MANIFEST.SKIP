@@ -7,3 +7,4 @@
 ^MANIFEST\.bak$
 ^MYMETA.yml$
 .*\.swp$
+^WIP_TASKS$
