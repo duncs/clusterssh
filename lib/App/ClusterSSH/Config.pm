@@ -15,6 +15,7 @@ use base qw/ App::ClusterSSH::Base /;
 use App::ClusterSSH::Cluster;
 
 my $clusters;
+my %old_clusters;
 my @app_specific   = (qw/ command title comms method ssh rsh telnet ccon /);
 my %default_config = (
     terminal                   => "xterm",
@@ -35,6 +36,7 @@ my %default_config = (
     key_paste               => "Control-v",
     mouse_paste             => "Button-2",
     auto_quit               => "yes",
+    auto_close              => 5,
     window_tiling           => "yes",
     window_tiling_direction => "right",
     console_position        => "",
@@ -89,13 +91,15 @@ sub new {
         $self->{comms} = 'ssh';
     }
 
-    if($self->{comms} && (! $self->{ $self->{comms} } || ! -e $self->{ $self->{comms} } ) ) {
-        $self->{ $self->{comms} } = $self->find_binary( $self->{ comms } );
+    if ( $self->{comms}
+        && ( !$self->{ $self->{comms} } || !-e $self->{ $self->{comms} } ) )
+    {
+        $self->{ $self->{comms} } = $self->find_binary( $self->{comms} );
     }
 
     $self->{title} = uc($Script);
 
-    $clusters=App::ClusterSSH::Cluster->new();
+    $clusters = App::ClusterSSH::Cluster->new();
 
     return $self->validate_args(%args);
 }
@@ -176,13 +180,14 @@ sub parse_config_file {
     }
     close(CFG);
 
-    # grab any clusters from the config before validating it
+    # grab any c'lusters from the config before validating it
     if ( $read_config{clusters} ) {
         $self->debug( 3, "Picked up clusters defined in $config_file" );
         foreach my $cluster ( sort split / /, $read_config{clusters} ) {
-            if($read_config{$cluster}) {
-                $clusters->register_tag($cluster,$read_config{$cluster});
-            delete( $read_config{$cluster} );
+            if ( $read_config{$cluster} ) {
+                $clusters->register_tag( $cluster, $read_config{$cluster} );
+                $old_clusters{$cluster}=$read_config{$cluster};
+                delete( $read_config{$cluster} );
             }
         }
         delete( $read_config{clusters} );
@@ -273,6 +278,16 @@ sub write_user_config_file {
                 ),
             ),
         );
+    }
+
+    return $self  if(!%old_clusters);
+
+    if( open( my $fh, ">", "$ENV{HOME}/.clusterssh/clusters" ) ) {
+        print $fh '# '.$self->loc('Tag definitions moved from old .csshrc file'),$/;
+        foreach ( sort( keys(%old_clusters))){
+            print $fh $_, ' ', join(' ', $old_clusters{$_}),$/;
+        }
+        close($fh);
     }
     return $self;
 }
