@@ -104,12 +104,6 @@ sub list_tags {
     return keys(%$self);
 }
 
-sub resolve_all_tags {
-    my ($self) = @_;
-
-    return $self;
-}
-
 #use overload (
 #    q{""} => sub {
 #        my ($self) = @_;
@@ -136,9 +130,29 @@ Object representing application configuration
 
 =over 4
 
-=item $host=ClusterSSH::Cluster->new();
+=item $cluster=ClusterSSH::Cluster->new();
 
 Create a new object.  Object should be common across all invocations.
+
+=item $cluster->get_clusters($filename);
+
+Read in /etc/clusters and any other given file name and register the tags found.
+
+=item $cluster->read_cluster_file($filename);
+
+Read in the given cluster file and register the tags found
+
+=item $cluster->register_tag($tag,@hosts);
+
+Register the given tag name with the given host names.
+
+=item @entries = $cluster->get_tag('tag');
+
+Retrieve all entries for the given tag
+
+=item @tags = $cluster->list_tags();
+
+Return an array of all available tag names
 
 =back
 

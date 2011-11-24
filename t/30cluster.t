@@ -25,7 +25,9 @@ my @expected = ( 'pete', 'jo', 'fred' );
 
 $cluster1->register_tag( 'people', @expected );
 
-is_deeply( $cluster2->get_tag('people'), \@expected,
+my @got = $cluster2->get_tag('people');
+
+is_deeply( \@got, \@expected,
     'Shared cluster object' );
 
 # should pass without issue
@@ -46,19 +48,23 @@ is( $trap->die, "Unable to read file $no_read: Permission denied", 'Error on rea
 
 @expected = ('host1');
 $cluster1->read_cluster_file( $Bin . '/30cluster.file1' );
-is_deeply( $cluster1->get_tag('tag1'), \@expected, 'read simple file OK' );
+@got = $cluster1->get_tag('tag1');
+is_deeply( \@got, \@expected, 'read simple file OK' );
 
 @expected = ('host1');
 $cluster1->read_cluster_file( $Bin . '/30cluster.file2' );
-is_deeply( $cluster1->get_tag('tag1'),
+@got=$cluster1->get_tag('tag1');
+is_deeply( \@got,
     \@expected, 'read more complex file OK' );
 
 @expected = ('host2');
-is_deeply( $cluster1->get_tag('tag2'),
+@got=$cluster1->get_tag('tag2');
+is_deeply( \@got,
     \@expected, 'read more complex file OK' );
 
 @expected = ( 'host3', 'host4' );
-is_deeply( $cluster1->get_tag('tag3'),
+@got=$cluster1->get_tag('tag3');
+is_deeply( \@got,
     \@expected, 'read more complex file OK' );
 
 done_testing();
