@@ -39,6 +39,7 @@ Readonly::Hash my %default_config => {
     key_paste               => "Control-v",
     mouse_paste             => "Button-2",
     auto_quit               => "yes",
+    auto_close              => 5,
     window_tiling           => "yes",
     window_tiling_direction => "right",
     console_position        => "",
@@ -185,10 +186,7 @@ is( $trap->leaveby, 'return', 'returned ok' );
 is( $trap->die,     undef,    'returned ok' );
 isa_ok( $config, "App::ClusterSSH::Config" );
 is( $trap->stdout, q{}, 'Expecting no STDOUT' );
-{
-    local $TODO = "deal with cluster definitions in config file";
-    is( $trap->stderr, q{}, 'Expecting no STDERR' );
-}
+is( $trap->stderr, q{}, 'Expecting no STDERR' );
 
 note('find_binary tests');
 my $path;
@@ -437,6 +435,7 @@ trap {
 };
 my $expected = <<'EOF';
 # Configuration dump produced by "cssh -u"
+auto_close=5
 auto_quit=yes
 console_position=
 debug=0

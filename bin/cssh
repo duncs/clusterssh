@@ -132,6 +132,10 @@ Run the command in each session, i.e. C<-a 'vi /etc/hosts'> to drop straight
 into a vi session.  NOTE: not all communications methods support this (ssh 
 and rsh should, telnet and console will not).
 
+=item --autoclose,-A <seconds>
+
+Number of seconds to wait before closing finished terminal windows.
+
 =item --autoquit,-q|--no-autoquit,-Q
 
 Enable|Disable automatically quiting after the last client window has closed
@@ -376,6 +380,12 @@ should be written as
 =item always_tile = yes
 
 Setting to anything other than C<yes> does not perform window tiling (see also -G).
+
+=item auto_close = 5
+
+Close terminal window after this many seconds.  If set to 0 will instead wait 
+on input from the user in each window before closing. Can be overridden
+by C<-K> on the command line
 
 =item auto_quit = yes
 

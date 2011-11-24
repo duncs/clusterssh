@@ -25,6 +25,9 @@ sub script {
     my $comms = $config->{comms};
     my $comms_args = $config->{$comms.'_args'};
     my $command = $config->{command};
+    my $autoclose = $config->{auto_close};
+
+    my $postcommand = $autoclose ? "echo Press RETURN to continue; read IGNORE" : "sleep $autoclose";
 
 #    # P = pipe file
 #    # s = server
@@ -116,7 +119,7 @@ sub script {
                  \$command .= "\$svr";
                }
            }
-           \$command .= " $command || sleep 5";
+           \$command .= " $command ; $postcommand";
            warn("Running:\$command\\n"); # for debug purposes
            exec(\$command);
     HERE

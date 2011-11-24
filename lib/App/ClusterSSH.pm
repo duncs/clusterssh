@@ -108,6 +108,7 @@ my @options_spec = (
     'port|p=i',
     'autoquit|q',
     'no-autoquit|Q',
+    'autoclose|K=i',
     'history|s',
     'term-args|t=s',
     'title|T=s',
@@ -1865,6 +1866,14 @@ sub run {
             = !$self->config->{use_all_a_records} || 0;
     }
 
+    if ( $options{action} ) {
+        $self->config->{command} = $options{action} ;
+    }
+
+    $self->config->{auto_quit} = "yes" if $options{autoquit};
+    $self->config->{auto_quit} = "no"  if $options{'no-autoquit'};
+    $self->config->{auto_close} = $options{autoclose} if $options{'autoclose'};
+
     $self->config->dump() if ( $options{'output-config'} );
 
     $self->evaluate_commands() if ( $options{evaluate} );
@@ -2001,6 +2010,8 @@ the code until this time.
 =item  config
 
 =item  helper
+
+=item cluster
 
 =item  create_menubar
 
