@@ -203,76 +203,6 @@ sub logmsg($@) {
     }
 }
 
-# make sure our config is sane (i.e. binaries found) and get some extra bits
-sub check_config() {
-    my %config;
-    warn 'This section to be rewritten';
-
-    # check we have xterm on our path
-    logmsg( 2, "Checking path to xterm" );
-    $config{terminal} = find_binary( $config{terminal} );
-
-    # check we have comms method on our path
-    logmsg( 2, "Checking path to $config{comms}" );
-    $config{ $config{comms} } = find_binary( $config{ $config{comms} } );
-
-    # make sure comms in an accepted value
-    die
-        "FATAL: Only ssh, rsh, telnet, and console/conserver protocols are currently supported (comms=$config{comms})\n"
-        if ( $config{comms} !~ /^(:?[rs]sh|telnet|console)$/ );
-
-    # Set any extra config options given on command line
-    $config{title} = $options{title} if ( $options{title} );
-
-    $config{auto_quit} = "yes" if $options{autoquit};
-    $config{auto_quit} = "no"  if $options{'no-autoquit'};
-
-    # backwards compatibility & tidyup
-    if ( $config{always_tile} ) {
-        if ( !$config{window_tiling} ) {
-            if ( $config{always_tile} eq "never" ) {
-                $config{window_tiling} = "no";
-            }
-            else {
-                $config{window_tiling} = "yes";
-            }
-        }
-        delete( $config{always_tile} );
-    }
-    $config{window_tiling} = "yes" if $options{tile};
-    $config{window_tiling} = "no"  if $options{'no-tile'};
-
-    $config{user} = $options{username} if ( $options{username} );
-    $config{port} = $options{port}     if ( $options{port} );
-
-    $config{mstr} = $options{master} if ( $options{master} );
-
-    $config{terminal_args} = $options{'term-args'}
-        if ( $options{'term-args'} );
-
-    if ( $config{terminal_args} =~ /-class (\w+)/ ) {
-        $config{terminal_allow_send_events}
-            = "-xrm '$1.VT100.allowSendEvents:true'";
-    }
-
-    $config{internal_previous_state} = "";    # set to default
-
-    # option font overrides config file font setting
-    $config{terminal_font} = $options{font} if ( $options{font} );
-
-    $config{extra_cluster_file} =~ s/\s+//g;
-
-    $config{ssh_args} = $options{options} if ( $options{options} );
-
-    $config{show_history} = 1 if $options{'show-history'};
-
-    $config{command} = $options{action} if ( $options{action} );
-
-    if ( $options{use_all_a_records} ) {
-        $config{use_all_a_records} = !$config{use_all_a_records} || 0;
-    }
-}
-
 sub evaluate_commands {
     my ($self) = @_;
     my ( $return, $user, $port, $host );
@@ -1874,6 +1804,23 @@ sub run {
     $self->config->{auto_quit} = "no"  if $options{'no-autoquit'};
     $self->config->{auto_close} = $options{autoclose} if $options{'autoclose'};
 
+    $self->config->{window_tiling} = "yes" if $options{tile};
+    $self->config->{window_tiling} = "no"  if $options{'no-tile'};
+
+    $self->config->{user} = $options{username} if ( $options{username} );
+    $self->config->{port} = $options{port}     if ( $options{port} );
+
+    $self->config->{show_history} = 1 if $options{'show-history'};
+    $self->config->{ssh_args} = $options{options} if ( $options{options} );
+
+    $self->config->{terminal_font} = $options{font} if ( $options{font} );
+    $self->config->{terminal_args} = $options{'term-args'}
+            if ( $options{'term-args'} );
+    if ( $self->config->{terminal_args} =~ /-class (\w+)/ ) {
+        $self->config->{terminal_allow_send_events}
+            = "-xrm '$1.VT100.allowSendEvents:true'";
+    }
+
     $self->config->dump() if ( $options{'output-config'} );
 
     $self->evaluate_commands() if ( $options{evaluate} );
@@ -2003,8 +1950,6 @@ the code until this time.
 
 =item change_main_window_title
 
-=item  check_config
-
 =item  close_inactive_sessions
 
 =item  config
@@ -2024,8 +1969,6 @@ the code until this time.
 =item  evaluate_commands
 
 =item  exit_prog
-
-=item  find_binary
 
 =item  get_clusters
 

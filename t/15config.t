@@ -21,7 +21,7 @@ $config = App::ClusterSSH::Config->new();
 isa_ok( $config, 'App::ClusterSSH::Config' );
 
 Readonly::Hash my %default_config => {
-    terminal                   => "xterm",
+    terminal                   => "/usr/bin/xterm",
     terminal_args              => "",
     terminal_title_opt         => "-T",
     terminal_colorize          => 1,
@@ -228,6 +228,33 @@ is( $trap->stdout, q{}, 'Expecting no STDOUT' );
 is( $trap->stderr, q{}, 'Expecting no STDERR' );
 is_deeply( $config, \%expected, 'amended config is correct' );
 is( $path, which('ls'), 'Found correct path to "ls"' );
+
+# check for a binary already found
+my $newpath;
+trap {
+    $newpath = $config->find_binary($path);
+};
+is( $trap->leaveby, 'return', 'returned ok' );
+isa_ok( $config, "App::ClusterSSH::Config" );
+isa_ok( $config, "App::ClusterSSH::Config" );
+is( $trap->stdout, q{}, 'Expecting no STDOUT' );
+is( $trap->stderr, q{}, 'Expecting no STDERR' );
+is_deeply( $config, \%expected, 'amended config is correct' );
+is( $path, which('ls'), 'Found correct path to "ls"' );
+is( $path, $newpath, 'No change made from find_binary');
+
+# give false path to force another search
+trap {
+    $newpath = $config->find_binary('/does/not/exist/'.$path);
+};
+is( $trap->leaveby, 'return', 'returned ok' );
+isa_ok( $config, "App::ClusterSSH::Config" );
+isa_ok( $config, "App::ClusterSSH::Config" );
+is( $trap->stdout, q{}, 'Expecting no STDOUT' );
+is( $trap->stderr, q{}, 'Expecting no STDERR' );
+is_deeply( $config, \%expected, 'amended config is correct' );
+is( $path, which('ls'), 'Found correct path to "ls"' );
+is( $path, $newpath, 'No change made from find_binary');
 
 note('Checks on loading configs');
 note('empty dir');
@@ -463,7 +490,7 @@ send_menu_xml_file=/home/dferguson/.csshrc_send_menu
 show_history=0
 ssh_args=
 telnet_args=
-terminal=xterm
+terminal=/usr/bin/xterm
 terminal_allow_send_events=-xrm '*.VT100.allowSendEvents:true'
 terminal_args=
 terminal_bg_style=dark

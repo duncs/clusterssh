@@ -97,6 +97,8 @@ sub new {
         $self->{ $self->{comms} } = $self->find_binary( $self->{comms} );
     }
 
+    $self->{terminal} = $self->find_binary( $self->{terminal} );
+
     $self->{title} = uc($Script);
 
     $clusters = App::ClusterSSH::Cluster->new();
@@ -186,7 +188,7 @@ sub parse_config_file {
         foreach my $cluster ( sort split / /, $read_config{clusters} ) {
             if ( $read_config{$cluster} ) {
                 $clusters->register_tag( $cluster, $read_config{$cluster} );
-                $old_clusters{$cluster}=$read_config{$cluster};
+                $old_clusters{$cluster} = $read_config{$cluster};
                 delete( $read_config{$cluster} );
             }
         }
@@ -280,12 +282,13 @@ sub write_user_config_file {
         );
     }
 
-    return $self  if(!%old_clusters);
+    return $self if ( !%old_clusters );
 
-    if( open( my $fh, ">", "$ENV{HOME}/.clusterssh/clusters" ) ) {
-        print $fh '# '.$self->loc('Tag definitions moved from old .csshrc file'),$/;
-        foreach ( sort( keys(%old_clusters))){
-            print $fh $_, ' ', join(' ', $old_clusters{$_}),$/;
+    if ( open( my $fh, ">", "$ENV{HOME}/.clusterssh/clusters" ) ) {
+        print $fh '# '
+            . $self->loc('Tag definitions moved from old .csshrc file'), $/;
+        foreach ( sort( keys(%old_clusters) ) ) {
+            print $fh $_, ' ', join( ' ', $old_clusters{$_} ), $/;
         }
         close($fh);
     }
@@ -306,6 +309,19 @@ sub find_binary {
     }
 
     $self->debug( 2, "Looking for $binary" );
+
+    # if not found, strip the path and look again
+    if ( $binary =~ m!^/! ) {
+        if ( -f $binary ) {
+            $self->debug( 2, "$binary already fully qualified" );
+            return $binary;
+        }
+        else {
+            $self->debug( 2, "$binary not found - re-searching" );
+            $binary =~ s!^.*/!!;
+        }
+    }
+
     my $path;
     if ( !-x $binary || substr( $binary, 0, 1 ) ne '/' ) {
 
