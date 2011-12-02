@@ -5,11 +5,16 @@ WriteMakefile
           'NAME' => 'App::ClusterSSH',
           'VERSION_FROM' => 'lib/App/ClusterSSH.pm',
           'PREREQ_PM' => {
+                           'Exception::Class' => '1.31',
+                           'File::Temp' => 0,
+                           'File::Which' => 0,
                            'Locale::Maketext' => 0,
+                           'Readonly' => 0,
                            'Test::Pod' => 0,
                            'Test::Pod::Coverage' => 0,
                            'Test::Trap' => 0,
                            'Tk' => '800.022',
+                           'Try::Tiny' => 0,
                            'X11::Protocol' => '0.56',
                            'version' => '0'
                          },

@@ -1,5 +1,9 @@
 ????-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_00
 * Start switching code to use Exception::Class
+* Moved config file from $HOME/.csshrc file to $HOME/.clusterssh directory
+* Rework config handling into a module
+* Rework cluster handling into a module
+* Added 'autoclose' functionality - see docs
 
 2011-07-28 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_11
 * Fix '-l <username>' option (SF bug 3380675)
