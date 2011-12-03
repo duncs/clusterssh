@@ -4,6 +4,7 @@
 * Rework config handling into a module
 * Rework cluster handling into a module
 * Added 'autoclose' functionality - see docs
+* Allow "-a 'cmd ; cmd'" to work for multiple remote commands
 
 2011-07-28 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_11
 * Fix '-l <username>' option (SF bug 3380675)

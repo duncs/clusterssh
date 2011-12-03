@@ -119,7 +119,7 @@ sub script {
                  \$command .= "\$svr";
                }
            }
-           \$command .= " $command ; $postcommand";
+           \$command .= " \\\"$command\\\" ; $postcommand";
            warn("Running:\$command\\n"); # for debug purposes
            exec(\$command);
     HERE
