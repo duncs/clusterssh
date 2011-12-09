@@ -10,6 +10,7 @@ WriteMakefile
                            'File::Which' => 0,
                            'Locale::Maketext' => 0,
                            'Readonly' => 0,
+                           'Test::DistManifest' => 0,
                            'Test::Pod' => 0,
                            'Test::Pod::Coverage' => 0,
                            'Test::Trap' => 0,
