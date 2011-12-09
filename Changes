@@ -1,3 +1,6 @@
+?????????? Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_01
+* Include missing files from release tarballs
+
 2011-12-03 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_00
 * Start switching code to use Exception::Class
 * Moved config file from $HOME/.csshrc file to $HOME/.clusterssh directory
