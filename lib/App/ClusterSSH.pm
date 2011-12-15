@@ -3,7 +3,7 @@ package App::ClusterSSH;
 use 5.008.004;
 use warnings;
 use strict;
-use version; our $VERSION = version->new('4.01_01');
+use version; our $VERSION = version->new('4.01_02');
 
 use Carp;
 
@@ -1802,7 +1802,7 @@ sub run {
 
     $self->config->{auto_quit} = "yes" if $options{autoquit};
     $self->config->{auto_quit} = "no"  if $options{'no-autoquit'};
-    $self->config->{auto_close} = $options{autoclose} if $options{'autoclose'};
+    $self->config->{auto_close} = $options{autoclose} if defined $options{'autoclose'};
 
     $self->config->{window_tiling} = "yes" if $options{tile};
     $self->config->{window_tiling} = "no"  if $options{'no-tile'};
