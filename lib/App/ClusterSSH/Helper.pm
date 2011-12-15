@@ -27,7 +27,7 @@ sub script {
     my $command = $config->{command};
     my $autoclose = $config->{auto_close};
 
-    my $postcommand = $autoclose ? "sleep $autoclose" : "echo Press RETURN to continue; read IGNORE"; # : "sleep $autoclose";
+    my $postcommand = $autoclose ? "echo Sleeping for $autoclose seconds; sleep $autoclose" : "echo Press RETURN to continue; read IGNORE"; # : "sleep $autoclose";
 
 #    # P = pipe file
 #    # s = server
