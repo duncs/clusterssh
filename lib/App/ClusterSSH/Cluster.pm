@@ -26,7 +26,7 @@ sub new {
 sub get_clusters {
     my ( $self, @files ) = @_;
 
-    for my $file ( '/etc/clusters', @files ) {
+    for my $file ( '/etc/clusters', $ENV{HOME}.'/.clusterssh/clusters',@files ) {
         $self->debug(3, 'Loading in config from: ', $file);
         $self->read_cluster_file($file);
     }
