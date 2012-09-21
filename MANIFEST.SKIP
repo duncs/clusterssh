@@ -8,3 +8,5 @@
 ^MYMETA.yml$
 .*\.swp$
 ^WIP_TASKS$
+^Makefile$
+^Makefile.old$
