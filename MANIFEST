@@ -14,8 +14,6 @@ lib/App/ClusterSSH/Helper.pm
 lib/App/ClusterSSH/Host.pm
 lib/App/ClusterSSH/L10N.pm
 lib/App/ClusterSSH/L10N/en.pm
-Makefile
-Makefile.old
 Makefile.PL
 MANIFEST
 MANIFEST.SKIP
