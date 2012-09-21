@@ -510,8 +510,11 @@ use_hotkeys=yes
 window_tiling=yes
 window_tiling_direction=right
 EOF
+
+$expected =~ s#/home/dferguson#$ENV{HOME}#;   # he don't live here no more
+
 isa_ok( $config, "App::ClusterSSH::Config" );
-is( $trap->die,    undef,     'die message correct' );
+is( $trap->die,    undef,     'die message correct' ); 
 is( $trap->stdout, $expected, 'Expecting no STDOUT' );
 is( $trap->stderr, q{},       'Expecting no STDERR' );
 
