@@ -34,6 +34,7 @@ my $build = Module::Build->new(
         'File::Which'         => 0,
         'File::Temp'          => 0,
         'Test::DistManifest'  => 0,
+        'Test::Differences'   => 0,
     },
     add_to_cleanup     => ['App-ClusterSSH-*'],
     create_makefile_pl => 'traditional',

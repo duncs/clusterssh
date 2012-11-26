@@ -10,3 +10,4 @@
 ^WIP_TASKS$
 ^Makefile$
 ^Makefile.old$
+pm_to_blib
