@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use version;
-our $VERSION = version->new('0.01');
+our $VERSION = version->new('0.02');
 
 use Carp;
 use Try::Tiny;
@@ -84,11 +84,16 @@ sub new {
     my $self = $class->SUPER::new(%default_config);
 
     ( my $comms = $Script ) =~ s/^c//;
-    $self->{comms} = $comms;
+
+    $comms = 'telnet'  if ( $comms eq 'tel' );
+    $comms = 'console' if ( $comms eq 'con' );
 
     # list of allowed comms methods
-    if ( 'ssh rsh telnet console' !~ m/\B$comms\B/ ) {
+    if ( 'ssh rsh telnet console' !~ m/\b$comms\b/ ) {
         $self->{comms} = 'ssh';
+    }
+    else {
+        $self->{comms} = $comms;
     }
 
     if ( $self->{comms}

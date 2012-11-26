@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use version;
-our $VERSION = version->new('0.01');
+our $VERSION = version->new('0.02');
 
 use Carp;
 use Try::Tiny;
@@ -119,7 +119,10 @@ sub script {
                  \$command .= "\$svr";
                }
            }
-           \$command .= " \\\"$command\\\" ; $postcommand";
+           if("$command") {
+            \$command .= " \\\"$command\\\"";
+           }
+           \$command .= " ; $postcommand";
            warn("Running:\$command\\n"); # for debug purposes
            exec(\$command);
     HERE

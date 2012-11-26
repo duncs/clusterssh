@@ -1,6 +1,7 @@
 ????-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_02
 * Fix logic when using 'autoclose' on the command line or config file
 * Fix $HOME/.clusterssh/clusters being read in
+* Fix 'ctel', 'crsh' and 'ccon'so they work as expected
 
 2011-12-09 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_01
 * Include missing files from release tarballs
