@@ -1,8 +1,10 @@
-blib/
-_build/
-Build
-cover_db/
-MANIFEST.bak
-MYMETA.yml
 *.swp
 *.tar.gz
+Build
+MANIFEST.bak
+MYMETA.yml
+Makefile
+_build/
+blib/
+cover_db/
+pm_to_blib
