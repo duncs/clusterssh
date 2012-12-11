@@ -6,13 +6,15 @@ build_requires:
   File::Temp: 0
   File::Which: 0
   Readonly: 0
+  Test::Differences: 0
   Test::DistManifest: 0
   Test::Pod: 0
   Test::Pod::Coverage: 0
   Test::Trap: 0
 configure_requires:
-  Module::Build: 0.36
-generated_by: 'Module::Build version 0.3603'
+  Module::Build: 0
+dynamic_config: 1
+generated_by: 'Module::Build version 0.4003, CPAN::Meta::Converter version 2.112621'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -21,7 +23,7 @@ name: App-ClusterSSH
 provides:
   App::ClusterSSH:
     file: lib/App/ClusterSSH.pm
-    version: 4.01_01
+    version: 4.01_02
   App::ClusterSSH::Base:
     file: lib/App/ClusterSSH/Base.pm
     version: 0.02
@@ -30,17 +32,19 @@ provides:
     version: 0.01
   App::ClusterSSH::Config:
     file: lib/App/ClusterSSH/Config.pm
-    version: 0.01
+    version: 0.02
   App::ClusterSSH::Helper:
     file: lib/App/ClusterSSH/Helper.pm
-    version: 0.01
+    version: 0.02
   App::ClusterSSH::Host:
     file: lib/App/ClusterSSH/Host.pm
     version: 0.03
   App::ClusterSSH::L10N:
     file: lib/App/ClusterSSH/L10N.pm
+    version: 0
   App::ClusterSSH::L10N::en:
     file: lib/App/ClusterSSH/L10N/en.pm
+    version: 0
 requires:
   Exception::Class: 1.31
   Locale::Maketext: 0
@@ -52,7 +56,7 @@ resources:
   bugtracker: http://sourceforge.net/tracker/?group_id=89139
   homepage: http://clusterssh.sourceforge.net/
   license: http://dev.perl.org/licenses/
-  repository:
+  x_Repository:
     - http://clusterssh.git.sourceforge.net/
     - http://github.com/duncs/clusterssh
-version: 4.01_01
+version: 4.01_02

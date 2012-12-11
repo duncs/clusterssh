@@ -41,3 +41,4 @@ t/pod-coverage.t
 t/pod.t
 THANKS
 TODO
+META.json
