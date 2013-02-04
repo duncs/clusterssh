@@ -3,7 +3,7 @@ package App::ClusterSSH;
 use 5.008.004;
 use warnings;
 use strict;
-use version; our $VERSION = version->new('4.01_02');
+use version; our $VERSION = version->new('4.01_03');
 
 use Carp;
 
@@ -751,7 +751,7 @@ sub get_font_size() {
 
     eval { (%font_info) = $xdisplay->QueryFont($font); }
         || die( "Fatal: Unrecognised font used ($terminal_font).\n"
-            . "Please amend \$HOME/.csshrc with a valid font (see man page).\n"
+            . "Please amend \$HOME/.clusterssh/config with a valid font (see man page).\n"
         );
 
     $self->config->{internal_font_width}
@@ -763,7 +763,7 @@ sub get_font_size() {
         || !$self->config->{internal_font_height} )
     {
         die(      "Fatal: Unrecognised font used ($terminal_font).\n"
-                . "Please amend \$HOME/.csshrc with a valid font (see man page).\n"
+                . "Please amend \$HOME/.clusterssh/config with a valid font (see man page).\n"
         );
     }
 

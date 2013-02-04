@@ -1,3 +1,6 @@
+????-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_03
+* Correct documentation for references to $HOME/.clusterssh/config
+
 2012-12-09 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_02
 * Fix logic when using 'autoclose' on the command line or config file
 * Fix $HOME/.clusterssh/clusters being read in

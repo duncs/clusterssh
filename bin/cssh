@@ -66,12 +66,12 @@ that host.  Re-selecting it will plug it back in.
 =item *
 
 If your window manager menu bars are obscured by terminal windows see
-the C<screen_reserve_XXXXX> options in the F<csshrc> file (see L</"FILES">).
+the C<screen_reserve_XXXXX> options in the F<$HOME/.clusterssh/config> file (see L</"FILES">).
 
 =item *
 
 If the terminals overlap too much see the C<terminal_reserve_XXXXX> 
-options in the F<csshrc> file (see L</"FILES">).
+options in the F<$HOME/.clusterssh/config> file (see L</"FILES">).
 
 =item *
 
@@ -115,7 +115,7 @@ be due to either the C<-xrm> terminal option which enables C<AllowSendEvents>
 (some terminal do not require this option, other terminals have another 
 method for enabling it - see your terminal documention) or the 
 C<ConnectTimeout> ssh option (see the configuration option C<-o> or file 
-C<csshrc> below to resolve this).
+C<$HOME/.clusterssh/config> below to resolve this).
 
 =back
 
@@ -201,7 +201,7 @@ F<$HOME/.ssh/config>).
 =item --output-config,-u
 
 Output the current configuration in the same format used by the 
-F<$HOME/.csshrc> file.
+F<$HOME/.clusterssh/config> file.
 
 =item --port,-p <port>
 
@@ -255,7 +255,7 @@ on standard port (e.g not listening on port 22) and ssh_config cannot be used.
 =item <tag> ...
 
 Open a series of xterms defined by <tag> within either /etc/clusters or
-F<$HOME/.csshrc> (see L</"FILES">).
+F<$HOME/.clusterssh/config> (see L</"FILES">).
 
 Note: specifying a username on a cluster tag will override any usernames 
 defined in the cluster
@@ -354,13 +354,13 @@ nested, but be aware of recursive tags which are not checked for.
 
 Clusters may also be specified either directly (see C<clusters> configuration
 options) or indirectly (see C<extra_cluster_file> configuration option) 
-in the users F<$HOME/.csshrc> file.
+in the users F<$HOME/.clusterssh/config> file.
 
 NOTE: there is a special cluster tag called C<default> - any tags or hosts
 included within this tag will be automatically opened if no other tags
 are specified on the command line.
 
-=item F</etc/csshrc> & F<$HOME/.csshrc>
+=item F</etc/csshrc> & F<$HOME/.clusterssh/config>
 
 This file contains configuration overrides - the defaults are as marked.
 Default options are overwritten first by the global file, and then by the
@@ -725,7 +725,7 @@ If you have issues running cssh, first try:
 C<< cssh -e [user@]<hostname>[:port] >>
 
 This performs two tests to confirm cssh is able to work properly with the
-settings provided within the F<.csshrc> file (or internal defaults).
+settings provided within the F<$HOME/.clusterssh/config> file (or internal defaults).
 
 	1. test the terminal window works with the options provided
 
@@ -734,7 +734,7 @@ settings provided within the F<.csshrc> file (or internal defaults).
 Configuration options to watch for in ssh are
 
 	- Doesnt understand "-o ConnectTimeout=10" - remove the option 
-	  in the F<.csshrc> file
+	  in the F<$HOME/.clusterssh/config> file
 
 	- OpenSSH-3.8 using untrusted ssh tunnels - use "-Y" instead of "-X"
 	  or use "ForwardX11Trusted yes' in ssh_config (if you change the
@@ -751,7 +751,7 @@ C<< perl -MTk -e 'print $Tk::VERSION,$/' >>
 
 C<< perl -MX11::Protocol -e 'print $X11::Protocol::VERSION,$/' >>
 
-C<< cat /etc/csshrc $HOME/.csshrc >>
+C<< cat /etc/csshrc $HOME/.clusterssh/config >>
 
 =item *
 
