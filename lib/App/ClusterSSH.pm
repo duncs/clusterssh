@@ -1134,7 +1134,7 @@ sub add_host_by_name() {
         $self->open_client_windows(@names);
     }
 
-    if ( $menus{listbox}->curselection() ) {
+    if ( defined $menus{listbox} && $menus{listbox}->curselection() ) {
         my @hosts = $menus{listbox}->get( $menus{listbox}->curselection() );
         logmsg( 2, "host=", join( ' ', @hosts ) );
         $self->open_client_windows( $self->resolve_names(@hosts) );
