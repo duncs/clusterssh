@@ -60,8 +60,11 @@ Readonly::Hash my %default_config => {
 
     ssh => '/usr/bin/ssh',
 
+    rsh         => 'rsh',
     rsh_args    => "",
+    telnet      => 'telnet',
     telnet_args => "",
+    ssh         => 'ssh',
     ssh_args    => "",
 
     extra_cluster_file => "",
@@ -483,6 +486,7 @@ max_host_menu_items=30
 menu_host_autotearoff=0
 menu_send_autotearoff=0
 mouse_paste=Button-2
+rsh=rsh
 rsh_args=
 screen_reserve_bottom=60
 screen_reserve_left=0
@@ -490,7 +494,9 @@ screen_reserve_right=0
 screen_reserve_top=0
 send_menu_xml_file=} . $ENV{HOME} . qq{/.csshrc_send_menu
 show_history=0
+ssh=ssh
 ssh_args=
+telnet=telnet
 telnet_args=
 terminal=/usr/bin/xterm
 terminal_allow_send_events=-xrm '*.VT100.allowSendEvents:true'

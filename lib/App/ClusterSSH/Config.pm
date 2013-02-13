@@ -16,7 +16,7 @@ use App::ClusterSSH::Cluster;
 
 my $clusters;
 my %old_clusters;
-my @app_specific   = (qw/ command title comms method ssh rsh telnet ccon /);
+my @app_specific   = (qw/ command title comms method /);
 my %default_config = (
     terminal                   => "xterm",
     terminal_args              => "",
@@ -54,8 +54,11 @@ my %default_config = (
     terminal_decoration_height => 10,
     terminal_decoration_width  => 8,
 
+    rsh         => 'rsh',
     rsh_args    => "",
+    telnet      => 'telnet',
     telnet_args => "",
+    ssh         => 'ssh',
     ssh_args    => "",
 
     extra_cluster_file => "",
@@ -98,12 +101,6 @@ sub new {
         $self->{comms} = $comms;
     }
 
-    if ( $self->{comms}
-        && ( !$self->{ $self->{comms} } || !-e $self->{ $self->{comms} } ) )
-    {
-        $self->{ $self->{comms} } = $self->find_binary( $self->{comms} );
-    }
-
     $self->{terminal} = $self->find_binary( $self->{terminal} );
 
     $self->{title} = uc($Script);
@@ -133,6 +130,7 @@ sub validate_args {
         }
     }
 
+
     if (@unknown_config) {
         croak(
             App::ClusterSSH::Exception::Config->throw(
@@ -144,6 +142,29 @@ sub validate_args {
             )
         );
     }
+
+    if ( ! $self->{comms} ) {
+        croak(
+            App::ClusterSSH::Exception::Config->throw(
+                error => $self->loc( 'Invalid variable: comms'.$/),
+            ),
+        );
+    }
+
+    if ( !$self->{ $self->{comms} } ) {
+        croak(
+            App::ClusterSSH::Exception::Config->throw(
+                error => $self->loc( 'Invalid variable: [_1]'.$/, $self->{comms}),
+            ),
+        );
+    }
+    
+#    # Don't search for the path to the binary - assume it is on the path
+#    # or defined correctly in the config.
+#    if( !-e $self->{ $self->{comms} } )
+#    {
+#        $self->{ $self->{comms} } = $self->find_binary( $self->{comms} );
+#    }
 
     return $self;
 }
@@ -189,7 +210,7 @@ sub parse_config_file {
     }
     close(CFG);
 
-    # grab any c'lusters from the config before validating it
+    # grab any clusters from the config before validating it
     if ( $read_config{clusters} ) {
         $self->debug( 3, "Picked up clusters defined in $config_file" );
         foreach my $cluster ( sort split / /, $read_config{clusters} ) {

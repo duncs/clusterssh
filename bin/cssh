@@ -472,9 +472,20 @@ program start
 Default key sequence to paste text into the console window using the mouse.  
 See below notes on shortcuts.
 
+=item rsh = rsh
+
+=item ssh = ssh
+
+=item telnet = telnet
+
+Set the path to the specific binary to use for the communication method, else 
+uses the first match found in $PATH
+
 =item rsh_args = <blank>
 
 =item ssh_args = "-x -o ConnectTimeout=10" 
+
+=item telnet_args = <blank>
 
 Sets any arguments to be used with the communication method (defaults to ssh
 arguments).  

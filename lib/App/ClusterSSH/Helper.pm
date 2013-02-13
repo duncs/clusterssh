@@ -22,8 +22,8 @@ sub new {
 sub script {
     my ($self, $config ) = @_;
 
-    my $comms = $config->{comms};
-    my $comms_args = $config->{$comms.'_args'};
+    my $comms = $config->{ $config->{comms} };
+    my $comms_args = $config->{ $config->{comms} . '_args'};
     my $command = $config->{command};
     my $autoclose = $config->{auto_close};
 
