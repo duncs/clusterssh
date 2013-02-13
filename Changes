@@ -3,6 +3,7 @@
 * Re-add user back into the configurartion file
 * Add in missing newline for some error messages
 * Allow the path to rsh/ssh/telnet to be defined in the configuration file
+* Move .csshrc to .csshrc.DISABLED since it should no longer be used
 
 2012-12-09 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_02
 * Fix logic when using 'autoclose' on the command line or config file

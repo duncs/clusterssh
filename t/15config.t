@@ -273,7 +273,10 @@ isa_ok( $config, "App::ClusterSSH::Config" );
 isa_ok( $config, "App::ClusterSSH::Config" );
 is( $trap->die,    undef, 'die message correct' );
 is( $trap->stdout, q{},   'Expecting no STDOUT' );
-is( $trap->stderr, q{},   'Expecting no STDERR' );
+is( $trap->stderr,
+    'Created new configuration file within $HOME/.clusterssh/'.$/,
+    'Got correct STDERR output for .csshrc'
+);
 
 #note(qx/ls -laR $ENV{HOME}/);
 ok( -d $ENV{HOME} . '/.clusterssh',        '.clusterssh dir exists' );
@@ -297,10 +300,8 @@ isa_ok( $config, "App::ClusterSSH::Config" );
 is( $trap->die,    undef, 'die message correct' );
 is( $trap->stdout, q{},   'Expecting no STDOUT' );
 is( $trap->stderr,
-    'NOTICE: '
-        . $ENV{HOME}
-        . '/.csshrc is no longer used - please see documentation and remove'
-        . $/,
+    'Moved $HOME/.csshrc to $HOME/.csshrc.DISABLED'.$/.
+    'Created new configuration file within $HOME/.clusterssh/'.$/,
     'Got correct STDERR output for .csshrc'
 );
 ok( -d $ENV{HOME} . '/.clusterssh',        '.clusterssh dir exists' );
@@ -308,6 +309,11 @@ ok( -f $ENV{HOME} . '/.clusterssh/config', '.clusterssh config file exists' );
 is_deeply( $config, \%expected, 'amended config is correct' );
 
 note('.csshrc warning and .clusterssh dir plus config');
+# need to recreate .csshrc as it was just moved
+open( $csshrc, '>', $ENV{HOME} . '/.csshrc' );
+print $csshrc 'auto_quit = no', $/;
+close($csshrc);
+$expected{auto_quit} = 'no';
 open( $csshrc, '>', $ENV{HOME} . '/.clusterssh/config' );
 print $csshrc 'window_tiling = no', $/;
 close($csshrc);
@@ -322,10 +328,7 @@ isa_ok( $config, "App::ClusterSSH::Config" );
 is( $trap->die,    undef, 'die message correct' );
 is( $trap->stdout, q{},   'Expecting no STDOUT' );
 is( $trap->stderr,
-    'NOTICE: '
-        . $ENV{HOME}
-        . '/.csshrc is no longer used - please see documentation and remove'
-        . $/,
+    'Moved $HOME/.csshrc to $HOME/.csshrc.DISABLED'.$/,
     'Got correct STDERR output for .csshrc'
 );
 ok( -d $ENV{HOME} . '/.clusterssh',        '.clusterssh dir exists' );
