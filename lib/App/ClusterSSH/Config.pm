@@ -76,6 +76,8 @@ my %default_config = (
     use_all_a_records => 0,
 
     send_menu_xml_file => $ENV{HOME} . '/.csshrc_send_menu',
+
+    user => $ENV{LOGNAME},
 );
 
 sub new {
@@ -136,7 +138,7 @@ sub validate_args {
             App::ClusterSSH::Exception::Config->throw(
                 unknown_config => \@unknown_config,
                 error          => $self->loc(
-                    'Unknown configuration parameters: [_1]',
+                    'Unknown configuration parameters: [_1]'.$/,
                     join( ',', @unknown_config )
                 )
             )
@@ -155,7 +157,7 @@ sub parse_config_file {
         croak(
             App::ClusterSSH::Exception::Config->throw(
                 error => $self->loc(
-                    'File [_1] does not exist or cannot be read', $config_file
+                    'File [_1] does not exist or cannot be read'.$/, $config_file
                 ),
             ),
         );
@@ -260,7 +262,7 @@ sub write_user_config_file {
             croak(
                 App::ClusterSSH::Exception::Config->throw(
                     error => $self->loc(
-                        'Unable to create directory [_1]: [_2]',
+                        'Unable to create directory [_1]: [_2]'.$/,
                         '$HOME/.clusterssh', $!
                     ),
                 ),
@@ -279,7 +281,7 @@ sub write_user_config_file {
         croak(
             App::ClusterSSH::Exception::Config->throw(
                 error => $self->loc(
-                    'Unable to write default [_1]: [_2]',
+                    'Unable to write default [_1]: [_2]'.$/,
                     '$HOME/.clusterssh/config',
                     $!
                 ),
@@ -308,7 +310,7 @@ sub find_binary {
     if ( !$binary ) {
         croak(
             App::ClusterSSH::Exception::Config->throw(
-                error => $self->loc('argument not provided'),
+                error => $self->loc('argument not provided').$/,
             ),
         );
     }
@@ -360,7 +362,7 @@ sub find_binary {
         croak(
             App::ClusterSSH::Exception::Config->throw(
                 error => $self->loc(
-                    '"[_1]" binary not found - please amend $PATH or the cssh config file',
+                    '"[_1]" binary not found - please amend $PATH or the cssh config file'.$/,
                     $binary
                 ),
             ),

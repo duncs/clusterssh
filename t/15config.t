@@ -89,6 +89,7 @@ Readonly::Hash my %default_config => {
     debug => 0,
     lang  => 'en',
 
+    user => $ENV{LOGNAME},
 };
 my %expected = %default_config;
 is_deeply( $config, \%expected, 'default config is correct' );
@@ -102,7 +103,7 @@ trap {
 };
 isa_ok( $trap->die, 'App::ClusterSSH::Exception::Config' );
 is( $trap->die,
-    'Unknown configuration parameters: doesnt_exist,whoops',
+    'Unknown configuration parameters: doesnt_exist,whoops'.$/,
     'got correct error message'
 );
 is_deeply(
@@ -135,7 +136,7 @@ trap {
 };
 isa_ok( $trap->die, 'App::ClusterSSH::Exception::Config' );
 is( $trap->die,
-    "File $file does not exist or cannot be read",
+    "File $file does not exist or cannot be read".$/,
     'got correct error message'
 );
 
@@ -167,7 +168,7 @@ trap {
 is( $trap->leaveby, 'die', 'died ok' );
 isa_ok( $trap->die, 'App::ClusterSSH::Exception::Config' );
 is( $trap->die,
-    'Unknown configuration parameters: missing,rubbish',
+    'Unknown configuration parameters: missing,rubbish'.$/,
     'die message correct'
 );
 isa_ok( $config, "App::ClusterSSH::Config" );
@@ -198,7 +199,7 @@ trap {
 is( $trap->leaveby, 'die', 'died ok' );
 isa_ok( $trap->die, 'App::ClusterSSH::Exception::Config' );
 isa_ok( $config,    "App::ClusterSSH::Config" );
-is( $trap->die, 'argument not provided', 'die message correct' );
+is( $trap->die, 'argument not provided'.$/, 'die message correct' );
 isa_ok( $config, "App::ClusterSSH::Config" );
 is( $trap->stdout, q{}, 'Expecting no STDOUT' );
 is( $trap->stderr, q{}, 'Expecting no STDERR' );
@@ -211,7 +212,7 @@ is( $trap->leaveby, 'die', 'died ok' );
 isa_ok( $trap->die, 'App::ClusterSSH::Exception::Config' );
 isa_ok( $config,    "App::ClusterSSH::Config" );
 is( $trap->die,
-    '"missing" binary not found - please amend $PATH or the cssh config file',
+    '"missing" binary not found - please amend $PATH or the cssh config file'.$/,
     'die message correct'
 );
 isa_ok( $config, "App::ClusterSSH::Config" );
@@ -396,7 +397,7 @@ is( $trap->leaveby, 'die', 'died ok' );
 isa_ok( $trap->die, 'App::ClusterSSH::Exception::Config' );
 isa_ok( $config,    "App::ClusterSSH::Config" );
 is( $trap->die,
-    'Unable to create directory $HOME/.clusterssh: File exists',
+    'Unable to create directory $HOME/.clusterssh: File exists'.$/,
     'die message correct'
 );
 isa_ok( $config, "App::ClusterSSH::Config" );
@@ -415,7 +416,7 @@ is( $trap->leaveby, 'die', 'died ok' );
 isa_ok( $trap->die, 'App::ClusterSSH::Exception::Config' );
 isa_ok( $config,    "App::ClusterSSH::Config" );
 is( $trap->die,
-    'Unable to write default $HOME/.clusterssh/config: Is a directory',
+    'Unable to write default $HOME/.clusterssh/config: Is a directory'.$/,
     'die message correct'
 );
 isa_ok( $config, "App::ClusterSSH::Config" );
@@ -435,7 +436,7 @@ is( $trap->leaveby, 'return', 'died ok' );
 isa_ok( $config, "App::ClusterSSH::Config" );
 is( $trap->stdout, q{}, 'Expecting no STDOUT' );
 is( $trap->stderr,
-    q{Unable to create directory $HOME/.clusterssh: File exists} . $/,
+    q{Unable to create directory $HOME/.clusterssh: File exists} . $/ . $/,
     'Expecting no STDERR'
 );
 
@@ -452,7 +453,7 @@ isa_ok( $config, "App::ClusterSSH::Config" );
 isa_ok( $config, "App::ClusterSSH::Config" );
 is( $trap->stdout, q{}, 'Expecting no STDOUT' );
 is( $trap->stderr,
-    q{Unable to write default $HOME/.clusterssh/config: Is a directory} . $/,
+    q{Unable to write default $HOME/.clusterssh/config: Is a directory} . $/ . $/,
     'Expecting no STDERR'
 );
 
@@ -508,6 +509,7 @@ terminal_title_opt=-T
 unmap_on_redraw=no
 use_all_a_records=0
 use_hotkeys=yes
+user=} . $ENV{LOGNAME} . qq{
 window_tiling=yes
 window_tiling_direction=right
 };

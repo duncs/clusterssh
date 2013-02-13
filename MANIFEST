@@ -19,6 +19,7 @@ MANIFEST
 MANIFEST.SKIP
 META.yml
 MYMETA.json
+MYMETA.yml
 README
 t/00-load.t
 t/01l10n.t

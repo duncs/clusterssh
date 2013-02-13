@@ -1,5 +1,7 @@
 ????-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_03
 * Correct documentation for references to $HOME/.clusterssh/config
+* Re-add user back into the configurartion file
+* Add in missing newline for some error messages
 
 2012-12-09 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_02
 * Fix logic when using 'autoclose' on the command line or config file
