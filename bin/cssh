@@ -377,10 +377,6 @@ should be written as
 
 =over
 
-=item always_tile = yes
-
-Setting to anything other than C<yes> does not perform window tiling (see also -G).
-
 =item auto_close = 5
 
 Close terminal window after this many seconds.  If set to 0 will instead wait 

@@ -8,6 +8,7 @@
 * Pastes uses a strange keyboard layout (Debian bug ID #364565)
 * Cope with being invoked by 'clusterssh' (Debian bug ID #644368)
 * Fix migration of .csshrc when not working as expected (Debian bug ID #673507)
+* Remove doc references to 'always_tile' as renamed 'window_tiling' (Debian bug ID #697371)
 
 2012-12-09 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_02
 * Fix logic when using 'autoclose' on the command line or config file
