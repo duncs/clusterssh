@@ -277,53 +277,48 @@ sub load_keyboard_map() {
 
     logmsg( 1, "Loading keymaps and keycodes" );
 
-    foreach ( 0 .. $#keyboard ) {
-        if ( defined $keyboard[$_][3] ) {
-            if ( defined( $keycodetosym{ $keyboard[$_][3] } ) ) {
-                $keyboardmap{ $keycodetosym{ $keyboard[$_][3] } }
-                    = 'sa' . ( $_ + $min );
-            }
-            else {
-                logmsg( 2, "Unknown keycode ", $keyboard[$_][3] )
-                    if ( $keyboard[$_][3] != 0 );
-            }
-        }
-        if ( defined $keyboard[$_][2] ) {
-            if ( defined( $keycodetosym{ $keyboard[$_][2] } ) ) {
-                $keyboardmap{ $keycodetosym{ $keyboard[$_][2] } }
-                    = 'a' . ( $_ + $min );
-            }
-            else {
-                logmsg( 2, "Unknown keycode ", $keyboard[$_][2] )
-                    if ( $keyboard[$_][2] != 0 );
-            }
-        }
-        if ( defined $keyboard[$_][1] ) {
-            if ( defined( $keycodetosym{ $keyboard[$_][1] } ) ) {
-                $keyboardmap{ $keycodetosym{ $keyboard[$_][1] } }
-                    = 's' . ( $_ + $min );
-            }
-            else {
-                logmsg( 2, "Unknown keycode ", $keyboard[$_][1] )
-                    if ( $keyboard[$_][1] != 0 );
-            }
-        }
-        if ( defined $keyboard[$_][0] ) {
-            if ( defined( $keycodetosym{ $keyboard[$_][0] } ) ) {
-                $keyboardmap{ $keycodetosym{ $keyboard[$_][0] } }
-                    = 'n' . ( $_ + $min );
-            }
-            else {
-                logmsg( 2, "Unknown keycode ", $keyboard[$_][0] )
-                    if ( $keyboard[$_][0] != 0 );
-            }
-        }
+	my %keyboard_modifier_priority = (
+		'sa' => 3,	# lowest
+		'a' => 2,
+		's' => 1,
+		'n' => 0,	# highest
+		);
+		
+	my %keyboard_stringlike_modifiers = reverse %keyboard_modifier_priority;	
+	
+	# try to associate $keyboard=X11->GetKeyboardMapping table with X11::Keysyms
+	foreach my $i ( 0 .. $#keyboard ) {
+		for my $modifier ( 0 .. 3 ) {
+			if( defined( $keycodetosym{ $keyboard[$i][$modifier] } ) ) {
+				# keyboard layout contains the keycode at $modifier level
+				if( defined( $keyboardmap{ $keycodetosym{ $keyboard[$i][$modifier] } } ) ) {
+					# we already have a mapping, let's see whether current one is better (lower shift state)
+					my ($mod_code,$key_code) = $keyboardmap{ $keycodetosym{ $keyboard[$i][$modifier] } } =~ /^(\D+)(\d+)$/;
+					# it is not easy to get around our own alien logic storing modifiers ;-)
+					if( $modifier < $keyboard_modifier_priority{$mod_code} ) {
+						# YES! current keycode have priority over old one (phew!)
+						$keyboardmap{ $keycodetosym{ $keyboard[$i][$modifier] } } =
+							$keyboard_stringlike_modifiers{$modifier} . ( $i + $min );
+					}
+				} else {
+					# we don't yet have a mapping... piece of cake!
+					$keyboardmap{ $keycodetosym{ $keyboard[$i][$modifier] } } =
+						$keyboard_stringlike_modifiers{$modifier} . ( $i + $min );
+				}
+			} else {
+				# we didn't get the code from X11::Keysyms
+				if( $keyboard[$i][$modifier] != 0 ) {
+					# ignore code=0
+					logmsg( 2, "Unknown keycode ", $keyboard[$i][$modifier] );
+				}
+			}
+		}
+	}
 
-        # dont know these two key combs yet...
-        #$keyboardmap{ $keycodetosym { $keyboard[$_][4] } } = $_ + $min;
-        #$keyboardmap{ $keycodetosym { $keyboard[$_][5] } } = $_ + $min;
-    }
-
+    # dont know these two key combs yet...
+    #$keyboardmap{ $keycodetosym { $keyboard[$_][4] } } = $_ + $min;
+    #$keyboardmap{ $keycodetosym { $keyboard[$_][5] } } = $_ + $min;
+    
     #print "$_ => $keyboardmap{$_}\n" foreach(sort(keys(%keyboardmap)));
     #print "keysymtocode: $keysymtocode{o}\n";
     #die;

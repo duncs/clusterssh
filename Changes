@@ -5,6 +5,7 @@
 * Allow the path to rsh/ssh/telnet to be defined in the configuration file
 * Move .csshrc to .csshrc.DISABLED since it should no longer be used
 * Error emitted when adding a host via the "Hosts" drop-down (Debian bug ID #578208)
+* Pastes uses a strange keyboard layout (Debian bug ID #364565)
 
 2012-12-09 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_02
 * Fix logic when using 'autoclose' on the command line or config file
