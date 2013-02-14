@@ -311,6 +311,29 @@ sub write_user_config_file {
         }
     }
 
+    # Debian #673507 - migrate clusters prior to writing ~/.clusterssh/config
+    # in order to update the extra_cluster_file property
+    if (%old_clusters) {
+        if ( open( my $fh, ">", "$ENV{HOME}/.clusterssh/clusters" ) ) {
+            print $fh '# '
+                . $self->loc('Tag definitions moved from old .csshrc file'),
+                $/;
+            foreach ( sort( keys(%old_clusters) ) ) {
+                print $fh $_, ' ', join( ' ', $old_clusters{$_} ), $/;
+            }
+            close($fh);
+        } else {
+            croak(
+                App::ClusterSSH::Exception::Config->throw(
+                    error => $self->loc(
+                        'Unable to write [_1]: [_2]' . $/,
+                        '$HOME/.clusterssh/clusters', $!
+                    ),
+                ),
+            );
+        }
+    }
+
     if ( open( CONFIG, ">", "$ENV{HOME}/.clusterssh/config" ) ) {
         foreach ( sort( keys(%$self) ) ) {
             print CONFIG "$_=$self->{$_}\n";
@@ -332,18 +355,6 @@ sub write_user_config_file {
                 ),
             ),
         );
-    }
-
-    if (%old_clusters) {
-        if ( open( my $fh, ">", "$ENV{HOME}/.clusterssh/clusters" ) ) {
-            print $fh '# '
-                . $self->loc('Tag definitions moved from old .csshrc file'),
-                $/;
-            foreach ( sort( keys(%old_clusters) ) ) {
-                print $fh $_, ' ', join( ' ', $old_clusters{$_} ), $/;
-            }
-            close($fh);
-        }
     }
 
     return $self;
