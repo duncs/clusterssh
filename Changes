@@ -11,6 +11,7 @@
 * Remove doc references to 'always_tile' as renamed 'window_tiling' (Debian bug ID #697371)
 * Updated manpage whatis entries (patch by Tony Mancill)
 * Fix watch line expression to catch 4.x series tarballs (Debian patch LP ID #1076897)
+* Allow tests to pass successfully when run as root
 
 2012-12-09 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_02
 * Fix logic when using 'autoclose' on the command line or config file
