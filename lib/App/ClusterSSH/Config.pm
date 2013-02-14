@@ -103,8 +103,6 @@ sub new {
         $self->{comms} = $comms;
     }
 
-    $self->{terminal} = $self->find_binary( $self->{terminal} );
-
     $self->{title} = uc($Script);
 
     $clusters = App::ClusterSSH::Cluster->new();
