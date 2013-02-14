@@ -157,7 +157,7 @@ sub set_config {
 
 =head1 NAME
 
-App::ClusterSSH::Base
+App::ClusterSSH::Base - Base object provding utility functions
 
 =head1 SYNOPSIS
 

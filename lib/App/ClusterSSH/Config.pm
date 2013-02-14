@@ -462,7 +462,7 @@ sub dump {
 
 =head1 NAME
 
-ClusterSSH::Config
+ClusterSSH::Config - Object representing application configuration
 
 =head1 SYNOPSIS
 

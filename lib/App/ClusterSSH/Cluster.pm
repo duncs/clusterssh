@@ -118,7 +118,7 @@ sub list_tags {
 
 =head1 NAME
 
-App::ClusterSSH::Cluster
+App::ClusterSSH::Cluster - Object representing cluster configuration
 
 =head1 SYNOPSIS
 

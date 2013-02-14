@@ -148,7 +148,7 @@ sub script {
 
 =head1 NAME
 
-ClusterSSH::Helper
+ClusterSSH::Helper - Object representing helper script
 
 =head1 SYNOPSIS
 

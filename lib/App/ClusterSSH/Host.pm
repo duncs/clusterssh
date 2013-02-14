@@ -301,7 +301,7 @@ use overload (
 
 =head1 NAME
 
-ClusterSSH::Host
+ClusterSSH::Host - Object representing a host.
 
 =head1 SYNOPSIS
 
