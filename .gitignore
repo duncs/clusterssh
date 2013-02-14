@@ -2,6 +2,7 @@
 *.tar.gz
 Build
 MANIFEST.bak
+MYMETA.json
 MYMETA.yml
 Makefile
 _build/
