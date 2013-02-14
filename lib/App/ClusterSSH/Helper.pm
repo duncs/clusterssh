@@ -24,7 +24,7 @@ sub script {
 
     my $comms = $config->{ $config->{comms} };
     my $comms_args = $config->{ $config->{comms} . '_args'};
-    my $command = $config->{command};
+    my $config_command = $config->{command};
     my $autoclose = $config->{auto_close};
 
     my $postcommand = $autoclose ? "echo Sleeping for $autoclose seconds; sleep $autoclose" : "echo Press RETURN to continue; read IGNORE"; # : "sleep $autoclose";
@@ -119,8 +119,8 @@ sub script {
                  \$command .= "\$svr";
                }
            }
-           if("$command") {
-            \$command .= " \\\"$command\\\"";
+           if("$config_command") {
+            \$command .= " \\\"$config_command\\\"";
            }
            \$command .= " ; $postcommand";
            warn("Running:\$command\\n"); # for debug purposes
