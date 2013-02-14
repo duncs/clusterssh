@@ -17,6 +17,7 @@ lib/App/ClusterSSH/L10N/en.pm
 Makefile.PL
 MANIFEST
 MANIFEST.SKIP
+META.json
 META.yml
 MYMETA.json
 MYMETA.yml
