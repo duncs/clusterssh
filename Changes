@@ -1,4 +1,4 @@
-????-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_03
+2013-02-15 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_03
 * Correct documentation for references to $HOME/.clusterssh/config
 * Re-add user back into the configurartion file
 * Add in missing newline for some error messages
