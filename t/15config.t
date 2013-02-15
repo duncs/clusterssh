@@ -22,7 +22,7 @@ $config = App::ClusterSSH::Config->new();
 isa_ok( $config, 'App::ClusterSSH::Config' );
 
 Readonly::Hash my %default_config => {
-    terminal                   => "/usr/bin/xterm",
+    terminal                   => "xterm",
     terminal_args              => "",
     terminal_title_opt         => "-T",
     terminal_colorize          => 1,
@@ -501,7 +501,7 @@ ssh=ssh
 ssh_args=
 telnet=telnet
 telnet_args=
-terminal=/usr/bin/xterm
+terminal=xterm
 terminal_allow_send_events=-xrm '*.VT100.allowSendEvents:true'
 terminal_args=
 terminal_bg_style=dark
