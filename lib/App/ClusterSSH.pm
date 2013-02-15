@@ -118,10 +118,10 @@ my @options_spec = (
     'use_all_a_records|A',
 );
 my %options;
-my %windows;     # hash for all window definitions
-my %menus;       # hash for all menu definitions
-my @servers;     # array of servers provided on cmdline
-my %servers;     # hash of server cx info
+my %windows;    # hash for all window definitions
+my %menus;      # hash for all menu definitions
+my @servers;    # array of servers provided on cmdline
+my %servers;    # hash of server cx info
 my $xdisplay;
 my %keyboardmap;
 my $sysconfigdir = "/etc";
@@ -277,48 +277,68 @@ sub load_keyboard_map() {
 
     logmsg( 1, "Loading keymaps and keycodes" );
 
-	my %keyboard_modifier_priority = (
-		'sa' => 3,	# lowest
-		'a' => 2,
-		's' => 1,
-		'n' => 0,	# highest
-		);
-		
-	my %keyboard_stringlike_modifiers = reverse %keyboard_modifier_priority;	
-	
-	# try to associate $keyboard=X11->GetKeyboardMapping table with X11::Keysyms
-	foreach my $i ( 0 .. $#keyboard ) {
-		for my $modifier ( 0 .. 3 ) {
-			if( defined( $keycodetosym{ $keyboard[$i][$modifier] } ) ) {
-				# keyboard layout contains the keycode at $modifier level
-				if( defined( $keyboardmap{ $keycodetosym{ $keyboard[$i][$modifier] } } ) ) {
-					# we already have a mapping, let's see whether current one is better (lower shift state)
-					my ($mod_code,$key_code) = $keyboardmap{ $keycodetosym{ $keyboard[$i][$modifier] } } =~ /^(\D+)(\d+)$/;
-					# it is not easy to get around our own alien logic storing modifiers ;-)
-					if( $modifier < $keyboard_modifier_priority{$mod_code} ) {
-						# YES! current keycode have priority over old one (phew!)
-						$keyboardmap{ $keycodetosym{ $keyboard[$i][$modifier] } } =
-							$keyboard_stringlike_modifiers{$modifier} . ( $i + $min );
-					}
-				} else {
-					# we don't yet have a mapping... piece of cake!
-					$keyboardmap{ $keycodetosym{ $keyboard[$i][$modifier] } } =
-						$keyboard_stringlike_modifiers{$modifier} . ( $i + $min );
-				}
-			} else {
-				# we didn't get the code from X11::Keysyms
-				if( $keyboard[$i][$modifier] != 0 ) {
-					# ignore code=0
-					logmsg( 2, "Unknown keycode ", $keyboard[$i][$modifier] );
-				}
-			}
-		}
-	}
+    my %keyboard_modifier_priority = (
+        'sa' => 3,    # lowest
+        'a'  => 2,
+        's'  => 1,
+        'n'  => 0,    # highest
+    );
+
+    my %keyboard_stringlike_modifiers = reverse %keyboard_modifier_priority;
+
+  # try to associate $keyboard=X11->GetKeyboardMapping table with X11::Keysyms
+    foreach my $i ( 0 .. $#keyboard ) {
+        for my $modifier ( 0 .. 3 ) {
+            if ( defined( $keycodetosym{ $keyboard[$i][$modifier] } ) ) {
+
+                # keyboard layout contains the keycode at $modifier level
+                if (defined(
+                        $keyboardmap{ $keycodetosym{ $keyboard[$i][$modifier]
+                                } }
+                    )
+                    )
+                {
+
+# we already have a mapping, let's see whether current one is better (lower shift state)
+                    my ( $mod_code, $key_code )
+                        = $keyboardmap{ $keycodetosym{ $keyboard[$i]
+                                [$modifier] } } =~ /^(\D+)(\d+)$/;
+
+      # it is not easy to get around our own alien logic storing modifiers ;-)
+                    if ( $modifier < $keyboard_modifier_priority{$mod_code} )
+                    {
+
+                     # YES! current keycode have priority over old one (phew!)
+                        $keyboardmap{ $keycodetosym{ $keyboard[$i][$modifier]
+                                } }
+                            = $keyboard_stringlike_modifiers{$modifier}
+                            . ( $i + $min );
+                    }
+                }
+                else {
+
+                    # we don't yet have a mapping... piece of cake!
+                    $keyboardmap{ $keycodetosym{ $keyboard[$i][$modifier] } }
+                        = $keyboard_stringlike_modifiers{$modifier}
+                        . ( $i + $min );
+                }
+            }
+            else {
+
+                # we didn't get the code from X11::Keysyms
+                if ( $keyboard[$i][$modifier] != 0 ) {
+
+                    # ignore code=0
+                    logmsg( 2, "Unknown keycode ", $keyboard[$i][$modifier] );
+                }
+            }
+        }
+    }
 
     # dont know these two key combs yet...
     #$keyboardmap{ $keycodetosym { $keyboard[$_][4] } } = $_ + $min;
     #$keyboardmap{ $keycodetosym { $keyboard[$_][5] } } = $_ + $min;
-    
+
     #print "$_ => $keyboardmap{$_}\n" foreach(sort(keys(%keyboardmap)));
     #print "keysymtocode: $keysymtocode{o}\n";
     #die;
@@ -378,8 +398,9 @@ sub resolve_names(@) {
             if ( defined($hostobj) ) {
                 my @alladdrs = map { inet_ntoa($_) } @{ $hostobj->addr_list };
                 if ( $#alladdrs > 0 ) {
-                    $self->cluster->register_tag($dirty, @alladdrs);
-                    logmsg( 3, 'Expanded to ', $self->cluster->get_tag($dirty) );
+                    $self->cluster->register_tag( $dirty, @alladdrs );
+                    logmsg( 3, 'Expanded to ',
+                        $self->cluster->get_tag($dirty) );
                 }
                 else {
                     logmsg( 3, 'Only one A record' );
@@ -1260,7 +1281,8 @@ sub setup_repeat() {
 sub create_windows() {
     my ($self) = @_;
     logmsg( 2, "create_windows: started" );
-    $windows{main_window} = MainWindow->new( -title => "ClusterSSH" );
+    $windows{main_window}
+        = MainWindow->new( -title => "ClusterSSH", -class => 'cssh', );
     $windows{main_window}->withdraw;    # leave withdrawn until needed
 
     if ( defined( $self->config->{console_position} )
@@ -1274,6 +1296,7 @@ sub create_windows() {
         -textvariable      => \$menus{entrytext},
         -insertborderwidth => 4,
         -width             => 25,
+        -class             => 'cssh',
         )->pack(
         -fill   => "x",
         -expand => 1,
@@ -1286,6 +1309,7 @@ sub create_windows() {
         -height            => $self->config->{history_height},
         -state             => 'normal',
         -takefocus         => 0,
+        -class             => 'cssh',
     );
     $windows{history}->bindtags(undef);
 
@@ -1348,6 +1372,7 @@ sub create_windows() {
         -popover    => $windows{main_window},
         -overanchor => "c",
         -popanchor  => "c",
+        -class      => 'cssh',
         -font       => [
             -family => "interface system",
             -size   => 10,
@@ -1362,6 +1387,7 @@ sub create_windows() {
         -overanchor => "c",
         -title      => "Cssh Documentation",
         -buttons    => ['Close'],
+        -class      => 'cssh',
     );
 
     my $manpage = `pod2text -l -q=\"\" $0 2>/dev/null`;
@@ -1380,17 +1406,19 @@ sub create_windows() {
         -title          => "Add Host(s) or Cluster(s)",
         -buttons        => [ 'Add', 'Cancel' ],
         -default_button => 'Add',
+        -class          => 'cssh',
     );
 
     if ( $self->config->{max_addhost_menu_cluster_items}
-        && scalar $self->cluster->list_tags()  )
+        && scalar $self->cluster->list_tags() )
     {
-        if (scalar
-            scalar $self->cluster->list_tags() < $self->config->{max_addhost_menu_cluster_items} )
+        if (scalar scalar $self->cluster->list_tags()
+            < $self->config->{max_addhost_menu_cluster_items} )
         {
             $menus{listbox} = $windows{addhost}->Listbox(
                 -selectmode => 'extended',
                 -height     => scalar $self->cluster->list_tags(),
+                -class      => 'cssh',
             )->pack();
         }
         else {
@@ -1399,6 +1427,7 @@ sub create_windows() {
                 -scrollbars => 'e',
                 -selectmode => 'extended',
                 -height => $self->config->{max_addhost_menu_cluster_items},
+                -class  => 'cssh',
             )->pack();
         }
         $menus{listbox}->insert( 'end', sort $self->cluster->list_tags() );
@@ -1410,6 +1439,7 @@ sub create_windows() {
         -width        => 20,
         -label        => 'Host',
         -labelPack    => [ -side => 'left', ],
+        -class        => 'cssh',
     )->pack( -side => 'left' );
     logmsg( 2, "create_windows: completed" );
 
@@ -1538,7 +1568,7 @@ sub key_event {
 
             logmsg( 3, "key=:$key:" );
             if ( $combo =~ /^$key$/ ) {
-                logmsg(3, "matched combo");
+                logmsg( 3, "matched combo" );
                 if ( $event eq "KeyRelease" ) {
                     logmsg( 2, "Received hotkey: $hotkey" );
                     send_text_to_all_servers('%s')
@@ -1595,8 +1625,8 @@ sub key_event {
 sub create_menubar() {
     my ($self) = @_;
     logmsg( 2, "create_menubar: started" );
-    $menus{bar} = $windows{main_window}->Menu;
-    $windows{main_window}->configure( -menu => $menus{bar} );
+    $menus{bar} = $windows{main_window}->Menu();
+    $windows{main_window}->configure( -menu => $menus{bar}, );
 
     $menus{file} = $menus{bar}->cascade(
         -label     => 'File',
@@ -1621,22 +1651,22 @@ sub create_menubar() {
         -menuitems => [
             [   "command",
                 "Retile Windows",
-                -command     => sub{ $self->retile_hosts },
+                -command => sub { $self->retile_hosts },
                 -accelerator => $self->config->{key_retilehosts},
             ],
 
 #         [ "command", "Capture Terminal",    -command => \&capture_terminal, ],
             [   "command",
                 "Toggle active state",
-                -command => sub{ $self->toggle_active_state() },
+                -command => sub { $self->toggle_active_state() },
             ],
             [   "command",
                 "Close inactive sessions",
-                -command => sub{ $self->close_inactive_sessions() },
+                -command => sub { $self->close_inactive_sessions() },
             ],
             [   "command",
                 "Add Host(s) or Cluster(s)",
-                -command     => sub{ $self->add_host_by_name, },
+                -command => sub { $self->add_host_by_name, },
                 -accelerator => $self->config->{key_addhost},
             ],
             '',
@@ -1662,7 +1692,8 @@ sub create_menubar() {
     );
 
     $windows{main_window}->bind( '<KeyPress>' => [ $self => 'key_event' ], );
-    $windows{main_window}->bind( '<KeyRelease>' => [ $self => 'key_event' ], );
+    $windows{main_window}
+        ->bind( '<KeyRelease>' => [ $self => 'key_event' ], );
     logmsg( 2, "create_menubar: completed" );
 }
 
@@ -1792,12 +1823,13 @@ sub run {
     }
 
     if ( $options{action} ) {
-        $self->config->{command} = $options{action} ;
+        $self->config->{command} = $options{action};
     }
 
     $self->config->{auto_quit} = "yes" if $options{autoquit};
     $self->config->{auto_quit} = "no"  if $options{'no-autoquit'};
-    $self->config->{auto_close} = $options{autoclose} if defined $options{'autoclose'};
+    $self->config->{auto_close} = $options{autoclose}
+        if defined $options{'autoclose'};
 
     $self->config->{window_tiling} = "yes" if $options{tile};
     $self->config->{window_tiling} = "no"  if $options{'no-tile'};
@@ -1810,7 +1842,7 @@ sub run {
 
     $self->config->{terminal_font} = $options{font} if ( $options{font} );
     $self->config->{terminal_args} = $options{'term-args'}
-            if ( $options{'term-args'} );
+        if ( $options{'term-args'} );
     if ( $self->config->{terminal_args} =~ /-class (\w+)/ ) {
         $self->config->{terminal_allow_send_events}
             = "-xrm '$1.VT100.allowSendEvents:true'";
