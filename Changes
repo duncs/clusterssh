@@ -1,3 +1,6 @@
+2013-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_04
+- Fixed 'ccon' not calling the correct command (Sf bug 3605002)
+
 2013-02-15 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_03
 * Correct documentation for references to $HOME/.clusterssh/config
 * Re-add user back into the configurartion file

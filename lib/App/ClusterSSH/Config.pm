@@ -55,12 +55,14 @@ my %default_config = (
     terminal_decoration_height => 10,
     terminal_decoration_width  => 8,
 
-    rsh         => 'rsh',
-    rsh_args    => "",
-    telnet      => 'telnet',
-    telnet_args => "",
-    ssh         => 'ssh',
-    ssh_args    => "",
+    console      => 'console',
+    console_args => '',
+    rsh          => 'rsh',
+    rsh_args     => "",
+    telnet       => 'telnet',
+    telnet_args  => "",
+    ssh          => 'ssh',
+    ssh_args     => "",
 
     extra_cluster_file => "",
 
