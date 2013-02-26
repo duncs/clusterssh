@@ -1,5 +1,6 @@
 2013-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_04
 - Fixed 'ccon' not calling the correct command (Sf bug 3605002)
+- Fixed clusters not being defined correctly within the .clusterssh/config file (Sf bug 3605675)
 
 2013-02-15 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_03
 * Correct documentation for references to $HOME/.clusterssh/config
