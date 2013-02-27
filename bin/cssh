@@ -224,6 +224,10 @@ Enable|Disable window tiling (overriding the config file)
 
 Specify the initial part of the title used in the console and client windows
 
+=item --unique-servers,-m
+
+Connect to each host only once
+
 =item --use_all_a_records,-A
 
 If a hostname resolves to multiple IP addresses, toggle whether or not to 

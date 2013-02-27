@@ -3,7 +3,7 @@ package App::ClusterSSH;
 use 5.008.004;
 use warnings;
 use strict;
-use version; our $VERSION = version->new('4.01_04');
+use version; our $VERSION = version->new('4.01_05');
 
 use Carp;
 
@@ -116,6 +116,7 @@ my @options_spec = (
     'font|f=s',
     'list|L',
     'use_all_a_records|A',
+    'unique-servers|m',
 );
 my %options;
 my %windows;    # hash for all window definitions
@@ -423,9 +424,20 @@ sub resolve_names(@) {
     # now clean the array up
     @servers = grep { $_ !~ m/^$/ } @servers;
 
+    if ($self->config->{unique_servers}) {
+        logmsg( 3, 'removing duplicate server names' );
+        @servers=remove_repeated_servers(@servers);
+    }
+
     logmsg( 3, 'leaving with ', $_ ) foreach (@servers);
     logmsg( 2, 'Resolving cluster names: completed' );
     return (@servers);
+}
+
+sub remove_repeated_servers {
+    my %all=();
+    @all{@_}=1;
+    return (keys %all);
 }
 
 sub change_main_window_title() {
@@ -1826,6 +1838,8 @@ sub run {
         $self->config->{command} = $options{action};
     }
 
+    $self->config->{unique_servers} = 1 if $options{'unique-servers'};
+
     $self->config->{auto_quit} = "yes" if $options{autoquit};
     $self->config->{auto_quit} = "no"  if $options{'no-autoquit'};
     $self->config->{auto_close} = $options{autoclose}
@@ -2024,6 +2038,8 @@ the code until this time.
 =item  populate_send_menu
 
 =item  populate_send_menu_entries_from_xml
+
+=item remove_repeated_servers
 
 =item  resolve_names
 
