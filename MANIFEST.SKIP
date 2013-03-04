@@ -4,9 +4,11 @@
 ^Build$
 ^.git/
 ^.gitignore
-^MANIFEST\.bak$
-.*\.swp$
-^WIP_TASKS$
 ^Makefile$
 ^Makefile.old$
+^MANIFEST\.bak$
+MYMETA.json
+MYMETA.yml
 pm_to_blib
+.*\.swp$
+^WIP_TASKS$

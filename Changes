@@ -1,5 +1,6 @@
 ????-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.02__00
 - New option (-m, --unique-servers) to remove repeated servers when openeing terminals (Thanks to Oliver Meissner)
+- Drop MYMETA.yml and .json files from the distribution
 
 2013-02-26 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_04
 - Fixed 'ccon' not calling the correct command (Sf bug 3605002)
