@@ -17,8 +17,12 @@ use App::ClusterSSH::Cluster;
 
 my $clusters;
 my %old_clusters;
-my @app_specific   = (qw/ command title comms method /);
-my %default_config = (
+my @app_specific = (qw/ command title comms method /);
+
+# list of config items to not write out when writing the default config
+my @ignore_default_config = (qw/ user /);
+
+my %default_config        = (
     terminal                   => "xterm",
     terminal_args              => "",
     terminal_title_opt         => "-T",
@@ -83,7 +87,8 @@ my %default_config = (
 
     send_menu_xml_file => $ENV{HOME} . '/.csshrc_send_menu',
 
-    user => $ENV{LOGNAME},
+    # don't set username here as takes precendence over ssh config
+    user => '', 
 );
 
 sub new {
@@ -220,7 +225,8 @@ sub parse_config_file {
         $self->debug( 3, "Picked up clusters defined in $config_file" );
         foreach my $cluster ( sort split / /, $read_config{clusters} ) {
             if ( $read_config{$cluster} ) {
-                $clusters->register_tag( $cluster, split(/ /,$read_config{$cluster}) );
+                $clusters->register_tag( $cluster,
+                    split( / /, $read_config{$cluster} ) );
                 $old_clusters{$cluster} = $read_config{$cluster};
                 delete( $read_config{$cluster} );
             }
@@ -322,12 +328,14 @@ sub write_user_config_file {
                 print $fh $_, ' ', join( ' ', $old_clusters{$_} ), $/;
             }
             close($fh);
-        } else {
+        }
+        else {
             croak(
                 App::ClusterSSH::Exception::Config->throw(
                     error => $self->loc(
                         'Unable to write [_1]: [_2]' . $/,
-                        '$HOME/.clusterssh/clusters', $!
+                        '$HOME/.clusterssh/clusters',
+                        $!
                     ),
                 ),
             );
@@ -336,7 +344,11 @@ sub write_user_config_file {
 
     if ( open( CONFIG, ">", "$ENV{HOME}/.clusterssh/config" ) ) {
         foreach ( sort( keys(%$self) ) ) {
-            print CONFIG "$_=$self->{$_}\n";
+            my $comment='';
+            if ( grep /$_/, @ignore_default_config ) {
+                $comment='#';
+            }
+            print CONFIG ${comment},$_,'=',$self->{$_},$/;
         }
         close(CONFIG);
         warn(
@@ -439,10 +451,14 @@ sub dump {
     print( '# Configuration dump produced by "cssh -u"', $/ );
 
     foreach my $key ( sort keys %$self ) {
+        my $comment='';
         if ( grep /$key/, @app_specific ) {
             next;
         }
-        print $key, '=', $self->{$key}, $/;
+        if ( grep /$key/, @ignore_default_config ) {
+            $comment='#';
+        }
+        print $comment, $key, '=', $self->{$key}, $/;
     }
 
     $self->exit if ( !$no_exit );

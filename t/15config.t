@@ -94,7 +94,7 @@ Readonly::Hash my %default_config => {
     debug => 0,
     lang  => 'en',
 
-    user => $ENV{LOGNAME},
+    user => '',
 };
 my %expected = %default_config;
 is_deeply( $config, \%expected, 'default config is correct' );
@@ -528,7 +528,7 @@ terminal_title_opt=-T
 unmap_on_redraw=no
 use_all_a_records=0
 use_hotkeys=yes
-user=} . $ENV{LOGNAME} . qq{
+#user=
 window_tiling=yes
 window_tiling_direction=right
 };

@@ -616,7 +616,7 @@ sub open_client_windows(@) {
         my $server_object = App::ClusterSSH::Host->parse_host_string($_);
 
         my $username = $server_object->get_username();
-        $username = $self->config->{user} if ( $self->config->{user} );
+        $username = $self->config->{user} if ( !$username && $self->config->{user} );
         my $port = $server_object->get_port();
         $port = $self->config->{port} if ( $self->config->{port} );
         my $server = $server_object->get_hostname();
