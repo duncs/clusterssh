@@ -11,13 +11,14 @@ use Exception::Class (
         fields => 'unknown_config',
     },
     'App::ClusterSSH::Exception::Cluster',
+    'App::ClusterSSH::Exception::LoadFile',
 );
 
 # Dont use SVN revision as it can cause problems
 use version;
 our $VERSION = version->new('0.02');
 
-my $debug_level = 0;
+my $debug_level = 4;
 our $language = 'en';
 our $language_handle;
 our $app_configuration;
@@ -89,7 +90,11 @@ sub set_lang {
 sub set_debug_level {
     my ( $self, $level ) = @_;
     if ( !defined $level ) {
-        croak( App::ClusterSSH::Exception->throw( error => _translate('Debug level not provided') ) );
+        croak(
+            App::ClusterSSH::Exception->throw(
+                error => _translate('Debug level not provided')
+            )
+        );
     }
     if ( $level > 9 ) {
         $level = 9;
@@ -127,7 +132,11 @@ sub config {
     my ($self) = @_;
 
     if ( !$app_configuration ) {
-        croak( App::ClusterSSH::Exception->throw( _translate('config has not yet been set') ) );
+        croak(
+            App::ClusterSSH::Exception->throw(
+                _translate('config has not yet been set')
+            )
+        );
     }
 
     return $app_configuration;
@@ -137,11 +146,19 @@ sub set_config {
     my ( $self, $config ) = @_;
 
     if ($app_configuration) {
-        croak( App::ClusterSSH::Exception->throw( _translate('config has already been set') ) );
+        croak(
+            App::ClusterSSH::Exception->throw(
+                _translate('config has already been set')
+            )
+        );
     }
 
-    if(!$config) { 
-        croak( App::ClusterSSH::Exception->throw( _translate('passed config is empty')) );
+    if ( !$config ) {
+        croak(
+            App::ClusterSSH::Exception->throw(
+                _translate('passed config is empty')
+            )
+        );
     }
 
     $self->debug( 3, _translate('Setting app configuration') );
@@ -149,6 +166,96 @@ sub set_config {
     $app_configuration = $config;
 
     return $self;
+}
+
+sub load_file {
+    my ( $self, %args ) = @_;
+
+    if ( !$args{filename} ) {
+        croak(
+            App::ClusterSSH::Exception->throw(
+                error => '"filename" arg not passed'
+            )
+        );
+    }
+
+    if ( !$args{type} || $args{type} !~ m/cluster|config/ ) {
+        croak(
+            App::ClusterSSH::Exception->throw(
+                error => '"type" arg invalid'
+            )
+        );
+    }
+
+    $self->debug( 2, 'Loading in config file: ', $args{filename} );
+
+    if ( !-e $args{filename} ) {
+        croak(
+            App::ClusterSSH::Exception::LoadFile->throw(
+                error => $self->loc(
+                    'Unable to read file [_1]: [_2]' . $/,
+                    $args{filename}, $!
+                ),
+            ),
+        );
+    }
+
+    my $regexp
+        = $args{type} eq 'config'  ? qr/\s*(\S+)\s*=\s*(.*)/
+        : $args{type} eq 'cluster' ? qr/\s*(\S+)\s+(.*)/
+        : croak(
+        App::ClusterSSH::Exception::LoadFile->throw(
+            error => 'Unknown arg type: ',
+            $args{type}
+        )
+        );
+
+    open( my $fh, '<', $args{filename} )
+        or croak(
+            App::ClusterSSH::Exception::LoadFile->throw(
+                error => $self->loc("Unable to read file [_1]: [_2]", $args{filename}, $!)
+            ),
+        );
+
+    my %results;
+    my $line;
+
+    while ( defined( $line = <$fh> ) ) {
+        next
+            if ( $line =~ /^\s*$/ || $line =~ /^#/ )
+            ;    # ignore blank lines & commented lines
+
+        $line =~ s/\s*#.*//;  # remove comments from remaining lines
+        $line =~ s/\s*$//;    # remove trailing whitespace
+
+        # look for continuation lines
+        chomp $line;
+        if ( $line =~ s/\\\s*$// ) {
+            $line .= <$fh>;
+            redo unless eof($fh);
+        }
+
+        next unless $line =~ $regexp;
+        my ( $key, $value ) = ( $1, $2 );
+        if ( defined $key && defined $value ) {
+            if($results{$key}) {
+                $results{$key} .= ' '. $value;
+            }else {
+                $results{$key} = $value;
+            }
+            $self->debug( 3, "$key=$value" );
+            $self->debug( 7, "entry now reads: $key=$results{$key}" );
+        }
+    }
+
+    close($fh)
+        or croak(
+        App::ClusterSSH::Exception::LoadFile->throw(
+            error => "Could not close $args{filename} after reading: $!"
+        ),
+        );
+
+    return %results;
 }
 
 1;
@@ -231,6 +338,11 @@ hasnt been called
 =item $obj->set_config($config);
 
 Set the config to the given value - croaks if has already been called
+
+=item %results = $obj->load_file( filename => '/path/to/file', type => '(cluster|config}' )
+
+Load in the specified file and return a hash, parsing the file depending on
+wther it is a config file (key = value) or cluster file (key value)
 
 =back
 

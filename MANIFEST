@@ -34,6 +34,7 @@ t/30cluster.cannot_read
 t/30cluster.file1
 t/30cluster.file2
 t/30cluster.t
+t/30cluster.tag1
 t/80clusterssh.t
 t/boilerplate.t
 t/manifest.t

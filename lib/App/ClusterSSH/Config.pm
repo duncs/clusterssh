@@ -183,42 +183,45 @@ sub parse_config_file {
 
     $self->debug( 2, 'Loading in config file: ', $config_file );
 
-    if ( !-e $config_file || !-r $config_file ) {
-        croak(
-            App::ClusterSSH::Exception::Config->throw(
-                error => $self->loc(
-                    'File [_1] does not exist or cannot be read' . $/,
-                    $config_file
-                ),
-            ),
-        );
-    }
+#    if ( !-e $config_file || !-r $config_file ) {
+#        croak(
+#            App::ClusterSSH::Exception::Config->throw(
+#                error => $self->loc(
+#                    'File [_1] does not exist or cannot be read' . $/,
+#                    $config_file
+#                ),
+#            ),
+#        );
+#    }
+#
+#    open( CFG, $config_file ) or die("Couldnt open $config_file: $!");
+#    my $l;
+#    my %read_config;
+#    while ( defined( $l = <CFG> ) ) {
+#        next
+#            if ( $l =~ /^\s*$/ || $l =~ /^#/ )
+#            ;    # ignore blank lines & commented lines
+#        $l =~ s/#.*//;     # remove comments from remaining lines
+#        $l =~ s/\s*$//;    # remove trailing whitespace
+#
+#        # look for continuation lines
+#        chomp $l;
+#        if ( $l =~ s/\\\s*$// ) {
+#            $l .= <CFG>;
+#            redo unless eof(CFG);
+#        }
+#
+#        next unless $l =~ m/\s*(\S+)\s*=\s*(.*)\s*/;
+#        my ( $key, $value ) = ( $1, $2 );
+#        if ( defined $key && defined $value ) {
+#            $read_config{$key} = $value;
+#            $self->debug( 3, "$key=$value" );
+#        }
+#    }
+#    close(CFG);
 
-    open( CFG, $config_file ) or die("Couldnt open $config_file: $!");
-    my $l;
     my %read_config;
-    while ( defined( $l = <CFG> ) ) {
-        next
-            if ( $l =~ /^\s*$/ || $l =~ /^#/ )
-            ;    # ignore blank lines & commented lines
-        $l =~ s/#.*//;     # remove comments from remaining lines
-        $l =~ s/\s*$//;    # remove trailing whitespace
-
-        # look for continuation lines
-        chomp $l;
-        if ( $l =~ s/\\\s*$// ) {
-            $l .= <CFG>;
-            redo unless eof(CFG);
-        }
-
-        next unless $l =~ m/\s*(\S+)\s*=\s*(.*)\s*/;
-        my ( $key, $value ) = ( $1, $2 );
-        if ( defined $key && defined $value ) {
-            $read_config{$key} = $value;
-            $self->debug( 3, "$key=$value" );
-        }
-    }
-    close(CFG);
+    %read_config = $self->load_file( type => 'config', filename => $config_file );
 
     # grab any clusters from the config before validating it
     if ( $read_config{clusters} ) {

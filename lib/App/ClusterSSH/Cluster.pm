@@ -34,43 +34,50 @@ sub get_clusters {
     return $self;
 }
 
+sub read_tag_file {
+    my ( $self, $filename ) = @_;
+    $self->debug( 2, 'Reading tags from file ', $filename );
+    if ( -f $filename ) {
+        my %hosts = $self->load_file( type => 'cluster', filename => $filename);
+        foreach my $host (keys %hosts) {
+            $self->debug(4, "Got entry for $host on tags $hosts{$host}");
+            $self->register_host($host, split(/\s+/, $hosts{$host}));
+        }
+    }
+    else {
+        $self->debug( 2, 'No file found to read');
+    }
+    return $self;
+}
+
 sub read_cluster_file {
     my ( $self, $filename ) = @_;
     $self->debug( 2, 'Reading clusters from file ', $filename );
 
     if ( -f $filename ) {
-        open( my $fh, '<', $filename )
-            || croak(
-            App::ClusterSSH::Exception::Cluster->throw(
-                error => $self->loc(
-                    'Unable to read file [_1]: [_2]',
-                    $filename, $!
-                )
-            )
-            );
+        my %tags = $self->load_file( type => 'cluster', filename => $filename);
 
-        my $line;
-        while ( defined( $line = <$fh> ) ) {
-            next
-                if ( $line =~ /^\s*$/ || $line =~ /^#/ )
-                ;    # ignore blank lines & commented lines
-            chomp $line;
-            if ( $line =~ s/\\\s*$// ) {
-                $line .= <$fh>;
-                redo unless eof($fh);
-            }
-            my @line = split( /\s+/, $line );
-
-        #s/^([\w-]+)\s*//;               # remote first word and stick into $1
-
-            $self->debug( 3, "read line: $line" );
-            $self->register_tag(@line);
+        foreach my $tag (keys %tags) {
+            $self->register_tag($tag, split(/\s+/, $tags{$tag}));
         }
-
-        close($fh);
     }
     else {
         $self->debug( 2, 'No file found to read');
+    }
+    return $self;
+}
+
+sub register_host {
+    my ( $self, $node, @tags ) = @_;
+    $self->debug( 2, "Registering node $node on tags:", join( ' ', @tags ) );
+
+    foreach my $tag (@tags) {
+        if( $self->{tags}->{$tag} ) {
+        $self->{tags}->{$tag} = [ sort @{ $self->{tags}->{$tag} }, $node ] ;
+        } else {
+            $self->{tags}->{$tag} = [ $node ];
+        }
+        #push(@{ $self->{tags}->{$tag} }, $node);
     }
     return $self;
 }
@@ -80,7 +87,7 @@ sub register_tag {
 
     $self->debug( 2, "Registering tag $tag: ", join( ' ', @nodes ) );
 
-    $self->{$tag} = \@nodes;
+    $self->{tags}->{$tag} = \@nodes;
 
     return $self;
 }
@@ -88,11 +95,11 @@ sub register_tag {
 sub get_tag {
     my ( $self, $tag ) = @_;
 
-    if ( $self->{$tag} ) {
+    if ( $self->{tags}->{$tag} ) {
         $self->debug( 2, "Retrieving tag $tag: ",
-            join( ' ', $self->{$tag} ) );
+            join( ' ', $self->{tags}->{$tag} ) );
 
-        return @{ $self->{$tag} };
+        return sort @{ $self->{tags}->{$tag} };
     }
 
     $self->debug( 2, "Tag $tag is not registered" );
@@ -101,7 +108,12 @@ sub get_tag {
 
 sub list_tags {
     my ($self) = @_;
-    return keys(%$self);
+    return sort keys(%{ $self->{tags} });
+}
+
+sub dump_tags {
+    my ($self) = @_;
+    return %{ $self->{tags} };
 }
 
 #use overload (
@@ -142,9 +154,17 @@ Read in /etc/clusters and any other given file name and register the tags found.
 
 Read in the given cluster file and register the tags found
 
+=item $cluster->read_tag_file($filename);
+
+Read in the given tag file and register the tags found
+
 =item $cluster->register_tag($tag,@hosts);
 
 Register the given tag name with the given host names.
+
+=item $cluster->register_host($host,@tags);
+
+Register the given host on the provided tags.
 
 =item @entries = $cluster->get_tag('tag');
 
@@ -153,6 +173,10 @@ Retrieve all entries for the given tag
 =item @tags = $cluster->list_tags();
 
 Return an array of all available tag names
+
+=item %tags = $cluster->dump_tags();
+
+Returns a hash of all tag data.
 
 =back
 

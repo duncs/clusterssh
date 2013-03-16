@@ -139,9 +139,9 @@ my $file = "$Bin/$Script.doesntexist";
 trap {
     $config = $config->parse_config_file( $file, );
 };
-isa_ok( $trap->die, 'App::ClusterSSH::Exception::Config' );
+isa_ok( $trap->die, 'App::ClusterSSH::Exception::LoadFile' );
 is( $trap->die,
-    "File $file does not exist or cannot be read" . $/,
+    "Unable to read file $file: No such file or directory" . $/,
     'got correct error message'
 );
 

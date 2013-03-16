@@ -1,3 +1,7 @@
+????-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.02_01
+- Refactured file loading code
+- Add in 'tags' file handling
+
 2013-03-05 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_05
 - New option (-m, --unique-servers) to remove repeated servers when opening terminals (Thanks to Oliver Meissner)
 - Drop MYMETA.yml and .json files from the distribution
