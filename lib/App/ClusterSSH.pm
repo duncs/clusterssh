@@ -98,6 +98,7 @@ my @options_spec = (
     'man|H',
     'action|a=s',
     'cluster-file|c=s',
+    'tag-file|c=s',
     'config-file|C=s',
     'evaluate|e=s',
     'tile|g',
@@ -391,9 +392,12 @@ sub resolve_names(@) {
         if ( $dirty =~ s/^(.*)@// ) {
             $username = $1;
         }
+
+        my @tag_list = $self->cluster->get_tag($dirty);
+
         if (   $self->config->{use_all_a_records}
             && $dirty !~ m/^(\d{1,3}\.?){4}$/
-            && !defined( $self->cluster->get_tag($dirty) ) )
+            && ! @tag_list )
         {
             my $hostobj = gethostbyname($dirty);
             if ( defined($hostobj) ) {
@@ -408,9 +412,9 @@ sub resolve_names(@) {
                 }
             }
         }
-        if ( $self->cluster->get_tag($dirty) ) {
+        if ( @tag_list ) {
             logmsg( 3, '... it is a cluster' );
-            foreach my $node ( $self->cluster->get_tag($dirty) ) {
+            foreach my $node ( @tag_list) {
                 if ($username) {
                     $node =~ s/^(.*)@//;
                     $node = $username . '@' . $node;
@@ -1871,30 +1875,18 @@ sub run {
     load_keyboard_map();
 
     # read in normal cluster files
-    $self->cluster->read_cluster_file('/etc/clusters');
-    if ( $self->config->{extra_cluster_file} || $options{'cluster-file'} ) {
-        foreach my $item ( split( /,/, $self->config->{extra_cluster_file} ),
-            $options{'cluster-file'} )
-        {
-            next unless ($item);
-            $item =~ s/\$HOME/$ENV{HOME}/;
-            foreach my $file ( glob($item) ) {
-                if ( !-r $file ) {
-                    warn("Unable to read cluster file '$file': $!\n");
-                    next;
-                }
+    $self->config->{extra_cluster_file} .= ','.$options{'cluster-file'} if($options{'cluster-file'});
+    $self->config->{extra_tag_file} .= ','.$options{'tag-file'} if($options{'tag-file'});
 
-                $self->cluster->read_cluster_file($file);
+    $self->cluster->get_cluster_entries( split /,/, $self->config->{extra_cluster_file} || '' );
+    $self->cluster->get_tag_entries( split /,/, $self->config->{extra_tag_file}|| ''  );
 
-            }
-        }
-    }
-
-    $self->cluster->get_clusters( $self->config->{extra_cluster_file} );
 
     if ( $options{'list'} ) {
         print( 'Available cluster tags:', $/ );
         print "\t", $_, $/ foreach ( sort( $self->cluster->list_tags ) );
+
+        $self->debug(4, "Full clusters dump: ",$self->_dump_args_hash( $self->cluster->dump_tags ) );
         exit_prog();
     }
 

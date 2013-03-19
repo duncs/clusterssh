@@ -1,0 +1,6 @@
+host10 tag10 tag20 tag30
+host20 tag10 # same host split over two lines
+host30 tag10
+host20 tag40 # part two of earlier host
+host30 tag40 \ # multi line second part tag
+    tag50

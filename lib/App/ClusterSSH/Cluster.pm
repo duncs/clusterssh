@@ -23,12 +23,23 @@ sub new {
     return $master_object_ref;
 }
 
-sub get_clusters {
+sub get_cluster_entries {
     my ( $self, @files ) = @_;
 
     for my $file ( '/etc/clusters', $ENV{HOME}.'/.clusterssh/clusters',@files ) {
-        $self->debug(3, 'Loading in config from: ', $file);
+        $self->debug(3, 'Loading in clusters from: ', $file);
         $self->read_cluster_file($file);
+    }
+
+    return $self;
+}
+
+sub get_tag_entries {
+    my ( $self, @files ) = @_;
+
+    for my $file ( '/etc/tags', $ENV{HOME}.'/.clusterssh/tags',@files ) {
+        $self->debug(3, 'Loading in tags from: ', $file);
+        $self->read_tag_file($file);
     }
 
     return $self;
@@ -97,7 +108,7 @@ sub get_tag {
 
     if ( $self->{tags}->{$tag} ) {
         $self->debug( 2, "Retrieving tag $tag: ",
-            join( ' ', $self->{tags}->{$tag} ) );
+            join( ' ', sort @{ $self->{tags}->{$tag} } ) );
 
         return sort @{ $self->{tags}->{$tag} };
     }
@@ -146,9 +157,15 @@ Object representing application configuration
 
 Create a new object.  Object should be common across all invocations.
 
-=item $cluster->get_clusters($filename);
+=item $cluster->get_cluster_entries($filename);
 
-Read in /etc/clusters and any other given file name and register the tags found.
+Read in /etc/clusters, $HOME/.clusterssh/clusters and any other given 
+file name and register the tags found.
+
+=item $cluster->get_tag_entries($filename);
+
+Read in /etc/tags, $HOME/.clusterssh/tags and any other given 
+file name and register the tags found.
 
 =item $cluster->read_cluster_file($filename);
 

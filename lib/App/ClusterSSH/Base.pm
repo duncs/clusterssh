@@ -54,7 +54,11 @@ sub _dump_args_hash {
         $string .= "\t";
         $string .= $_;
         $string .= ' => ';
-        $string .= $args{$_};
+        if(ref($args{$_}) eq 'ARRAY') {
+            $string .= "@{ $args{$_} }";
+        } else {
+            $string .= $args{$_};
+        }
         $string .= ',';
         $string .= $/;
     }
