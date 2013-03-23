@@ -2,6 +2,7 @@
 ^blib/
 ^_build/
 ^Build$
+^cover_db/
 ^.git/
 ^.gitignore
 ^Makefile$
