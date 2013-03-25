@@ -68,7 +68,8 @@ my %default_config        = (
     ssh          => 'ssh',
     ssh_args     => "",
 
-    extra_cluster_file => "",
+    extra_cluster_file => '',
+    external_cluster_command => '',
 
     unmap_on_redraw => "no",    # Debian #329440
 

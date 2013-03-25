@@ -1,0 +1,25 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+# test script for proving external command for fetching tags works
+
+my %tag_lookup = (
+    tag100 => [ qw/ host100 host110 host105 / ],
+    tag200 => [ qw/ host200 host250 host125 /],
+    tag300 => [ qw/ tag100 tag200 host300 host301 / ],
+);
+
+
+my @lookup=@ARGV;
+
+for (@lookup) {
+    if($tag_lookup{$_}) {
+        push(@lookup, @{ $tag_lookup{$_} });
+        $_= '';
+    }
+}
+
+@lookup = grep { $_ !~ m/^$/ } sort @lookup;
+
+print "@lookup",$/;

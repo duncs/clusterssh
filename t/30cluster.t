@@ -76,6 +76,10 @@ $expected{tag50} = [ 'host30', ];
 $cluster1->read_tag_file( $Bin . '/30cluster.tag1' );
 test_expected( 'tag 1', %expected );
 
+# now checks agains running an external command
+
+
+
 done_testing();
 
 sub test_expected {

@@ -45,6 +45,23 @@ sub get_tag_entries {
     return $self;
 }
 
+sub get_external_clusters {
+    my ( $self, $external_command, @tags ) = @_;
+
+    $self->debug(3, 'Running tags through external command');
+    $self->debug(4, 'External command: ', $external_command);
+    $self->debug(3, 'Tags: ', join(',',@tags));
+
+    ############################
+    ###########################
+    ###########################
+    ###########################
+
+    die "catchall while testing",$/;
+
+    return $self;
+}
+
 sub read_tag_file {
     my ( $self, $filename ) = @_;
     $self->debug( 2, 'Reading tags from file ', $filename );

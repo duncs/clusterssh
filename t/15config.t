@@ -70,6 +70,7 @@ Readonly::Hash my %default_config => {
     ssh_args     => "",
 
     extra_cluster_file => "",
+    external_cluster_command => '',
 
     unmap_on_redraw => "no",
 
@@ -484,6 +485,7 @@ console=console
 console_args=
 console_position=
 debug=0
+external_cluster_command=
 extra_cluster_file=
 history_height=10
 history_width=40
