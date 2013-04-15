@@ -1,13 +1,31 @@
 #!/usr/bin/perl
+#
+# test script for proving external command for fetching tags works
+#
 use strict;
 use warnings;
+use Getopt::Std;
 
-# test script for proving external command for fetching tags works
+my $opt = {};
+getopts('qx', $opt);
+
+# if we get '-q' option, force an error
+if($opt->{q}) {
+    my $fail;
+    $fail->cause_death();
+}
+
+# if we get '-x' option, die with non-0 return code
+if($opt->{x}) {
+    warn 'Forced non-0 exit',$/;
+    exit 5;
+}
 
 my %tag_lookup = (
-    tag100 => [ qw/ host100 host110 host105 / ],
-    tag200 => [ qw/ host200 host250 host125 /],
-    tag300 => [ qw/ tag100 tag200 host300 host301 / ],
+    tag100 => [ qw/ host100 / ],
+    tag200 => [ qw/ host200 host210 host205 / ],
+    tag300 => [ qw/ host300 host350 host325 /],
+    tag400 => [ qw/ tag100 tag200 tag300 host400 host401 / ],
 );
 
 
@@ -22,4 +40,6 @@ for (@lookup) {
 
 @lookup = grep { $_ !~ m/^$/ } sort @lookup;
 
-print "@lookup",$/;
+if(@lookup) {
+    print "@lookup",$/;
+}

@@ -8,6 +8,7 @@ our $VERSION = version->new('0.01');
 
 use Carp;
 use Try::Tiny;
+use English qw( -no_match_vars );
 
 use base qw/ App::ClusterSSH::Base /;
 
@@ -26,8 +27,10 @@ sub new {
 sub get_cluster_entries {
     my ( $self, @files ) = @_;
 
-    for my $file ( '/etc/clusters', $ENV{HOME}.'/.clusterssh/clusters',@files ) {
-        $self->debug(3, 'Loading in clusters from: ', $file);
+    for my $file ( '/etc/clusters', $ENV{HOME} . '/.clusterssh/clusters',
+        @files )
+    {
+        $self->debug( 3, 'Loading in clusters from: ', $file );
         $self->read_cluster_file($file);
     }
 
@@ -37,8 +40,8 @@ sub get_cluster_entries {
 sub get_tag_entries {
     my ( $self, @files ) = @_;
 
-    for my $file ( '/etc/tags', $ENV{HOME}.'/.clusterssh/tags',@files ) {
-        $self->debug(3, 'Loading in tags from: ', $file);
+    for my $file ( '/etc/tags', $ENV{HOME} . '/.clusterssh/tags', @files ) {
+        $self->debug( 3, 'Loading in tags from: ', $file );
         $self->read_tag_file($file);
     }
 
@@ -48,32 +51,55 @@ sub get_tag_entries {
 sub get_external_clusters {
     my ( $self, $external_command, @tags ) = @_;
 
-    $self->debug(3, 'Running tags through external command');
-    $self->debug(4, 'External command: ', $external_command);
-    $self->debug(3, 'Tags: ', join(',',@tags));
+    $self->debug( 3, 'Running tags through external command' );
+    $self->debug( 4, 'External command: ', $external_command );
+    $self->debug( 3, 'Tags: ', join( ',', @tags ) );
 
-    ############################
-    ###########################
-    ###########################
-    ###########################
+    my $command = "$external_command @tags";
 
-    die "catchall while testing",$/;
+    $self->debug( 3, 'Running ', $command );
 
-    return $self;
+    my $result;
+    my $return_code;
+    {
+        local  $SIG{CHLD} = undef;
+        $result      = qx/ $command /;
+        $return_code = $CHILD_ERROR >> 8;
+    }
+    chomp($result);
+
+    $self->debug( 3, "Result: $result" );
+    $self->debug( 3, "Return code: $return_code" );
+
+    if ( $return_code != 0 ) {
+        croak(
+            App::ClusterSSH::Exception::Cluster->throw(
+                error => $self->loc(
+                    "External command exited failed.\nCommand: [_1]\nReturn Code: [_2]",
+                    $command, $return_code,
+                ),
+            )
+        );
+    }
+
+    my @results=split / /, $result;
+
+    return @results;
 }
 
 sub read_tag_file {
     my ( $self, $filename ) = @_;
     $self->debug( 2, 'Reading tags from file ', $filename );
     if ( -f $filename ) {
-        my %hosts = $self->load_file( type => 'cluster', filename => $filename);
-        foreach my $host (keys %hosts) {
-            $self->debug(4, "Got entry for $host on tags $hosts{$host}");
-            $self->register_host($host, split(/\s+/, $hosts{$host}));
+        my %hosts
+            = $self->load_file( type => 'cluster', filename => $filename );
+        foreach my $host ( keys %hosts ) {
+            $self->debug( 4, "Got entry for $host on tags $hosts{$host}" );
+            $self->register_host( $host, split( /\s+/, $hosts{$host} ) );
         }
     }
     else {
-        $self->debug( 2, 'No file found to read');
+        $self->debug( 2, 'No file found to read' );
     }
     return $self;
 }
@@ -83,14 +109,15 @@ sub read_cluster_file {
     $self->debug( 2, 'Reading clusters from file ', $filename );
 
     if ( -f $filename ) {
-        my %tags = $self->load_file( type => 'cluster', filename => $filename);
+        my %tags
+            = $self->load_file( type => 'cluster', filename => $filename );
 
-        foreach my $tag (keys %tags) {
-            $self->register_tag($tag, split(/\s+/, $tags{$tag}));
+        foreach my $tag ( keys %tags ) {
+            $self->register_tag( $tag, split( /\s+/, $tags{$tag} ) );
         }
     }
     else {
-        $self->debug( 2, 'No file found to read');
+        $self->debug( 2, 'No file found to read' );
     }
     return $self;
 }
@@ -100,11 +127,14 @@ sub register_host {
     $self->debug( 2, "Registering node $node on tags:", join( ' ', @tags ) );
 
     foreach my $tag (@tags) {
-        if( $self->{tags}->{$tag} ) {
-        $self->{tags}->{$tag} = [ sort @{ $self->{tags}->{$tag} }, $node ] ;
-        } else {
-            $self->{tags}->{$tag} = [ $node ];
+        if ( $self->{tags}->{$tag} ) {
+            $self->{tags}->{$tag}
+                = [ sort @{ $self->{tags}->{$tag} }, $node ];
         }
+        else {
+            $self->{tags}->{$tag} = [$node];
+        }
+
         #push(@{ $self->{tags}->{$tag} }, $node);
     }
     return $self;
@@ -124,8 +154,11 @@ sub get_tag {
     my ( $self, $tag ) = @_;
 
     if ( $self->{tags}->{$tag} ) {
-        $self->debug( 2, "Retrieving tag $tag: ",
-            join( ' ', sort @{ $self->{tags}->{$tag} } ) );
+        $self->debug(
+            2,
+            "Retrieving tag $tag: ",
+            join( ' ', sort @{ $self->{tags}->{$tag} } )
+        );
 
         return sort @{ $self->{tags}->{$tag} };
     }
@@ -136,7 +169,7 @@ sub get_tag {
 
 sub list_tags {
     my ($self) = @_;
-    return sort keys(%{ $self->{tags} });
+    return sort keys( %{ $self->{tags} } );
 }
 
 sub dump_tags {

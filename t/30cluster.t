@@ -76,9 +76,48 @@ $expected{tag50} = [ 'host30', ];
 $cluster1->read_tag_file( $Bin . '/30cluster.tag1' );
 test_expected( 'tag 1', %expected );
 
-# now checks agains running an external command
+# now checks against running an external command
 
+my @external_expected;
 
+@external_expected=$cluster1->get_external_clusters("$Bin/external_cluster_command");
+is_deeply(\@external_expected,[], 'External command no args');
+
+@external_expected=$cluster1->get_external_clusters("$Bin/external_cluster_command tag1 tag2");
+is_deeply(\@external_expected,[ qw/tag1 tag2 / ] , 'External command: 2 args passed through');
+
+@external_expected=$cluster1->get_external_clusters("$Bin/external_cluster_command tag100");
+is_deeply(\@external_expected,[ qw/host100 / ] , 'External command: 1 tag expanded to one host');
+
+@external_expected=$cluster1->get_external_clusters("$Bin/external_cluster_command tag200");
+is_deeply(\@external_expected,[ qw/host200 host205 host210 / ] , 'External command: 1 tag expanded to 3 hosts and sorted');
+
+@external_expected=$cluster1->get_external_clusters("$Bin/external_cluster_command tag400");
+is_deeply(\@external_expected,[ qw/host100 host200 host205 host210 host300 host325 host350 host400 host401 / ] , 'External command: 1 tag expanded with self referencing tags');
+
+# NOTE
+# Since this is calling a shell run command, the tests cannot capture 
+# the shell STDOUT and STDERR.  By default redirect STDOUT and STDERR into
+# /dev/null so it dones't make noise in normal test output
+# However, don't hide it if running with -v flag
+my $redirect=' 1>/dev/null 2>&1';
+if($ENV{TEST_VERBOSE}) {
+    $redirect='';
+}
+
+trap {
+    @external_expected=$cluster1->get_external_clusters("$Bin/external_cluster_command -x $redirect");
+};
+is( $trap->die, 'External command exited with non-zero status: 5', 'External command: caught exception message' );
+is( $trap->stdout, '', 'External command: no stdout from perl code' );
+is( $trap->stderr, '', 'External command: no stderr from perl code' );
+
+trap {
+    @external_expected=$cluster1->get_external_clusters("$Bin/external_cluster_command -q $redirect");
+};
+is( $trap->die, 'External command exited with non-zero status: 255', 'External command: caught exception message' );
+is( $trap->stdout, '', 'External command: no stdout from perl code' );
+is( $trap->stderr, '', 'External command: no stderr from perl code' );
 
 done_testing();
 

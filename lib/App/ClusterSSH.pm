@@ -439,8 +439,7 @@ sub resolve_names(@) {
         };
 
         if ($@) {
-            warn 'Failure running external cluster command "',
-                $self->config->{external_cluster_command}, '": ', $@;
+            warn $@, $/;
         }
         else {
             @servers = @new_servers;
