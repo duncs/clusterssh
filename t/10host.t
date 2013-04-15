@@ -12,7 +12,7 @@ BEGIN { use_ok("App::ClusterSSH::Host") }
 my $host;
 
 eval { $host = App::ClusterSSH::Host->new(); };
-isa_ok($@, 'App::ClusterSSH::Exception', 'Caught exception object OK');
+isa_ok( $@, 'App::ClusterSSH::Exception', 'Caught exception object OK' );
 like(
     $@,
     qr/hostname is undefined/,

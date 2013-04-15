@@ -15,7 +15,7 @@ BEGIN { use_ok("App::ClusterSSH") }
 my $app;
 
 $app = App::ClusterSSH->new();
-isa_ok( $app, 'App::ClusterSSH' );
+isa_ok( $app,         'App::ClusterSSH' );
 isa_ok( $app->config, 'App::ClusterSSH::Config' );
 
 done_testing();

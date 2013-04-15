@@ -22,7 +22,7 @@ my @app_specific = (qw/ command title comms method /);
 # list of config items to not write out when writing the default config
 my @ignore_default_config = (qw/ user /);
 
-my %default_config        = (
+my %default_config = (
     terminal                   => "xterm",
     terminal_args              => "",
     terminal_title_opt         => "-T",
@@ -68,7 +68,7 @@ my %default_config        = (
     ssh          => 'ssh',
     ssh_args     => "",
 
-    extra_cluster_file => '',
+    extra_cluster_file       => '',
     external_cluster_command => '',
 
     unmap_on_redraw => "no",    # Debian #329440
@@ -89,7 +89,7 @@ my %default_config        = (
     send_menu_xml_file => $ENV{HOME} . '/.csshrc_send_menu',
 
     # don't set username here as takes precendence over ssh config
-    user => '', 
+    user => '',
 );
 
 sub new {
@@ -184,45 +184,46 @@ sub parse_config_file {
 
     $self->debug( 2, 'Loading in config file: ', $config_file );
 
-#    if ( !-e $config_file || !-r $config_file ) {
-#        croak(
-#            App::ClusterSSH::Exception::Config->throw(
-#                error => $self->loc(
-#                    'File [_1] does not exist or cannot be read' . $/,
-#                    $config_file
-#                ),
-#            ),
-#        );
-#    }
-#
-#    open( CFG, $config_file ) or die("Couldnt open $config_file: $!");
-#    my $l;
-#    my %read_config;
-#    while ( defined( $l = <CFG> ) ) {
-#        next
-#            if ( $l =~ /^\s*$/ || $l =~ /^#/ )
-#            ;    # ignore blank lines & commented lines
-#        $l =~ s/#.*//;     # remove comments from remaining lines
-#        $l =~ s/\s*$//;    # remove trailing whitespace
-#
-#        # look for continuation lines
-#        chomp $l;
-#        if ( $l =~ s/\\\s*$// ) {
-#            $l .= <CFG>;
-#            redo unless eof(CFG);
-#        }
-#
-#        next unless $l =~ m/\s*(\S+)\s*=\s*(.*)\s*/;
-#        my ( $key, $value ) = ( $1, $2 );
-#        if ( defined $key && defined $value ) {
-#            $read_config{$key} = $value;
-#            $self->debug( 3, "$key=$value" );
-#        }
-#    }
-#    close(CFG);
+    #    if ( !-e $config_file || !-r $config_file ) {
+    #        croak(
+    #            App::ClusterSSH::Exception::Config->throw(
+    #                error => $self->loc(
+    #                    'File [_1] does not exist or cannot be read' . $/,
+    #                    $config_file
+    #                ),
+    #            ),
+    #        );
+    #    }
+    #
+    #    open( CFG, $config_file ) or die("Couldnt open $config_file: $!");
+    #    my $l;
+    #    my %read_config;
+    #    while ( defined( $l = <CFG> ) ) {
+    #        next
+    #            if ( $l =~ /^\s*$/ || $l =~ /^#/ )
+    #            ;    # ignore blank lines & commented lines
+    #        $l =~ s/#.*//;     # remove comments from remaining lines
+    #        $l =~ s/\s*$//;    # remove trailing whitespace
+    #
+    #        # look for continuation lines
+    #        chomp $l;
+    #        if ( $l =~ s/\\\s*$// ) {
+    #            $l .= <CFG>;
+    #            redo unless eof(CFG);
+    #        }
+    #
+    #        next unless $l =~ m/\s*(\S+)\s*=\s*(.*)\s*/;
+    #        my ( $key, $value ) = ( $1, $2 );
+    #        if ( defined $key && defined $value ) {
+    #            $read_config{$key} = $value;
+    #            $self->debug( 3, "$key=$value" );
+    #        }
+    #    }
+    #    close(CFG);
 
     my %read_config;
-    %read_config = $self->load_file( type => 'config', filename => $config_file );
+    %read_config
+        = $self->load_file( type => 'config', filename => $config_file );
 
     # grab any clusters from the config before validating it
     if ( $read_config{clusters} ) {
@@ -348,11 +349,11 @@ sub write_user_config_file {
 
     if ( open( CONFIG, ">", "$ENV{HOME}/.clusterssh/config" ) ) {
         foreach ( sort( keys(%$self) ) ) {
-            my $comment='';
+            my $comment = '';
             if ( grep /$_/, @ignore_default_config ) {
-                $comment='#';
+                $comment = '#';
             }
-            print CONFIG ${comment},$_,'=',$self->{$_},$/;
+            print CONFIG ${comment}, $_, '=', $self->{$_}, $/;
         }
         close(CONFIG);
         warn(
@@ -455,12 +456,12 @@ sub dump {
     print( '# Configuration dump produced by "cssh -u"', $/ );
 
     foreach my $key ( sort keys %$self ) {
-        my $comment='';
+        my $comment = '';
         if ( grep /$key/, @app_specific ) {
             next;
         }
         if ( grep /$key/, @ignore_default_config ) {
-            $comment='#';
+            $comment = '#';
         }
         print $comment, $key, '=', $self->{$key}, $/;
     }

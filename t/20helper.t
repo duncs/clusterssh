@@ -11,7 +11,9 @@ use File::Temp qw(tempdir);
 
 use Readonly;
 
-BEGIN { use_ok("App::ClusterSSH::Helper")  || BAIL_OUT('failed to use module')}
+BEGIN {
+    use_ok("App::ClusterSSH::Helper") || BAIL_OUT('failed to use module');
+}
 
 my $helper;
 

@@ -20,14 +20,18 @@ sub new {
 }
 
 sub script {
-    my ($self, $config ) = @_;
+    my ( $self, $config ) = @_;
 
-    my $comms = $config->{ $config->{comms} };
-    my $comms_args = $config->{ $config->{comms} . '_args'};
+    my $comms          = $config->{ $config->{comms} };
+    my $comms_args     = $config->{ $config->{comms} . '_args' };
     my $config_command = $config->{command};
-    my $autoclose = $config->{auto_close};
+    my $autoclose      = $config->{auto_close};
 
-    my $postcommand = $autoclose ? "echo Sleeping for $autoclose seconds; sleep $autoclose" : "echo Press RETURN to continue; read IGNORE"; # : "sleep $autoclose";
+    my $postcommand
+        = $autoclose
+        ? "echo Sleeping for $autoclose seconds; sleep $autoclose"
+        : "echo Press RETURN to continue; read IGNORE"
+        ;    # : "sleep $autoclose";
 
 #    # P = pipe file
 #    # s = server
@@ -38,14 +42,14 @@ sub script {
 #    # a = command args
 #    # C = command to run
 #    my $lelehelper_script = q{
-#        use strict; 
+#        use strict;
 #        use warnings;
 #        use Getopt::Std;
 #        my %opts;
 #        getopts('PsupmcaC', \%opts);
 #        my $command="$opts{c} $opts{a}";
 #        open(PIPE, ">", $opts{P}) or die("Failed to open pipe: $!\n");
-#        print PIPE "$$:$ENV{WINDOWID}" 
+#        print PIPE "$$:$ENV{WINDOWID}"
 #            or die("Failed to write to pipe: $!\\n");
 #        close(PIPE) or die("Failed to close pipe: $!\\n");
 #        if($opts{s} =~ m/==$/)
@@ -127,12 +131,11 @@ sub script {
            exec(\$command);
     HERE
 
-    $self->debug(4, $script);
-    $self->debug(2, 'Helper script done');
+    $self->debug( 4, $script );
+    $self->debug( 2, 'Helper script done' );
 
     return $script;
 }
-    
 
 #use overload (
 #    q{""} => sub {

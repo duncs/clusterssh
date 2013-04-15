@@ -53,12 +53,12 @@ my $level;
 trap {
     $level = $base->set_debug_level();
 };
-isa_ok($trap->die, 'App::ClusterSSH::Exception', 'Caught exception object OK');
+isa_ok( $trap->die, 'App::ClusterSSH::Exception',
+    'Caught exception object OK' );
 is( $trap->leaveby, 'die', 'returned ok' );
 is( $trap->stderr,  '',    'Expecting no STDERR' );
 is( $trap->stdout,  '',    'Expecting no STDOUT' );
-like( $trap->die, qr/^Debug level not provided/,
-    'Got correct croak text' );
+like( $trap->die, qr/^Debug level not provided/, 'Got correct croak text' );
 
 $base->set_debug_level(10);
 is( $base->debug_level(), 9, 'checking debug_level reset to 9' );
@@ -139,7 +139,8 @@ is( $trap->stdout,  '',       'Expecting no STDOUT' );
 trap {
     $get_config = $base->config();
 };
-isa_ok($trap->die, 'App::ClusterSSH::Exception', 'Caught exception object OK');
+isa_ok( $trap->die, 'App::ClusterSSH::Exception',
+    'Caught exception object OK' );
 is( $trap->leaveby, 'die', 'died ok' );
 like( $trap->die, qr/^config has not yet been set/,
     'Got correct croak text' );
@@ -150,7 +151,8 @@ is( $get_config,   undef, 'config left empty' );
 trap {
     $object = $base->set_config();
 };
-isa_ok($trap->die, 'App::ClusterSSH::Exception', 'Caught exception object OK');
+isa_ok( $trap->die, 'App::ClusterSSH::Exception',
+    'Caught exception object OK' );
 is( $trap->leaveby, 'die', 'died ok' );
 like( $trap->die, qr/^passed config is empty/, 'Got correct croak text' );
 is( $trap->stderr, '', 'Expecting no STDERR' );
@@ -182,7 +184,8 @@ trap {
     $object = $base->set_config('set to another scalar');
 };
 is( $trap->leaveby, 'die', 'died ok' );
-isa_ok($trap->die, 'App::ClusterSSH::Exception', 'Caught exception object OK');
+isa_ok( $trap->die, 'App::ClusterSSH::Exception',
+    'Caught exception object OK' );
 like(
     $trap->die,
     qr/^config\shas\salready\sbeen\sset/,
@@ -195,7 +198,8 @@ trap {
     $object = $base->set_config();
 };
 is( $trap->leaveby, 'die', 'died ok' );
-isa_ok($trap->die, 'App::ClusterSSH::Exception', 'Caught exception object OK');
+isa_ok( $trap->die, 'App::ClusterSSH::Exception',
+    'Caught exception object OK' );
 like(
     $trap->die,
     qr/^config\shas\salready\sbeen\sset/,

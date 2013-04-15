@@ -54,9 +54,10 @@ sub _dump_args_hash {
         $string .= "\t";
         $string .= $_;
         $string .= ' => ';
-        if(ref($args{$_}) eq 'ARRAY') {
+        if ( ref( $args{$_} ) eq 'ARRAY' ) {
             $string .= "@{ $args{$_} }";
-        } else {
+        }
+        else {
             $string .= $args{$_};
         }
         $string .= ',';
@@ -197,8 +198,8 @@ sub load_file {
         croak(
             App::ClusterSSH::Exception::LoadFile->throw(
                 error => $self->loc(
-                    'Unable to read file [_1]: [_2]' . $/,
-                    $args{filename}, $!
+                    'Unable to read file [_1]: [_2]' . $/, $args{filename},
+                    $!
                 ),
             ),
         );
@@ -216,9 +217,12 @@ sub load_file {
 
     open( my $fh, '<', $args{filename} )
         or croak(
-            App::ClusterSSH::Exception::LoadFile->throw(
-                error => $self->loc("Unable to read file [_1]: [_2]", $args{filename}, $!)
-            ),
+        App::ClusterSSH::Exception::LoadFile->throw(
+            error => $self->loc(
+                "Unable to read file [_1]: [_2]",
+                $args{filename}, $!
+            )
+        ),
         );
 
     my %results;
@@ -229,8 +233,8 @@ sub load_file {
             if ( $line =~ /^\s*$/ || $line =~ /^#/ )
             ;    # ignore blank lines & commented lines
 
-        $line =~ s/\s*#.*//;  # remove comments from remaining lines
-        $line =~ s/\s*$//;    # remove trailing whitespace
+        $line =~ s/\s*#.*//;    # remove comments from remaining lines
+        $line =~ s/\s*$//;      # remove trailing whitespace
 
         # look for continuation lines
         chomp $line;
@@ -242,9 +246,10 @@ sub load_file {
         next unless $line =~ $regexp;
         my ( $key, $value ) = ( $1, $2 );
         if ( defined $key && defined $value ) {
-            if($results{$key}) {
-                $results{$key} .= ' '. $value;
-            }else {
+            if ( $results{$key} ) {
+                $results{$key} .= ' ' . $value;
+            }
+            else {
                 $results{$key} = $value;
             }
             $self->debug( 3, "$key=$value" );

@@ -62,7 +62,7 @@ sub get_external_clusters {
     my $result;
     my $return_code;
     {
-        local  $SIG{CHLD} = undef;
+        local $SIG{CHLD} = undef;
         $result      = qx/ $command /;
         $return_code = $CHILD_ERROR >> 8;
     }
@@ -76,13 +76,14 @@ sub get_external_clusters {
             App::ClusterSSH::Exception::Cluster->throw(
                 error => $self->loc(
                     "External command exited failed.\nCommand: [_1]\nReturn Code: [_2]",
-                    $command, $return_code,
+                    $command,
+                    $return_code,
                 ),
             )
         );
     }
 
-    my @results=split / /, $result;
+    my @results = split / /, $result;
 
     return @results;
 }

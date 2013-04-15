@@ -36,9 +36,7 @@ my $build = Module::Build->new(
         'Test::DistManifest'  => 0,
         'Test::Differences'   => 0,
     },
-    configure_requires => {
-        'Module::Build' => 0,
-    },
+    configure_requires => { 'Module::Build' => 0, },
     add_to_cleanup     => ['App-ClusterSSH-*'],
     create_makefile_pl => 'traditional',
     script_files       => 'bin',
