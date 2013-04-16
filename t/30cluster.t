@@ -125,8 +125,7 @@ trap {
     @external_expected = $cluster1->get_external_clusters(
         "$Bin/external_cluster_command -x $redirect");
 };
-is( $trap->die,
-    'External command exited with non-zero status: 5',
+like( $trap->die, qr/External command failure.*external_cluster_command.*Return Code: 5/ms,
     'External command: caught exception message'
 );
 is( $trap->stdout, '', 'External command: no stdout from perl code' );
@@ -136,8 +135,7 @@ trap {
     @external_expected = $cluster1->get_external_clusters(
         "$Bin/external_cluster_command -q $redirect");
 };
-is( $trap->die,
-    'External command exited with non-zero status: 255',
+like( $trap->die, qr/External command failure.*external_cluster_command.*Return Code: 255/ms,
     'External command: caught exception message'
 );
 is( $trap->stdout, '', 'External command: no stdout from perl code' );

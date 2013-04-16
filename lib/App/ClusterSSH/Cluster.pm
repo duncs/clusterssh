@@ -75,7 +75,7 @@ sub get_external_clusters {
         croak(
             App::ClusterSSH::Exception::Cluster->throw(
                 error => $self->loc(
-                    "External command exited failed.\nCommand: [_1]\nReturn Code: [_2]",
+                    "External command failure.\nCommand: [_1]\nReturn Code: [_2]",
                     $command,
                     $return_code,
                 ),
@@ -212,6 +212,10 @@ Create a new object.  Object should be common across all invocations.
 
 Read in /etc/clusters, $HOME/.clusterssh/clusters and any other given 
 file name and register the tags found.
+
+=item @resolved_tags=get_external_clusters($path_to_binary, @tags)
+
+Define and use an external script to resolve tags into hostnames.
 
 =item $cluster->get_tag_entries($filename);
 
