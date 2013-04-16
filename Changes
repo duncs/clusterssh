@@ -3,6 +3,7 @@
 - Add in 'tags' file handling
 - Fix bug whereby cluster files were read in multiple times
 - Add in resolving tags by external command
+- Fix library path on bin/cssh (Sf bug 3610601)
 
 2013-03-05 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_05
 - New option (-m, --unique-servers) to remove repeated servers when opening terminals (Thanks to Oliver Meissner)
