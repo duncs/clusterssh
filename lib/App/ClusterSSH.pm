@@ -3,7 +3,7 @@ package App::ClusterSSH;
 use 5.008.004;
 use warnings;
 use strict;
-use version; our $VERSION = version->new('4.02_01');
+use version; our $VERSION = version->new('4.02_02');
 
 use Carp;
 
@@ -538,17 +538,17 @@ sub send_text($@) {
     {
         my $servername = $svr;
         $servername =~ s/\s+//;
-        $text       =~ s/%s/$servername/xsm;
+        $text       =~ s/%s/$servername/xsmg;
     }
-    $text =~ s/%h/hostname()/xsme;
+    $text =~ s/%h/hostname()/xsmeg;
 
     # use connection username, else default to current username
     {
         my $username = $servers{$svr}{username};
         $username ||= getpwuid($UID);
-        $text =~ s/%u/$username/xsm;
+        $text =~ s/%u/$username/xsmg;
     }
-    $text =~ s/%n/\n/xsm;
+    $text =~ s/%n/\n/xsmg;
 
     foreach my $char ( split( //, $text ) ) {
         next if ( !defined($char) );
