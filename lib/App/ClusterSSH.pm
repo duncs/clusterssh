@@ -1617,7 +1617,7 @@ sub key_event {
                         if ( $hotkey eq "key_addhost" );
                     $self->retile_hosts("force")
                         if ( $hotkey eq "key_retilehosts" );
-                    show_history() if ( $hotkey eq "key_history" );
+                    $self->show_history() if ( $hotkey eq "key_history" );
                     exit_prog()    if ( $hotkey eq "key_quit" );
                 }
                 return;
@@ -1780,7 +1780,12 @@ sub populate_send_menu {
         logmsg( 2, 'Using default send menu' );
 
         $menus{send}->command(
-            -label       => 'Hostname',
+            -label       => 'Remote Hostname',
+            -command     => [ \&send_text_to_all_servers, '%s' ],
+            -accelerator => $self->config->{key_clientname},
+        );
+        $menus{send}->command(
+            -label       => 'Local Hostname',
             -command     => [ \&send_text_to_all_servers, '%s' ],
             -accelerator => $self->config->{key_clientname},
         );
