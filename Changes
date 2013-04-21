@@ -1,6 +1,7 @@
 ????-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.02_02
 - Fixed macros (%u, %s, %h, %n) not doing multiple replacements
 - Add in key shortcut for username macro (ALT-u)
+- Add in key shortcut for local hostname macro (ALT-l)
 - Fixed a bug with 'show history' key shortcut
 
 2013-04-16 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.02_01

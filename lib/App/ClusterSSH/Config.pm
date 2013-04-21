@@ -37,6 +37,7 @@ my %default_config = (
     key_addhost             => "Control-Shift-plus",
     key_clientname          => "Alt-n",
     key_history             => "Alt-h",
+    key_localname           => "Alt-l",
     key_retilehosts         => "Alt-r",
     key_paste               => "Control-v",
     key_username            => "Alt-u",

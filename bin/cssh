@@ -470,6 +470,11 @@ Default key sequence to open AddHost menu.  See below notes on shortcuts.
 Default key sequence to send cssh client names to client.  See below notes 
 on shortcuts.
 
+=item key_localname = Alt-l
+
+Default key sequence to send hostname of local server to client.  See below 
+notes on shortcuts.
+
 =item key_paste = Control-v
 
 Default key sequence to paste text into the console window.  See below notes

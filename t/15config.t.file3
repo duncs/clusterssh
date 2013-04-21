@@ -10,6 +10,7 @@ history_width=40
 key_addhost=Control-Shift-plus
 key_clientname=Alt-n
 key_history=Alt-h
+key_localname=Alt-l
 key_paste=Control-v
 key_quit=Control-q
 key_retilehosts=Alt-r
