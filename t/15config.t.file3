@@ -13,6 +13,7 @@ key_history=Alt-h
 key_paste=Control-v
 key_quit=Control-q
 key_retilehosts=Alt-r
+key_username=Alt-n
 max_host_menu_items=30
 method=ssh
 mouse_paste=Button-2

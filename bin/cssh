@@ -484,6 +484,11 @@ See below notes on shortcuts.
 
 Default key sequence to retile host windows.  See below notes on shortcuts.
 
+=item key_username = Alt-u
+
+Default key sequence to send username to client.  See below notes 
+on shortcuts.
+
 =item max_addhost_menu_cluster_items = 6
 
 Maximum number of entries in the 'Add Host' menu cluster list before 

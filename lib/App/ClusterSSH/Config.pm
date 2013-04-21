@@ -39,6 +39,7 @@ my %default_config = (
     key_history             => "Alt-h",
     key_retilehosts         => "Alt-r",
     key_paste               => "Control-v",
+    key_username            => "Alt-u",
     mouse_paste             => "Button-2",
     auto_quit               => "yes",
     auto_close              => 5,

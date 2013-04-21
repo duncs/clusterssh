@@ -1611,6 +1611,8 @@ sub key_event {
                     logmsg( 2, "Received hotkey: $hotkey" );
                     send_text_to_all_servers('%s')
                         if ( $hotkey eq "key_clientname" );
+                    send_text_to_all_servers('%u')
+                        if ( $hotkey eq "key_username" );
                     $self->add_host_by_name()
                         if ( $hotkey eq "key_addhost" );
                     $self->retile_hosts("force")
@@ -1781,6 +1783,11 @@ sub populate_send_menu {
             -label       => 'Hostname',
             -command     => [ \&send_text_to_all_servers, '%s' ],
             -accelerator => $self->config->{key_clientname},
+        );
+        $menus{send}->command(
+            -label       => 'Username',
+            -command     => [ \&send_text_to_all_servers, '%u' ],
+            -accelerator => $self->config->{key_username},
         );
     }
     else {
