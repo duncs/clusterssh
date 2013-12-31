@@ -291,7 +291,7 @@ sub load_keyboard_map() {
   # try to associate $keyboard=X11->GetKeyboardMapping table with X11::Keysyms
     foreach my $i ( 0 .. $#keyboard ) {
         for my $modifier ( 0 .. 3 ) {
-            if ( defined( $keycodetosym{ $keyboard[$i][$modifier] } ) ) {
+            if ( defined( $keyboard[$i][$modifier] ) && defined( $keycodetosym{ $keyboard[$i][$modifier] } ) ) {
 
                 # keyboard layout contains the keycode at $modifier level
                 if (defined(
@@ -328,7 +328,7 @@ sub load_keyboard_map() {
             else {
 
                 # we didn't get the code from X11::Keysyms
-                if ( $keyboard[$i][$modifier] != 0 ) {
+                if ( defined( $keyboard[$i][$modifier] ) && $keyboard[$i][$modifier] != 0 ) {
 
                     # ignore code=0
                     logmsg( 2, "Unknown keycode ", $keyboard[$i][$modifier] );
