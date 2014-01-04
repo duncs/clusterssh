@@ -12,6 +12,7 @@ use App::ClusterSSH::Host;
 use App::ClusterSSH::Config;
 use App::ClusterSSH::Helper;
 use App::ClusterSSH::Cluster;
+use App::ClusterSSH::Windows;
 
 use FindBin qw($Script);
 
@@ -58,6 +59,7 @@ sub new {
     $self->{config}  = App::ClusterSSH::Config->new();
     $self->{helper}  = App::ClusterSSH::Helper->new();
     $self->{cluster} = App::ClusterSSH::Cluster->new();
+    $self->{windows} = App::ClusterSSH::Windows->new();
 
     # catch and reap any zombies
     $SIG{CHLD} = \&REAPER;
@@ -78,6 +80,11 @@ sub cluster {
 sub helper {
     my ($self) = @_;
     return $self->{helper};
+}
+
+sub windows {
+    my ($self) = @_;
+    return $self->{windows};
 }
 
 sub REAPER {
@@ -1943,6 +1950,9 @@ sub run {
         }
     }
 
+    $self->windows->console->show;
+    $self->windows->enter_loop;
+    die "DUNCS HERE";;
     $self->create_windows();
     $self->create_menubar();
 
