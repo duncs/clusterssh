@@ -291,7 +291,9 @@ sub load_keyboard_map() {
   # try to associate $keyboard=X11->GetKeyboardMapping table with X11::Keysyms
     foreach my $i ( 0 .. $#keyboard ) {
         for my $modifier ( 0 .. 3 ) {
-            if ( defined( $keyboard[$i][$modifier] ) && defined( $keycodetosym{ $keyboard[$i][$modifier] } ) ) {
+            if (   defined( $keyboard[$i][$modifier] )
+                && defined( $keycodetosym{ $keyboard[$i][$modifier] } ) )
+            {
 
                 # keyboard layout contains the keycode at $modifier level
                 if (defined(
@@ -328,7 +330,9 @@ sub load_keyboard_map() {
             else {
 
                 # we didn't get the code from X11::Keysyms
-                if ( defined( $keyboard[$i][$modifier] ) && $keyboard[$i][$modifier] != 0 ) {
+                if ( defined( $keyboard[$i][$modifier] )
+                    && $keyboard[$i][$modifier] != 0 )
+                {
 
                     # ignore code=0
                     logmsg( 2, "Unknown keycode ", $keyboard[$i][$modifier] );
@@ -383,6 +387,9 @@ SWITCH: for ($state) {
 sub resolve_names(@) {
     my ( $self, @servers ) = @_;
     logmsg( 2, 'Resolving cluster names: started' );
+
+    use Data::Dump qw(dump);
+    warn dump \@servers;
 
     foreach (@servers) {
         my $dirty    = $_;
@@ -1620,7 +1627,7 @@ sub key_event {
                     $self->retile_hosts("force")
                         if ( $hotkey eq "key_retilehosts" );
                     $self->show_history() if ( $hotkey eq "key_history" );
-                    exit_prog()    if ( $hotkey eq "key_quit" );
+                    exit_prog() if ( $hotkey eq "key_quit" );
                 }
                 return;
             }
@@ -1937,9 +1944,18 @@ sub run {
         @servers = $self->resolve_names(@ARGV);
     }
     else {
+
+        #if ( my @default = $self->cluster->get_tag('default') ) {
         if ( $self->cluster->get_tag('default') ) {
             @servers
+
+                #    = $self->resolve_names( @default );
                 = $self->resolve_names( $self->cluster->get_tag('default') );
+            warn "blip";
+        }
+        else {
+            warn "blop";
+            warn scalar $self->cluster->get_tag('default');
         }
     }
 

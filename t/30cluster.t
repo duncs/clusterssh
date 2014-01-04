@@ -76,6 +76,18 @@ $expected{tag50} = [ 'host30', ];
 $cluster1->read_tag_file( $Bin . '/30cluster.tag1' );
 test_expected( 'tag 1', %expected );
 
+$cluster1->read_cluster_file( $Bin . '/30cluster.file3' );
+my @default_expected = (qw/ host7 host8 host9 /);
+$expected{default} = \@default_expected;
+test_expected( 'file 3', %expected );
+my @default = $cluster1->get_tag('default');
+is_deeply( \@default, \@default_expected, 'default cluster ok' );
+
+is( scalar $cluster1->get_tag('default'),
+    scalar @default_expected,
+    'Count correct'
+);
+
 # now checks against running an external command
 
 my @external_expected;
@@ -125,7 +137,9 @@ trap {
     @external_expected = $cluster1->get_external_clusters(
         "$Bin/external_cluster_command -x $redirect");
 };
-like( $trap->die, qr/External command failure.*external_cluster_command.*Return Code: 5/ms,
+like(
+    $trap->die,
+    qr/External command failure.*external_cluster_command.*Return Code: 5/ms,
     'External command: caught exception message'
 );
 is( $trap->stdout, '', 'External command: no stdout from perl code' );
@@ -135,7 +149,9 @@ trap {
     @external_expected = $cluster1->get_external_clusters(
         "$Bin/external_cluster_command -q $redirect");
 };
-like( $trap->die, qr/External command failure.*external_cluster_command.*Return Code: 255/ms,
+like(
+    $trap->die,
+    qr/External command failure.*external_cluster_command.*Return Code: 255/ms,
     'External command: caught exception message'
 );
 is( $trap->stdout, '', 'External command: no stdout from perl code' );

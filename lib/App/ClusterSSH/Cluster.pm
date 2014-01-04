@@ -161,7 +161,10 @@ sub get_tag {
             join( ' ', sort @{ $self->{tags}->{$tag} } )
         );
 
-        return sort @{ $self->{tags}->{$tag} };
+        return
+            wantarray
+            ? sort @{ $self->{tags}->{$tag} }
+            : scalar @{ $self->{tags}->{$tag} };
     }
 
     $self->debug( 2, "Tag $tag is not registered" );
@@ -240,7 +243,10 @@ Register the given host on the provided tags.
 
 =item @entries = $cluster->get_tag('tag');
 
-Retrieve all entries for the given tag
+=item $entries = $cluster->get_tag('tag');
+
+Retrieve all entries for the given tag.  Returns an array of hosts or 
+the number of hosts in the array depending on context.
 
 =item @tags = $cluster->list_tags();
 
