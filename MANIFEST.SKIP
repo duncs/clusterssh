@@ -12,4 +12,5 @@ MYMETA.json
 MYMETA.yml
 pm_to_blib
 .*\.swp$
+^TOAD$
 ^WIP_TASKS$
