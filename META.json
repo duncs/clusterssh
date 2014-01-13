@@ -4,7 +4,7 @@
       "Duncan Ferguson <duncan_j_ferguson@yahoo.co.uk>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.4003, CPAN::Meta::Converter version 2.112621",
+   "generated_by" : "Module::Build version 0.4003, CPAN::Meta::Converter version 2.120921",
    "license" : [
       "perl_5"
    ],
@@ -16,36 +16,36 @@
    "prereqs" : {
       "build" : {
          "requires" : {
-            "File::Temp" : 0,
-            "File::Which" : 0,
-            "Readonly" : 0,
-            "Test::Differences" : 0,
-            "Test::DistManifest" : 0,
-            "Test::Pod" : 0,
-            "Test::Pod::Coverage" : 0,
-            "Test::Trap" : 0
+            "File::Temp" : "0",
+            "File::Which" : "0",
+            "Readonly" : "0",
+            "Test::Differences" : "0",
+            "Test::DistManifest" : "0",
+            "Test::Pod" : "0",
+            "Test::Pod::Coverage" : "0",
+            "Test::Trap" : "0"
          }
       },
       "configure" : {
          "requires" : {
-            "Module::Build" : 0
+            "Module::Build" : "0"
          }
       },
       "runtime" : {
          "requires" : {
             "Exception::Class" : "1.31",
-            "Locale::Maketext" : 0,
+            "Locale::Maketext" : "0",
             "Tk" : "800.022",
-            "Try::Tiny" : 0,
+            "Try::Tiny" : "0",
             "X11::Protocol" : "0.56",
-            "version" : 0
+            "version" : "0"
          }
       }
    },
    "provides" : {
       "App::ClusterSSH" : {
          "file" : "lib/App/ClusterSSH.pm",
-         "version" : "4.02_01"
+         "version" : "4.02_02"
       },
       "App::ClusterSSH::Base" : {
          "file" : "lib/App/ClusterSSH/Base.pm",
@@ -90,5 +90,5 @@
          "http://github.com/duncs/clusterssh"
       ]
    },
-   "version" : "4.02_01"
+   "version" : "4.02_02"
 }
