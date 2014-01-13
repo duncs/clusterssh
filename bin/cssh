@@ -494,6 +494,24 @@ Default key sequence to retile host windows.  See below notes on shortcuts.
 Default key sequence to send username to client.  See below notes 
 on shortcuts.
 
+=item macro_servername = %s
+
+=item macro_hostname = %h
+
+=item macro_username = %u
+
+=item macro_newline = %n
+
+=item macro_version = %v
+
+Change the replacement macro used when either using a 'Send' menu item, or when 
+pasting text into the main console.  
+
+=item macros_enabled = yes
+
+Enable or disable macro replacement.  Note: this affects pasting into the 
+main console,  items on the 'Send' menu and key_clientname, key_localname, key_servername and key_username.
+
 =item max_addhost_menu_cluster_items = 6
 
 Maximum number of entries in the 'Add Host' menu cluster list before 
@@ -659,9 +677,24 @@ This (optional) file contains items to populate the send menu.  The
 default entry could be written as:
 
   <send_menu>
-    <menu title="Hostname">
+    <menu title="Use Macros">
+        <toggle/>
+        <accelerator>ALT-p</accelerator>
+    </dmenu>
+    <menu title="Remote Hostname">
         <command>%s</command>
         <accelerator>ALT-n</accelerator>
+    </menu>
+    <menu title="Local Hostname">
+        <command>%s</command>
+        <accelerator>ALT-l</accelerator>
+    </menu>
+    <menu title="Username">
+        <command>%u</command>
+        <accelerator>ALT-u</accelerator>
+    </menu>
+    <menu title="Test Text">
+        <command>echo "ClusterSSH Version: %v%n</command>
     </menu>
   </send_menu>
 
@@ -689,7 +722,7 @@ B<Caveats:>
 
 =back
 
-The following replacement macros are available:
+The following replacement macros are available (note: these can be changed in the configuration file):
 
 =over 4
 

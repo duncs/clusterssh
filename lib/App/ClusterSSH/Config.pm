@@ -39,6 +39,7 @@ my %default_config = (
     key_history             => "Alt-h",
     key_localname           => "Alt-l",
     key_retilehosts         => "Alt-r",
+    key_macros_enable       => "Alt-p",
     key_paste               => "Control-v",
     key_username            => "Alt-u",
     mouse_paste             => "Button-2",
@@ -81,6 +82,13 @@ my %default_config = (
 
     command             => q{},
     max_host_menu_items => 30,
+
+    macros_enabled   => 'yes',
+    macro_servername => '%s',
+    macro_hostname   => '%h',
+    macro_username   => '%u',
+    macro_newline    => '%n',
+    macro_version    => '%v',
 
     max_addhost_menu_cluster_items => 6,
     menu_send_autotearoff          => 0,

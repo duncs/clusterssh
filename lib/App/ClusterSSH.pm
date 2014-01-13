@@ -298,7 +298,7 @@ sub load_keyboard_map() {
                 # keyboard layout contains the keycode at $modifier level
                 if (defined(
                         $keyboardmap{ $keycodetosym{ $keyboard[$i][$modifier]
-                                } }
+                        } }
                     )
                     )
                 {
@@ -387,9 +387,6 @@ SWITCH: for ($state) {
 sub resolve_names(@) {
     my ( $self, @servers ) = @_;
     logmsg( 2, 'Resolving cluster names: started' );
-
-    use Data::Dump qw(dump);
-    warn dump \@servers;
 
     foreach (@servers) {
         my $dirty    = $_;
@@ -533,29 +530,41 @@ SWITCH: {
 }
 
 sub send_text($@) {
-    my $svr = shift;
+    my $self = shift;
+    my $svr  = shift;
     my $text = join( "", @_ );
 
     logmsg( 2, "servers{$svr}{wid}=$servers{$svr}{wid}" );
     logmsg( 3, "Sending to '$svr' text:$text:" );
 
     # command macro substitution
+    if ( $self->config->{macros_enabled} eq 'yes' ) {
 
-    # $svr contains a trailing space here, so ensure its stripped off
-    {
-        my $servername = $svr;
-        $servername =~ s/\s+//;
-        $text       =~ s/%s/$servername/xsmg;
-    }
-    $text =~ s/%h/hostname()/xsmeg;
+        # $svr contains a trailing space here, so ensure its stripped off
+        {
+            my $macro_servername = $self->config->{macro_servername};
+            my $servername       = $svr;
+            $servername =~ s/\s+//;
+            $text       =~ s/$macro_servername/$servername/xsmg;
+        }
+        $text =~ s/%h/hostname()/xsmeg;
 
-    # use connection username, else default to current username
-    {
-        my $username = $servers{$svr}{username};
-        $username ||= getpwuid($UID);
-        $text =~ s/%u/$username/xsmg;
+        # use connection username, else default to current username
+        {
+            my $macro_username = $self->config->{macro_username};
+            my $username       = $servers{$svr}{username};
+            $username ||= getpwuid($UID);
+            $text =~ s/$macro_username/$username/xsmg;
+        }
+        {
+            my $macro_newline = $self->config->{macro_newline};
+            $text =~ s/$macro_newline/\n/xsmg;
+        }
+        {
+            my $macro_version = $self->config->{macro_version};
+            $text =~ s/$macro_version/$VERSION/xsmg;
+        }
     }
-    $text =~ s/%n/\n/xsmg;
 
     foreach my $char ( split( //, $text ) ) {
         next if ( !defined($char) );
@@ -598,10 +607,11 @@ sub send_text($@) {
 }
 
 sub send_text_to_all_servers {
+    my $self = shift;
     my $text = join( '', @_ );
 
     foreach my $svr ( keys(%servers) ) {
-        send_text( $svr, $text )
+        $self->send_text( $svr, $text )
             if ( $servers{$svr}{active} == 1 );
     }
 }
@@ -1407,7 +1417,7 @@ sub create_windows() {
 
             # now sent it on
             foreach my $svr ( keys(%servers) ) {
-                send_text( $svr, $paste_text )
+                $self->send_text( $svr, $paste_text )
                     if ( $servers{$svr}{active} == 1 );
             }
         }
@@ -1616,11 +1626,11 @@ sub key_event {
                 logmsg( 3, "matched combo" );
                 if ( $event eq "KeyRelease" ) {
                     logmsg( 2, "Received hotkey: $hotkey" );
-                    send_text_to_all_servers('%s')
+                    $self->send_text_to_all_servers('%s')
                         if ( $hotkey eq "key_clientname" );
-                    send_text_to_all_servers('%h')
+                    $self->send_text_to_all_servers('%h')
                         if ( $hotkey eq "key_localname" );
-                    send_text_to_all_servers('%u')
+                    $self->send_text_to_all_servers('%u')
                         if ( $hotkey eq "key_username" );
                     $self->add_host_by_name()
                         if ( $hotkey eq "key_addhost" );
@@ -1760,21 +1770,33 @@ sub populate_send_menu_entries_from_xml {
             }
         }
         else {
-            my $command     = undef;
             my $accelerator = undef;
-            if ( $menu_ref->{command} ) {
-                $command = sub {
-                    send_text_to_all_servers( $menu_ref->{command}[0] );
-                };
-            }
             if ( $menu_ref->{accelerator} ) {
                 $accelerator = $menu_ref->{accelerator};
             }
-            $menu->command(
-                -label       => $menu_ref->{title},
-                -command     => $command,
-                -accelerator => $accelerator,
-            );
+            if ( $menu_ref->{toggle} ) {
+                $menus{send}->checkbutton(
+                    -label       => 'Use Macros',
+                    -variable    => \$self->config->{macros_enabled},
+                    -offvalue    => 'no',
+                    -onvalue     => 'yes',
+                    -accelerator => $accelerator,
+                );
+            }
+            else {
+                my $command = undef;
+                if ( $menu_ref->{command} ) {
+                    $command = sub {
+                        $self->send_text_to_all_servers(
+                            $menu_ref->{command}[0] );
+                    };
+                }
+                $menu->command(
+                    -label       => $menu_ref->{title},
+                    -command     => $command,
+                    -accelerator => $accelerator,
+                );
+            }
         }
     }
 
@@ -1788,20 +1810,45 @@ sub populate_send_menu {
     if ( !-r $self->config->{send_menu_xml_file} ) {
         logmsg( 2, 'Using default send menu' );
 
+        $menus{send}->checkbutton(
+            -label       => 'Use Macros',
+            -variable    => \$self->config->{macros_enabled},
+            -offvalue    => 'no',
+            -onvalue     => 'yes',
+            -accelerator => $self->config->{key_macros_enable},
+        );
+
         $menus{send}->command(
-            -label       => 'Remote Hostname',
-            -command     => [ \&send_text_to_all_servers, '%s' ],
+            -label   => 'Remote Hostname',
+            -command => sub {
+                $self->send_text_to_all_servers(
+                    $self->config->{macro_servername} );
+            },
             -accelerator => $self->config->{key_clientname},
         );
         $menus{send}->command(
-            -label       => 'Local Hostname',
-            -command     => [ \&send_text_to_all_servers, '%h' ],
+            -label   => 'Local Hostname',
+            -command => sub {
+                $self->send_text_to_all_servers(
+                    $self->config->{macro_hostname} );
+            },
             -accelerator => $self->config->{key_localname},
         );
         $menus{send}->command(
-            -label       => 'Username',
-            -command     => [ \&send_text_to_all_servers, '%u' ],
+            -label   => 'Username',
+            -command => sub {
+                $self->send_text_to_all_servers(
+                    $self->config->{macro_username} );
+            },
             -accelerator => $self->config->{key_username},
+        );
+        $menus{send}->command(
+            -label   => 'Test Text',
+            -command => sub {
+                $self->send_text_to_all_servers( 'echo ClusterSSH Version: '
+                        . $self->config->{macro_version}
+                        . $self->config->{macro_newline} );
+            },
         );
     }
     else {
@@ -1951,11 +1998,6 @@ sub run {
 
                 #    = $self->resolve_names( @default );
                 = $self->resolve_names( $self->cluster->get_tag('default') );
-            warn "blip";
-        }
-        else {
-            warn "blop";
-            warn scalar $self->cluster->get_tag('default');
         }
     }
 
