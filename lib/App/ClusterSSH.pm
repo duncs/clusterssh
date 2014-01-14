@@ -3,7 +3,7 @@ package App::ClusterSSH;
 use 5.008.004;
 use warnings;
 use strict;
-use version; our $VERSION = version->new('4.02_02');
+use version; our $VERSION = version->new('4.02_03');
 
 use Carp;
 
@@ -1692,7 +1692,7 @@ sub create_menubar() {
         -menuitems => [
             [   "command",
                 "Show History",
-                -command     => \&show_history,
+                -command     => sub{ $self->show_history; },
                 -accelerator => $self->config->{key_history},
             ],
             [   "command",
