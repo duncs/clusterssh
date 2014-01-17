@@ -1,5 +1,6 @@
 ????-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.02_03
 - Fix 'File->Show History' (Sf support request 41)
+- Amend 'tag-file' short option to 'r' to avoid option clash
 
 2014-01-13 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.02_02
 - Fixed macros (%u, %s, %h, %n) not doing multiple replacements

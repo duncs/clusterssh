@@ -213,7 +213,7 @@ Specify an alternate port for connections.
 IN BETA: Show history within console window.  This code is still being 
 worked upon, but may help some users.
 
-=item --tag-file,-c <file>
+=item --tag-file,-r <file>
 
 Use supplied file as additional tag file (see also L</"FILES">)
 

@@ -98,7 +98,7 @@ my @options_spec = (
     'man|H',
     'action|a=s',
     'cluster-file|c=s',
-    'tag-file|c=s',
+    'tag-file|r=s',
     'config-file|C=s',
     'evaluate|e=s',
     'tile|g',
