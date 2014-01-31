@@ -3,7 +3,26 @@ use warnings;
 
 use Module::Build;
 
-my $build = Module::Build->new(
+my $class = Module::Build->subclass(
+    class => "Module::Build::Custom",
+    code  => q{
+        sub ACTION_email {
+            my ($self, @args) = shift;
+
+            my $v=$self->dist_version;
+
+            print $/, '=' x 10,$/,$/;
+            print 'Bug Reports and Issues: https://github.com/duncs/clusterssh/issues',$/;
+            print 'Project Repository: http://github.com/duncs/clusterssh',$/;
+            print 'CPAN release: http://search.cpan.org/~duncs/App-ClusterSSH-',$v,$/;
+            print 'SF release: http://sourceforge.net/projects/clusterssh/files/2.%20ClusterSSH%20Series%204/App-ClusterSSH-',$v,'.tar.gz/download',$/;
+            print 'SF/net git repo: https://sourceforge.net/scm/?type=git&group_id=89139',$/;
+            print $/, '=' x 10,$/,$/;
+        }
+    },
+);
+
+my $build = $class->new(
     meta_merge => {
         resources => {
             Repository => [
