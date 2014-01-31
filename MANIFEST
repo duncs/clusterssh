@@ -38,6 +38,7 @@ t/30cluster.t
 t/30cluster.tag1
 t/80clusterssh.t
 t/boilerplate.t
+t/changes.t
 t/external_cluster_command
 t/manifest.t
 t/pod-coverage.t

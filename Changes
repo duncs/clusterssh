@@ -1,8 +1,11 @@
-2014-01-31 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.02_03
+4.02_04 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net>
+- Amend 'Changes' file format to match CPAN specs (see CPAN::Changes)
+
+4.02_03 2014-01-31 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Fix 'File->Show History' (Sf support request 41)
 - Amend 'tag-file' short option to 'r' to avoid option clash
 
-2014-01-13 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.02_02
+4.02_02 2014-01-13 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Fixed macros (%u, %s, %h, %n) not doing multiple replacements
 - Add in key shortcut for username macro (ALT-u)
 - Add in key shortcut for local hostname macro (ALT-l)
@@ -11,392 +14,390 @@
 - Fixed the default cluster not being opened
 - Add in toggle for macros
 
-2013-04-16 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.02_01
+4.02_01 2013-04-16 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Refactured file loading code
 - Add in 'tags' file handling
 - Fix bug whereby cluster files were read in multiple times
 - Add in resolving tags by external command
 - Fix library path on bin/cssh (Sf bug 3610601)
 
-2013-03-05 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_05
+4.01_05 2013-03-05 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - New option (-m, --unique-servers) to remove repeated servers when opening terminals (Thanks to Oliver Meissner)
 - Drop MYMETA.yml and .json files from the distribution
 - Do not set default user name to prevent overriding ssh configuration
 
-2013-02-26 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_04
+4.01_04 2013-02-26 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Fixed 'ccon' not calling the correct command (Sf bug 3605002)
 - Fixed clusters not being defined correctly within the .clusterssh/config file (Sf bug 3605675)
 
-2013-02-15 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_03
-* Correct documentation for references to $HOME/.clusterssh/config
-* Re-add user back into the configurartion file
-* Add in missing newline for some error messages
-* Allow the path to rsh/ssh/telnet to be defined in the configuration file
-* Move .csshrc to .csshrc.DISABLED since it should no longer be used
-* Error emitted when adding a host via the "Hosts" drop-down (Debian bug ID #578208)
-* Pastes uses a strange keyboard layout (Debian bug ID #364565)
-* Cope with being invoked by 'clusterssh' (Debian bug ID #644368)
-* Fix migration of .csshrc when not working as expected (Debian bug ID #673507)
-* Remove doc references to 'always_tile' as renamed 'window_tiling' (Debian bug ID #697371)
-* Updated manpage whatis entries (patch by Tony Mancill)
-* Fix watch line expression to catch 4.x series tarballs (Debian patch LP ID #1076897)
-* Allow tests to pass successfully when run as root
-* Fix cssh starting if xterm is not installed (Sf bug 3494988)
-* Set WM_CLASS on windows to 'cssh' (Sf bug 3187736)
+4.01_03 2013-02-15 Duncan Ferguson <duncan_ferguson@user.sf.net>
+- Correct documentation for references to $HOME/.clusterssh/config
+- Re-add user back into the configurartion file
+- Add in missing newline for some error messages
+- Allow the path to rsh/ssh/telnet to be defined in the configuration file
+- Move .csshrc to .csshrc.DISABLED since it should no longer be used
+- Error emitted when adding a host via the "Hosts" drop-down (Debian bug ID #578208)
+- Pastes uses a strange keyboard layout (Debian bug ID #364565)
+- Cope with being invoked by 'clusterssh' (Debian bug ID #644368)
+- Fix migration of .csshrc when not working as expected (Debian bug ID #673507)
+- Remove doc references to 'always_tile' as renamed 'window_tiling' (Debian bug ID #697371)
+- Updated manpage whatis entries (patch by Tony Mancill)
+- Fix watch line expression to catch 4.x series tarballs (Debian patch LP ID #1076897)
+- Allow tests to pass successfully when run as root
+- Fix cssh starting if xterm is not installed (Sf bug 3494988)
+- Set WM_CLASS on windows to 'cssh' (Sf bug 3187736)
 
-2012-12-09 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_02
-* Fix logic when using 'autoclose' on the command line or config file
-* Fix $HOME/.clusterssh/clusters being read in
-* Fix 'ctel', 'crsh' and 'ccon'so they work as expected
+4.01_02 2012-12-09 Duncan Ferguson <duncan_ferguson@user.sf.net>
+- Fix logic when using 'autoclose' on the command line or config file
+- Fix $HOME/.clusterssh/clusters being read in
+- Fix 'ctel', 'crsh' and 'ccon'so they work as expected
 
-2011-12-09 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_01
-* Include missing files from release tarballs
+4.01_01 2011-12-09 Duncan Ferguson <duncan_ferguson@user.sf.net>
+- Include missing files from release tarballs
 
-2011-12-03 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.01_00
-* Start switching code to use Exception::Class
-* Moved config file from $HOME/.csshrc file to $HOME/.clusterssh directory
-* Rework config handling into a module
-* Rework cluster handling into a module
-* Added 'autoclose' functionality - see docs
-* Allow "-a 'cmd ; cmd'" to work for multiple remote commands
+4.01_00 2011-12-03 Duncan Ferguson <duncan_ferguson@user.sf.net>
+- Start switching code to use Exception::Class
+- Moved config file from $HOME/.csshrc file to $HOME/.clusterssh directory
+- Rework config handling into a module
+- Rework cluster handling into a module
+- Added 'autoclose' functionality - see docs
+- Allow "-a 'cmd ; cmd'" to work for multiple remote commands
 
-2011-07-28 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_11
-* Fix '-l <username>' option (SF bug 3380675)
+4.00_11 2011-07-28 Duncan Ferguson <duncan_ferguson@user.sf.net>
+- Fix '-l <username>' option (SF bug 3380675)
 
-2011-07-08 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_10
-* Fix 'uninitialised error' message
+4.00_10 2011-07-08 Duncan Ferguson <duncan_ferguson@user.sf.net>
+- Fix 'uninitialised error' message
 
-2011-06-30 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_09
-* Cater for missing 'pod2text' command (Thanks to Sami Kerola)
-* Fix 'uninitialised variable' error
-* Added 'ccon' command (Thanks to Brandon Perkins)
+4.00_09 2011-06-30 Duncan Ferguson <duncan_ferguson@user.sf.net>
+- Cater for missing 'pod2text' command (Thanks to Sami Kerola)
+- Fix 'uninitialised variable' error
+- Added 'ccon' command (Thanks to Brandon Perkins)
 
-2011-04-01 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_08
-* Amend all L<xx> links to prevent build breakage on cygwin (Sf bug 3115635)
+4.00_08 2011-04-01 Duncan Ferguson <duncan_ferguson@user.sf.net>
+- Amend all L<xx> links to prevent build breakage on cygwin (Sf bug 3115635)
 
-2011-01-24 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_07
-* Fix for parsing config files with empty values (Stefan Steiner)
-* Reinstate acting on '-l username' option (reported by Ryan Brown)
+4.00_07 2011-01-24 Duncan Ferguson <duncan_ferguson@user.sf.net>
+- Fix for parsing config files with empty values (Stefan Steiner)
+- Reinstate acting on '-l username' option (reported by Ryan Brown)
 
-2010-09-20 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_06
-* Fix test error on 5.8.8 (reported by Wei Wang)
-* Added '--list', '-L' to list available cluster tags (idea from Markus Manzke)
-* Fix terminal size only set on last windows (Sf bug 3061999)
-* Added '--use_all_a_records' (Simon Fraser)
+4.00_06 2010-09-20 Duncan Ferguson <duncan_ferguson@user.sf.net>
+- Fix test error on 5.8.8 (reported by Wei Wang)
+- Added '--list', '-L' to list available cluster tags (idea from Markus Manzke)
+- Fix terminal size only set on last windows (Sf bug 3061999)
+- Added '--use_all_a_records' (Simon Fraser)
 
-2010-06-20 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_05
+4.00_05 2010-06-20 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* Tidy up pod for whatis errors
-* Amend copyright years and text to be consistent
-* Include missing buld prereq (Test::Trap)
-* Correct '--font, -f' in cssh documentation
+- Tidy up pod for whatis errors
+- Amend copyright years and text to be consistent
+- Include missing buld prereq (Test::Trap)
+- Correct '--font, -f' in cssh documentation
 - Thanks to Tony Mancill for reporting these errors
 
-2010-06-20 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_04
+4.00_04 2010-06-20 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* Update MANIFEST file to ensure all correct files are included in release
+- Update MANIFEST file to ensure all correct files are included in release
 
-2010-06-20 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_03
+4.00_03 2010-06-20 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* Fix silly type in code/tests
+- Fix silly type in code/tests
 
-2010-06-19 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_02
+4.00_02 2010-06-19 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* Add in bugtracker and homepage resources to Build.PL file
-* Bring new module App::ClusterSSH::Host into play for parsing host strings
-* Patch to override font used on command line (Roland Rosenfeld)
-* Put options in cssh pod into alphabetical order
+- Add in bugtracker and homepage resources to Build.PL file
+- Bring new module App::ClusterSSH::Host into play for parsing host strings
+- Patch to override font used on command line (Roland Rosenfeld)
+- Put options in cssh pod into alphabetical order
 
-2010-01-08 Duncan Ferguson <duncan_ferguson@user.sf.net> - v4.00_01
+4.00_01 2010-01-08 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* Remove GNU tools and switch to Perl module layout using Module::Build
+- Remove GNU tools and switch to Perl module layout using Module::Build
 
-0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.29 - unreleased
+3.29 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net> (unreleased)
 
-* Handle hostnames containing % properly (Debian bug  543368)
+- Handle hostnames containing % properly (Debian bug  543368)
 - Thanks to Tony Mancill for the patch
 
-2009-12-19 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.28
+3.28 2009-12-19 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* Look for usernames when adding clusters
+- Look for usernames when adding clusters
 - Thanks to Kristian Lyngstol for the patch
-* Allow username@cluster to override all usernames in the cluster
-* Account for multiple host definitions within ssh configuration file
+- Allow username@cluster to override all usernames in the cluster
+- Account for multiple host definitions within ssh configuration file
 - Thanks to anonymous for the patch
-* Allow for long line continuation in config files with a backslash
+- Allow for long line continuation in config files with a backslash
 - Thanks to Mike Loseke for the patch
-* Improve binary search to 
+- Improve binary search to 
   - ignore directories of the same name, and 
   - always search for the binary if it is not fully qualified
 - Thanks to Ian Marsh for the patch
-* Always use the given host name, not the resolved host name, when opening the ssh connection (Debian bug 533406)
+- Always use the given host name, not the resolved host name, when opening the ssh connection (Debian bug 533406)
 
-2009-09-24 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.27
+3.27 2009-09-24 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* Add in list of clusters to 'Add Host' window 
+- Add in list of clusters to 'Add Host' window 
   - thanks for Stanislas Rouvelin for the idea
-* Fix bug where unresolvable host stopped program running
+- Fix bug where unresolvable host stopped program running
   - thanks to Sami Kerola
-* Add in config for auto-tearoff of send and host menus
+- Add in config for auto-tearoff of send and host menus
   - thanks to James Chernikov for the idea
-* Add in send menu xml definition file
+- Add in send menu xml definition file
   - thanks to James Chernikov for the idea
 
-2009-06-02 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.26-1
+3.26_1 2009-06-02 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* Allow user to set a different ConnectTimeout and -o string (Tony Mancill)
-* Fix warning from 'mandb' (Tony Mancill)
-* Continue connecting to unresolvable hosts (debian bug 499935) (Tony Mancill)
-* Correct bug with unset default ports (Tony Mancill)
-* Rearrange pod documentation to remove extraenous comment (Tony Mancill)
-* Cope better with IPv6 addresses
-* Fix bug with passing arguments from command line to comms method binary
-* Rework defaultport code
-* Add new "-a 'command'" option for running a command in each terminal
-* Fix bug with some host lookups failing
-* Set window hints on terminals slightly differently to help with tiling
-* Reserve 5 pixels on top and left hand side of terminals for better tiling
-* Increase reserve of screen from bottom from 40 pixels to 60
-* Better notes in docs for screen/terminal reserving
-* Minor fixup to docs formatting
-* Correct pasting mechanism into control window
-* Allow use of long options (swap Getopt::Std to Getopt::Long)
-* Remove deprecated '-i' option
-* Deprecate -d and -D, replaced with --debug
-* Allow for configurable max number of hosts within hosts menu before
+- Allow user to set a different ConnectTimeout and -o string (Tony Mancill)
+- Fix warning from 'mandb' (Tony Mancill)
+- Continue connecting to unresolvable hosts (debian bug 499935) (Tony Mancill)
+- Correct bug with unset default ports (Tony Mancill)
+- Rearrange pod documentation to remove extraenous comment (Tony Mancill)
+- Cope better with IPv6 addresses
+- Fix bug with passing arguments from command line to comms method binary
+- Rework defaultport code
+- Add new "-a 'command'" option for running a command in each terminal
+- Fix bug with some host lookups failing
+- Set window hints on terminals slightly differently to help with tiling
+- Reserve 5 pixels on top and left hand side of terminals for better tiling
+- Increase reserve of screen from bottom from 40 pixels to 60
+- Better notes in docs for screen/terminal reserving
+- Minor fixup to docs formatting
+- Correct pasting mechanism into control window
+- Allow use of long options (swap Getopt::Std to Getopt::Long)
+- Remove deprecated '-i' option
+- Deprecate -d and -D, replaced with --debug
+- Allow for configurable max number of hosts within hosts menu before
   starting a new column - see .csshrc doc for "max_host_menu_items".
   This is until Tk allows for scrollable menus
-* Amend default key_addhost from 'Control-plus' to 'Control-Shift-plus'
-* Add in a 'default' cluster tag, used when no tags provided on command line
-* Fix Alt-n pasting in a resolved hostname instead of the connection hostname 
-* Disabled unmapping code until such time as a better way of doing it exists 
+- Amend default key_addhost from 'Control-plus' to 'Control-Shift-plus'
+- Add in a 'default' cluster tag, used when no tags provided on command line
+- Fix Alt-n pasting in a resolved hostname instead of the connection hostname 
+- Disabled unmapping code until such time as a better way of doing it exists 
   - this is due to virtual desktop change triggering a retile 
 
-2009-03-26 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.25-1
+3.25_1 2009-03-26 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* Add patch from David F. Skoll for adding colour to terminals
-* Apply fix from Bogdan Pintea for DNS failing to resolve IPs
-* Allow the configuration files to be symlinks (debian bug 518196)
-* Add an 'EXAMPLES' section to the cssh documentation
-* List options alphabetically in documentation
-* Apply patch from Gerfried Fuchs/Tony Mancill for ports on the command line
+- Add patch from David F. Skoll for adding colour to terminals
+- Apply fix from Bogdan Pintea for DNS failing to resolve IPs
+- Allow the configuration files to be symlinks (debian bug 518196)
+- Add an 'EXAMPLES' section to the cssh documentation
+- List options alphabetically in documentation
+- Apply patch from Gerfried Fuchs/Tony Mancill for ports on the command line
 
-2008-11-14 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.24-1
+3.24_1 2008-11-14 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* Do not attempt to re-resolve IP addresses
-* Apply patch from Dan Wallis
+- Do not attempt to re-resolve IP addresses
+- Apply patch from Dan Wallis
 - Add '-C <file>' command to load in specific config file
 - Typo correct in pod
 - Cope with random/strange config files better
-* Correct some minor typos
-* Create the .csshrc file if it doesnt already exist and amend pod
-* Amend host menu items to be a little more descriptive
-* Remove 'Catpure Terminal' from Hosts menu as it doesnt do anything useful
+- Correct some minor typos
+- Create the .csshrc file if it doesnt already exist and amend pod
+- Amend host menu items to be a little more descriptive
+- Remove 'Catpure Terminal' from Hosts menu as it doesnt do anything useful
 
-2008-01-23 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.23-1
+3.23_1 2008-01-23 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* Apply bugfix supplied by Jima
+- Apply bugfix supplied by Jima
 - Ensure loading of hosts from user ssh config file is case insensitive
 
-2008-01-23 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.22-1
+3.22_1 2008-01-23 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* Update X resources class to allow use of terms other than XTerm
-* Apply patch from Harald Weidner to stop error messages in Debian Etch
-* Add in key shortcut (alt-h) to toggle history window
-* Tidy up pod a little to highlight notes better
-* Check terminal_font config for quotes and remove
-* Enable use of "configure --sysconfdir=", defaults to /etc
-* Revise host checking algorithm to take ssh_config files into account
-* Revise username check used as part of host id to accept more chars
-* Correct year value for previous two entries from 2008 to 2007
+- Update X resources class to allow use of terms other than XTerm
+- Apply patch from Harald Weidner to stop error messages in Debian Etch
+- Add in key shortcut (alt-h) to toggle history window
+- Tidy up pod a little to highlight notes better
+- Check terminal_font config for quotes and remove
+- Enable use of "configure --sysconfdir=", defaults to /etc
+- Revise host checking algorithm to take ssh_config files into account
+- Revise username check used as part of host id to accept more chars
+- Correct year value for previous two entries from 2008 to 2007
 
-2007-11-28 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.21-1
+3.21_1 2007-11-28 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* Implement a basic history window in the console (option -s)
-* Fixed bug whereby username@ wasn't being used correctly
+- Implement a basic history window in the console (option -s)
+- Fixed bug whereby username@ wasn't being used correctly
 
-2007-11-26 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.20-1
+3.20_1 2007-11-26 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* Move source repository from CVS to SVN on sourceforge
-* Remove last digit of version number since not required with SVN
-* Add in host menu option to close inactive windows
-* Apply bugfixes suppled by Tony Mancill
+- Move source repository from CVS to SVN on sourceforge
+- Remove last digit of version number since not required with SVN
+- Add in host menu option to close inactive windows
+- Apply bugfixes suppled by Tony Mancill
 - reset xrm switch in terminal_args 
 - prevent warning messages being printed when keysyms arent found
 - fixes for fvwm
 - chekc for child process before sending kill
-* Slight rewording of man page
-* Add in option to use telnet as comms command (use 'ctel' to invoke script)
-* Run through perltidy -b -i=2
-* Appy patches from Klaus Ethgen
+- Slight rewording of man page
+- Add in option to use telnet as comms command (use 'ctel' to invoke script)
+- Run through perltidy -b -i=2
+- Appy patches from Klaus Ethgen
 - Client dies when cannot write to pipe
 - Sleeping and flushing in window manager to allow time to draw windows
 - Fix pipe reading to not use undefined values
-* Apply patches from Nicolas Simonds
+- Apply patches from Nicolas Simonds
 - allow colons in hostnames
 - allow -o option as per man page
-* Apply patch from Peter Palfrader
+- Apply patch from Peter Palfrader
 - improvement to finding binaries
-* Allow font to be specified on the command line
-* Check for errors around key data gathering
-* Add in 'extra_cluster_file' to csshrc
+- Allow font to be specified on the command line
+- Check for errors around key data gathering
+- Add in 'extra_cluster_file' to csshrc
 
-2006-07-24 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.19.1-1
+3.19.1_1 2006-07-24 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
 - Below is an abridged version of changes - see CVS for more information
-* Check for failure to connect to X session
-* Totally rework character mapping and events to cope with non-QWERTY keyboards
-* Rework pasting code to cope with non-QWERTY charatcters
-* Manpage/help doc updates and corrections
-* Check for missing definitions for cluster tags in .csshrc
-* Run through perltidy -b -i=2
-* Apply patch to add in optional port information from D. Dumont
-* Amend hotkey code to not pick up <ctrl>-<alt> as default clientname shortcut
-* Alter repeat function to improve efficiency
-* Rework retiling code 
-* Add "-e <host>" to evaluate terminal and communcation methods
-* Add in toggle option on hosts menu
-* Fix check in find_binary to ensure one is actually found
-* Search $PATH and other standard places for binaries incase $PATH is incomplete
-* Amend code to allow getting help when no X display available
-* Allow override of both key and mouse paste key sequences
-* Added icons and desktop file
-* Amended clusterssh.spec to cope with icons and desktop file
-* Improve cluster file import efficiency as was taking faaar too long previously
-* Fixed bug whereby when pid's of the xterm changes records were not updated
-* Do not die when pipe open fails, but continue as others may be connected
-* Remove code that breaks the minimize/maximise stuff;
-* Catch X button presses on title bar to close all windows correctly
-* Delay map event capture at program start to avoid infinite loop
-* Fix execvp error on Solaris 10
+- Check for failure to connect to X session
+- Totally rework character mapping and events to cope with non-QWERTY keyboards
+- Rework pasting code to cope with non-QWERTY charatcters
+- Manpage/help doc updates and corrections
+- Check for missing definitions for cluster tags in .csshrc
+- Run through perltidy -b -i=2
+- Apply patch to add in optional port information from D. Dumont
+- Amend hotkey code to not pick up <ctrl>-<alt> as default clientname shortcut
+- Alter repeat function to improve efficiency
+- Rework retiling code 
+- Add "-e <host>" to evaluate terminal and communcation methods
+- Add in toggle option on hosts menu
+- Fix check in find_binary to ensure one is actually found
+- Search $PATH and other standard places for binaries incase $PATH is incomplete
+- Amend code to allow getting help when no X display available
+- Allow override of both key and mouse paste key sequences
+- Added icons and desktop file
+- Amended clusterssh.spec to cope with icons and desktop file
+- Improve cluster file import efficiency as was taking faaar too long previously
+- Fixed bug whereby when pid's of the xterm changes records were not updated
+- Do not die when pipe open fails, but continue as others may be connected
+- Remove code that breaks the minimize/maximise stuff;
+- Catch X button presses on title bar to close all windows correctly
+- Delay map event capture at program start to avoid infinite loop
+- Fix execvp error on Solaris 10
 
-2005-11-28 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.18.1-1
+3.18.1_1 2005-11-28 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* Correct mask value for backtick (grave) character
-* Add more logging for debug mode
-* Amend indentation
-* Rerun through perltidy
-* Improve cluster file import efficiency as was taking faaar too long previously
-* Fixed bug whereby when pid's of the xterm changes records were not updated
-* Do not die when pipe open fails, but continue as others may be connected
-* Remove code that breaks the minimize/maximise stuff;
-* Catch X button presses on title bar to close all windows correctly
-* Delay map event capture at program start to avoid infinite loop
-* Fix execvp error on Solaris 10
-* Update to man pages
+- Correct mask value for backtick (grave) character
+- Add more logging for debug mode
+- Amend indentation
+- Rerun through perltidy
+- Improve cluster file import efficiency as was taking faaar too long previously
+- Fixed bug whereby when pid's of the xterm changes records were not updated
+- Do not die when pipe open fails, but continue as others may be connected
+- Remove code that breaks the minimize/maximise stuff;
+- Catch X button presses on title bar to close all windows correctly
+- Delay map event capture at program start to avoid infinite loop
+- Fix execvp error on Solaris 10
+- Update to man pages
 
-2005-06-24 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.17.1
+3.17.1 2005-06-24 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* Allow _'s in paste text correctly
-* Bugfix minimise/maximise again
-* Run through "perltidy -i=4 -ce"
-* Unmap all windows in one go instead of one at a time when retiling
-* Add + doc 'console_position'
-* Maintain user position of console between maps (i.e. tell window manager 
+- Allow _'s in paste text correctly
+- Bugfix minimise/maximise again
+- Run through "perltidy -i=4 -ce"
+- Unmap all windows in one go instead of one at a time when retiling
+- Add + doc 'console_position'
+- Maintain user position of console between maps (i.e. tell window manager 
   not to move it)
-* Note that ssh options are for OpenSSH not for any other ssh version
+- Note that ssh options are for OpenSSH not for any other ssh version
 
-2005-06-13 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.16.1
+3.16.1 2005-06-13 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* Allow ignoring of unresolved hosts (i.e. if hostname aliased in 
+- Allow ignoring of unresolved hosts (i.e. if hostname aliased in 
   ssh config file)
 
-2005-06-09 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.15.1 
+3.15.1  2005-06-09 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* Add and document "-c <clusterfile>"
-* Add and document "-l <username>"
-* Add and document "-o <options>"
-* Document "-t <title>"
-* Set controlled terminals to have user set size & position (WM_SIZE_HINTS)
-* Speed up initial terminal openings
-* Remove all key bindings from drop down menus (conflicts with emacs and
+- Add and document "-c <clusterfile>"
+- Add and document "-l <username>"
+- Add and document "-o <options>"
+- Document "-t <title>"
+- Set controlled terminals to have user set size & position (WM_SIZE_HINTS)
+- Speed up initial terminal openings
+- Remove all key bindings from drop down menus (conflicts with emacs and
   can all be done by other hotkeys anyhow)
-* Allow individual hotkeys to be disabled, instead of all-or-nothing
-* Updates to POD
-* Update retile code to avoid flickering windows (& also fix cygwin bug)
-* Rename -t to -T to match previous series option
-* Added in -t to modify cmd line args for terminals
+- Allow individual hotkeys to be disabled, instead of all-or-nothing
+- Updates to POD
+- Update retile code to avoid flickering windows (& also fix cygwin bug)
+- Rename -t to -T to match previous series option
+- Added in -t to modify cmd line args for terminals
 
-2005-06-04 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.14.1 
+3.14.1  2005-06-04 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* first cut at terminal opening speed up
+- first cut at terminal opening speed up
 
-2005-05-20 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.13.1 
+3.13.1  2005-05-20 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* Bugfix for whitespace in config files (missing a char from regexp)
-* Allow for minimising/maximising all windows when done on console
+- Bugfix for whitespace in config files (missing a char from regexp)
+- Allow for minimising/maximising all windows when done on console
 
-2005-05-19 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.12.1 
+3.12.1  2005-05-19 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* Bugfix for shifted non-alphanumeric keyboard chars not being pasted correctly
-* Marked version number with 3rd digit to signify beta releases
+- Bugfix for shifted non-alphanumeric keyboard chars not being pasted correctly
+- Marked version number with 3rd digit to signify beta releases
 
-2005-05-18 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.11
+3.11 2005-05-18 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* Remove trailing whitespace from config file lines
-* Prevent paste events being sent to non-active clients
-* Allow paste events to send capitalised letters
+- Remove trailing whitespace from config file lines
+- Prevent paste events being sent to non-active clients
+- Allow paste events to send capitalised letters
 
-2005-05-17 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.10
+3.10 2005-05-17 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* fix for moving atom numbers in font info
+- fix for moving atom numbers in font info
 
-2005-05-11 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.9
+3.9 2005-05-11 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* Allow multiple hosts or tags in the "Add Host" text widget
-* Retile all windows (if set) after adding a host
-* Do not automatically send a return after hostname (Alt-n)
-* Fix bug with sending read hostname instead of internal unique host 
+- Allow multiple hosts or tags in the "Add Host" text widget
+- Retile all windows (if set) after adding a host
+- Do not automatically send a return after hostname (Alt-n)
+- Fix bug with sending read hostname instead of internal unique host 
   name (Alt-n)
-* Fix bug whereby cannot start cssh without any hosts on cmd-line
-* Fix bug where client name was sent to inactive clients
-* Fix bug whereby 0's in sent text were ignored
+- Fix bug whereby cannot start cssh without any hosts on cmd-line
+- Fix bug where client name was sent to inactive clients
+- Fix bug whereby 0's in sent text were ignored
 
-2005-05-09 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.8
+3.8 2005-05-09 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* Remove the need for xlsfonts (perform function by X window calls instead)
-* Debug level output changes
-* Ensure windows are overlapping in the right places, instead of any order
-* Create config section on window decorations (i.e. title & scroll bars)
+- Remove the need for xlsfonts (perform function by X window calls instead)
+- Debug level output changes
+- Ensure windows are overlapping in the right places, instead of any order
+- Create config section on window decorations (i.e. title & scroll bars)
 
-2005-05-05 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.7
+3.7 2005-05-05 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* Found ConfigureWindow instead of ResizeMoveWindow
+- Found ConfigureWindow instead of ResizeMoveWindow
 
-2005-05-05 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.6
+3.6 2005-05-05 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* Lots of work on window tiling - to fall at last hurdle (No XResizeMoveWindow)
-* Documentation updates
-* Allow -u ouput when binaries havnt been found
-* Start coding for capturing an existing terminal window
-* Rebuild hosts menu when all hosts checked, not when each host checked
-* Change debug message output level of keysyms
-* Cater for config of no tiling, but allow to retile in console window anyhow
+- Lots of work on window tiling - to fall at last hurdle (No XResizeMoveWindow)
+- Documentation updates
+- Allow -u ouput when binaries havnt been found
+- Start coding for capturing an existing terminal window
+- Rebuild hosts menu when all hosts checked, not when each host checked
+- Change debug message output level of keysyms
+- Cater for config of no tiling, but allow to retile in console window anyhow
 
-2005-05-03 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.5
+3.5 2005-05-03 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* Remove some old (commented out) code
-* Remove some (unnecessary) debug code
-* Start coding for window tiling
-* Modify find_binary function to make it more portable
-* Output internal vars in "-u -d"
-* Small mods to docs to take account of all of the above
+- Remove some old (commented out) code
+- Remove some (unnecessary) debug code
+- Start coding for window tiling
+- Modify find_binary function to make it more portable
+- Output internal vars in "-u -d"
+- Small mods to docs to take account of all of the above
 
-2005-04-26 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.4
+3.4 2005-04-26 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* Changed order of "use POSIX" to put :sys_wait_h first to avoid chance of 
+- Changed order of "use POSIX" to put :sys_wait_h first to avoid chance of 
   hitting known issue
-* Allow for running from cvs dir in config{comms}
-* Add "ConnectTimeout=10" to default ssh options
-* Add further debug info
-* Add check to ensure hostname can be resolved before attempting connection
-* Modigy zombie reaping to prevent hand on unconnected cx term closing
-* Add "autoquit" feature to close ClusterSSH after last client window closes
-* Also produce man page and include as part of install
+- Allow for running from cvs dir in config{comms}
+- Add "ConnectTimeout=10" to default ssh options
+- Add further debug info
+- Add check to ensure hostname can be resolved before attempting connection
+- Modigy zombie reaping to prevent hand on unconnected cx term closing
+- Add "autoquit" feature to close ClusterSSH after last client window closes
+- Also produce man page and include as part of install
 
-2005-04-10 Duncan Ferguson <duncan_ferguson@user.sf.net> - v3.3
+3.3 2005-04-10 Duncan Ferguson <duncan_ferguson@user.sf.net>
 
-* src/cssh.pl: Rewritten from scratch
-* Set up to use Gnu Autotools
-
-$Id$
+- src/cssh.pl: Rewritten from scratch
+- Set up to use Gnu Autotools
