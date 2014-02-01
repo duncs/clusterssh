@@ -25,7 +25,7 @@ sub new {
     }
 
     # remove any keys undef values - must be a better way...
-    foreach my $remove (qw/ port username /) {
+    foreach my $remove (qw/ port username geometry /) {
         if ( !$args{$remove} && grep {/^$remove$/} keys(%args) ) {
             delete( $args{$remove} );
         }
@@ -75,6 +75,16 @@ sub get_username {
     return $self->{username} || q{};
 }
 
+sub get_type {
+    my ($self) = @_;
+    return $self->{type} || q{};
+}
+
+sub get_geometry {
+    my ($self) = @_;
+    return $self->{geometry} || q{};
+}
+
 sub set_username {
     my ( $self, $new_username ) = @_;
     $self->{username} = $new_username;
@@ -89,6 +99,18 @@ sub get_port {
 sub set_port {
     my ( $self, $new_port ) = @_;
     $self->{port} = $new_port;
+    return $self;
+}
+
+sub set_type {
+    my ( $self, $type ) = @_;
+    $self->{type} = $type;
+    return $self;
+}
+
+sub set_geometry {
+    my ( $self, $geometry ) = @_;
+    $self->{geometry} = $geometry;
     return $self;
 }
 
@@ -136,22 +158,24 @@ sub parse_host_string {
     # check for bracketed IPv6 addresses
     if ($host_string =~ m{
             \A 
-            (?:(.*?)@)?     # username@ (optional)
-            \[([\w:]*)\]    # [<sequence of chars>]
-            (?::(\d+))?     # :port     (optional)
+            (?:(.*?)@)?               # username@ (optional)
+            \[([\w:]*)\]              # [<sequence of chars>]
+            (?::(\d+))?               # :port     (optional)
+            (?:=(\d+\D\d+\D\d+\D\d))? # =geometry (optional)
             \z
         }xms
         )
     {
         $self->debug(
             5,
-            $self->loc( 'bracketed IPv6: u=[_1] h=[_2] p=[_3]', $1, $2, $3 ),
+            $self->loc( 'bracketed IPv6: u=[_1] h=[_2] p=[_3] g=[_4]', $1, $2, $3, $4 ),
         );
         return __PACKAGE__->new(
             parse_string => $parse_string,
             username     => $1,
             hostname     => $2,
             port         => $3,
+            geometry     => $4,
             type         => 'ipv6',
         );
     }
@@ -159,52 +183,73 @@ sub parse_host_string {
     # check for standard IPv4 host.domain/IP address
     if ($host_string =~ m{
             \A 
-            (?:(.*?)@)?     # username@ (optional)
-            ([\w\.-]*)      # hostname[.domain[.domain] | 123.123.123.123
-            (?::(\d+))?     # :port     (optional)
+            (?:(.*?)@)?               # username@ (optional)
+            ([\w\.-]*)                # hostname[.domain[.domain] | 123.123.123.123
+            (?::(\d+))?               # :port     (optional)
+            (?:=(\d+\D\d+\D\d+\D\d+))? # =geometry (optional)
             \z
         }xms
         )
     {
         $self->debug( 5,
-            $self->loc( 'std IPv4: u=[_1] h=[_2] p=[_3]', $1, $2, $3 ),
+            $self->loc( 'std IPv4: u=[_1] h=[_2] p=[_3] g=[_4]', $1, $2, $3, $4 ),
         );
         return __PACKAGE__->new(
             parse_string => $parse_string,
             username     => $1,
             hostname     => $2,
             port         => $3,
+            geometry     => $4,
             type         => 'ipv4',
         );
     }
 
     # Check for unbracketed IPv6 addresses as best we can...
+    my $username = q{};
+    my $geometry = q{};
+    my $port     = q{};
+
     # first, see if there is a username to grab
-    my $username = q[];
-    if ( $host_string =~ s/\A(?:(.*)@)// ) {
+    if ( $host_string =~ s/\A(?:(.*?)@)// ) {
 
         # catch where @ is in host_string but no text before it
         $username = $1 || q{};
+    }
+
+    # Cannot check for a port with this type of IPv6 string
+    #if ( $host_string =~ s/\A(?::(\d+)\A)// ) {
+    #   $port = $1 || q{};
+    #}
+
+    # check for any geometry settings
+    if ( $host_string =~ s/(?:=(.*?)$)// ) {
+        $geometry = $1 || q{};
     }
 
     # use number of colons as a possible indicator
     my $colon_count = $host_string =~ tr/://;
 
     # if there are 7 colons assume its a full IPv6 address
+    # if its 8 then assumed full IPv6 address with a port
     # also catch localhost address here
-    if ( $colon_count == 7 || $host_string eq '::1' ) {
+    if ( $colon_count == 7 || $colon_count == 8 || $host_string eq '::1' ) {
+        if( $colon_count == 8) {
+            $host_string =~ s/(?::(\d+?))$//;
+            $port = $1;
+        }
         $self->debug(
             5,
             $self->loc(
-                'IPv6: u=[_1] h=[_2] p=[_3]',
-                $username, $host_string, ''
+                'IPv6: u=[_1] h=[_2] p=[_3] g=[_4]',
+                $username, $host_string, $port, $geometry,
             ),
         );
         return __PACKAGE__->new(
             parse_string => $parse_string,
             username     => $username,
             hostname     => $host_string,
-            port         => q{},
+            port         => $port,
+            geometry     => $geometry,
             type         => 'ipv6',
         );
     }
@@ -218,27 +263,22 @@ sub parse_host_string {
         $self->debug(
             5,
             $self->loc(
-                'Ambiguous IPv6 u=[_1] h=[_2] p=[_3]', $username,
-                $host_string,                          ''
+                'Ambiguous IPv6 u=[_1] h=[_2] p=[_3] g=[_4]', $username,
+                $host_string, $port, $geometry,
             )
         );
-
-        #warn "host_string=$host_string";
-        #warn "username=$username";
-        #warn $self->loc('some string to return');
-        #warn 'debug done, returning';
 
         return __PACKAGE__->new(
             parse_string => $parse_string,
             username     => $username,
             hostname     => $host_string,
-            port         => q{},
+            port         => $port,
+            geometry     => $geometry,
             type         => 'ipv6',
         );
     }
     else {
-        my $port = q{};
-        if ( $host_string =~ s/:(\d+)$// ) {
+        if ( $host_string =~ s/:(\d+)\A// ) {
             $port = $1;
         }
 
@@ -247,8 +287,8 @@ sub parse_host_string {
         $self->debug(
             5,
             $self->loc(
-                'Default parse u=[_1] h=[_2] p=[_3]',
-                $username, $hostname, $port
+                'Default parse u=[_1] h=[_2] p=[_3] g=[_4]',
+                $username, $hostname, $port, $geometry,
             )
         );
 
@@ -257,6 +297,7 @@ sub parse_host_string {
             username     => $username,
             hostname     => $hostname,
             port         => $port,
+            geometry     => $geometry,
             type         => 'name',
         );
     }

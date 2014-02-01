@@ -26,6 +26,7 @@ is( $host->get_hostname, 'hostname', 'hostname set' );
 is( $host->get_port,     q{},        'checking set works' );
 is( $host->get_username, q{},        'username is unset' );
 is( $host->get_realname, 'hostname', 'realname set' );
+is( $host->get_geometry, q{},        'geometry set' );
 
 $host->set_port(2323);
 
@@ -34,6 +35,7 @@ is( $host->get_hostname, 'hostname', 'checking set works' );
 is( $host->get_port,     2323,       'checking set works' );
 is( $host->get_username, q{},        'username is unset' );
 is( $host->get_realname, 'hostname', 'realname set' );
+is( $host->get_geometry, q{},        'geometry set' );
 
 $host->set_username('username');
 
@@ -41,33 +43,15 @@ is( $host->get_hostname, 'hostname', 'checking set works' );
 is( $host->get_port,     2323,       'checking set works' );
 is( $host->get_username, 'username', 'username is unset' );
 is( $host->get_realname, 'hostname', 'realname set' );
+is( $host->get_geometry, q{},        'geometry set' );
 
-$host = undef;
-is( $host, undef, 'starting afresh' );
+$host->set_geometry('100x50+100+100');
 
-$host = App::ClusterSSH::Host->new( hostname => 'hostname' );
-isa_ok( $host, "App::ClusterSSH::Host" );
-
-is( $host,               'hostname', 'stringify works' );
-is( $host->get_hostname, 'hostname', 'hostname set' );
-is( $host->get_port,     q{},        'checking set works' );
-is( $host->get_username, q{},        'username is unset' );
-is( $host->get_realname, 'hostname', 'realname set' );
-
-$host->set_port(2323);
-
-is( $host,               'hostname', 'stringify works' );
-is( $host->get_hostname, 'hostname', 'checking set works' );
-is( $host->get_port,     2323,       'checking set works' );
-is( $host->get_username, q{},        'username is unset' );
-is( $host->get_realname, 'hostname', 'realname set' );
-
-$host->set_username('username');
-
-is( $host->get_hostname, 'hostname', 'checking set works' );
-is( $host->get_port,     2323,       'checking set works' );
-is( $host->get_username, 'username', 'username is unset' );
-is( $host->get_realname, 'hostname', 'realname set' );
+is( $host->get_hostname, 'hostname',       'checking set works' );
+is( $host->get_port,     2323,             'checking set works' );
+is( $host->get_username, 'username',       'username is unset' );
+is( $host->get_realname, 'hostname',       'realname set' );
+is( $host->get_geometry, '100x50+100+100', 'geometry set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
@@ -83,6 +67,7 @@ is( $host->get_hostname, 'hostname', 'hostname set' );
 is( $host->get_port,     2323,       'checking set works' );
 is( $host->get_username, q{},        'username is unset' );
 is( $host->get_realname, 'hostname', 'realname set' );
+is( $host->get_geometry, q{},        'geometry set' );
 
 $host->set_username('username');
 
@@ -90,6 +75,7 @@ is( $host->get_hostname, 'hostname', 'checking set works' );
 is( $host->get_port,     2323,       'checking set works' );
 is( $host->get_username, 'username', 'username is unset' );
 is( $host->get_realname, 'hostname', 'realname set' );
+is( $host->get_geometry, q{},        'geometry set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
@@ -105,6 +91,7 @@ is( $host->get_hostname, 'hostname', 'hostname set' );
 is( $host->get_port,     q{},        'checking set works' );
 is( $host->get_username, 'username', 'username is set' );
 is( $host->get_realname, 'hostname', 'realname set' );
+is( $host->get_geometry, q{},        'geometry set' );
 
 $host->set_port(2323);
 
@@ -112,6 +99,7 @@ is( $host->get_hostname, 'hostname', 'checking set works' );
 is( $host->get_port,     2323,       'checking set works' );
 is( $host->get_username, 'username', 'username is set' );
 is( $host->get_realname, 'hostname', 'realname set' );
+is( $host->get_geometry, q{},        'geometry set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
@@ -129,249 +117,481 @@ is( $host->get_hostname, 'hostname', 'checking set works' );
 is( $host->get_port,     2323,       'checking set works' );
 is( $host->get_username, 'username', 'username is set' );
 is( $host->get_realname, 'hostname', 'realname set' );
+is( $host->get_geometry, q{},        'geometry set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
 
-diag('Parsing IPv4 hostname') if ( $ENV{TEST_VERBOSE} );
-
-$host = App::ClusterSSH::Host->parse_host_string('hostname');
-isa_ok( $host, "App::ClusterSSH::Host" );
-is( $host,               'hostname', 'stringify works' );
-is( $host->get_hostname, 'hostname', 'checking set works' );
-is( $host->get_port,     q{},        'checking set works' );
-is( $host->get_username, q{},        'username is unset' );
-is( $host->get_realname, 'hostname', 'realname set' );
-
-$host = App::ClusterSSH::Host->parse_host_string('host%name');
-isa_ok( $host, "App::ClusterSSH::Host" );
-is( $host,               'host%name', 'stringify works' );
-is( $host->get_hostname, 'host%name', 'checking set works' );
-is( $host->get_port,     q{},         'checking set works' );
-is( $host->get_username, q{},         'username is unset' );
-is( $host->get_realname, 'host%name', 'realname set' );
-
-$host = undef;
-is( $host, undef, 'starting afresh' );
-
-$host = App::ClusterSSH::Host->parse_host_string('hostname:2323');
-isa_ok( $host, "App::ClusterSSH::Host" );
-is( $host,               'hostname', 'stringify works' );
-is( $host->get_hostname, 'hostname', 'checking set works' );
-is( $host->get_port,     2323,       'checking set works' );
-is( $host->get_username, q{},        'username is unset' );
-is( $host->get_realname, 'hostname', 'realname set' );
-
-$host = App::ClusterSSH::Host->parse_host_string('host%name:2323');
-isa_ok( $host, "App::ClusterSSH::Host" );
-is( $host,               'host%name', 'stringify works' );
-is( $host->get_hostname, 'host%name', 'checking set works' );
-is( $host->get_port,     2323,        'checking set works' );
-is( $host->get_username, q{},         'username is unset' );
-is( $host->get_realname, 'host%name', 'realname set' );
-
-$host = undef;
-is( $host, undef, 'starting afresh' );
-
-$host = App::ClusterSSH::Host->parse_host_string('username@hostname:2323');
-isa_ok( $host, "App::ClusterSSH::Host" );
-is( $host,               'hostname', 'stringify works' );
-is( $host->get_hostname, 'hostname', 'checking set works' );
-is( $host->get_port,     2323,       'checking set works' );
-is( $host->get_username, 'username', 'username is set' );
-is( $host->get_realname, 'hostname', 'realname set' );
-
-$host = App::ClusterSSH::Host->parse_host_string('username@host%name:2323');
-isa_ok( $host, "App::ClusterSSH::Host" );
-is( $host,               'host%name', 'stringify works' );
-is( $host->get_hostname, 'host%name', 'checking set works' );
-is( $host->get_port,     2323,        'checking set works' );
-is( $host->get_username, 'username',  'username is set' );
-is( $host->get_realname, 'host%name', 'realname set' );
-
-$host = undef;
-is( $host, undef, 'starting afresh' );
-
-$host = App::ClusterSSH::Host->parse_host_string('username@hostname');
-isa_ok( $host, "App::ClusterSSH::Host" );
-is( $host,               'hostname', 'stringify works' );
-is( $host->get_hostname, 'hostname', 'checking set works' );
-is( $host->get_port,     q{},        'checking set works' );
-is( $host->get_username, 'username', 'username is set' );
-is( $host->get_realname, 'hostname', 'realname set' );
-
-$host = App::ClusterSSH::Host->parse_host_string('username@host%name');
-isa_ok( $host, "App::ClusterSSH::Host" );
-is( $host,               'host%name', 'stringify works' );
-is( $host->get_hostname, 'host%name', 'checking set works' );
-is( $host->get_port,     q{},         'checking set works' );
-is( $host->get_username, 'username',  'username is set' );
-is( $host->get_realname, 'host%name', 'realname set' );
-
-diag('Parsing IPv4 IP address') if ( $ENV{TEST_VERBOSE} );
-
-$host = App::ClusterSSH::Host->parse_host_string('127.0.0.1');
-isa_ok( $host, "App::ClusterSSH::Host" );
-is( $host,               '127.0.0.1', 'stringify works' );
-is( $host->get_hostname, '127.0.0.1', 'checking set works' );
-is( $host->get_port,     q{},         'checking set works' );
-is( $host->get_username, q{},         'username is unset' );
-is( $host->get_realname, '127.0.0.1', 'realname set' );
-
-$host = undef;
-is( $host, undef, 'starting afresh' );
-
-$host = App::ClusterSSH::Host->parse_host_string('127.0.0.1:2323');
-isa_ok( $host, "App::ClusterSSH::Host" );
-
-is( $host,               '127.0.0.1', 'stringify works' );
-is( $host->get_hostname, '127.0.0.1', 'checking set works' );
-is( $host->get_port,     2323,        'checking set works' );
-is( $host->get_username, q{},         'username is unset' );
-is( $host->get_realname, '127.0.0.1', 'realname set' );
-
-$host = undef;
-is( $host, undef, 'starting afresh' );
-
-$host = App::ClusterSSH::Host->parse_host_string('username@127.0.0.1:2323');
-isa_ok( $host, "App::ClusterSSH::Host" );
-is( $host,               '127.0.0.1', 'stringify works' );
-is( $host->get_hostname, '127.0.0.1', 'checking set works' );
-is( $host->get_port,     2323,        'checking set works' );
-is( $host->get_username, 'username',  'username is set' );
-is( $host->get_realname, '127.0.0.1', 'realname set' );
-
-$host = undef;
-is( $host, undef, 'starting afresh' );
-
-$host = App::ClusterSSH::Host->parse_host_string('username@127.0.0.1');
-isa_ok( $host, "App::ClusterSSH::Host" );
-
-is( $host,               '127.0.0.1', 'stringify works' );
-is( $host->get_hostname, '127.0.0.1', 'checking set works' );
-is( $host->get_port,     q{},         'checking set works' );
-is( $host->get_username, 'username',  'username is set' );
-is( $host->get_realname, '127.0.0.1', 'realname set' );
-
-diag('Checking IPv6 type addresses') if ( $ENV{TEST_VERBOSE} );
-
-$host = undef;
-is( $host, undef, 'starting afresh' );
-
-$host = App::ClusterSSH::Host->parse_host_string('::1');
-isa_ok( $host, "App::ClusterSSH::Host" );
-is( $host,               '::1', 'stringify works' );
-is( $host->get_hostname, '::1', 'checking set works' );
-is( $host->get_port,     q{},   'port is unset' );
-is( $host->get_username, q{},   'username is unset' );
-is( $host->get_realname, '::1', 'realname set' );
-
-$host = undef;
-is( $host, undef, 'starting afresh' );
-
-$host = App::ClusterSSH::Host->parse_host_string('username@::1');
-isa_ok( $host, "App::ClusterSSH::Host" );
-is( $host,               '::1',      'stringify works' );
-is( $host->get_hostname, '::1',      'checking set works' );
-is( $host->get_port,     q{},        'port is unset' );
-is( $host->get_username, 'username', 'username is set' );
-is( $host->get_realname, '::1',      'realname set' );
-
-$host = undef;
-is( $host, undef, 'starting afresh' );
-
-$host = App::ClusterSSH::Host->parse_host_string('[::1]');
-isa_ok( $host, "App::ClusterSSH::Host" );
-is( $host,               '::1', 'stringify works' );
-is( $host->get_hostname, '::1', 'checking set works' );
-is( $host->get_port,     q{},   'port is unset' );
-is( $host->get_username, q{},   'username is unset' );
-is( $host->get_realname, '::1', 'realname set' );
-
-$host = undef;
-is( $host, undef, 'starting afresh' );
-
-$host = App::ClusterSSH::Host->parse_host_string('username@[::1]');
-isa_ok( $host, "App::ClusterSSH::Host" );
-is( $host,               '::1',      'stringify works' );
-is( $host->get_hostname, '::1',      'checking set works' );
-is( $host->get_port,     q{},        'port is unset' );
-is( $host->get_username, 'username', 'username is set' );
-is( $host->get_realname, '::1',      'realname set' );
-
-$host = undef;
-is( $host, undef, 'starting afresh' );
-
-$host = App::ClusterSSH::Host->parse_host_string('[::1]:22');
-isa_ok( $host, "App::ClusterSSH::Host" );
-is( $host,               '::1', 'stringify works' );
-is( $host->get_hostname, '::1', 'checking set works' );
-is( $host->get_port,     22,    'checking port set' );
-is( $host->get_username, q{},   'username is unset' );
-is( $host->get_realname, '::1', 'realname set' );
-
-$host = undef;
-is( $host, undef, 'starting afresh' );
-
-$host = App::ClusterSSH::Host->parse_host_string('username@[::1]:22');
-isa_ok( $host, "App::ClusterSSH::Host" );
-is( $host,               '::1',      'stringify works' );
-is( $host->get_hostname, '::1',      'checking set works' );
-is( $host->get_port,     22,         'checking port set' );
-is( $host->get_username, 'username', 'username is set' );
-is( $host->get_realname, '::1',      'realname set' );
-
-$host = undef;
-is( $host, undef, 'starting afresh' );
-
-$host = App::ClusterSSH::Host->parse_host_string(
-    '2001:0db8:85a3:0000:0000:8a2e:0370:7334');
-isa_ok( $host, "App::ClusterSSH::Host" );
-is( $host, '2001:0db8:85a3:0000:0000:8a2e:0370:7334', 'stringify works' );
-is( $host->get_hostname,
-    '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
-    'checking set works'
+$host = App::ClusterSSH::Host->new(
+    hostname => 'hostname',
+    username => 'username',
+    port     => 2323,
+    geometry => '100x50+100+100',
 );
-is( $host->get_port,     q{}, 'port is unset' );
-is( $host->get_username, q{}, 'username is unset' );
-is( $host->get_realname, '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
-    'realname set' );
-
-$host = undef;
-is( $host, undef, 'starting afresh' );
-
-trap {
-    $host = App::ClusterSSH::Host->parse_host_string(
-        '2001:0db8:85a3::8a2e:0370:7334');
-};
-is( $trap->leaveby, 'return', 'returned ok' );
-is( $trap->die,     undef,    'returned ok' );
 isa_ok( $host, "App::ClusterSSH::Host" );
-is( $host, '2001:0db8:85a3::8a2e:0370:7334', 'stringify works' );
 
-is( $trap->stdout, q{}, 'Expecting no STDOUT' );
-is( $trap->stderr =~ tr/\n//, 2, 'got correct number of print lines' );
-like(
-    $trap->stderr,
-    qr/^Ambiguous host string: "2001:0db8:85a3::8a2e:0370:7334/,
-    'checking warning output'
-);
-like(
-    $trap->stderr,
-    qr/Assuming you meant "\[2001:0db8:85a3::8a2e:0370:7334\]"?/,
-    'checking warning output'
+is( $host,               'hostname',       'stringify works' );
+is( $host->get_hostname, 'hostname',       'checking set works' );
+is( $host->get_port,     2323,             'checking set works' );
+is( $host->get_username, 'username',       'username is set' );
+is( $host->get_realname, 'hostname',       'realname set' );
+is( $host->get_geometry, '100x50+100+100', 'geometry set' );
+
+diag('Parsing tests') if ( $ENV{TEST_VERBOSE} );
+
+my %parse_tests = (
+    'hostname' => {
+        hostname => 'hostname',
+        port     => q{},
+        username => q{},
+        realname => 'hostname',
+        geometry => q{},
+        type     => 'ipv4',
+    },
+    'hostname.domain.com' => {
+        hostname => 'hostname.domain.com',
+        port     => q{},
+        username => q{},
+        realname => 'hostname.domain.com',
+        geometry => q{},
+        type     => 'ipv4',
+    },
+    'hostname:2323' => {
+        hostname => 'hostname',
+        port     => 2323,
+        username => q{},
+        realname => 'hostname',
+        geometry => q{},
+        type     => 'ipv4',
+    },
+    'hostname:3232=1x1+1+1' => {
+        hostname => 'hostname',
+        port     => 3232,
+        username => q{},
+        realname => 'hostname',
+        geometry => '1x1+1+1',
+        type     => 'ipv4',
+    },
+    'hostname.domain.com:3232' => {
+        hostname => 'hostname.domain.com',
+        port     => 3232,
+        username => q{},
+        realname => 'hostname.domain.com',
+        geometry => q{},
+        type     => 'ipv4',
+    },
+    'hostname.domain.com:3232=1x1+1+1' => {
+        hostname => 'hostname.domain.com',
+        port     => 3232,
+        username => q{},
+        realname => 'hostname.domain.com',
+        geometry => '1x1+1+1',
+        type     => 'ipv4',
+    },
+    'user@hostname' => {
+        hostname => 'hostname',
+        port     => q{},
+        username => 'user',
+        realname => 'hostname',
+        geometry => q{},
+        type     => 'ipv4',
+    },
+    'user@hostname.domain.com' => {
+        hostname => 'hostname.domain.com',
+        port     => q{},
+        username => 'user',
+        realname => 'hostname.domain.com',
+        geometry => q{},
+        type     => 'ipv4',
+    },
+    'user@hostname:2323' => {
+        hostname => 'hostname',
+        port     => 2323,
+        username => 'user',
+        realname => 'hostname',
+        geometry => q{},
+        type     => 'ipv4',
+    },
+    'user@hostname:3232=1x1+1+1' => {
+        hostname => 'hostname',
+        port     => 3232,
+        username => 'user',
+        realname => 'hostname',
+        geometry => '1x1+1+1',
+        type     => 'ipv4',
+    },
+    'user@hostname.domain.com:3232' => {
+        hostname => 'hostname.domain.com',
+        port     => 3232,
+        username => 'user',
+        realname => 'hostname.domain.com',
+        geometry => q{},
+        type     => 'ipv4',
+    },
+    'user@hostname.domain.com:3232=1x1+1+1' => {
+        hostname => 'hostname.domain.com',
+        port     => 3232,
+        username => 'user',
+        realname => 'hostname.domain.com',
+        geometry => '1x1+1+1',
+        type     => 'ipv4',
+    },
+    '127.0.0.1' => {
+        hostname => '127.0.0.1',
+        port     => q{},
+        username => q{},
+        realname => '127.0.0.1',
+        geometry => q{},
+        type     => 'ipv4',
+    },
+    '127.0.0.1:2323' => {
+        hostname => '127.0.0.1',
+        port     => 2323,
+        username => q{},
+        realname => '127.0.0.1',
+        geometry => q{},
+        type     => 'ipv4',
+    },
+    '127.0.0.1:3232=1x1+1+1' => {
+        hostname => '127.0.0.1',
+        port     => 3232,
+        username => q{},
+        realname => '127.0.0.1',
+        geometry => '1x1+1+1',
+        type     => 'ipv4',
+    },
+    'user@127.0.0.1' => {
+        hostname => '127.0.0.1',
+        port     => q{},
+        username => 'user',
+        realname => '127.0.0.1',
+        geometry => q{},
+        type     => 'ipv4',
+    },
+    'user@127.0.0.1:2323' => {
+        hostname => '127.0.0.1',
+        port     => 2323,
+        username => 'user',
+        realname => '127.0.0.1',
+        geometry => q{},
+        type     => 'ipv4',
+    },
+    'user@127.0.0.1=2x2+2+2' => {
+        hostname => '127.0.0.1',
+        port     => q{},
+        username => 'user',
+        realname => '127.0.0.1',
+        geometry => '2x2+2+2',
+        type     => 'ipv4',
+    },
+    'user@127.0.0.1:3232=1x1+1+1' => {
+        hostname => '127.0.0.1',
+        port     => 3232,
+        username => 'user',
+        realname => '127.0.0.1',
+        geometry => '1x1+1+1',
+        type     => 'ipv4',
+    },
+    '::1' => {
+        hostname => '::1',
+        port     => q{},
+        username => q{},
+        realname => '::1',
+        geometry => q{},
+        type     => 'ipv6',
+    },
+    '::1:2323' => {
+        hostname => '::1:2323',
+        port     => q{},
+        username => q{},
+        realname => '::1:2323',
+        geometry => q{},
+        type     => 'ipv6',
+        stderr   => qr{Ambiguous host string:.*Assuming you meant}ms
+    },
+    '::1:2323=3x3+3+3' => {
+        hostname => '::1:2323',
+        port     => q{},
+        username => q{},
+        realname => '::1:2323',
+        geometry => '3x3+3+3',
+        type     => 'ipv6',
+        stderr   => qr{Ambiguous host string:.*Assuming you meant}ms
+    },
+    'user@::1' => {
+        hostname => '::1',
+        port     => q{},
+        username => 'user',
+        realname => '::1',
+        geometry => q{},
+        type     => 'ipv6',
+    },
+    'user@::1:4242' => {
+        hostname => '::1:4242',
+        port     => q{},
+        username => 'user',
+        realname => '::1:4242',
+        geometry => q{},
+        type     => 'ipv6',
+        stderr   => qr{Ambiguous host string:.*Assuming you meant}ms
+    },
+    'user@::1=5x5+5+5' => {
+        hostname => '::1',
+        port     => q{},
+        username => 'user',
+        realname => '::1',
+        geometry => '5x5+5+5',
+        type     => 'ipv6',
+    },
+    'user@::1:4242=5x5+5+5' => {
+        hostname => '::1:4242',
+        port     => q{},
+        username => 'user',
+        realname => '::1:4242',
+        geometry => '5x5+5+5',
+        type     => 'ipv6',
+        stderr   => qr{Ambiguous host string:.*Assuming you meant}ms
+    },
+    '[::1]' => {
+        hostname => '::1',
+        port     => q{},
+        username => q{},
+        realname => '::1',
+        geometry => q{},
+        type     => 'ipv6',
+    },
+    '[::1]:2323' => {
+        hostname => '::1',
+        port     => 2323,
+        username => q{},
+        realname => '::1',
+        geometry => q{},
+        type     => 'ipv6',
+    },
+    '[::1]:2323=3x3+3+3' => {
+        hostname => '::1',
+        port     => 2323,
+        username => q{},
+        realname => '::1',
+        geometry => '3x3+3+3',
+        type     => 'ipv6',
+    },
+    'user@[::1]' => {
+        hostname => '::1',
+        port     => q{},
+        username => 'user',
+        realname => '::1',
+        geometry => q{},
+        type     => 'ipv6',
+    },
+    'user@[::1]:4242' => {
+        hostname => '::1',
+        port     => 4242,
+        username => 'user',
+        realname => '::1',
+        geometry => q{},
+        type     => 'ipv6',
+    },
+    'user@[::1]=5x5+5+5' => {
+        hostname => '::1',
+        port     => q{},
+        username => 'user',
+        realname => '::1',
+        geometry => '5x5+5+5',
+        type     => 'ipv6',
+    },
+    'user@[::1]:4242=5x5+5+5' => {
+        hostname => '::1',
+        port     => 4242,
+        username => 'user',
+        realname => '::1',
+        geometry => '5x5+5+5',
+        type     => 'ipv6',
+    },
+    '2001:0db8:85a3:0000:0000:8a2e:0370:7334' => {
+        hostname => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+        port     => q{},
+        username => q{},
+        realname => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+        geometry => q{},
+        type     => 'ipv6',
+    },
+    'jo@2001:0db8:85a3:0000:0000:8a2e:0370:7334' => {
+        hostname => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+        port     => q{},
+        username => 'jo',
+        realname => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+        geometry => q{},
+        type     => 'ipv6',
+    },
+    '2001:0db8:85a3:0000:0000:8a2e:0370:7334=9x9+9+9' => {
+        hostname => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+        port     => q{},
+        username => q{},
+        realname => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+        geometry => '9x9+9+9',
+        type     => 'ipv6',
+    },
+    'jo@2001:0db8:85a3:0000:0000:8a2e:0370:7334=8x8+8+8' => {
+        hostname => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+        port     => q{},
+        username => 'jo',
+        realname => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+        geometry => '8x8+8+8',
+        type     => 'ipv6',
+    },
+    '2001:0db8:85a3:0000:0000:8a2e:0370:7334:22' => {
+        hostname => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+        port     => 22,
+        username => q{},
+        realname => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+        geometry => q{},
+        type     => 'ipv6',
+    },
+    '[2001:0db8:85a3:0000:0000:8a2e:0370:7334]' => {
+        hostname => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+        port     => q{},
+        username => q{},
+        realname => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+        geometry => q{},
+        type     => 'ipv6',
+    },
+    'jo@[2001:0db8:85a3:0000:0000:8a2e:0370:7334]' => {
+        hostname => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+        port     => q{},
+        username => 'jo',
+        realname => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+        geometry => q{},
+        type     => 'ipv6',
+    },
+    '[2001:0db8:85a3:0000:0000:8a2e:0370:7334]=9x9+9+9' => {
+        hostname => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+        port     => q{},
+        username => q{},
+        realname => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+        geometry => '9x9+9+9',
+        type     => 'ipv6',
+    },
+    'jo@[2001:0db8:85a3:0000:0000:8a2e:0370:7334]=8x8+8+8' => {
+        hostname => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+        port     => q{},
+        username => 'jo',
+        realname => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+        geometry => '8x8+8+8',
+        type     => 'ipv6',
+    },
+    '[2001:0db8:85a3:0000:0000:8a2e:0370:7334]:22' => {
+        hostname => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+        port     => 22,
+        username => q{},
+        realname => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+        geometry => q{},
+        type     => 'ipv6',
+    },
+    '2001:0db8:85a3::8a2e:0370:7334' => {
+        hostname => '2001:0db8:85a3::8a2e:0370:7334',
+        port     => q{},
+        username => q{},
+        realname => '2001:0db8:85a3::8a2e:0370:7334',
+        geometry => q{},
+        type     => 'ipv6',
+        stderr   => qr{Ambiguous host string:.*Assuming you meant}ms
+    },
+    'pete@2001:0db8:85a3::8a2e:0370:7334' => {
+        hostname => '2001:0db8:85a3::8a2e:0370:7334',
+        port     => q{},
+        username => 'pete',
+        realname => '2001:0db8:85a3::8a2e:0370:7334',
+        geometry => q{},
+        type     => 'ipv6',
+        stderr   => qr{Ambiguous host string:.*Assuming you meant}ms
+    },
+    'pete@2001:0db8:85a3::8a2e:0370:7334=2x3+4+5' => {
+        hostname => '2001:0db8:85a3::8a2e:0370:7334',
+        port     => q{},
+        username => 'pete',
+        realname => '2001:0db8:85a3::8a2e:0370:7334',
+        geometry => '2x3+4+5',
+        type     => 'ipv6',
+        stderr   => qr{Ambiguous host string:.*Assuming you meant}ms
+    },
+    '2001:0db8:85a3::8a2e:0370:7334=2x3+4+5' => {
+        hostname => '2001:0db8:85a3::8a2e:0370:7334',
+        port     => q{},
+        username => q{},
+        realname => '2001:0db8:85a3::8a2e:0370:7334',
+        geometry => '2x3+4+5',
+        type     => 'ipv6',
+        stderr   => qr{Ambiguous host string:.*Assuming you meant}ms
+    },
+    '[2001:0db8:85a3::8a2e:0370:7334]' => {
+        hostname => '2001:0db8:85a3::8a2e:0370:7334',
+        port     => q{},
+        username => q{},
+        realname => '2001:0db8:85a3::8a2e:0370:7334',
+        geometry => q{},
+        type     => 'ipv6',
+    },
+    'pete@[2001:0db8:85a3::8a2e:0370:7334]' => {
+        hostname => '2001:0db8:85a3::8a2e:0370:7334',
+        port     => q{},
+        username => 'pete',
+        realname => '2001:0db8:85a3::8a2e:0370:7334',
+        geometry => q{},
+        type     => 'ipv6',
+    },
+    'pete@[2001:0db8:85a3::8a2e:0370:7334]=2x3+4+5' => {
+        hostname => '2001:0db8:85a3::8a2e:0370:7334',
+        port     => q{},
+        username => 'pete',
+        realname => '2001:0db8:85a3::8a2e:0370:7334',
+        geometry => '2x3+4+5',
+        type     => 'ipv6',
+    },
+    '[2001:0db8:85a3::8a2e:0370:7334]=2x3+4+5' => {
+        hostname => '2001:0db8:85a3::8a2e:0370:7334',
+        port     => q{},
+        username => q{},
+        realname => '2001:0db8:85a3::8a2e:0370:7334',
+        geometry => '2x3+4+5',
+        type     => 'ipv6',
+    },
 );
 
-is( $host->get_hostname,
-    '2001:0db8:85a3::8a2e:0370:7334',
-    'checking set works'
-);
-is( $host->get_port,     q{}, 'port is unset' );
-is( $host->get_username, q{}, 'username is unset' );
-is( $host->get_realname, '2001:0db8:85a3::8a2e:0370:7334', 'realname set' );
+foreach my $ident ( keys(%parse_tests) ) {
+    trap {
+        $host = App::ClusterSSH::Host->parse_host_string($ident);
+    };
+    is( $trap->leaveby, 'return', 'returned ok' );
 
-$host = undef;
-is( $host, undef, 'starting afresh' );
+    #is( $trap->die,     undef,    'returned ok' );
+    #is( $trap->stdout,  q{},      'no stdout' );
+    #is( $trap->stderr,  q{},      'no stderr' );
+    isa_ok( $host, "App::ClusterSSH::Host" );
+    is( $host, $parse_tests{$ident}{hostname}, 'stringify works' );
+
+    for my $trap_undef (qw/ die /) {
+        is( $trap->$trap_undef,
+            $parse_tests{$ident}{$trap_undef},
+            "$ident $trap_undef"
+        );
+    }
+
+    for my $trap_empty (qw/ stdout stderr /) {
+        like(
+            $trap->$trap_empty,
+            $parse_tests{$ident}{$trap_empty} || qr{^$},
+            "$ident $trap_empty"
+        );
+    }
+    for my $attr (qw/ hostname type port username realname geometry /) {
+        my $method = "get_$attr";
+        is( $host->$method,
+            $parse_tests{$ident}{$attr},
+            "$ident $attr: " . $host->$method
+        );
+    }
+}
 
 trap {
     $host = App::ClusterSSH::Host->new(
@@ -409,31 +629,7 @@ for my $hostname (
     is( $host->check_ssh_hostname, 1,
         'check_ssh_hostname ok for ' . $hostname );
     is( $host->get_realname, $hostname, 'realname set' );
-
+    is( $host->get_geometry, q{},       'geometry set' );
 }
-
-#$host = undef;
-#is( $host, undef, ' starting afresh for ssh hostname checks ' );
-#
-#trap {
-#    $host = App::ClusterSSH::Host->new( hostname => ' ssh_text ', ssh_config => $Bin . ' / 10 host_ssh_config ' );
-#};
-#is( $trap->leaveby, ' return ', ' returned ok ' );
-#is( $trap->die,     undef,    ' returned ok ' );
-#isa_ok( $host, "App::ClusterSSH::Host" );
-#is( $host, ' ssh_text ', ' stringify works ' );
-#is( $host->check_ssh_hostname, 0, ' check_ssh_hostname ok ');
-#
-#$host = undef;
-#is( $host, undef, ' starting afresh for ssh hostname checks ' );
-#
-#trap {
-#    $host = App::ClusterSSH::Host->new( hostname => ' ssh_text ', ssh_config => $Bin . ' / 10 host_ssh_config ' );
-#};
-#is( $trap->leaveby, ' return ', ' returned ok ' );
-#is( $trap->die,     undef,    ' returned ok ' );
-#isa_ok( $host, "App::ClusterSSH::Host" );
-#is( $host, ' ssh_text ', ' stringify works ' );
-#is( $host->check_ssh_hostname, 0, ' check_ssh_hostname ok ');
 
 done_testing();
