@@ -14,7 +14,7 @@ use Exception::Class (
     'App::ClusterSSH::Exception::LoadFile',
 );
 
-# Dont use SVN revision as it can cause problems
+# Don't use SVN revision as it can cause problems
 use version;
 our $VERSION = version->new('0.02');
 

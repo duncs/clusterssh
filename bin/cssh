@@ -36,7 +36,7 @@ the same configuration or commands must be run on each node within the
 cluster.  Performing these commands all at once via this tool ensures all
 nodes are kept in sync.
 
-Connections are opened via ssh so a correctly installed and configured
+Connections are opened via ssh, so a correctly installed and configured
 ssh installation is required.  If, however, the program is called by "crsh"
 then the rsh protocol is used (and the communications channel is insecure),
 or by "ctel" then telnet is used, or by "ccon" then console is used.
@@ -44,8 +44,8 @@ or by "ctel" then telnet is used, or by "ccon" then console is used.
 Extra caution should be taken when editing system files such as
 /etc/inet/hosts as lines may not necessarily be in the same order.  Assuming
 line 5 is the same across all servers and modifying that is dangerous.
-Better to search for the specific line to be changed and double-check before
-changes are committed.
+It's better to search for the specific line to be changed and double-check
+before changes are committed.
 
 =head2 Further Notes
 
@@ -113,8 +113,8 @@ C<< cssh -e {single host name} >>
 
 This will test the mechanisms used to open windows to hosts.  This could 
 be due to either the C<-xrm> terminal option which enables C<AllowSendEvents> 
-(some terminal do not require this option, other terminals have another 
-method for enabling it - see your terminal documention) or the 
+(some terminals do not require this option, other terminals have another 
+method for enabling it - see your terminal documentation) or the 
 C<ConnectTimeout> ssh option (see the configuration option C<-o> or file 
 C<$HOME/.clusterssh/config> below to resolve this).
 
@@ -129,7 +129,7 @@ Default options are shown as appropriate.
 
 =item --action,-a '<command>'
 
-Run the command in each session, i.e. C<-a 'vi /etc/hosts'> to drop straight
+Run the command in each session, e.g. C<-a 'vi /etc/hosts'> to drop straight
 into a vi session.  NOTE: not all communications methods support this (ssh 
 and rsh should, telnet and console will not).
 
@@ -165,7 +165,7 @@ repeated multiple times.  Maximum level is 4.
 
 =item --evaluate,-e [user@]<hostname>[:port]
 
-Display and evaluate the terminal and connection arguments so display any
+Display and evaluate the terminal and connection arguments to display any
 potential errors.  The <hostname> is required to aid the evaluation.  
 
 =item --font,-f "5x8"
@@ -182,7 +182,7 @@ List available cluster tags.
 
 =item --man,-H
 
-Show full help test (the man page), and exit
+Show full help text (the man page), and exit
 
 =item --master,-M <master>
 
@@ -195,7 +195,7 @@ default set at compile time (typically ``console'').
 
 Specify arguments to be passed to ssh or rsh when making the connection.  
 
-B<NOTE:> any "generic" change to the method (i.e. specifying the ssh port to use)
+B<NOTE:> any "generic" change to the method (e.g., specifying the ssh port to use)
 should be done in the medium's own config file (see C<ssh_config> and 
 F<$HOME/.ssh/config>).
 
@@ -251,7 +251,7 @@ Show version information and exit
 
 =head1 ARGUMENTS
 
-The following arguments are support:
+The following arguments are supported:
 
 =over
 
@@ -259,11 +259,12 @@ The following arguments are support:
 
 Open an xterm to the given hostname and connect to the administration
 console.  An optional port number can be used if sshd is not listening
-on standard port (e.g not listening on port 22) and ssh_config cannot be used.
+on the standard port (i.e., not listening on port 22) and ssh_config cannot
+be used.
 
 =item <tag> ...
 
-Open a series of xterms defined by <tag> in one of the suplimentary 
+Open a series of xterms defined by <tag> in one of the supplementary
 configuration files (see L</"FILES">).
 
 Note: specifying a username on a cluster tag will override any usernames 
@@ -284,7 +285,7 @@ Quit the program and close all connections and windows
 
 =item Control-+
 
-Open the 'Add Host(s) or Cluster(s)' dialogue box.  Mutiple host or cluster 
+Open the 'Add Host(s) or Cluster(s)' dialogue box.  Multiple host or cluster 
 names can be entered, separated by spaces.
 
 =item Alt-n
@@ -318,7 +319,7 @@ S<$ cssh -T 'Web Farm Cluster 1' farm1>
 
 =item Connect to different servers using different login names.  NOTE: this can 
 also be achieved by setting up appropriate options in the F<.ssh/config> file.
-Do not close cssh when last terminal exits.
+Do not close cssh when the last terminal exits.
 
 S<$ cssh -Q user1@server1 admin@server2>
 
@@ -349,11 +350,11 @@ S<$ ccon -M master server1 server2>
 These files contain a list of tags to server names mappings.  When any name
 is used on the command line it is checked to see if it is a tag.
 If it is a tag, then the tag is replaced with the list of servers.  The 
-formated is as follows:
+format is as follows:
 
 S<< <tag> [user@]<server> [user@]<server> [...] >>
 
-  i.e.
+  e.g.
 
   # List of servers in live
   live admin1@server1 admin2@server2 server3 server4 
@@ -362,7 +363,7 @@ All comments (marked by a #) and blank lines are ignored.  Tags may be
 nested, but be aware of using recursive tags as they are not checked for.
 
 Extra cluster files may also be specified either as an option on the 
-command line (see C<cluster-file>) or in the users F<$HOME/.clusterssh/config> 
+command line (see C<cluster-file>) or in the user's F<$HOME/.clusterssh/config> 
 file (see C<extra_cluster_file> configuration option).
 
 NOTE: the last tag read overwrites any pre-existing tag of that name
@@ -381,8 +382,8 @@ S<< <host> <tag> [...] >>
 This allows one host to be specified as a member of a number of tags.  This
 format can be clearer than using F<clusters> files.
 
-Extra tag files may be spcieid either an an option (see C<tag-file>) or within
-the users F<$HOME/.clusterssh/config> file (see C<extra_tag_file> 
+Extra tag files may be specified either as an option (see C<tag-file>) or within
+the user's F<$HOME/.clusterssh/config> file (see C<extra_tag_file> 
 configuration option).
 
 NOTE: All tags are added together
@@ -394,7 +395,7 @@ Default options are overwritten first by the global file, and then by the
 user file.
 
 B<NOTE:> values for entries do not need to be quoted unless it is required 
-for passing arguments, i.e.
+for passing arguments, e.g.
 
   terminal_allow_send_events="-xrm '*.VT100.allowSendEvents:true'"
 
@@ -408,7 +409,7 @@ should be written as
 
 Close terminal window after this many seconds.  If set to 0 will instead wait 
 on input from the user in each window before closing. Can be overridden
-by C<-K> on the command line
+by C<-K> on the command line.
 
 =item auto_quit = yes
 
@@ -425,11 +426,11 @@ in the F</etc/clusters> file.  The format is:
  <tag2> = user@host4 user@host5 host6
  <tag3> = <tag1> <tag2>
 
-As with the F</etc/clusters> file, be sure not to create recursivly nested tags.
+As with the F</etc/clusters> file, be sure not to create recursively nested tags.
 
 =item comms = ssh
 
-Sets the default communication method (initially taken from the name of 
+Sets the default communication method (initially taken from the name of the
 program, but can be overridden here).
 
 =item console_position = <null>
@@ -451,8 +452,8 @@ output ignored.
 =item extra_cluster_file = <null>
 
 Define an extra cluster file in the format of F</etc/clusters>.  Multiple
-files can be specified, seperated by commas.  Both ~ and $HOME are acceptable
-as a to reference the users home directory, i.e.
+files can be specified, separated by commas.  Both ~ and $HOME are acceptable
+as a reference to the user's home directory, i.e.
 
  extra_cluster_file = ~/clusters, $HOME/clus
 
@@ -510,7 +511,8 @@ pasting text into the main console.
 =item macros_enabled = yes
 
 Enable or disable macro replacement.  Note: this affects pasting into the 
-main console,  items on the 'Send' menu and key_clientname, key_localname, key_servername and key_username.
+main console, items on the 'Send' menu and key_clientname, key_localname,
+key_servername and key_username.
 
 =item max_addhost_menu_cluster_items = 6
 
@@ -553,7 +555,7 @@ arguments).
 
 B<NOTE:> The given defaults are based on OpenSSH, not commercial ssh software.
 
-B<NOTE:> Any "generic" change to the method (i.e. specifying the ssh port to use)
+B<NOTE:> Any "generic" change to the method (e.g., specifying the ssh port to use)
 should be done in the medium's own config file (see C<ssh_config> and 
 F<$HOME/.ssh/config>).
 
@@ -565,7 +567,7 @@ F<$HOME/.ssh/config>).
 
 =item screen_reserve_right = 0
 
-Number of pixels from the screen side to reserve when calculating screen 
+Number of pixels from the screen's side to reserve when calculating screen 
 geometry for tiling.  Setting this to something like 50 will help keep cssh 
 from positioning windows over your window manager's menu bar if it draws one 
 at that side of the screen.
@@ -578,7 +580,7 @@ Depending on the value of comms, set the path of the communication binary.
 
 =item terminal = /path/to/terminal
 
-Path to the x-windows terminal used for the client.
+Path to the X-Windows terminal used for the client.
 
 =item terminal_args = <blank>
 
@@ -597,7 +599,7 @@ Font to use in the terminal windows.  Use standard X font notation.
 
 =item terminal_reserve_right = 0
 
-Number of pixels from the terminal side to reserve when calculating screen 
+Number of pixels from the terminal's side to reserve when calculating screen 
 geometry for tiling.  Setting these will help keep cssh from positioning 
 windows over your scroll and title bars or otherwise overlapping the windows
 too much.
@@ -613,15 +615,15 @@ terminal color.
 
 =item terminal_bg_style = dark
 
-If set to dark, the the terminal background will be set to black and
+If set to dark, the terminal background will be set to black and
 the foreground to the pseudo-random color.  If set to light, then the
 foreground will be black and the background the pseudo-random color.  If
 terminal_colorize is zero, then this option has no effect.
 
 =item terminal_size = 80x24
 
-Initial size of terminals to use (note: the number of lines (24) will be 
-decreased when resizing terminals for tiling, not the number of characters (80))
+Initial size of terminals to use. NOTE: the number of lines (24) will be 
+decreased when resizing terminals for tiling, not the number of characters (80).
 
 =item terminal_title_opt = -T
 
@@ -680,7 +682,7 @@ default entry could be written as:
     <menu title="Use Macros">
         <toggle/>
         <accelerator>ALT-p</accelerator>
-    </dmenu>
+    </menu>
     <menu title="Remote Hostname">
         <command>%s</command>
         <accelerator>ALT-n</accelerator>
@@ -718,7 +720,7 @@ B<Caveats:>
 
 =item The format of the file may change in the future
 
-=item If the file exists the default entry (Hostname) is not added
+=item If the file exists, the default entry (Hostname) is not added
 
 =back
 
@@ -757,15 +759,15 @@ B<NOTE:> requires L<XML::Simple> to be installed
 
 Catering for IPv6 addresses is minimal.  This is due to a conflict 
 between IPv6 addresses and port numbers within the same 
-server definition since they both use the same seperator, i.e. is the 
+server definition since they both use the same separator, i.e. is the 
 following just an IPv6 address, or an address + port number of 2323?
 
     2001:db8::1428:2323
 
-Exactly - I cannot tell either.  the IPv6 address without a port is assumed
+Exactly - I cannot tell either.  The IPv6 address without a port is assumed
 in those cases where it cannot be determined and a warning is issued.
 
-Possible work arounds include:
+Possible workarounds include:
 
 =over 4
 
@@ -780,7 +782,7 @@ as appropriate so there is no ambiguity
 =item b.
 
 Use the full IPv6 address if also using a port number - the 8th colon
-is assumed to be the port seperator.
+is assumed to be the port separator.
 
 =item c.
 
@@ -791,7 +793,7 @@ lookup mechanism and use the hostname instead of the address.
 
 =item 2. 
 
-Swapping virtual desktops can a redraw of all the terminal windows.  This
+Swapping virtual desktops can cause a redraw of all the terminal windows.  This
 is due to a lack of distinction within Tk between switching desktops and 
 minimising/maximising windows.  Until Tk can tell the difference between the 
 two events, there is no fix (apart from rewriting everything directly in X)
@@ -814,13 +816,13 @@ C<< cssh -e [user@]<hostname>[:port] >>
 This performs two tests to confirm cssh is able to work properly with the
 settings provided within the F<$HOME/.clusterssh/config> file (or internal defaults).
 
-	1. test the terminal window works with the options provided
+	1. Test the terminal window works with the options provided
 
-	2. test ssh works to a host with the configured arguments
+	2. Test ssh works to a host with the configured arguments
 
 Configuration options to watch for in ssh are
 
-	- Doesnt understand "-o ConnectTimeout=10" - remove the option 
+	- Doesn't understand "-o ConnectTimeout=10" - remove the option 
 	  in the F<$HOME/.clusterssh/config> file
 
 	- OpenSSH-3.8 using untrusted ssh tunnels - use "-Y" instead of "-X"
@@ -842,7 +844,7 @@ C<< cat /etc/csshrc $HOME/.clusterssh/config >>
 
 =item *
 
-Use the debug switches (-d, -D, or -dD) will turn on debugging output.  
+Using the debug switches (-d, -D, or -dD) will turn on debugging output.  
 However, please only use this option with one host at a time, 
 i.e. "cssh -d <host>" due to the amount of output produced (in both main 
 and child windows).
