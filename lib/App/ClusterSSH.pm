@@ -46,7 +46,7 @@ use Socket;
 # load cfg files from options
 # overlay rest of cmd line args onto options
 # record all clusters
-# parse givwen tags/hostnames and resolve to connections
+# parse given tags/hostnames and resolve to connections
 # open terminals
 # optionally open console if required
 
@@ -178,10 +178,9 @@ sub terminate_host($) {
 sub exit_prog() {
     logmsg( 3, "Exiting via normal routine" );
 
-    # for each of the client windows, send a kill
-
-    # to make sure we catch all children, even when they havnt
-    # finished starting or received teh kill signal, do it like this
+    # for each of the client windows, send a kill.
+    # to make sure we catch all children, even when they haven't
+    # finished starting or received the kill signal, do it like this
     while (%servers) {
         foreach my $svr ( keys(%servers) ) {
             terminate_host($svr);
@@ -341,7 +340,7 @@ sub load_keyboard_map() {
         }
     }
 
-    # dont know these two key combs yet...
+    # don't know these two key combs yet...
     #$keyboardmap{ $keycodetosym { $keyboard[$_][4] } } = $_ + $min;
     #$keyboardmap{ $keycodetosym { $keyboard[$_][5] } } = $_ + $min;
 
@@ -634,7 +633,7 @@ sub send_resizemove($$$$$) {
         32,
         'Replace',
 
-        # create data struct on fly to set bitwise flags
+        # create data struct on-the-fly to set bitwise flags
         pack( 'LLLLL' . 'x[L]' x 12, 1 | 2, $x_pos, $y_pos, $x_siz, $y_siz ),
     );
 
@@ -719,7 +718,7 @@ sub open_client_windows(@) {
         mkfifo( $servers{$server}{pipenm}, 0600 )
             or die("Cannot create pipe: $!");
 
-       # NOTE: the pid is re-fetched from the xterm window (via helper_script)
+       # NOTE: the PID is re-fetched from the xterm window (via helper_script)
        # later as it changes and we need an accurate PID as it is widely used
         $servers{$server}{pid} = fork();
         if ( !defined( $servers{$server}{pid} ) ) {
@@ -755,7 +754,7 @@ sub open_client_windows(@) {
         }
     }
 
-    # Now all the windows are open, get all their window id's
+    # Now all the windows are open, get all their window IDs
     foreach my $server ( keys(%servers) ) {
         next if ( defined( $servers{$server}{active} ) );
 
@@ -881,7 +880,7 @@ sub show_console() {
     return $self;
 }
 
-# leave function def open here so we can be flexible in how it called
+# leave function def open here so we can be flexible in how it's called
 sub retile_hosts {
     my ( $self, $force ) = @_;
     $force ||= "";
@@ -1234,7 +1233,7 @@ sub build_hosts_menu() {
 
     logmsg( 3, "Menu deleted" );
 
-    # add back the seperator
+    # add back the separator
     $menus{hosts}->separator;
 
     logmsg( 3, "Parsing list" );
@@ -1880,7 +1879,7 @@ sub run {
     my ($self) = @_;
 ### main ###
 
-    # Note: getopts returned "" if it finds any options it doesnt recognise
+    # Note: getopts returns "" if it finds any options it doesn't recognise
     # so use this to print out basic help
     pod2usage( -verbose => 1 )
         if ( !GetOptions( \%options, @options_spec ) );
@@ -2061,7 +2060,7 @@ for F<cssh>, F<crsh>, F<ctel>, F<ccon>, or F<cscp> instead.
 
 =head1 DESCRIPTION
 
-THis is the core for App::ClusterSSH.  You should probably look at L<cssh> 
+This is the core for App::ClusterSSH.  You should probably look at L<cssh> 
 instead.
 
 =head1 SUBROUTINES/METHODS
