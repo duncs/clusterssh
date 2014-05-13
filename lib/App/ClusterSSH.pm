@@ -405,12 +405,14 @@ sub resolve_names(@) {
             my $hostobj = gethostbyname($dirty);
             if ( defined($hostobj) ) {
                 my @alladdrs = map { inet_ntoa($_) } @{ $hostobj->addr_list };
+                $self->cluster->register_tag( $dirty, @alladdrs );
                 if ( $#alladdrs > 0 ) {
-                    $self->cluster->register_tag( $dirty, @alladdrs );
                     logmsg( 3, 'Expanded to ',
-                        $self->cluster->get_tag($dirty) );
+                        join(' ', $self->cluster->get_tag($dirty) ) );
+                    @tag_list = $self->cluster->get_tag($dirty);
                 }
                 else {
+                    # don't expand if there is only one record found
                     logmsg( 3, 'Only one A record' );
                 }
             }
