@@ -173,7 +173,10 @@ sub get_tag {
 
 sub list_tags {
     my ($self) = @_;
-    return sort keys( %{ $self->{tags} } );
+    return
+        wantarray
+        ? sort keys( %{ $self->{tags} } )
+        : scalar keys( %{ $self->{tags} } );
 }
 
 sub dump_tags {

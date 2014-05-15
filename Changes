@@ -3,6 +3,7 @@
 - Correct autoclose short option to what is actually used (Github issue 4) (thanks to Simon Fraser)
 - Fix 'use_all_a_records' option (Github issue: 5) (thanks to Simon Fraser)
 - Fix 'title' option (thanks to Barry Roberts)
+- Fix 'Add host or cluster' window to contain cluster names
 
 4.02_03 2014-01-31 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Fix 'File->Show History' (Sf support request 41)
