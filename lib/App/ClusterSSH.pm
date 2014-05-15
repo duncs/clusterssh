@@ -1924,6 +1924,11 @@ sub run {
 
     $self->config->load_configs( $options{'config-file'} );
 
+    if ( $options{title} ) {
+        $self->config->{title} = $options{title};
+        logmsg( 2, "Title: " . $self->config->{title} );
+    }
+
     if ( $options{use_all_a_records} ) {
         $self->config->{use_all_a_records}
             = !$self->config->{use_all_a_records} || 0;
