@@ -1,4 +1,4 @@
-4.02_04 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net>
+4.02_04 2014-05-17 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Amend 'Changes' file format to match CPAN specs (see CPAN::Changes)
 - Correct autoclose short option to what is actually used (Github issue 4) (thanks to Simon Fraser)
 - Fix 'use_all_a_records' option (Github issue: 5) (thanks to Simon Fraser)

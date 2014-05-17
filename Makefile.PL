@@ -5,6 +5,7 @@ WriteMakefile
   'NAME' => 'App::ClusterSSH',
   'VERSION_FROM' => 'lib/App/ClusterSSH.pm',
   'PREREQ_PM' => {
+                   'CPAN::Changes' => '0.27',
                    'Exception::Class' => '1.31',
                    'File::Temp' => 0,
                    'File::Which' => 0,
