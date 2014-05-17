@@ -143,7 +143,7 @@ Run the command in each session, e.g. C<-a 'vi /etc/hosts'> to drop straight
 into a vi session.  NOTE: not all communications methods support this (ssh 
 and rsh should, telnet and console will not).
 
-=item --autoclose,-A <seconds>
+=item --autoclose,-K <seconds>
 
 Number of seconds to wait before closing finished terminal windows.
 
