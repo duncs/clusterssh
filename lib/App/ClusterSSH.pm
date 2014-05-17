@@ -12,6 +12,7 @@ use App::ClusterSSH::Host;
 use App::ClusterSSH::Config;
 use App::ClusterSSH::Helper;
 use App::ClusterSSH::Cluster;
+use App::ClusterSSH::Getopt;
 
 use FindBin qw($Script);
 
@@ -58,6 +59,7 @@ sub new {
     $self->{config}  = App::ClusterSSH::Config->new();
     $self->{helper}  = App::ClusterSSH::Helper->new();
     $self->{cluster} = App::ClusterSSH::Cluster->new();
+    $self->{options}  = App::ClusterSSH::Getopt->new();
 
     # catch and reap any zombies
     $SIG{CHLD} = \&REAPER;
@@ -78,6 +80,21 @@ sub cluster {
 sub helper {
     my ($self) = @_;
     return $self->{helper};
+}
+
+sub options {
+    my ($self) = @_;
+    return $self->{options};
+}
+
+sub getopts {
+    my ($self) = @_;
+    return $self->{options}->getopts;
+}
+
+sub add_option {
+    my ($self, %args) = @_;
+    return $self->{options}->add_option(%args);
 }
 
 sub REAPER {
@@ -1877,6 +1894,11 @@ sub populate_send_menu {
 
 sub run {
     my ($self) = @_;
+
+    $self->getopts;
+
+    warn "THROUGH";
+    #die;
 ### main ###
 
     # Note: getopts returns "" if it finds any options it doesn't recognise

@@ -1,11 +1,14 @@
 use strict;
 use warnings;
+use Cwd;
 
 use Module::Build;
 
 my $class = Module::Build->subclass(
     class => "Module::Build::Custom",
     code  => q{
+        use File::Slurp;
+
         sub ACTION_email {
             my ($self, @args) = @_;
 
@@ -39,6 +42,40 @@ SF release: http://sourceforge.net/projects/clusterssh/files/2.%20ClusterSSH%20S
 SF/net git repo: https://sourceforge.net/scm/?type=git&group_id=89139
 ==========
 EOF
+            return $self;
+        }
+
+        sub ACTION_build {
+            my ($self, @args) = @_;
+
+            print "Building pod files",$/;
+
+            my $common_file = File::Slurp::read_file('pod_data/common_file');
+            die "Failed to read 'pod_data/common_file'" unless($common_file);
+
+            # Each file in bin/ should have a file within pod_data.
+            # If not, there is a problem.
+            my @files=glob('bin/*');
+            foreach my $binfile (@files) {
+                next unless(-f $binfile);
+                (my $podfile = $binfile) =~ s!bin!pod_data!;
+                warn "checking $podfile",$/;
+
+                if(!-f $podfile) {
+                    warn "$podfile does not exist",$/;
+                    next;
+                }
+                my $pod = read_file( $podfile );
+                warn "Unable to read '$podfile'" unless ($pod);
+
+                $pod =~ s/%FILES%/$common_file/;
+
+                my $options = qx{ $binfile -h 2>&1 };
+                warn "Unable to run '$binfile -h'" unless ($options);
+
+            }
+
+            $self->SUPER::ACTION_build;
         }
     },
 );
@@ -76,6 +113,7 @@ my $build = $class->new(
         'Test::DistManifest'  => 0,
         'Test::Differences'   => 0,
         'CPAN::Changes'       => 0.27,
+        'File::Slurp'         => 0,
     },
     configure_requires => { 'Module::Build' => 0, },
     add_to_cleanup     => ['App-ClusterSSH-*'],
