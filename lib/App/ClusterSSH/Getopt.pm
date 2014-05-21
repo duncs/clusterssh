@@ -13,26 +13,6 @@ use FindBin qw($Script);
 
 use base qw/ App::ClusterSSH::Base /;
 
-my %command_options = (
-    'debug:+' => {
-        spec => 'debug:+',
-        help =>
-            "--debug [number]\n\t".$self->loc("Enable debugging.  Either a level can be provided or the option can be repeated multiple times.  Maximum level is 4."),
-        default => 0,
-    },
-    'help|h' =>
-        { help => "--help, -h\n\t".$self->loc("Show help text and exit"), },
-    'usage|?' => 
-        { help => '--usage, -?\n\t'.$self->loc('Show basic usage and exit'), },
-    'version|v' =>
-        { help => "--version, -v\n\t".$self->loc("Show version information and exit"), },
-    'man|H' => {
-        help => "--man, -H\n\t".$self->loc("Show full help text (the man page) and exit"),
-    },
-    'generate-pod' => {
-        hidden => 1,
-    },
-);
 
 # basic setup that is over-rideable
 my %setup = (
@@ -44,12 +24,34 @@ sub new {
 
     my $self = $class->SUPER::new(%setup, %args);
 
+    #my %command_options = (
+    $self->{command_options} = {
+        'debug:+' => {
+            spec => 'debug:+',
+            help =>
+                "--debug [number]\n\t".$self->loc("Enable debugging.  Either a level can be provided or the option can be repeated multiple times.  Maximum level is 4."),
+            default => 0,
+        },
+        'help|h' =>
+            { help => "--help, -h\n\t".$self->loc("Show help text and exit"), },
+        'usage|?' => 
+            { help => '--usage, -?\n\t'.$self->loc('Show basic usage and exit'), },
+        'version|v' =>
+            { help => "--version, -v\n\t".$self->loc("Show version information and exit"), },
+        'man|H' => {
+            help => "--man, -H\n\t".$self->loc("Show full help text (the man page) and exit"),
+        },
+        'generate-pod' => {
+            hidden => 1,
+        },
+    };
+
     return $self;
 }
 
 sub add_option {
     my ( $self, %args ) = @_;
-    $command_options{ delete $args{spec} } = \%args;
+    $self->{command_options}->{ delete $args{spec} } = \%args;
     return $self;
 }
 
@@ -73,12 +75,12 @@ sub getopts {
     my ($self) = @_;
 
     use Data::Dump qw(dump);
-    warn "master: ", dump \%command_options;
+    #warn "master: ", dump \%command_options;
 
     warn "ARGV: ", dump @ARGV;
 
     my $options = {};
-    if ( !GetOptions( $options, keys(%command_options) ) ) {
+    if ( !GetOptions( $options, keys(%{$self->{command_options}}) ) ) {
         $self->usage;
         $self->exit;
     }
@@ -115,14 +117,14 @@ sub getopts {
 sub usage {
     my ($self) = @_;
 
-    print $self->loc('US
+    #print $self->loc('US
 
     my $options_pod;
     $options_pod .= "=over\n\n";
 
-    foreach my $option ( sort keys(%command_options) ) {
+    foreach my $option ( sort keys(%{ $self->{command_options}}) ) {
         my ( $short, $long )
-            = $command_options{$option}{help} =~ m/^(.*)\n\t(.*)/;
+            = $self->{command_options}{$option}{help} =~ m/^(.*)\n\t(.*)/;
         $options_pod .= "=item $short\n\n";
         $options_pod .= "$long\n\n";
     }
