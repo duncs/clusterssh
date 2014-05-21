@@ -50,28 +50,31 @@ EOF
 
             print "Building pod files",$/;
 
-            my $common_file = File::Slurp::read_file('pod_data/common_file');
-            die "Failed to read 'pod_data/common_file'" unless($common_file);
+#            my $common_file = File::Slurp::read_file('pod_data/common_file');
+#            die "Failed to read 'pod_data/common_file'" unless($common_file);
 
             # Each file in bin/ should have a file within pod_data.
             # If not, there is a problem.
             my @files=glob('bin/*');
             foreach my $binfile (@files) {
                 next unless(-f $binfile);
-                (my $podfile = $binfile) =~ s!bin!pod_data!;
+#                (my $podfile = $binfile) =~ s!bin!pod_data!;
                 warn "checking $podfile",$/;
 
-                if(!-f $podfile) {
-                    warn "$podfile does not exist",$/;
-                    next;
-                }
-                my $pod = read_file( $podfile );
-                warn "Unable to read '$podfile'" unless ($pod);
+#                if(!-f $podfile) {
+#                    warn "$podfile does not exist",$/;
+#                    next;
+#                }
+#                my $pod = read_file( $podfile );
+#                warn "Unable to read '$podfile'" unless ($pod);
+#
+#                $pod =~ s/%FILES%/$common_file/;
+#
+#                my $options = qx{ $binfile -h 2>&1 };
+#                warn "Unable to run '$binfile -h'" unless ($options);
 
-                $pod =~ s/%FILES%/$common_file/;
-
-                my $options = qx{ $binfile -h 2>&1 };
-                warn "Unable to run '$binfile -h'" unless ($options);
+                my $pod = qx { $binfile --generate-pod 2>&1 };
+                write_file("${bifile}.pod", $pod);
 
             }
 

@@ -16,6 +16,10 @@ $app->add_option(
     help => "--freddo\n\tSome help output",
 );
 
+use Data::Dump qw(dump);
+warn dump  $app;
+die;
+
 $app->run();
 
 __DATA__

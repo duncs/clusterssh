@@ -9,6 +9,7 @@ our $VERSION = version->new('0.01');
 use Carp;
 use Try::Tiny;
 use Getopt::Long qw(:config no_ignore_case bundling no_auto_abbrev);
+use FindBin qw($Script);
 
 use base qw/ App::ClusterSSH::Base /;
 
@@ -16,24 +17,32 @@ my %command_options = (
     'debug:+' => {
         spec => 'debug:+',
         help =>
-            "--debug [number]\n\tEnable debugging.  Either a level can be provided or the option can be repeated multiple times.  Maximum level is 4.",
+            "--debug [number]\n\t".$self->loc("Enable debugging.  Either a level can be provided or the option can be repeated multiple times.  Maximum level is 4."),
         default => 0,
     },
-    'd' => { help => "-d\n\tDEPRECATED.  See '--debug'.", },
-    'D' => { help => "-D\n\tDEPRECATED.  See '--debug'.", },
-    'help|h|?' =>
-        { help => "--help, -h, -?\n\tShow basic help text and exit", },
+    'help|h' =>
+        { help => "--help, -h\n\t".$self->loc("Show help text and exit"), },
+    'usage|?' => 
+        { help => '--usage, -?\n\t'.$self->loc('Show basic usage and exit'), },
     'version|v' =>
-        { help => "--version, -v\n\tShow version information and exit", },
+        { help => "--version, -v\n\t".$self->loc("Show version information and exit"), },
     'man|H' => {
-        help => "--man, -H\n\tShow full help text (the man page) and exit",
+        help => "--man, -H\n\t".$self->loc("Show full help text (the man page) and exit"),
     },
+    'generate-pod' => {
+        hidden => 1,
+    },
+);
+
+# basic setup that is over-rideable
+my %setup = (
+    usage => '[%options%] [[user@]<server>[:port]|<tag>] [...]',
 );
 
 sub new {
     my ( $class, %args ) = @_;
 
-    my $self = $class->SUPER::new(%args);
+    my $self = $class->SUPER::new(%setup, %args);
 
     return $self;
 }
@@ -70,17 +79,29 @@ sub getopts {
 
     my $options = {};
     if ( !GetOptions( $options, keys(%command_options) ) ) {
-        $self->_usage;
+        $self->usage;
+        $self->exit;
+    }
+
+    if ( $options->{'generate-pod'}) {
+        # generate valid POD from all the options and send to STDOUT
+        # so build process can create pod files for the distribution
+        $self->exit;
+    }
+
+    if ( $options->{usage} ) {
+        $self->usage;
+        $self->exit;
     }
 
     if ( $options->{help} ) {
-        $self->_usage;
-        $self->exit_prog;
+        $self->help;
+        $self->exit;
     }
 
     if ( $options->{version} ) {
         print "Version: $VERSION\n";
-        $self->exit_prog;
+        $self->exit;
     }
 
     warn "end: ", dump $options;
@@ -91,10 +112,10 @@ sub getopts {
     return $self;
 }
 
-sub _usage {
+sub usage {
     my ($self) = @_;
 
-    warn "**** USAGE ****";
+    print $self->loc('US
 
     my $options_pod;
     $options_pod .= "=over\n\n";
@@ -115,19 +136,27 @@ sub _usage {
 #    warn "common_pod=$common_pod";
 
 #    warn '#' x 60;
-    warn "options_pod=$options_pod";
-    warn '#' x 60;
-    my $main_pod = '';
-    while (<main::DATA>) {
-        $main_pod .= $_;
-    }
+##    warn "options_pod=$options_pod";
+##    warn '#' x 60;
+##    my $main_pod = '';
+##    while (<main::DATA>) {
+##        $main_pod .= $_;
+##    }
 
 #    warn "main_pod=$main_pod";
 
-    $main_pod =~ s/%OPTIONS%/$options_pod/;
+##    $main_pod =~ s/%OPTIONS%/$options_pod/;
 
-    die $main_pod;
-    -return $self;
+ ##   die $main_pod;
+    return $self;
+}
+
+sub help {
+    my ($self) = @_;
+
+    warn "** HELP **";
+
+    return $self;
 }
 
 #use overload (
