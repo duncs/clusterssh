@@ -11,14 +11,16 @@ my $app = App::ClusterSSH->new();
 
 $app->options->add_common_ssh_options;
 
+# only works in ssh and rsh, not telnet or console
 $app->add_option(
-    spec => 'freddo|z',
-    help => "--freddo\n\tSome help output",
+    spec => 'action|a=s',
+    help => $app->loc("Run the command in each session, e.g. C<-a 'vi /etc/hosts'> to drop straight into a vi session."),
 );
 
-use Data::Dump qw(dump);
-warn dump  $app;
-die;
+$app->add_option(
+    spec => 'freddo|z',
+    help => $app->loc("Some help output"),
+);
 
 $app->run();
 
