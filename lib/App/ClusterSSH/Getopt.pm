@@ -13,33 +13,38 @@ use FindBin qw($Script);
 
 use base qw/ App::ClusterSSH::Base /;
 
-
-# basic setup that is over-rideable
-my %setup = (
-    usage => '[%options%] [[user@]<server>[:port]|<tag>] [...]',
-);
-
 sub new {
     my ( $class, %args ) = @_;
+
+    # basic setup that is over-rideable by each script as needs may be
+    # different depending ont he command used
+    my %setup = (
+        usage => '[options] [[user@]<server>[:port]|<tag>] [...]',
+    );
 
     my $self = $class->SUPER::new(%setup, %args);
 
     #my %command_options = (
     $self->{command_options} = {
+        'autoquit|q' =>{
+            help => $self->loc('Enable automatically quiting after the last client window has closed (overriding the config file).  See also L<--no-autoquit>'),
+        },
+        'no-autoquit|Q' =>{
+            help => $self->loc('Disable automatically quiting after the last client window has closed (overriding the config file).  See also L<--autoquit>'),
+        },
         'debug:+' => {
-            spec => 'debug:+',
             help =>
-                "--debug [number]\n\t".$self->loc("Enable debugging.  Either a level can be provided or the option can be repeated multiple times.  Maximum level is 4."),
+                $self->loc("Enable debugging.  Either a level can be provided or the option can be repeated multiple times.  Maximum level is 4."),
             default => 0,
         },
         'help|h' =>
-            { help => "--help, -h\n\t".$self->loc("Show help text and exit"), },
+            { help => $self->loc("Show help text and exit"), },
         'usage|?' => 
-            { help => '--usage, -?\n\t'.$self->loc('Show basic usage and exit'), },
+            { help => $self->loc('Show basic usage and exit'), },
         'version|v' =>
-            { help => "--version, -v\n\t".$self->loc("Show version information and exit"), },
+            { help => $self->loc("Show version information and exit"), },
         'man|H' => {
-            help => "--man, -H\n\t".$self->loc("Show full help text (the man page) and exit"),
+            help => $self->loc("Show full help text (the man page) and exit"),
         },
         'generate-pod' => {
             hidden => 1,
@@ -59,13 +64,13 @@ sub add_common_ssh_options {
     my ( $self ) = @_;
 
     $self->add_option(
-        spec => 'ssh_cmd1|c1',
-        help => "--ssh_cmd1\n\tCommon ssh option 1",
+        spec => 'ssh_cmd1|X=s',
+        help => $self->loc("Common ssh option 1"),
     );
     
     $self->add_option(
-        spec => 'ssh_cmd2|c2',
-        help => "--ssh_cmd2\n\tCommon ssh option 2",
+        spec => 'ssh_cmd2|Y=i',
+        help => $self->loc("Common ssh option 2"),
     );
     
     return $self;
@@ -88,6 +93,49 @@ sub getopts {
     if ( $options->{'generate-pod'}) {
         # generate valid POD from all the options and send to STDOUT
         # so build process can create pod files for the distribution
+
+        warn "** GENERATE POD **";
+        print $/ , "=pod",$/,$/;
+        print '=head1 ',$self->loc('NAME'),$/,$/;
+        print "$Script - ", $self->loc("Cluster administration tool"),$/,$/;
+        print '=head1 ',$self->loc('SYNOPSIS'),$/,$/;
+        print "S<< $Script $self->{usage} >>",$/,$/;
+        print '=head1 ',$self->loc('DESCRIPTION'),$/,$/;
+        print $self->loc("_DESCRIPTION"),$/,$/;
+        print '=head1 '.$self->loc('Further Notes'),$/,$/;
+        print $self->loc("_FURTHER_NOTES"),$/,$/;
+        print '=head1 '.$self->loc('OPTIONS'),$/,$/;
+        print $self->loc("_OPTIONS"),$/,$/;
+
+        print '=over',$/,$/;
+        foreach my $longopt (sort keys(%{$self->{command_options}})) {
+            next if($self->{command_options}->{$longopt}->{hidden});
+
+            my ($option, $arg) = $longopt =~ m/^(.*?)(?:[=:](.*))?$/;
+            if($arg) {
+                $arg=~s/\+/[[...] || <INTEGER>]/g;
+                $arg=~s/i/<INTEGER>/g;
+                $arg=~s/s/<STRING>/g;
+            }
+            my $desc;
+            foreach my $item ( split /\|/, $option) {
+
+                $desc .= ', ' if($desc);
+
+                # assumption - long options are 2 or more chars
+                if(length($item) == 1) {
+                    $desc .= "-$item";
+                } else {
+                    $desc .= "--$item";
+                }
+                $desc .= " $arg" if($arg);
+            }
+            print '=item ', $desc, $/,$/;
+            print $self->{command_options}->{$longopt}->{help},$/,$/;
+        }
+        print '=back',$/,$/;
+
+        # now list out alphabetically all defined options
         $self->exit;
     }
 
