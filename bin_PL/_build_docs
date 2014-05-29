@@ -1,0 +1,40 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use FindBin qw($Bin $Script);
+
+chdir $Bin || die "Unable to chdir into $Bin: $!";
+
+my $bindir="$Bin/../bin";
+
+if(! -d $bindir) {
+    mkdir $bindir || die "Could not mkdir $bindir: $!";
+}
+
+for my $source (glob("*")) {
+    my $dest="$bindir/$source";
+
+    next if($source =~ m/$Script/);
+    next if($source =~ m/\.x$/);
+
+    print "Generating: $source",$/;
+
+    if($dest) {
+        chmod(0777, $dest) || die "Could not chmod $dest for removing: $!";
+    }
+
+    open(my $sfh, '<', $source) || die "Could not open $source for reading: $!";
+    open(my $dfh, '>', $dest  ) || die "Could not open $dest for writing: $!";
+    print $dfh $_ while(<$sfh>);
+    close($sfh);
+
+    print $dfh "\n\n__END__\n\n";
+
+    my $pod= qx{ ./$source --generate-pod };
+    print $dfh $pod;
+    close($dfh);
+
+    chmod(0555, $dest) || die "Could not chmod $dest: $!";
+}

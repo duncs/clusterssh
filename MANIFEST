@@ -1,9 +1,9 @@
 AUTHORS
-bin/ccon
-bin/crsh
-bin/cscp.x
-bin/cssh
-bin/ctel
+bin_PL/ccon
+bin_PL/crsh
+bin_PL/cscp.x
+bin_PL/cssh
+bin_PL/ctel
 Build.PL
 Changes
 lib/App/ClusterSSH.pm

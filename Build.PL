@@ -45,46 +45,46 @@ EOF
             return $self;
         }
 
-        sub ACTION_build {
-            my ($self, @args) = @_;
-
-            print "Building pod files",$/;
-
-#            my $common_file = File::Slurp::read_file('pod_data/common_file');
-#            die "Failed to read 'pod_data/common_file'" unless($common_file);
-
-            # Each file in bin/ should have a file within pod_data.
-            # If not, there is a problem.
-            my @files=glob('bin/*');
-            foreach my $binfile (@files) {
-                # ignore any dirs or such in the bin directory
-                next unless(-f $binfile && -x $binfile);
-
-#                (my $podfile = $binfile) =~ s!bin!pod_data!;
-#                warn "checking $podfile",$/;
-#
-#                if(!-f $podfile) {
-#                    warn "$podfile does not exist",$/;
-#                    next;
-#                }
-#                my $pod = read_file( $podfile );
-#                warn "Unable to read '$podfile'" unless ($pod);
-#
-#                $pod =~ s/%FILES%/$common_file/;
-#
-#                my $options = qx{ $binfile -h 2>&1 };
-#                warn "Unable to run '$binfile -h'" unless ($options);
-
-                my $cmd="$binfile --generate-pod 2>&1";
-                warn "Running: $cmd",$/;
-                my $pod = qx { $cmd };
-                die "Failed to generate POD" if($?);
-                write_file("${binfile}.pod", $pod);
-
-            }
-
-            $self->SUPER::ACTION_build;
-        }
+#%#        sub ACTION_build {
+#%#            my ($self, @args) = @_;
+#%#
+#%#            print "Building pod files",$/;
+#%#
+#%##            my $common_file = File::Slurp::read_file('pod_data/common_file');
+#%##            die "Failed to read 'pod_data/common_file'" unless($common_file);
+#%#
+#%#            # Each file in bin/ should have a file within pod_data.
+#%#            # If not, there is a problem.
+#%#            my @files=glob('bin/*');
+#%#            foreach my $binfile (@files) {
+#%#                # ignore any dirs or such in the bin directory
+#%#                next unless(-f $binfile && -x $binfile);
+#%#
+#%##                (my $podfile = $binfile) =~ s!bin!pod_data!;
+#%##                warn "checking $podfile",$/;
+#%##
+#%##                if(!-f $podfile) {
+#%##                    warn "$podfile does not exist",$/;
+#%##                    next;
+#%##                }
+#%##                my $pod = read_file( $podfile );
+##%#                warn "Unable to read '$podfile'" unless ($pod);
+#%##
+#%##                $pod =~ s/%FILES%/$common_file/;
+#%##
+#%##                my $options = qx{ $binfile -h 2>&1 };
+#%##                warn "Unable to run '$binfile -h'" unless ($options);
+#%#
+#%#                my $cmd="$binfile --generate-pod 2>&1";
+#%#                warn "Running: $cmd",$/;
+#%#                my $pod = qx { $cmd };
+#%#                die "Failed to generate POD" if($?);
+#%#                write_file("${binfile}.pod", $pod);
+#%#
+#%#            }
+#%#
+#%#            $self->SUPER::ACTION_build;
+#%#        }
     },
 );
 
@@ -128,6 +128,9 @@ my $build = $class->new(
     create_makefile_pl => 'traditional',
     script_files       => 'bin',
     get_options => { changes => { type => '=s' }, },
+    PL_files => {
+        'bin_PL/_build_docs' => [],
+    },
 );
 
 $build->create_build_script;
