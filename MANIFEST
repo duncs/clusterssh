@@ -1,7 +1,7 @@
 AUTHORS
 bin/ccon
 bin/crsh
-bin/cscp
+bin/cscp.x
 bin/cssh
 bin/ctel
 Build.PL
