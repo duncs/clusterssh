@@ -57,10 +57,12 @@ EOF
             # If not, there is a problem.
             my @files=glob('bin/*');
             foreach my $binfile (@files) {
-                next unless(-f $binfile);
-#                (my $podfile = $binfile) =~ s!bin!pod_data!;
-                warn "checking $podfile",$/;
+                # ignore any dirs or such in the bin directory
+                next unless(-f $binfile && -x $binfile);
 
+#                (my $podfile = $binfile) =~ s!bin!pod_data!;
+#                warn "checking $podfile",$/;
+#
 #                if(!-f $podfile) {
 #                    warn "$podfile does not exist",$/;
 #                    next;
@@ -73,8 +75,11 @@ EOF
 #                my $options = qx{ $binfile -h 2>&1 };
 #                warn "Unable to run '$binfile -h'" unless ($options);
 
-                my $pod = qx { $binfile --generate-pod 2>&1 };
-                write_file("${bifile}.pod", $pod);
+                my $cmd="$binfile --generate-pod 2>&1";
+                warn "Running: $cmd",$/;
+                my $pod = qx { $cmd };
+                die "Failed to generate POD" if($?);
+                write_file("${binfile}.pod", $pod);
 
             }
 
