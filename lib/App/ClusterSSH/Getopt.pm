@@ -26,6 +26,14 @@ sub new {
 
     #my %command_options = (
     $self->{command_options} = {
+        'config-file|C=s' => {
+            arg_desc => 'filename',
+            help => $self->loc('Use supplied file as additional configuration file (see also L</"FILES">).'),
+        },
+        'cluster-file|c=s' => {
+            arg_desc => 'filename',
+            help => $self->loc('Use supplied file as additional cluster file (see also L</"FILES">).'),
+        },
         'autoclose|K=i' => {
             arg_desc => 'seconds',
             help => $self->loc('Number of seconds to wait before closing finished terminal windows.'),
