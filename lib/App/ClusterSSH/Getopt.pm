@@ -120,19 +120,22 @@ sub add_option {
     return $self;
 }
 
+# For options common to everything
+sub add_common_options {
+    my ( $self ) = @_;
+
+    return $self;
+}
+
 # For options common to ssh sessions
 sub add_common_ssh_options {
     my ( $self ) = @_;
 
-#    $self->add_option(
-#        spec => 'ssh_cmd1|X=s',
-#        help => $self->loc("Common ssh option 1"),
-#    );
-#    
-#    $self->add_option(
-#        spec => 'ssh_cmd2|Y=i',
-#        help => $self->loc("Common ssh option 2"),
-#    );
+    $self->add_option(
+        spec => 'options|o=s',
+        help => $self->loc('Specify arguments to be passed to ssh when making the connection.  B<NOTE:> options for ssh should normally be put into the ssh configuration file; see C<ssh_config> and F<$HOME/.ssh/config> for more details.'),
+        default => '-x -o ConnectTimeout=10',
+    );
     
     return $self;
 }
