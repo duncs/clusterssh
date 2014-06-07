@@ -24,7 +24,7 @@ sub new {
 
     my $self = $class->SUPER::new(%setup, %args);
 
-    #my %command_options = (
+    # options common to all connection types
     $self->{command_options} = {
         'config-file|C=s' => {
             arg_desc => 'filename',
@@ -33,6 +33,10 @@ sub new {
         'cluster-file|c=s' => {
             arg_desc => 'filename',
             help => $self->loc('Use supplied file as additional cluster file (see also L</"FILES">).'),
+        },
+        'tag-file|r=s' => {
+            arg_desc => 'filename',
+            help => $self->loc('Use supplied file as additional tag file (see also L</"FILES">)'),
         },
         'autoclose|K=i' => {
             arg_desc => 'seconds',
@@ -43,6 +47,50 @@ sub new {
         },
         'no-autoquit|Q' =>{
             help => $self->loc('Disable automatically quiting after the last client window has closed (overriding the config file).  See also L<--autoquit>'),
+        },
+        'evaluate|e=s' => {
+            arg_desc => '[user@]<host>[:port]',
+            help => $self->loc('Display and evaluate the terminal and connection arguments to display any potential errors.  The <hostname> is required to aid the evaluation.'),
+        },
+        'font|f=s' => {
+            arg_desc => 'font',
+            help => $self->loc('Specify the font to use in the terminal windows. Use standard X font notation such as "5x8".'),
+        },
+        'list|L' => {
+            help => $self->loc('List available cluster tags.'),
+        },
+        'output-config|u' => {
+            help => $self->loc('Output the current configuration in the same format used by the F<$HOME/.clusterssh/config> file.'),
+        },
+        'port|p=i' => {
+            arg_desc => 'port',
+            help => $self->loc('Specify an alternate port for connections.'),
+        },
+        'show-history|s' => {
+            help => $self->loc('IN BETA: Show history within console window.  This code is still being worked upon, but may help some users.'),
+        },
+        'tile|g' => {
+            help => $self->loc('Enable window tiling (overriding the config file).  See also --no-tile.'),
+        },
+        'no-tile|G' => {
+            help => $self->loc('Disable window tiling (overriding the config file).  See also --tile.'),
+        },
+        'term-args|t=s' => {
+            help => $self->loc('Specify arguments to be passed to terminals being used.'),
+        },
+        'title|T=s' => {
+            arg_desc => 'title',
+            help => $self->loc('Specify the initial part of the title used in the console and client windows.'),
+        },
+        'unique-servers|m' => {
+            help => $self->loc('Connect to each host only once.'),
+        },
+        'use-all-a-records|A' => {
+            help => $self->loc('If a hostname resolves to multiple IP addresses, toggle whether or not to connect to all of them, or just the first one (see also config file entry).'),
+        },
+        'username|l=s' => {
+            arg_desc => 'username',
+            help => $self->loc('Specify the default username to use for connections (if different from the currently logged in user).  B<NOTE:> will be overridden by <user>@<host>.'),
         },
         'debug:+' => {
             help =>
@@ -76,15 +124,15 @@ sub add_option {
 sub add_common_ssh_options {
     my ( $self ) = @_;
 
-    $self->add_option(
-        spec => 'ssh_cmd1|X=s',
-        help => $self->loc("Common ssh option 1"),
-    );
-    
-    $self->add_option(
-        spec => 'ssh_cmd2|Y=i',
-        help => $self->loc("Common ssh option 2"),
-    );
+#    $self->add_option(
+#        spec => 'ssh_cmd1|X=s',
+#        help => $self->loc("Common ssh option 1"),
+#    );
+#    
+#    $self->add_option(
+#        spec => 'ssh_cmd2|Y=i',
+#        help => $self->loc("Common ssh option 2"),
+#    );
     
     return $self;
 }
