@@ -11,12 +11,6 @@ my $app = App::ClusterSSH->new();
 
 $app->options->add_common_ssh_options;
 $app->options->add_common_session_options;
-
-$app->add_option(
-    spec => 'freddo|z',
-    help => $app->loc("Some help output"),
-);
-
 $app->run();
 
 1;
