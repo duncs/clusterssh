@@ -76,6 +76,18 @@ sub add_common_ssh_options {
     return $self;
 }
 
+sub add_common_session_options {
+    my ( $self ) = @_;
+
+    $self->add_option(
+        spec => 'action|a=s',
+        help => $self->loc("Run the command in each session, e.g. C<-a 'vi /etc/hosts'> to drop straight into a vi session.");
+    );
+
+
+    return $self;
+}
+
 sub getopts {
     my ($self) = @_;
 

@@ -113,7 +113,6 @@ my @options_spec = (
     'version|v',
     'help|h|?',
     'man|H',
-    'action|a=s',
     'cluster-file|c=s',
     'tag-file|r=s',
     'config-file|C=s',
