@@ -21,7 +21,7 @@ for my $source (glob("*")) {
 
     print "Generating: $source",$/;
 
-    if($dest) {
+    if(-f $dest) {
         chmod(0777, $dest) || die "Could not chmod $dest for removing: $!";
     }
 
