@@ -97,19 +97,12 @@ sub new {
                 $self->loc("Enable debugging.  Either a level can be provided or the option can be repeated multiple times.  Maximum level is 4."),
             default => 0,
         },
-        'help|h' =>
-            { help => $self->loc("Show help text and exit"), },
-        'usage|?' => 
-            { help => $self->loc('Show basic usage and exit'), },
-        'version|v' =>
-            { help => $self->loc("Show version information and exit"), },
-        'man|H' => {
-            help => $self->loc("Show full help text (the man page) and exit"),
-        },
         'generate-pod' => {
             hidden => 1,
         },
     };
+
+    $self->add_common_options;
 
     return $self;
 }
@@ -123,6 +116,23 @@ sub add_option {
 # For options common to everything
 sub add_common_options {
     my ( $self ) = @_;
+
+    $self->add_option(
+        spec => 'help|h' ,
+        help => $self->loc("Show help text and exit"),
+    );
+    $self->add_option(
+        spec => 'usage|?' ,
+        help => $self->loc('Show basic usage and exit'),
+    );
+    $self->add_option(
+        spec => 'version|v' ,
+        help => $self->loc("Show version information and exit"),
+    );
+    $self->add_option(
+        spec => 'man|H' ,
+        help => $self->loc("Show full help text (the man page) and exit"),
+    );
 
     return $self;
 }
