@@ -10,10 +10,25 @@ Connections are opened via ssh, so a correctly installed and configured ssh inst
 
 Extra caution should be taken when editing system files such as /etc/inet/hosts as lines may not necessarily be in the same order.  Assuming line 5 is the same across all servers and modifying that is dangerous.  It's better to search for the specific line to be changed and double-check before changes are committed.},
 
-    '_FURTHER_NOTES' => q{Further Notes},
-    '_OPTIONS' => q{Some of these options may also be defined within the configuration file. 
+    '_FURTHER_NOTES' => q{Please also see "KNOWN BUGS".},
 
-Default options are shown as appropriate.
+    '_FURTHER_NOTES_1' => q{The dotted line on any sub-menu is a tear-off, i.e. click on it and the sub-menu is turned into its own window.},
+
+    '_FURTHER_NOTES_2' => q{Unchecking a hostname on the Hosts sub-menu will unplug the host from the cluster control window, so any text typed into the console is not sent to that host.  Re-selecting it will plug it back in.},
+
+    '_FURTHER_NOTES_3' => q{If your window manager menu bars are obscured by terminal windows see the C<screen_reserve_XXXXX> options in the F<$HOME/.clusterssh/config> file (see L</"FILES">).},
+
+    '_FURTHER_NOTES_4' => q{If the terminals overlap too much see the C<terminal_reserve_XXXXX> options in the F<$HOME/.clusterssh/config> file (see L</"FILES">).},
+
+    '_FURTHER_NOTES_5' => q{When using cssh on a large number of systems to connect back to a single system (e.g. you issue a command to the cluster to scp a file from a given location) and when these connections require authentication (i.e. you are going to authenticate with a password), the sshd daemon at that location may refuse connects after the number specified by MaxStartups in sshd_config is exceeded.  (If this value is not set, it defaults to 10.)  This is expected behavior; sshd uses this mechanism to prevent DoS attacks from unauthenticated sources.  Please tune sshd_config and reload the SSH daemon, or consider using the ~/.ssh/authorized_keys mechanism for authentication if you encounter this problem.},
+
+    '_FURTHER_NOTES_6' => q{If client windows fail to open, try running: 
+    
+C<< cssh -e {single host name} >>
+
+This will test the mechanisms used to open windows to hosts.  This could be due to either the C<-xrm> terminal option which enables C<AllowSendEvents> (some terminals do not require this option, other terminals have another method for enabling it - see your terminal documentation) or the C<ConnectTimeout> ssh option (see the configuration option C<-o> or file C<$HOME/.clusterssh/config> below to resolve this).},
+
+    '_OPTIONS' => q{Some of these options may also be defined within the configuration file.  Default options are shown as appropriate.
     },
 
 );

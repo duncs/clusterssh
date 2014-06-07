@@ -26,6 +26,10 @@ sub new {
 
     #my %command_options = (
     $self->{command_options} = {
+        'autoclose|K=i' => {
+            arg_desc => 'seconds',
+            help => $self->loc('Number of seconds to wait before closing finished terminal windows.'),
+        },
         'autoquit|q' =>{
             help => $self->loc('Enable automatically quiting after the last client window has closed (overriding the config file).  See also L<--no-autoquit>'),
         },
@@ -60,6 +64,7 @@ sub add_option {
     return $self;
 }
 
+# For options common to ssh sessions
 sub add_common_ssh_options {
     my ( $self ) = @_;
 
@@ -76,14 +81,15 @@ sub add_common_ssh_options {
     return $self;
 }
 
+# For options that work in ssh, rsh type consoles, but not telnet or console
 sub add_common_session_options {
     my ( $self ) = @_;
 
     $self->add_option(
         spec => 'action|a=s',
-        help => $self->loc("Run the command in each session, e.g. C<-a 'vi /etc/hosts'> to drop straight into a vi session.");
+        arg_desc => 'command',
+        help => $self->loc("Run the command in each session, e.g. C<-a 'vi /etc/hosts'> to drop straight into a vi session."),
     );
-
 
     return $self;
 }
@@ -114,8 +120,14 @@ sub getopts {
         print "S<< $Script $self->{usage} >>",$/,$/;
         print '=head1 ',$self->loc('DESCRIPTION'),$/,$/;
         print $self->loc("_DESCRIPTION"),$/,$/;
-        print '=head1 '.$self->loc('Further Notes'),$/,$/;
+        print '=head2 '.$self->loc('Further Notes'),$/,$/;
         print $self->loc("_FURTHER_NOTES"),$/,$/;
+        print '=over',$/,$/;
+        for (1 .. 6) {
+            print '=item *',$/,$/;
+            print $self->loc("_FURTHER_NOTES_".$_),$/,$/;
+        }
+        print '=back',$/,$/;
         print '=head1 '.$self->loc('OPTIONS'),$/,$/;
         print $self->loc("_OPTIONS"),$/,$/;
 
@@ -125,9 +137,21 @@ sub getopts {
 
             my ($option, $arg) = $longopt =~ m/^(.*?)(?:[=:](.*))?$/;
             if($arg) {
+                my $arg_desc;
+                if(my $desc=$self->{command_options}->{$longopt}->{arg_desc}) {
+                    $arg_desc="<$desc>";
+                }
                 $arg=~s/\+/[[...] || <INTEGER>]/g;
-                $arg=~s/i/<INTEGER>/g;
-                $arg=~s/s/<STRING>/g;
+                $arg = $arg_desc || '<INTEGER>' if($arg eq 'i');
+                if($arg eq 's'){
+                    if($arg_desc) {
+                        $arg = "'$arg_desc'";
+                    } else {
+                        $arg = "'<STRING>'" ;
+                    }
+                }
+                #$arg=~s/i/<INTEGER>/g;
+                #$arg=~s/s/<STRING>/g;
             }
             my $desc;
             foreach my $item ( split /\|/, $option) {
