@@ -33,6 +33,7 @@ for my $source (glob("*")) {
     print $dfh "\n\n__END__\n\n";
 
     my $pod= qx{ ./$source --generate-pod };
+    die "Failed to generate pod" if($?);
     print $dfh $pod;
     close($dfh);
 
