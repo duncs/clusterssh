@@ -283,14 +283,9 @@ sub _generate_pod {
     print "S<< $Script $self->{usage} >>",$/,$/;
     print '=head1 ',$self->loc('DESCRIPTION'),$/,$/;
     print $self->loc("_DESCRIPTION"),$/,$/;
-    print '=head2 '.$self->loc('Further Notes'),$/,$/;
-    print $self->loc("_FURTHER_NOTES"),$/,$/;
-    print '=over',$/,$/;
-    for (1 .. 6) {
-        print '=item *',$/,$/;
-        print $self->loc("_FURTHER_NOTES_".$_),$/,$/;
-    }
-    print '=back',$/,$/;
+
+    $self->_pod_output_list_section(2,'Further Notes');
+
     print '=head1 '.$self->loc('OPTIONS'),$/,$/;
     print $self->loc("_OPTIONS"),$/,$/;
 
@@ -334,7 +329,39 @@ sub _generate_pod {
     }
     print '=back',$/,$/;
 
-    # now list out alphabetically all defined options
+    $self->_pod_output_list_section(1,'ARGUMENTS');
+    $self->_pod_output_list_section(1,'KEY SHORTCUTS');
+    $self->_pod_output_list_section(1,'EXAMPLES');
+
+    return $self;
+}
+
+sub _pod_output_list_section {
+    my ($self, $level, $section) = @_;
+
+    print '=head'.$level.' ',$self->loc($section),$/,$/;
+    $section=uc($section);
+    $section=~s/ /_/g;
+    print $self->loc('_'.$section),$/,$/;
+    print '=over',$/,$/;
+    for (1 .. 10) {
+        # there might not be 10 sections so catch errors
+        my ($name, $desc);
+        eval {
+            $name = $self->loc('_'.$section.'_NAME_'.$_);
+        };
+        eval {
+            $desc=$self->loc('_'.$section.'_DESC_'.$_);
+        };
+        # and if there is an error we have gone past the last item
+        #last if($@);
+        if($desc) {
+            print '=item ', $name || '*',$/,$/;
+            print $desc,$/,$/;
+        }
+    }
+    print '=back',$/,$/;
+
     return $self;
 }
 
