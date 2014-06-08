@@ -326,6 +326,10 @@ sub _generate_pod {
         }
         print '=item ', $desc, $/,$/;
         print $self->{command_options}->{$longopt}->{help},$/,$/;
+
+        if($self->{command_options}->{$longopt}->{default}) {
+        print 'Default: ', $self->{command_options}->{$longopt}->{default}, $/, $/;
+        }
     }
     print '=back',$/,$/;
 
