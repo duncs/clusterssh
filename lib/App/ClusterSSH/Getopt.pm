@@ -337,6 +337,33 @@ sub _generate_pod {
     $self->_pod_output_list_section(1,'KEY SHORTCUTS');
     $self->_pod_output_list_section(1,'EXAMPLES');
 
+    $self->_pod_output_list_section(1,'KNOWN BUGS');
+    $self->_pod_output_list_section(1,'REPORTING BUGS');
+
+    print '=head1 ',$self->loc('SEE ALSO'),$/,$/;
+    print $self->loc(q{
+L<http://clusterssh.sourceforge.net/>,
+C<ssh>,
+L<Tk::overview>,
+L<X11::Protocol>,
+C<perl>
+}),$/,$/;
+
+    print '=head1 ',$self->loc('CREDITS'),$/,$/;
+    print $self->loc('A web site for comments, requests, bug reports and bug fixes/patches is available at: [_1]', 'L<http://clusterssh.sourceforge.net/>'),$/,$/;
+
+    print '=head1 ',$self->loc('AUTHOR'),$/,$/;
+    print 'Duncan Ferguson, C<< <duncan_j_ferguson at yahoo.co.uk> >>',$/,$/;
+
+    print '=head1 ',$self->loc('LICENSE AND COPYRIGHT'),$/,$/;
+    print $self->loc(q{
+Copyright 1999-2014 Duncan Ferguson.
+
+This program is free software; you can redistribute it and/or modify it under the terms of either: the GNU General Public License as published by the Free Software Foundation; or the Artistic License.
+
+See http://dev.perl.org/licenses/ for more information.
+}),$/,$/;
+
     return $self;
 }
 

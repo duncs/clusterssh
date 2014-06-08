@@ -70,6 +70,14 @@ would replace the <Alt-n> with the client's name in each window.},
     '_EXAMPLES_NAME_8' => q{Use console with master as the primary server instead of ssh},
     '_EXAMPLES_DESC_8' => q{S<$ ccon -M master server1 server2>},
 
+    '_KNOWN_BUGS' => q{If you have any ideas about how to fix the below bugs, please get in touch and/or provide a patch.},
+
+    '_KNOWN_BUGS_DESC_1' => q{Swapping virtual desktops can cause a redraw of all the terminal windows.  This is due to a lack of distinction within Tk between switching desktops and minimising/maximising windows.  Until Tk can tell the difference between the two events, there is no fix (apart from rewriting everything directly in X).},
+
+    '_REPORTING_BUGS' => q{ },
+    '_REPORTING_BUGS_NAME_1' => q{a},
+    '_REPORTING_BUGS_DESC_1' => q{a},
+
 );
 
 1;
