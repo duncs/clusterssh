@@ -25,83 +25,7 @@ sub new {
     my $self = $class->SUPER::new(%setup, %args);
 
     # options common to all connection types
-    $self->{command_options} = {
-        'config-file|C=s' => {
-            arg_desc => 'filename',
-            help => $self->loc('Use supplied file as additional configuration file (see also L</"FILES">).'),
-        },
-        'cluster-file|c=s' => {
-            arg_desc => 'filename',
-            help => $self->loc('Use supplied file as additional cluster file (see also L</"FILES">).'),
-        },
-        'tag-file|r=s' => {
-            arg_desc => 'filename',
-            help => $self->loc('Use supplied file as additional tag file (see also L</"FILES">)'),
-        },
-        'autoclose|K=i' => {
-            arg_desc => 'seconds',
-            help => $self->loc('Number of seconds to wait before closing finished terminal windows.'),
-        },
-        'autoquit|q' =>{
-            help => $self->loc('Enable automatically quiting after the last client window has closed (overriding the config file).  See also L<--no-autoquit>'),
-        },
-        'no-autoquit|Q' =>{
-            help => $self->loc('Disable automatically quiting after the last client window has closed (overriding the config file).  See also L<--autoquit>'),
-        },
-        'evaluate|e=s' => {
-            arg_desc => '[user@]<host>[:port]',
-            help => $self->loc('Display and evaluate the terminal and connection arguments to display any potential errors.  The <hostname> is required to aid the evaluation.'),
-        },
-        'font|f=s' => {
-            arg_desc => 'font',
-            help => $self->loc('Specify the font to use in the terminal windows. Use standard X font notation such as "5x8".'),
-        },
-        'list|L' => {
-            help => $self->loc('List available cluster tags.'),
-        },
-        'output-config|u' => {
-            help => $self->loc('Output the current configuration in the same format used by the F<$HOME/.clusterssh/config> file.'),
-        },
-        'port|p=i' => {
-            arg_desc => 'port',
-            help => $self->loc('Specify an alternate port for connections.'),
-        },
-        'show-history|s' => {
-            help => $self->loc('IN BETA: Show history within console window.  This code is still being worked upon, but may help some users.'),
-        },
-        'tile|g' => {
-            help => $self->loc('Enable window tiling (overriding the config file).  See also --no-tile.'),
-        },
-        'no-tile|G' => {
-            help => $self->loc('Disable window tiling (overriding the config file).  See also --tile.'),
-        },
-        'term-args|t=s' => {
-            help => $self->loc('Specify arguments to be passed to terminals being used.'),
-        },
-        'title|T=s' => {
-            arg_desc => 'title',
-            help => $self->loc('Specify the initial part of the title used in the console and client windows.'),
-        },
-        'unique-servers|m' => {
-            help => $self->loc('Connect to each host only once.'),
-        },
-        'use-all-a-records|A' => {
-            help => $self->loc('If a hostname resolves to multiple IP addresses, toggle whether or not to connect to all of them, or just the first one (see also config file entry).'),
-        },
-        'username|l=s' => {
-            arg_desc => 'username',
-            help => $self->loc('Specify the default username to use for connections (if different from the currently logged in user).  B<NOTE:> will be overridden by <user>@<host>.'),
-        },
-        'debug:+' => {
-            help =>
-                $self->loc("Enable debugging.  Either a level can be provided or the option can be repeated multiple times.  Maximum level is 4."),
-            default => 0,
-        },
-        'generate-pod' => {
-            hidden => 1,
-        },
-    };
-
+    $self->{command_options} = {};
     $self->add_common_options;
 
     return $self;
@@ -133,7 +57,101 @@ sub add_common_options {
         spec => 'man|H' ,
         help => $self->loc("Show full help text (the man page) and exit"),
     );
-
+    $self->add_option(
+        spec => 'debug:+',
+        help => $self->loc("Enable debugging.  Either a level can be provided or the option can be repeated multiple times.  Maximum level is 4."),
+        default => 0,
+    );
+    $self->add_option(
+        spec => 'generate-pod',
+        hidden => 1,
+    );
+    $self->add_option(
+        spec => 'autoclose|K=i',
+        arg_desc => 'seconds',
+        help => $self->loc('Number of seconds to wait before closing finished terminal windows.'),
+    );
+    $self->add_option(
+        spec => 'autoquit|q',
+        help => $self->loc('Enable automatically quiting after the last client window has closed (overriding the config file).  See also L<--no-autoquit>'),
+    );
+    $self->add_option(
+        spec => 'no-autoquit|Q',
+        help => $self->loc('Disable automatically quiting after the last client window has closed (overriding the config file).  See also L<--autoquit>'),
+    );
+    $self->add_option(
+        spec => 'evaluate|e=s',
+        arg_desc => '[user@]<host>[:port]',
+        help => $self->loc('Display and evaluate the terminal and connection arguments to display any potential errors.  The <hostname> is required to aid the evaluation.'),
+    );
+    $self->add_option(
+        spec => 'config-file|C=s',
+        arg_desc => 'filename',
+        help => $self->loc('Use supplied file as additional configuration file (see also L</"FILES">).'),
+    );
+    $self->add_option(
+        spec => 'cluster-file|c=s',
+        arg_desc => 'filename',
+        help => $self->loc('Use supplied file as additional cluster file (see also L</"FILES">).'),
+    );
+    $self->add_option(
+        spec => 'tag-file|r=s',
+        arg_desc => 'filename',
+        help => $self->loc('Use supplied file as additional tag file (see also L</"FILES">)'),
+    );
+    $self->add_option(
+        spec => 'font|f=s',
+        arg_desc => 'font',
+        help => $self->loc('Specify the font to use in the terminal windows. Use standard X font notation such as "5x8".'),
+    );
+    $self->add_option(
+        spec => 'list|L',
+        help => $self->loc('List available cluster tags.'),
+    );
+    $self->add_option(
+        spec => 'output-config|u',
+        help => $self->loc('Output the current configuration in the same format used by the F<$HOME/.clusterssh/config> file.'),
+    );
+    $self->add_option(
+        spec => 'port|p=i',
+        arg_desc => 'port',
+        help => $self->loc('Specify an alternate port for connections.'),
+    );
+    $self->add_option(
+        spec => 'show-history|s',
+        help => $self->loc('IN BETA: Show history within console window.  This code is still being worked upon, but may help some users.'),
+    );
+    $self->add_option(
+        spec => 'tile|g',
+        help => $self->loc('Enable window tiling (overriding the config file).  See also --no-tile.'),
+    );
+    $self->add_option(
+        spec => 'no-tile|G',
+        help => $self->loc('Disable window tiling (overriding the config file).  See also --tile.'),
+    );
+    $self->add_option(
+        spec => 'term-args|t=s',
+        help => $self->loc('Specify arguments to be passed to terminals being used.'),
+    );
+    $self->add_option(
+        spec => 'title|T=s',
+        arg_desc => 'title',
+        help => $self->loc('Specify the initial part of the title used in the console and client windows.'),
+    );
+    $self->add_option(
+        spec => 'unique-servers|m',
+        help => $self->loc('Connect to each host only once.'),
+    );
+    $self->add_option(
+        spec => 'use-all-a-records|A',
+        help => $self->loc('If a hostname resolves to multiple IP addresses, toggle whether or not to connect to all of them, or just the first one (see also config file entry).'),
+    );
+    $self->add_option(
+        spec => 'username|l=s',
+        arg_desc => 'username',
+        help => $self->loc('Specify the default username to use for connections (if different from the currently logged in user).  B<NOTE:> will be overridden by <user>@<host>.'),
+    );
+    
     return $self;
 }
 
@@ -146,7 +164,7 @@ sub add_common_ssh_options {
         help => $self->loc('Specify arguments to be passed to ssh when making the connection.  B<NOTE:> options for ssh should normally be put into the ssh configuration file; see C<ssh_config> and F<$HOME/.ssh/config> for more details.'),
         default => '-x -o ConnectTimeout=10',
     );
-    
+
     return $self;
 }
 
