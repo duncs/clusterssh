@@ -186,79 +186,17 @@ sub getopts {
 
     use Data::Dump qw(dump);
     #warn "master: ", dump \%command_options;
-
     warn "ARGV: ", dump @ARGV;
 
     my $options = {};
+
     if ( !GetOptions( $options, keys(%{$self->{command_options}}) ) ) {
         $self->usage;
         $self->exit;
     }
 
     if ( $options->{'generate-pod'}) {
-        # generate valid POD from all the options and send to STDOUT
-        # so build process can create pod files for the distribution
-
-        warn "** GENERATE POD **";
-        print $/ , "=pod",$/,$/;
-        print '=head1 ',$self->loc('NAME'),$/,$/;
-        print "$Script - ", $self->loc("Cluster administration tool"),$/,$/;
-        print '=head1 ',$self->loc('SYNOPSIS'),$/,$/;
-        print "S<< $Script $self->{usage} >>",$/,$/;
-        print '=head1 ',$self->loc('DESCRIPTION'),$/,$/;
-        print $self->loc("_DESCRIPTION"),$/,$/;
-        print '=head2 '.$self->loc('Further Notes'),$/,$/;
-        print $self->loc("_FURTHER_NOTES"),$/,$/;
-        print '=over',$/,$/;
-        for (1 .. 6) {
-            print '=item *',$/,$/;
-            print $self->loc("_FURTHER_NOTES_".$_),$/,$/;
-        }
-        print '=back',$/,$/;
-        print '=head1 '.$self->loc('OPTIONS'),$/,$/;
-        print $self->loc("_OPTIONS"),$/,$/;
-
-        print '=over',$/,$/;
-        foreach my $longopt (sort keys(%{$self->{command_options}})) {
-            next if($self->{command_options}->{$longopt}->{hidden});
-
-            my ($option, $arg) = $longopt =~ m/^(.*?)(?:[=:](.*))?$/;
-            if($arg) {
-                my $arg_desc;
-                if(my $desc=$self->{command_options}->{$longopt}->{arg_desc}) {
-                    $arg_desc="<$desc>";
-                }
-                $arg=~s/\+/[[...] || <INTEGER>]/g;
-                $arg = $arg_desc || '<INTEGER>' if($arg eq 'i');
-                if($arg eq 's'){
-                    if($arg_desc) {
-                        $arg = "'$arg_desc'";
-                    } else {
-                        $arg = "'<STRING>'" ;
-                    }
-                }
-                #$arg=~s/i/<INTEGER>/g;
-                #$arg=~s/s/<STRING>/g;
-            }
-            my $desc;
-            foreach my $item ( split /\|/, $option) {
-
-                $desc .= ', ' if($desc);
-
-                # assumption - long options are 2 or more chars
-                if(length($item) == 1) {
-                    $desc .= "-$item";
-                } else {
-                    $desc .= "--$item";
-                }
-                $desc .= " $arg" if($arg);
-            }
-            print '=item ', $desc, $/,$/;
-            print $self->{command_options}->{$longopt}->{help},$/,$/;
-        }
-        print '=back',$/,$/;
-
-        # now list out alphabetically all defined options
+        $self->_generate_pod;
         $self->exit;
     }
 
@@ -329,6 +267,74 @@ sub help {
 
     warn "** HELP **";
 
+    return $self;
+}
+
+# generate valid POD from all the options and send to STDOUT
+# so build process can create pod files for the distribution
+sub _generate_pod {
+    my ($self) = @_;
+
+    warn "** GENERATE POD **";
+    print $/ , "=pod",$/,$/;
+    print '=head1 ',$self->loc('NAME'),$/,$/;
+    print "$Script - ", $self->loc("Cluster administration tool"),$/,$/;
+    print '=head1 ',$self->loc('SYNOPSIS'),$/,$/;
+    print "S<< $Script $self->{usage} >>",$/,$/;
+    print '=head1 ',$self->loc('DESCRIPTION'),$/,$/;
+    print $self->loc("_DESCRIPTION"),$/,$/;
+    print '=head2 '.$self->loc('Further Notes'),$/,$/;
+    print $self->loc("_FURTHER_NOTES"),$/,$/;
+    print '=over',$/,$/;
+    for (1 .. 6) {
+        print '=item *',$/,$/;
+        print $self->loc("_FURTHER_NOTES_".$_),$/,$/;
+    }
+    print '=back',$/,$/;
+    print '=head1 '.$self->loc('OPTIONS'),$/,$/;
+    print $self->loc("_OPTIONS"),$/,$/;
+
+    print '=over',$/,$/;
+    foreach my $longopt (sort keys(%{$self->{command_options}})) {
+        next if($self->{command_options}->{$longopt}->{hidden});
+
+        my ($option, $arg) = $longopt =~ m/^(.*?)(?:[=:](.*))?$/;
+        if($arg) {
+            my $arg_desc;
+            if(my $desc=$self->{command_options}->{$longopt}->{arg_desc}) {
+                $arg_desc="<$desc>";
+            }
+            $arg=~s/\+/[[...] || <INTEGER>]/g;
+            $arg = $arg_desc || '<INTEGER>' if($arg eq 'i');
+            if($arg eq 's'){
+                if($arg_desc) {
+                    $arg = "'$arg_desc'";
+                } else {
+                    $arg = "'<STRING>'" ;
+                }
+            }
+            #$arg=~s/i/<INTEGER>/g;
+            #$arg=~s/s/<STRING>/g;
+        }
+        my $desc;
+        foreach my $item ( split /\|/, $option) {
+
+            $desc .= ', ' if($desc);
+
+            # assumption - long options are 2 or more chars
+            if(length($item) == 1) {
+                $desc .= "-$item";
+            } else {
+                $desc .= "--$item";
+            }
+            $desc .= " $arg" if($arg);
+        }
+        print '=item ', $desc, $/,$/;
+        print $self->{command_options}->{$longopt}->{help},$/,$/;
+    }
+    print '=back',$/,$/;
+
+    # now list out alphabetically all defined options
     return $self;
 }
 
