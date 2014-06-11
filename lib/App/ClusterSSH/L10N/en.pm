@@ -70,14 +70,76 @@ would replace the <Alt-n> with the client's name in each window.},
     '_EXAMPLES_NAME_8' => q{Use console with master as the primary server instead of ssh},
     '_EXAMPLES_DESC_8' => q{S<$ ccon -M master server1 server2>},
 
+    '_FILES' => q{},
+    '_FILES_NAME_1' => q{F</etc/clusters>, F<$HOME/.clusterssh/clusters>},
+    '_FILES_DESC_1' => q{These files contain a list of tags to server names mappings.  When any name is used on the command line it is checked to see if it is a tag.  If it is a tag, then the tag is replaced with the list of servers.  The format is as follows:
+
+S<< <tag> ~[user@~]<server> ~[user@~]<server> ~[...~] >>
+
+e.g.
+
+    # List of servers in live
+    live admin1@server1 admin2@server2 server3 server4
+
+All comments (marked by a #) and blank lines are ignored.  Tags may be nested, but be aware of using recursive tags as they are not checked for.
+
+Extra cluster files may also be specified either as an option on the command line (see C<cluster-file>) or in the user's F<$HOME/.clusterssh/config> file (see C<extra_cluster_file> configuration option).
+
+NOTE: the last tag read overwrites any pre-existing tag of that name.
+
+NOTE: there is a special cluster tag called C<default> - any tags or hosts included within this tag will be automatically opened if no other tags are specified on the command line.},
+
+    '_FILES_NAME_2' => q{ F</etc/tags>, F<$HOME/.clusterssh/tags>},
+    '_FILES_DESC_2' => q{Very similar to F<cluster> files but the definition is reversed.  The format is:
+
+S<< <host> <tag> ~[...~] >>
+
+This allows one host to be specified as a member of a number of tags.  This format can be clearer than using F<clusters> files.
+
+Extra tag files may be specified either as an option (see C<tag-file>) or within the user's F<$HOME/.clusterssh/config> file (see C<extra_tag_file> configuration option).
+
+NOTE: All tags are added together},
+
+    '_FILES_NAME_3' => q{  F</etc/csshrc> & F<$HOME/.clusterssh/config>},
+    '_FILES_DESC_3' => q{ aaa },
+
+    '_FILES_NAME_4' => q{ F<$HOME/.csshrc_send_menu> },
+    '_FILES_DESC_4' => q{ aaa },
+
     '_KNOWN_BUGS' => q{If you have any ideas about how to fix the below bugs, please get in touch and/or provide a patch.},
 
     '_KNOWN_BUGS_DESC_1' => q{Swapping virtual desktops can cause a redraw of all the terminal windows.  This is due to a lack of distinction within Tk between switching desktops and minimising/maximising windows.  Until Tk can tell the difference between the two events, there is no fix (apart from rewriting everything directly in X).},
 
     '_REPORTING_BUGS' => q{ },
-    '_REPORTING_BUGS_NAME_1' => q{a},
-    '_REPORTING_BUGS_DESC_1' => q{a},
+    '_REPORTING_BUGS_DESC_1' => q{If you have issues running cssh, first try:
+    
+C<< cssh -e ~[user@~]<hostname>~[:port~] >>
 
+This performs two tests to confirm cssh is able to work properly with the
+settings provided within the F<$HOME/.clusterssh/config> file (or internal defaults).
+
+    1. Test the terminal window works with the options provided
+
+    2. Test ssh works to a host with the configured arguments
+            
+Configuration options to watch for in ssh are
+
+    - Doesn't understand "-o ConnectTimeout=10" - remove the option in the F<$HOME/.clusterssh/config> file
+
+    - OpenSSH-3.8 using untrusted ssh tunnels - use "-Y" instead of "-X" or use "ForwardX11Trusted yes' in ssh_config (if you change the default ssh options from -x to -X)},
+
+    '_REPORTING_BUGS_DESC_2' => q{If you require support, please run the following commands and post it on the web site in the support/problems forum:
+
+C<< perl -V >>
+
+C<< perl -MTk -e 'print $Tk::VERSION,$/' >>
+
+C<< perl -MX11::Protocol -e 'print $X11::Protocol::VERSION,$/' >>
+
+C<< cat /etc/csshrc $HOME/.clusterssh/config >>
+},
+
+    '_REPORTING_BUGS_DESC_3' => q{Using the debug option (--debug) will turn on debugging output.  Repeat the option to increase the amount of debug.  However, if possible please only use this option with one host at a time, e.g.  "cssh --debug <host>" due to the amount of output produced (in both main and child windows).},
 );
 
 1;

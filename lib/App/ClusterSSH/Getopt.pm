@@ -337,6 +337,9 @@ sub _generate_pod {
     $self->_pod_output_list_section(1,'KEY SHORTCUTS');
     $self->_pod_output_list_section(1,'EXAMPLES');
 
+    #print '=head1 '.$self->loc('FILES'),$/,$/;
+    $self->_pod_output_list_section(1,'FILES');
+
     $self->_pod_output_list_section(1,'KNOWN BUGS');
     $self->_pod_output_list_section(1,'REPORTING BUGS');
 
@@ -370,7 +373,9 @@ See http://dev.perl.org/licenses/ for more information.
 sub _pod_output_list_section {
     my ($self, $level, $section) = @_;
 
-    print '=head'.$level.' ',$self->loc($section),$/,$/;
+    if($level) {
+        print '=head'.$level.' ',$self->loc($section),$/,$/;
+    }
     $section=uc($section);
     $section=~s/ /_/g;
     print $self->loc('_'.$section),$/,$/;
