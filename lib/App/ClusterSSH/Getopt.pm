@@ -238,27 +238,6 @@ sub usage {
         $options_pod .= "$long\n\n";
     }
     $options_pod .= "=back\n\n";
-
-#    my $common_pod;
-#    while (<DATA>) {
-#        $common_pod .= $_;
-#    }
-#
-#    warn "common_pod=$common_pod";
-
-#    warn '#' x 60;
-##    warn "options_pod=$options_pod";
-##    warn '#' x 60;
-##    my $main_pod = '';
-##    while (<main::DATA>) {
-##        $main_pod .= $_;
-##    }
-
-#    warn "main_pod=$main_pod";
-
-##    $main_pod =~ s/%OPTIONS%/$options_pod/;
-
- ##   die $main_pod;
     return $self;
 }
 
@@ -270,26 +249,57 @@ sub help {
     return $self;
 }
 
+sub output {
+    my (@text) = @_;
+
+    print @text,$/,$/;
+}
+
 # generate valid POD from all the options and send to STDOUT
 # so build process can create pod files for the distribution
 sub _generate_pod {
     my ($self) = @_;
 
     warn "** GENERATE POD **";
-    print $/ , "=pod",$/,$/;
-    print '=head1 ',$self->loc('NAME'),$/,$/;
-    print "$Script - ", $self->loc("Cluster administration tool"),$/,$/;
-    print '=head1 ',$self->loc('SYNOPSIS'),$/,$/;
-    print "S<< $Script $self->{usage} >>",$/,$/;
-    print '=head1 ',$self->loc('DESCRIPTION'),$/,$/;
-    print $self->loc("_DESCRIPTION"),$/,$/;
+    output $/ , "=pod";
+    output '=head1 ',$self->loc('NAME') ;
+    output "$Script - ", $self->loc("Cluster administration tool");
+    output '=head1 ',$self->loc('SYNOPSIS');
+    output "S<< $Script $self->{usage} >>";
+    output '=head1 ',$self->loc('DESCRIPTION');
+    output $self->loc(q{The command opens an administration console and an xterm to all specified hosts.  Any text typed into the administration console is replicated to all windows.  All windows may also be typed into directly.
 
-    $self->_pod_output_list_section(2,'Further Notes');
+This tool is intended for (but not limited to) cluster administration where the same configuration or commands must be run on each node within the cluster.  Performing these commands all at once via this tool ensures all nodes are kept in sync.
 
-    print '=head1 '.$self->loc('OPTIONS'),$/,$/;
-    print $self->loc("_OPTIONS"),$/,$/;
+Connections are opened via ssh, so a correctly installed and configured ssh installation is required.  If, however, the program is called by "crsh" then the rsh protocol is used (and the communications channel is insecure), or by "ctel" then telnet is used, or by "ccon" then console is used.
 
-    print '=over',$/,$/;
+Extra caution should be taken when editing system files such as /etc/inet/hosts as lines may not necessarily be in the same order.  Assuming line 5 is the same across all servers and modifying that is dangerous.  It's better to search for the specific line to be changed and double-check before changes are committed.});
+
+    output '=head2 ',$self->loc('Further Notes');
+    output $self->loc('Please also see "KNOWN BUGS".');
+    output '=over';
+    output '=item *';
+    output $self->loc(q{The dotted line on any sub-menu is a tear-off, i.e. click on it and the sub-menu is turned into its own window.});
+    output '=item *';
+    output $self->loc(q{Unchecking a hostname on the Hosts sub-menu will unplug the host from the cluster control window, so any text typed into the console is not sent to that host.  Re-selecting it will plug it back in.});
+    output '=item *';
+    output $self->loc(q{If your window manager menu bars are obscured by terminal windows see the C<screen_reserve_XXXXX> options in the [_1] file (see [_2]).}, 'F<$HOME/.clusterssh/config>','L</"FILES">');
+    output '=item *';
+    output $self->loc(q{If the terminals overlap too much see the C<terminal_reserve_XXXXX> options in the [_1] file (see [_2]).},'F<$HOME/.clusterssh/config>','L</"FILES">');
+    output '=item *';
+    output $self->loc(q{When using cssh on a large number of systems to connect back to a single system (e.g. you issue a command to the cluster to scp a file from a given location) and when these connections require authentication (i.e. you are going to authenticate with a password), the sshd daemon at that location may refuse connects after the number specified by MaxStartups in sshd_config is exceeded.  (If this value is not set, it defaults to 10.)  This is expected behavior; sshd uses this mechanism to prevent DoS attacks from unauthenticated sources.  Please tune sshd_config and reload the SSH daemon, or consider using the [_1] mechanism for authentication if you encounter this problem.},'F<~/.ssh/authorized_keys>');
+    output '=item *';
+    output $self->loc(q{If client windows fail to open, try running:
+
+[_1]
+
+This will test the mechanisms used to open windows to hosts.  This could be due to either the [_2] terminal option which enables [_3] (some terminals do not require this option, other terminals have another method for enabling it - see your terminal documentation) or the [_4] ssh option (see the configuration option [_5] or file [_6] below to resolve this).},'C<< cssh -e {single host name} >>','C<-xrm>','C<AllowSendEvents>','C<ConnectTimeout>','C<-o>','C<$HOME/.clusterssh/config>');
+    output '=back';
+
+    output '=head1 '.$self->loc('OPTIONS');
+    output $self->loc("Some of these options may also be defined within the configuration file.  Default options are shown as appropriate.");
+
+    output '=over';
     foreach my $longopt (sort keys(%{$self->{command_options}})) {
         next if($self->{command_options}->{$longopt}->{hidden});
 
@@ -300,16 +310,14 @@ sub _generate_pod {
                 $arg_desc="<$desc>";
             }
             $arg=~s/\+/[[...] || <INTEGER>]/g;
-            $arg = $arg_desc || '<INTEGER>' if($arg eq 'i');
+            $arg = $arg_desc || '<'.$self->loc('INTEGER').'>' if($arg eq 'i');
             if($arg eq 's'){
                 if($arg_desc) {
                     $arg = "'$arg_desc'";
                 } else {
-                    $arg = "'<STRING>'" ;
+                    $arg = q{'<}.$self->loc('STRING').q{>'};
                 }
             }
-            #$arg=~s/i/<INTEGER>/g;
-            #$arg=~s/s/<STRING>/g;
         }
         my $desc;
         foreach my $item ( split /\|/, $option) {
@@ -324,79 +332,391 @@ sub _generate_pod {
             }
             $desc .= " $arg" if($arg);
         }
-        print '=item ', $desc, $/,$/;
-        print $self->{command_options}->{$longopt}->{help},$/,$/;
+        output '=item ', $desc;
+        output $self->{command_options}->{$longopt}->{help};
 
         if($self->{command_options}->{$longopt}->{default}) {
-        print 'Default: ', $self->{command_options}->{$longopt}->{default}, $/, $/;
+            output $self->loc('Default'),': ', $self->{command_options}->{$longopt}->{default}, $/, $/;
         }
     }
-    print '=back',$/,$/;
+    output '=back';
 
-    $self->_pod_output_list_section(1,'ARGUMENTS');
-    $self->_pod_output_list_section(1,'KEY SHORTCUTS');
-    $self->_pod_output_list_section(1,'EXAMPLES');
+    output '=head1 '.$self->loc('ARGUMENTS');
+    output $self->loc('The following arguments are supported:');
+    output '=over';
+    output '=item [user@]<hostname>[:port] ...';
+    output $self->loc('Open an xterm to the given hostname and connect to the administration console.  An optional port number can be used if sshd is not listening on the standard port (i.e., not listening on port 22) and ssh_config cannot be used.');
+    output '=item <tag> ...';
+    output $self->loc('Open a series of xterms defined by <tag> in one of the supplementary configuration files (see [_1]).
 
-    #print '=head1 '.$self->loc('FILES'),$/,$/;
-    $self->_pod_output_list_section(1,'FILES');
+B<Note:> specifying a username on a cluster tag will override any usernames defined in the cluster.', 'L</"FILES">');
+    output '=back';
 
-    $self->_pod_output_list_section(1,'KNOWN BUGS');
-    $self->_pod_output_list_section(1,'REPORTING BUGS');
+    output '=head1 '.$self->loc('KEY SHORTCUTS');
+    output $self->loc('The following key shortcuts are available within the console window, and all of them may be changed via the configuration files.');
+    output '=over';
+    output '=item Control-q';
+    output $self->loc('Quit the program and close all connections and windows.');
+    output '=item Control-+';
+    output $self->loc(q{Open the 'Add Host(s) or Cluster(s)' dialogue box.  Multiple host or cluster names can be entered, separated by spaces.});
+    output '=item Alt-n';
+    output $self->loc(q{Paste in the hostname part of the specific connection string to each client, minus any username or port, e.g.
 
-    print '=head1 ',$self->loc('SEE ALSO'),$/,$/;
-    print $self->loc(q{
-L<http://clusterssh.sourceforge.net/>,
+C<< scp /etc/hosts server:files/<Alt-n>.hosts >>
+
+would replace the <Alt-n> with the client's name in each window.});
+    output '=item Alt-r';
+    output $self->loc(q{Retile all the client windows.});
+    output '=back';
+
+    output '=head1 '.$self->loc('EXAMPLES');
+    output '=over';
+    output '=item ', $self->loc(q{Open up a session to 3 servers});
+    output q{S<$ cssh server1 server2 server3>};
+    output '=item ', $self->loc(q{Open up a session to a cluster of servers identified by the tag 'farm1' and give the controlling window a specific title, where the cluster is defined in one of the default configuration files});
+    output q{S<$ cssh -T 'Web Farm Cluster 1' farm1>};
+    output '=item ', $self->loc(q{Connect to different servers using different login names.  NOTE: this can also be achieved by setting up appropriate options in the F<.ssh/config> file.  Do not close cssh when the last terminal exits.});
+    output q{S<$ cssh -Q user1@server1 admin@server2>};
+    output '=item ', $self->loc(q{Open up a cluster defined in a non-default configuration file});
+    output q{S<$ cssh -c $HOME/cssh.config db_cluster>};
+    output '=item ', $self->loc(q{Use telnet on port 2022 instead of ssh});
+    output q{S<$ ctel -p 2022 server1 server2>};
+    output '=item ', $self->loc(q{Use rsh instead of ssh});
+    output q{S<$ crsh server1 server2>};
+    output '=item ', $self->loc(q{Use console with master as the primary server instead of ssh});
+    output q{S<$ ccon -M master server1 server2>};
+    output '=back';
+
+    output '=head1 '.$self->loc('FILES');
+    output '=over';
+    output q{=item F</etc/clusters>, F<$HOME/.clusterssh/clusters>};
+    output $self->loc(q{These files contain a list of tags to server names mappings.  When any name is used on the command line it is checked to see if it is a tag.  If it is a tag, then the tag is replaced with the list of servers.  The format is as follows:});
+    output 'S<< <tag> [user@]<server> [user@]<server> [...] >>';
+    output $self->loc('e.g.
+
+    # List of servers in live
+    live admin1@server1 admin2@server2 server3 server4');
+    output $self->loc(q{All comments (marked by a #) and blank lines are ignored.  Tags may be nested, but be aware of using recursive tags as they are not checked for.});
+    output $self->loc(q{Extra cluster files may also be specified either as an option on the command line (see [_1]) or in the user's [_2] file (see [_3] configuration option).}, 'C<cluster-file>','F<$HOME/.clusterssh/config>','C<extra_cluster_file>');
+    output $self->loc('B<NOTE:> the last tag read overwrites any pre-existing tag of that name.');
+    output $self->loc('B<NOTE:> there is a special cluster tag called [_1] - any tags or hosts included within this tag will be automatically opened if no other tags are specified on the command line.', 'C<default>');
+
+    output q{=item F</etc/tags>, F<$HOME/.clusterssh/tags>};
+    output $self->loc(q{Very similar to [_1] files but the definition is reversed.  The format is:}, 'F<clusters>');
+    output 'S<< <host> <tag> [...] >>';
+    output $self->loc(q{This allows one host to be specified as a member of a number of tags.  This format can be clearer than using [_1] files.}, 'F<clusters>');
+    output $self->loc(q{Extra tag files may be specified either as an option (see [_1]) or within the user's [_2] file (see [_3] configuration option).}, 'C<tag-file>','F<$HOME/.clusterssh/config>','C<extra_tag_file>');
+    output $self->loc('B<NOTE:> All tags are added together');
+
+    output q{=item F</etc/csshrc> & F<$HOME/.clusterssh/config>};
+    output $self->loc(q{This file contains configuration overrides - the defaults are as marked.  Default options are overwritten first by the global file, and then by the user file.});
+    output $self->loc('B<NOTE:> values for entries do not need to be quoted unless it is required for passing arguments, e.g.');
+    output q{C<< terminal_allow_send_events="-xrm '*.VT100.allowSendEvents:true'" >>};
+    output $self->loc('should be written as');
+    output q{C<< terminal_allow_send_events=-xrm '*.VT100.allowSendEvents:true' >>};
+
+    output '=over';
+
+    output '=item auto_close = 5';
+    output $self->loc('Close terminal window after this many seconds.  If set to 0 will instead wait on input from the user in each window before closing. See also [_1] and [_2]', 'L<--autoclose>', '--no-autoclose');
+
+    output '=item auto_quit = yes';
+    output $self->loc('Automatically quit after the last client window closes.  Set to anything other than "yes" to disable.  See also [_1] and [_2]', 'L<--autoquit>','L<--no-autoquit>');
+
+    output '=item clusters = <blank>';
+    output $self->loc('Define a number of cluster tags in addition to (or to replace) tags defined in the [_1] file.  The format is:','F<clusters>');
+    output(q{C<< clusters = <tag1> <tag2> <tag3> >>
+C<< <tag1> = host1 host2 host3 >>
+C<< <tag2> = user@host4 user@host5 host6 >>
+C<< <tag3> = <tag1> <tag2> >>});
+    output $self->loc('As with the [_1] file, be sure not to create recursively nested tags.','F<clusters>');
+
+    output '=item comms = ssh';
+    output $self->loc('Sets the default communication method (initially taken from the name of the program, but can be overridden here).');
+
+    output '=item console_position = <null>';
+    output $self->loc(q{Set the initial position of the console - if empty then let the window manager decide.  Format is '+<x>+<y>', i.e. '+0+0' is top left hand corner of the screen, '+0-70' is bottom left hand side of screen (more or less).});
+
+    output '=item external_cluster_command = <null>';
+    output $self->loc(q{Define the full path to an external command that can be used to resolve tags to host names.  This command can be written in any language.  The script must accept a list of tags to resolve and output a list of hosts on a single line.  Any tags that cannot be resolved should be returned unchanged.
+
+A non-0 exit code will be counted as an error, a warning will be printed and output ignored.});
+
+    output '=item extra_cluster_file = <null>';
+    output $self->loc(q{Define an extra cluster file in the format of [_1].  Multiple files can be specified, separated by commas.  Both ~ and $HOME are acceptable as a reference to the user's home directory, e.g.}, 'F</etc/clusters>');
+    output 'C<< extra_cluster_file = ~/clusters, $HOME/clus >>';
+
+    output '=item key_addhost = Control-Shift-plus';
+    output $self->loc(q{Default key sequence to open AddHost menu.  See [_1] for more information.}, 'L<KEY SHORTCUTS>');
+
+    output '=item key_clientname = Alt-n';
+    output $self->loc(q{Default key sequence to send cssh client names to client.  See [_1] for more information.}, 'L<KEY SHORTCUTS>');
+
+    output '=item key_localname = Alt-l';
+    output $self->loc(q{Default key sequence to send hostname of local server to client.  See [_1] for more information.}, 'L<KEY SHORTCUTS>');
+
+    output '=item key_paste = Control-v';
+    output $self->loc(q{Default key sequence to paste text into the console window.  See [_1] for more information.}, 'L<KEY SHORTCUTS>');
+
+    output '=item key_quit = Control-q';
+    output $self->loc(q{Default key sequence to quit the program (will terminate all open windows).  See [_1] for more information.}, 'L<KEY SHORTCUTS>');
+
+    output '=item key_retilehosts = Alt-r';
+    output $self->loc(q{Default key sequence to retile host windows.  See [_1] for more information.}, 'L<KEY SHORTCUTS>');
+
+    output '=item key_username = Alt-u';
+    output $self->loc(q{Default key sequence to send username to client.  See [_1] for more information.}, 'L<KEY SHORTCUTS>');
+
+    output '=item macro_servername = %s';
+    output '=item macro_hostname = %h';
+    output '=item macro_username = %u';
+    output '=item macro_newline = %n';
+    output '=item macro_version = %v';
+    output $self->loc(q{Change the replacement macro used when either using a 'Send' menu item, or when pasting text into the main console.});
+
+    output '=item macros_enabled = yes';
+    output $self->loc(q{Enable or disable macro replacement.  Note: this affects all the [_1] variables above.}, 'C<macro_*>');
+
+    output '=item max_addhost_menu_cluster_items = 6';
+    output $self->loc(q{Maximum number of entries in the 'Add Host' menu cluster list before scrollbars are used});
+
+    output '=item max_host_menu_items = 30';
+    output $self->loc(q{Maximum number of hosts to put into the host menu before starting a new column});
+
+    output '=item menu_host_autotearoff = 0';
+    output '=item menu_send_autotearoff = 0';
+    output $self->loc(q{When set to non-0 will automatically tear-off the host or send menu at program start});
+
+    output '=item mouse_paste = Button-2 (middle mouse button)';
+    output $self->loc(q{Default key sequence to paste text into the console window using the mouse.  See [_1] for more information.}, 'L<KEY SHORTCUTS>');
+
+    output '=item rsh = rsh';
+    output '=item ssh = ssh';
+    output '=item telnet = telnet';
+    output $self->loc(q{Set the path to the specific binary to use for the communication method, else uses the first match found in [_1]},'C<$PATH>');
+
+    output '=item rsh_args = <blank>';
+    output '=item ssh_args = "-x -o ConnectTimeout=10"';
+    output '=item telnet_args = <blank>';
+    output $self->loc(q{Sets any arguments to be used with the communication method (defaults to ssh arguments).
+
+B<NOTE:> The given defaults are based on OpenSSH, not commercial ssh software.
+
+B<NOTE:> Any "generic" change to the method (e.g., specifying the ssh port to use) should be done in the medium's own config file (see [_1] and [_2]).},'C<ssh_config>','F<$HOME/.ssh/config>');
+
+    output '=item screen_reserve_top = 0';
+    output '=item screen_reserve_bottom = 60';
+    output '=item screen_reserve_left = 0';
+    output '=item screen_reserve_right = 0';
+    output $self->loc(q{Number of pixels from the screen's side to reserve when calculating screen geometry for tiling.  Setting this to something like 50 will help keep cssh from positioning windows over your window manager's menu bar if it draws one at that side of the screen.});
+
+    output '=item rsh = /path/to/rsh';
+    output '=item ssh = /path/to/ssh';
+    output $self->loc(q{Depending on the value of comms, set the path of the communication binary.});
+
+    output '=item terminal = /path/to/xterm';
+    output $self->loc(q{Path to the X-Windows terminal used for the client.});
+
+    output '=item terminal_args = <blank>';
+    output $self->loc(q{Arguments to use when opening terminal windows.  Otherwise takes defaults from [_1] or [_2] file.},'F<$HOME/.Xdefaults>','F<$HOME/.Xresources>');
+
+    output '=item terminal_font = 6x13';
+    output $self->loc(q{Font to use in the terminal windows.  Use standard X font notation.});
+
+    output '=item terminal_reserve_top = 5';
+    output '=item terminal_reserve_bottom = 0';
+    output '=item terminal_reserve_left = 5';
+    output '=item terminal_reserve_right = 0';
+    output $self->loc(q{Number of pixels from the terminal's side to reserve when calculating screen geometry for tiling.  Setting these will help keep cssh from positioning windows over your scroll and title bars or otherwise overlapping the windows too much.});
+
+    output '=item terminal_colorize = 1';
+    output $self->loc(q{If set to 1 (the default), then "-bg" and "-fg" arguments will be added to the terminal invocation command-line.  The terminal will be colored in a pseudo-random way based on the host name; while the color of a terminal is not easily predicted, it will always be the same color for a given host name.  After a while, you will recognize hosts by their characteristic terminal color.});
+
+    output '=item terminal_bg_style = dark';
+    output $self->loc(q{If set to [_1], the terminal background will be set to black and the foreground to the pseudo-random color.  If set to [_2], then the foreground will be black and the background the pseudo-random color.  If terminal_colorize is [_3], then this option has no effect.}, 'C<dark>','C<light>','C<zero>');
+
+    output '=item terminal_size = 80x24';
+    output $self->loc(q{Initial size of terminals to use. NOTE: the number of lines (24) will be decreased when resizing terminals for tiling, not the number of characters (80).});
+
+    output '=item terminal_title_opt = -T';
+    output $self->loc(q{Option used with [_1] to set the title of the window},'C<terminal>');
+
+    output q{=item terminal_allow_send_events = -xrm '*.VT100.allowSendEvents:true'};
+    output $self->loc(q{Option required by the terminal to allow XSendEvents to be received});
+
+    output '=item title = cssh';
+    output $self->loc(q{Title of windows to use for both the console and terminals.});
+
+    output '=item unmap_on_redraw = no';
+    output $self->loc(q{Tell Tk to use the UnmapWindow request before redrawing terminal windows.  This defaults to "no" as it causes some problems with the FVWM window manager.  If you are experiencing problems with redraws, you can set it to "yes" to allow the window to be unmapped before it is repositioned.});
+
+    output '=item use_all_a_records = no';
+    output $self->loc(q{If a hostname resolves to multiple IP addresses, set to [_1] to connect to all of them, not just the first one found.},'C<yes>');
+
+    output '=item use_hotkeys = yes';
+    output $self->loc(q{Setting to anything other than [_1] will disable all hotkeys.},'C<yes>');
+
+    output '=item user = $LOGNAME';
+    output $self->loc(q{Sets the default user for running commands on clients.});
+
+    output '=item window_tiling = yes';
+    output $self->loc(q{Perform window tiling (set to [_1] to disable)},'C<no>');
+
+    output '=item window_tiling_direction = right';
+    output $self->loc(q{Direction to tile windows, where [_1] means starting top left and moving right and then down, and anything else means starting bottom right and moving left and then up},'C<right>');
+
+    output '=back';
+
+    output $self->loc(q{B<NOTE:> The key shortcut modifiers must be in the form [_1], [_2] or [_3], e.g. with the first letter capitalised and the rest lower case.  Keys may also be disabled individually by setting to the word [_4].},'C<Control>','C<Alt>','C<Shift>','C<null>');
+
+    output q{=item F<$HOME/.csshrc_send_menu>};
+    output $self->loc(q{This (optional) file contains items to populate the send menu.  The default entry could be written as:});
+    output '  <send_menu>
+    <menu title="Use Macros">
+        <toggle/>
+        <accelerator>ALT-p</accelerator>
+    </menu>
+    <menu title="Remote Hostname">
+        <command>%s</command>
+        <accelerator>ALT-n</accelerator>
+    </menu>
+    <menu title="Local Hostname">
+        <command>%s</command>
+        <accelerator>ALT-l</accelerator>
+    </menu>
+    <menu title="Username">
+        <command>%u</command>
+        <accelerator>ALT-u</accelerator>
+    </menu>
+    <menu title="Test Text">
+        <command>echo "ClusterSSH Version: %v%n</command>
+    </menu>
+  </send_menu>';
+
+    output $self->loc(q{Submenus can also be specified as follows:});
+    output '  <send_menu>
+    <menu title="Default Entries">
+      <detach>yes</detach>
+      <menu title="Hostname">
+          <command>%s</command>
+          <accelerator>ALT-n</accelerator>
+      </menu>
+    </menu>
+  </send_menu>';
+
+    output $self->loc(q{B<Caveats:>});
+    output '=over';
+    output '=item ',$self->loc(q{There is currently no strict format checking of this file.});
+    output '=item ',$self->loc(q{The format of the file may change in the future});
+    output '=item ',$self->loc(q{If the file exists, the default entry (Hostname) is not added});
+    output '=back';
+
+    output $self->loc(q{The following replacement macros are available (note: these can be changed in the configuration file):});
+    output '=over';
+    output '=item %s';
+    output $self->loc(q{Hostname part of the specific connection string to each client, minus any username or port});
+    output '=item %u';
+    output $self->loc(q{Username part of the connection string to each client});
+    output '=item %h';
+    output $self->loc(q{Hostname of server where cssh is being run from});
+    output '=item %n';
+    output $self->loc(q{C<RETURN> code});
+    output '=back';
+
+    output $self->loc(q{B<NOTE:> requires [_1] to be installed},'L<XML::Simple>');
+
+    output '=back';
+
+    output '=head1 ', $self->loc('KNOWN BUGS');
+    output $self->loc(q{If you have any ideas about how to fix the below bugs, please get in touch and/or provide a patch.});
+    output '=over';
+    output '=item *';
+    output $self->loc(q{Swapping virtual desktops can cause a redraw of all the terminal windows.  This is due to a lack of distinction within Tk between switching desktops and minimising/maximising windows.  Until Tk can tell the difference between the two events, there is no fix (apart from rewriting everything directly in X).});
+    output '=back';
+
+    output '=head1 ', $self->loc('REPORTING BUGS');
+    output '=over';
+    output '=item *';
+    output $self->loc(q{If you have issues running cssh, first try:
+
+[_1]
+
+This performs two tests to confirm cssh is able to work properly with the settings provided within the [_2] file (or internal defaults).
+}, 'C<< cssh -e [user@]<hostname>[:port] >>','F<$HOME/.clusterssh/config>');
+
+    output '=over';
+    output '=item 1';
+    output $self->loc(q{Test the terminal window works with the options provided});
+    output '=item 2';
+    output $self->loc(q{Test ssh works to a host with the configured arguments});
+    output '=back';
+
+    output $self->loc(q{Configuration options to watch for in ssh are});
+    output '=over';
+    output '=item ',$self->loc(q{SSH doesn't understand [_1] - remove the option from the [_2] file},'C<-o ConnectTimeout=10>', 'F<$HOME/.clusterssh/config>');
+    output '=item ',$self->loc(q{OpenSSH-3.8 using untrusted ssh tunnels - use [_1] instead of [_2] or use [_3] in [_4] (if you change the default ssh options from [_5] to [_6])}, 'C<-Y>','C<-X>','C<ForwardX11Trusted yes>','F<$HOME/.ssh/ssh_config>','C<-x>','C<-X>');
+    output '=back';
+
+    output '=item *';
+    output $self->loc(q{If you require support, please run the following commands and post it on the web site in the support/problems forum:});
+    output 'C<< perl -V >>';
+    output q{C<< perl -MTk -e 'print $Tk::VERSION,$/' >>};
+    output q{C<< perl -MX11::Protocol -e 'print $X11::Protocol::VERSION,$/' >>};
+    output 'C<< cat /etc/csshrc $HOME/.clusterssh/config >>';
+
+    output '=item *';
+    output $self->loc(q{Using the debug option (--debug) will turn on debugging output.  Repeat the option to increase the amount of debug.  However, if possible please only use this option with one host at a time, e.g. [_1] due to the amount of output produced (in both main and child windows).}, 'C<< cssh --debug <host> >>');
+    output '=back';
+
+    output '=head1 ',$self->loc('SEE ALSO');
+    output $self->loc(q{L<http://clusterssh.sourceforge.net/>,
 C<ssh>,
 L<Tk::overview>,
 L<X11::Protocol>,
-C<perl>
-}),$/,$/;
+C<perl>});
 
-    print '=head1 ',$self->loc('CREDITS'),$/,$/;
-    print $self->loc('A web site for comments, requests, bug reports and bug fixes/patches is available at: [_1]', 'L<http://clusterssh.sourceforge.net/>'),$/,$/;
+    output '=head1 ',$self->loc('CREDITS');
+    output $self->loc('A web site for comments, requests, bug reports and bug fixes/patches is available at: [_1]', 'L<http://clusterssh.sourceforge.net/>');
 
-    print '=head1 ',$self->loc('AUTHOR'),$/,$/;
-    print 'Duncan Ferguson, C<< <duncan_j_ferguson at yahoo.co.uk> >>',$/,$/;
+    output '=head1 ',$self->loc('AUTHOR');
+    output 'Duncan Ferguson, C<< <duncan_j_ferguson at yahoo.co.uk> >>';
 
-    print '=head1 ',$self->loc('LICENSE AND COPYRIGHT'),$/,$/;
-    print $self->loc(q{
+    output '=head1 ',$self->loc('LICENSE AND COPYRIGHT');
+    output $self->loc(q{
 Copyright 1999-2014 Duncan Ferguson.
 
 This program is free software; you can redistribute it and/or modify it under the terms of either: the GNU General Public License as published by the Free Software Foundation; or the Artistic License.
 
 See http://dev.perl.org/licenses/ for more information.
-}),$/,$/;
+});
 
     return $self;
 }
 
 sub _pod_output_list_section {
-    my ($self, $level, $section) = @_;
+    my ($self, $section) = @_;
 
-    if($level) {
-        print '=head'.$level.' ',$self->loc($section),$/,$/;
-    }
-    $section=uc($section);
-    $section=~s/ /_/g;
-    print $self->loc('_'.$section),$/,$/;
-    print '=over',$/,$/;
-    for (1 .. 10) {
+    output '=over';
+    for (1 .. 50) {
         # there might not be 10 sections so catch errors
-        my ($name, $desc);
+        my ($item, $text);
         eval {
-            $name = $self->loc('_'.$section.'_NAME_'.$_);
+            $item = $self->loc('_'.$section.'_ITEM_'.$_);
         };
         eval {
-            $desc=$self->loc('_'.$section.'_DESC_'.$_);
+            $text=$self->loc('_'.$section.'_TEXT_'.$_);
         };
         # and if there is an error we have gone past the last item
         #last if($@);
-        if($desc) {
-            print '=item ', $name || '*',$/,$/;
-            print $desc,$/,$/;
+        if($item) {
+            output '=item ', $item;
+        }
+        if($text) {
+            output '=item *' if(!$item);
+            output $text;
         }
     }
-    print '=back',$/,$/;
+    output '=back';
 
     return $self;
 }
