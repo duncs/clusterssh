@@ -8,6 +8,7 @@ our $VERSION = version->new('0.01');
 
 use Carp;
 use Try::Tiny;
+use Pod::Usage;
 use Getopt::Long qw(:config no_ignore_case bundling no_auto_abbrev);
 use FindBin qw($Script);
 
@@ -19,7 +20,10 @@ sub new {
     # basic setup that is over-rideable by each script as needs may be
     # different depending ont he command used
     my %setup = (
-        usage => '[options] [[user@]<server>[:port]|<tag>] [...]',
+        usage => [ 
+            '-h|--help' ,
+            '[options] [[user@]<server>[:port]|<tag>] [...] ',
+        ],
     );
 
     my $self = $class->SUPER::new(%setup, %args);
@@ -183,17 +187,12 @@ sub add_common_session_options {
 
 sub getopts {
     my ($self) = @_;
-
-    use Data::Dump qw(dump);
-    #warn "master: ", dump \%command_options;
-    warn "ARGV: ", dump @ARGV;
-
     my $options = {};
 
-    if ( !GetOptions( $options, keys(%{$self->{command_options}}) ) ) {
-        $self->usage;
-        $self->exit;
-    }
+    pod2usage( -verbose => 1 ) if ( !GetOptions( $options, keys(%{$self->{command_options}}) ) );
+    pod2usage( -verbose => 0 ) if ( $options->{'?'} || $options->{usage} );
+    pod2usage( -verbose => 1 ) if ( $options->{'h'} || $options->{help} );
+    pod2usage( -verbose => 2 ) if ( $options->{H}   || $options->{man} );
 
     if ( $options->{'generate-pod'}) {
         $self->_generate_pod;
@@ -214,11 +213,6 @@ sub getopts {
         print "Version: $VERSION\n";
         $self->exit;
     }
-
-    warn "end: ", dump $options;
-
-    #die "and out";
-    warn "WAS DEAD HERE";
 
     return $self;
 }
@@ -265,7 +259,9 @@ sub _generate_pod {
     output '=head1 ',$self->loc('NAME') ;
     output "$Script - ", $self->loc("Cluster administration tool");
     output '=head1 ',$self->loc('SYNOPSIS');
-    output "S<< $Script $self->{usage} >>";
+    foreach my $usage (@{  $self->{usage} } ) {
+        print "S<< $Script $usage >>",$/,$/;
+    }
     output '=head1 ',$self->loc('DESCRIPTION');
     output $self->loc(q{The command opens an administration console and an xterm to all specified hosts.  Any text typed into the administration console is replicated to all windows.  All windows may also be typed into directly.
 
