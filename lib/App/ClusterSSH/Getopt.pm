@@ -37,7 +37,39 @@ sub new {
 
 sub add_option {
     my ( $self, %args ) = @_;
-    $self->{command_options}->{ delete $args{spec} } = \%args;
+    my $spec = $args{spec};
+    my ($option, $arg) = $spec =~ m/^(.*?)(?:[\+=:](.*))?$/;
+    if($arg) {
+        my $arg_type = defined $args{arg_desc} ? "<$args{arg_desc}>" : undef;
+        $arg=~s/\+/[[...] || <INTEGER>]/g;
+        if($arg eq 'i') {
+            $arg = defined $arg_type ? $arg_type : q{<}.$self->loc('INTEGER').q{>};
+        }
+        if($arg eq 's'){
+            $arg = defined $arg_type ? "'$arg_type'" : q{'<}.$self->loc('STRING').q{>'};
+        }
+    }
+    my ($desc, $long, $short);
+    foreach my $item ( split /\|/, $option) {
+        $desc .= ', ' if($desc);
+
+        # assumption - long options are 2 or more chars
+        if(length($item) == 1) {
+            $desc .= "-$item";
+            $short = "-$item";
+        } else {
+            $desc .= "--$item";
+            $long = "--$item";
+        }
+        $desc .= " $arg" if($arg);
+        $short .= " $arg" if($short && $arg);
+        $long .= " $arg" if($long && $arg);
+    }
+    $args{option_desc}=$desc;
+    $args{option_short}=$short;
+    $args{option_long}=$long;
+
+    $self->{command_options}->{ $spec } = \%args;
     return $self;
 }
 
@@ -254,14 +286,20 @@ sub output {
 sub _generate_pod {
     my ($self) = @_;
 
-    warn "** GENERATE POD **";
     output $/ , "=pod";
     output '=head1 ',$self->loc('NAME') ;
     output "$Script - ", $self->loc("Cluster administration tool");
     output '=head1 ',$self->loc('SYNOPSIS');
-    foreach my $usage (@{  $self->{usage} } ) {
-        print "S<< $Script $usage >>",$/,$/;
+
+    # build the synopsis
+    print "$Script ";
+    foreach my $longopt (sort keys(%{$self->{command_options}})) {
+        next if($self->{command_options}->{$longopt}->{hidden});
+
+        print '['.($self->{command_options}->{$longopt}->{option_short} || $self->{command_options}->{$longopt}->{option_long} ) . '] ';
     }
+    print $/,$/;
+
     output '=head1 ',$self->loc('DESCRIPTION');
     output $self->loc(q{The command opens an administration console and an xterm to all specified hosts.  Any text typed into the administration console is replicated to all windows.  All windows may also be typed into directly.
 
@@ -299,36 +337,7 @@ This will test the mechanisms used to open windows to hosts.  This could be due 
     foreach my $longopt (sort keys(%{$self->{command_options}})) {
         next if($self->{command_options}->{$longopt}->{hidden});
 
-        my ($option, $arg) = $longopt =~ m/^(.*?)(?:[=:](.*))?$/;
-        if($arg) {
-            my $arg_desc;
-            if(my $desc=$self->{command_options}->{$longopt}->{arg_desc}) {
-                $arg_desc="<$desc>";
-            }
-            $arg=~s/\+/[[...] || <INTEGER>]/g;
-            $arg = $arg_desc || '<'.$self->loc('INTEGER').'>' if($arg eq 'i');
-            if($arg eq 's'){
-                if($arg_desc) {
-                    $arg = "'$arg_desc'";
-                } else {
-                    $arg = q{'<}.$self->loc('STRING').q{>'};
-                }
-            }
-        }
-        my $desc;
-        foreach my $item ( split /\|/, $option) {
-
-            $desc .= ', ' if($desc);
-
-            # assumption - long options are 2 or more chars
-            if(length($item) == 1) {
-                $desc .= "-$item";
-            } else {
-                $desc .= "--$item";
-            }
-            $desc .= " $arg" if($arg);
-        }
-        output '=item ', $desc;
+        output '=item ', $self->{command_options}->{$longopt}->{option_desc};
         output $self->{command_options}->{$longopt}->{help};
 
         if($self->{command_options}->{$longopt}->{default}) {
