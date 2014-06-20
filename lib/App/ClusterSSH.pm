@@ -1176,6 +1176,27 @@ sub toggle_active_state() {
     }
 }
 
+sub set_all_active() {
+    my ($self) = @_;
+    logmsg( 2, "Setting all hosts to be active" );
+
+    foreach my $svr ( keys(%servers) ) {
+        $servers{$svr}{active} = 1;
+    }
+
+}
+
+sub set_half_inactive() {
+    my ($self) = @_;
+    logmsg( 2, "Setting approx half of all hosts to inactive" );
+
+	my(@keys) = keys(%servers);
+	$#keys /= 2;
+    foreach my $svr ( @keys ) {
+        $servers{$svr}{active} = 0;
+    }
+}
+
 sub close_inactive_sessions() {
     my ($self) = @_;
     logmsg( 2, "Closing all inactive sessions" );
@@ -1716,6 +1737,14 @@ sub create_menubar() {
             ],
 
 #         [ "command", "Capture Terminal",    -command => \&capture_terminal, ],
+            [   "command",
+                "Set all active",
+                -command => sub { $self->set_all_active() },
+            ],
+            [   "command",
+                "Set half inactive",
+                -command => sub { $self->set_half_inactive() },
+            ],
             [   "command",
                 "Toggle active state",
                 -command => sub { $self->toggle_active_state() },
