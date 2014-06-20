@@ -49,7 +49,7 @@ sub add_option {
             $arg = defined $arg_type ? "'$arg_type'" : q{'<}.$self->loc('STRING').q{>'};
         }
     }
-    my ($desc, $long, $short);
+    my ($desc, $long, $short, $accessor);
     foreach my $item ( split /\|/, $option) {
         $desc .= ', ' if($desc);
 
@@ -60,6 +60,7 @@ sub add_option {
         } else {
             $desc .= "--$item";
             $long = "--$item";
+            $accessor=$item if(!$accessor);
         }
         $desc .= " $arg" if($arg);
         $short .= " $arg" if($short && $arg);
@@ -68,6 +69,7 @@ sub add_option {
     $args{option_desc}=$desc;
     $args{option_short}=$short;
     $args{option_long}=$long;
+    $args{accessor}=$accessor if(!defined $args{no_accessor});
 
     $self->{command_options}->{ $spec } = \%args;
     return $self;
@@ -80,18 +82,22 @@ sub add_common_options {
     $self->add_option(
         spec => 'help|h' ,
         help => $self->loc("Show help text and exit"),
+        no_accessor => 1,
     );
     $self->add_option(
         spec => 'usage|?' ,
         help => $self->loc('Show basic usage and exit'),
+        no_accessor => 1,
     );
     $self->add_option(
         spec => 'version|v' ,
         help => $self->loc("Show version information and exit"),
+        no_accessor => 1,
     );
     $self->add_option(
         spec => 'man|H' ,
         help => $self->loc("Show full help text (the man page) and exit"),
+        no_accessor => 1,
     );
     $self->add_option(
         spec => 'debug:+',
@@ -244,6 +250,40 @@ sub getopts {
     if ( $options->{version} ) {
         print "Version: $VERSION\n";
         $self->exit;
+    }
+
+    $options->{debug} ||= 0;
+    $options->{debug} = 4 if ( $options->{debug} && $options->{debug} > 4 );
+
+    # Now all options are set to the correct values, generate accessor methods
+    foreach my $option ( sort keys(%{ $self->{command_options}}) ) {
+        my $accessor=$self->{command_options}->{$option}->{accessor};
+
+        if($accessor) {
+            $accessor =~ s/-/_/g;
+            no strict 'refs';
+            *$accessor = sub {
+                return $options->{$accessor};
+            };
+        }
+    }
+
+    $self->set_debug_level( $self->debug );
+
+    $self->parent->config->load_configs( $self->config_file );
+
+    if($self->{title}) {
+        $self->parent->config->{title} = $self->title;
+        $self->debug(2, "Title: " . $self->title );
+    }
+
+    if ( $options->{use_all_a_records} ) {
+        $self->parent->config->{use_all_a_records}
+            = !$self->parent->config->{use_all_a_records} || 0;
+    }
+
+    if ( $self->action ) {
+        $self->parent->config->{command} = $self->action;
     }
 
     return $self;

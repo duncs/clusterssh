@@ -267,6 +267,11 @@ sub load_file {
     return %results;
 }
 
+sub parent {
+    my ($self) = @_;
+    return $self->{parent};
+}
+
 1;
 
 =pod

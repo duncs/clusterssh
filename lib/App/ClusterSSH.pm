@@ -56,10 +56,10 @@ sub new {
 
     my $self = $class->SUPER::new(%args);
 
-    $self->{config}  = App::ClusterSSH::Config->new();
-    $self->{helper}  = App::ClusterSSH::Helper->new();
-    $self->{cluster} = App::ClusterSSH::Cluster->new();
-    $self->{options}  = App::ClusterSSH::Getopt->new();
+    $self->{config}  = App::ClusterSSH::Config->new(parent => $self, );
+    $self->{helper}  = App::ClusterSSH::Helper->new(parent => $self, );
+    $self->{cluster} = App::ClusterSSH::Cluster->new(parent => $self, );
+    $self->{options}  = App::ClusterSSH::Getopt->new(parent => $self, );
 
     # catch and reap any zombies
     $SIG{CHLD} = \&REAPER;
@@ -995,7 +995,7 @@ sub retile_hosts {
         );
     }
 
-    $self->config->dump("noexit") if ( $options{debug} > 1 );
+    $self->config->dump("noexit") if ( $self->getopts->debug > 1 );
 
     # now we have the info, plot first window position
     my @hosts;
@@ -1902,20 +1902,6 @@ sub run {
     #die;
 ### main ###
 
-    # Note: getopts returns "" if it finds any options it doesn't recognise
-    # so use this to print out basic help
-    pod2usage( -verbose => 1 )
-        if ( !GetOptions( \%options, @options_spec ) );
-    pod2usage( -verbose => 1 ) if ( $options{'?'} || $options{help} );
-    pod2usage( -verbose => 2 ) if ( $options{H}   || $options{man} );
-
-    if ( $options{version} ) {
-        print "Version: $VERSION\n";
-        exit 0;
-    }
-
-    $options{debug} ||= 0;
-
     # only get xdisplay if we got past usage and help stuff
     $xdisplay = X11::Protocol->new();
 
@@ -1923,32 +1909,7 @@ sub run {
         die("Failed to get X connection\n");
     }
 
-    if ( $options{d} && $options{D} ) {
-        $options{debug} += 3;
-        logmsg( 0,
-            'NOTE: -d and -D are deprecated - use "--debug 3" instead' );
-    }
-    elsif ( $options{d} ) {
-        $options{debug} += 1;
-        logmsg( 0, 'NOTE: -d is deprecated - use "--debug 1" instead' );
-    }
-    elsif ( $options{D} ) {
-        $options{debug} += 2;
-        logmsg( 0, 'NOTE: -D is deprecated - use "--debug 2" instead' );
-    }
-
-    # restrict to max level
-    $options{debug} = 4 if ( $options{debug} && $options{debug} > 4 );
-    $self->set_debug_level( $options{debug} );
-
     logmsg( 2, "VERSION: $VERSION" );
-
-    $self->config->load_configs( $options{'config-file'} );
-
-    if ( $options{title} ) {
-        $self->config->{title} = $options{title};
-        logmsg( 2, "Title: " . $self->config->{title} );
-    }
 
     if ( $options{use_all_a_records} ) {
         $self->config->{use_all_a_records}
