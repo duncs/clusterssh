@@ -62,7 +62,13 @@ sub new {
     $self->{options}  = App::ClusterSSH::Getopt->new(parent => $self, );
 
     # catch and reap any zombies
-    $SIG{CHLD} = \&REAPER;
+    $SIG{CHLD} = sub {
+        my $kid;
+        do {
+            $kid = waitpid( -1, WNOHANG );
+            $self->debug( 2, "REAPER currently returns: $kid" );
+        } until ( $kid == -1 || $kid == 0 );
+    };
 
     return $self;
 }
@@ -89,20 +95,12 @@ sub options {
 
 sub getopts {
     my ($self) = @_;
-    return $self->{options}->getopts;
+    return $self->options->getopts;
 }
 
 sub add_option {
     my ($self, %args) = @_;
     return $self->{options}->add_option(%args);
-}
-
-sub REAPER {
-    my $kid;
-    do {
-        $kid = waitpid( -1, WNOHANG );
-        logmsg( 2, "REAPER currently returns: $kid" );
-    } until ( $kid == -1 || $kid == 0 );
 }
 
 # Command line options list
@@ -178,21 +176,23 @@ sub pick_color {
 
 # close a specific host session
 sub terminate_host($) {
-    my $svr = shift;
-    logmsg( 2, "Killing session for $svr" );
+    my ($self, $svr ) = @_;
+    $self->debug( 2, "Killing session for $svr" );
     if ( !$servers{$svr} ) {
-        logmsg( 2, "Session for $svr not found" );
+        $self->debug( 2, "Session for $svr not found" );
         return;
     }
 
-    logmsg( 2, "Killing process $servers{$svr}{pid}" );
+    $self->debug( 2, "Killing process $servers{$svr}{pid}" );
     kill( 9, $servers{$svr}{pid} ) if kill( 0, $servers{$svr}{pid} );
     delete( $servers{$svr} );
+    return $self;
 }
 
 # catch_all exit routine that should always be used
 sub exit_prog() {
-    logmsg( 3, "Exiting via normal routine" );
+    my ($self) = @_;
+    $self->debug( 3, "Exiting via normal routine" );
 
     # for each of the client windows, send a kill.
     # to make sure we catch all children, even when they haven't
@@ -203,21 +203,6 @@ sub exit_prog() {
         }
     }
     exit 0;
-}
-
-# output function according to debug level
-# $1 = log level (0 to 3)
-# $2 .. $n = list to pass to print
-sub logmsg($@) {
-    my $level = shift;
-
-    $level = 6 if ( $level > 6 );
-
-    if ( $level <= $options{debug} ) {
-        print( strftime( "%H:%M:%S: ", localtime ) )
-            if ( $options{debug} > 1 );
-        print @_, $/;
-    }
 }
 
 sub evaluate_commands {
@@ -274,10 +259,11 @@ sub evaluate_commands {
 
     system($run_command);
 
-    exit_prog;
+    $self->exit_prog;
 }
 
 sub load_keyboard_map() {
+    my ($self) = @_;
 
     # load up the keyboard map to convert keysyms to keyboardmap
     my $min      = $xdisplay->{min_keycode};
@@ -292,7 +278,7 @@ sub load_keyboard_map() {
     #  4 = same as 2 - control/alt?
     #  5 = same as 3 - shift-control-alt?
 
-    logmsg( 1, "Loading keymaps and keycodes" );
+    $self->debug( 1, "Loading keymaps and keycodes" );
 
     my %keyboard_modifier_priority = (
         'sa' => 3,    # lowest
@@ -350,7 +336,7 @@ sub load_keyboard_map() {
                 {
 
                     # ignore code=0
-                    logmsg( 2, "Unknown keycode ", $keyboard[$i][$modifier] );
+                    $self->debug( 2, "Unknown keycode ", $keyboard[$i][$modifier] );
                 }
             }
         }
@@ -366,12 +352,12 @@ sub load_keyboard_map() {
 }
 
 sub get_keycode_state($) {
-    my $keysym = shift;
+    my ($self, $keysym) = @_;
     $keyboardmap{$keysym} =~ m/^(\D+)(\d+)$/;
     my ( $state, $code ) = ( $1, $2 );
 
-    logmsg( 2, "keyboardmap=:", $keyboardmap{$keysym}, ":" );
-    logmsg( 2, "state=$state, code=$code" );
+    $self->debug( 2, "keyboardmap=:", $keyboardmap{$keysym}, ":" );
+    $self->debug( 2, "state=$state, code=$code" );
 
 SWITCH: for ($state) {
         /^n$/ && do {
@@ -394,19 +380,19 @@ SWITCH: for ($state) {
         die("Should never reach here");
     }
 
-    logmsg( 2, "returning state=:$state: code=:$code:" );
+    $self->debug( 2, "returning state=:$state: code=:$code:" );
 
     return ( $state, $code );
 }
 
 sub resolve_names(@) {
     my ( $self, @servers ) = @_;
-    logmsg( 2, 'Resolving cluster names: started' );
+    $self->debug( 2, 'Resolving cluster names: started' );
 
     foreach (@servers) {
         my $dirty    = $_;
         my $username = q{};
-        logmsg( 3, 'Checking tag ', $_ );
+        $self->debug( 3, 'Checking tag ', $_ );
 
         if ( $dirty =~ s/^(.*)@// ) {
             $username = $1;
@@ -423,18 +409,18 @@ sub resolve_names(@) {
                 my @alladdrs = map { inet_ntoa($_) } @{ $hostobj->addr_list };
                 $self->cluster->register_tag( $dirty, @alladdrs );
                 if ( $#alladdrs > 0 ) {
-                    logmsg( 3, 'Expanded to ',
+                    $self->debug( 3, 'Expanded to ',
                         join(' ', $self->cluster->get_tag($dirty) ) );
                     @tag_list = $self->cluster->get_tag($dirty);
                 }
                 else {
                     # don't expand if there is only one record found
-                    logmsg( 3, 'Only one A record' );
+                    $self->debug( 3, 'Only one A record' );
                 }
             }
         }
         if (@tag_list) {
-            logmsg( 3, '... it is a cluster' );
+            $self->debug( 3, '... it is a cluster' );
             foreach my $node (@tag_list) {
                 if ($username) {
                     $node =~ s/^(.*)@//;
@@ -471,12 +457,12 @@ sub resolve_names(@) {
     @servers = grep { $_ !~ m/^$/ } @servers;
 
     if ( $self->config->{unique_servers} ) {
-        logmsg( 3, 'removing duplicate server names' );
+        $self->debug( 3, 'removing duplicate server names' );
         @servers = remove_repeated_servers(@servers);
     }
 
-    logmsg( 3, 'leaving with ', $_ ) foreach (@servers);
-    logmsg( 2, 'Resolving cluster names: completed' );
+    $self->debug( 3, 'leaving with ', $_ ) foreach (@servers);
+    $self->debug( 2, 'Resolving cluster names: completed' );
     return (@servers);
 }
 
@@ -512,7 +498,7 @@ sub update_display_text($) {
 
     return if ( !$self->config->{show_history} );
 
-    logmsg( 2, "Dropping :$char: into display" );
+    $self->debug( 2, "Dropping :$char: into display" );
 
 SWITCH: {
         foreach ($char) {
@@ -551,8 +537,8 @@ sub send_text($@) {
     my $svr  = shift;
     my $text = join( "", @_ );
 
-    logmsg( 2, "servers{$svr}{wid}=$servers{$svr}{wid}" );
-    logmsg( 3, "Sending to '$svr' text:$text:" );
+    $self->debug( 2, "servers{$svr}{wid}=$servers{$svr}{wid}" );
+    $self->debug( 3, "Sending to '$svr' text:$text:" );
 
     # command macro substitution
     if ( $self->config->{macros_enabled} eq 'yes' ) {
@@ -595,15 +581,15 @@ sub send_text($@) {
         my $keysym  = $keycodetosym{$ord};
         my $keycode = $keysymtocode{$keysym};
 
-        logmsg( 2, "Looking for char :$char: with ord :$ord:" );
-        logmsg( 2, "Looking for keycode :$keycode:" );
-        logmsg( 2, "Looking for keysym  :$keysym:" );
-        logmsg( 2, "Looking for keyboardmap :", $keyboardmap{$keysym}, ":" );
-        my ( $state, $code ) = get_keycode_state($keysym);
-        logmsg( 2, "Got state :$state: code :$code:" );
+        $self->debug( 2, "Looking for char :$char: with ord :$ord:" );
+        $self->debug( 2, "Looking for keycode :$keycode:" );
+        $self->debug( 2, "Looking for keysym  :$keysym:" );
+        $self->debug( 2, "Looking for keyboardmap :", $keyboardmap{$keysym}, ":" );
+        my ( $state, $code ) = $self->get_keycode_state($keysym);
+        $self->debug( 2, "Got state :$state: code :$code:" );
 
         for my $event (qw/KeyPress KeyRelease/) {
-            logmsg( 2, "sending event=$event code=:$code: state=:$state:" );
+            $self->debug( 2, "sending event=$event code=:$code: state=:$state:" );
             $xdisplay->SendEvent(
                 $servers{$svr}{wid},
                 0,
@@ -634,13 +620,13 @@ sub send_text_to_all_servers {
 }
 
 sub send_resizemove($$$$$) {
-    my ( $win, $x_pos, $y_pos, $x_siz, $y_siz ) = @_;
+    my ( $self,  $win, $x_pos, $y_pos, $x_siz, $y_siz ) = @_;
 
-    logmsg( 3,
+    $self->debug( 3,
         "Moving window $win to x:$x_pos y:$y_pos (size x:$x_siz y:$y_siz)" );
 
-    #logmsg( 2, "resize move normal: ", $xdisplay->atom('WM_NORMAL_HINTS') );
-    #logmsg( 2, "resize move size:   ", $xdisplay->atom('WM_SIZE_HINTS') );
+    #$self->debug( 2, "resize move normal: ", $xdisplay->atom('WM_NORMAL_HINTS') );
+    #$self->debug( 2, "resize move size:   ", $xdisplay->atom('WM_SIZE_HINTS') );
 
     # set the window to have "user" set size & position, rather than "program"
     $xdisplay->req(
@@ -699,7 +685,7 @@ sub open_client_windows(@) {
        #next;  # Debian bug 499935 - ignore warnings about hostname resolution
         }
 
-        logmsg( 3, "username=$username, server=$server, port=$port" );
+        $self->debug( 3, "username=$username, server=$server, port=$port" );
 
         my $color = '';
         if ( $self->config->{terminal_colorize} ) {
@@ -728,11 +714,11 @@ sub open_client_windows(@) {
         $servers{$server}{master}         = $self->config->{mstr} || '';
         $servers{$server}{master}         = $master if ($master);
 
-        logmsg( 2, "Working on server $server for $_" );
+        $self->debug( 2, "Working on server $server for $_" );
 
         $servers{$server}{pipenm} = tmpnam();
 
-        logmsg( 2, "Set temp name to: $servers{$server}{pipenm}" );
+        $self->debug( 2, "Set temp name to: $servers{$server}{pipenm}" );
         mkfifo( $servers{$server}{pipenm}, 0600 )
             or die("Cannot create pipe: $!");
 
@@ -767,7 +753,7 @@ sub open_client_windows(@) {
                 " '" . $servers{$server}{port} . "'",
                 " '" . $servers{$server}{master} . "'",
             );
-            logmsg( 2, "Terminal exec line:\n$exec\n" );
+            $self->debug( 2, "Terminal exec line:\n$exec\n" );
             exec($exec) == 0 or warn("Failed: $!");
         }
     }
@@ -795,7 +781,7 @@ sub open_client_windows(@) {
             # NOTE: read both the xterm pid and the window ID here
             # get PID here as it changes from the fork above, and we need the
             # correct PID
-            logmsg( 2, "Performing sysread" );
+            $self->debug( 2, "Performing sysread" );
             my $piperead;
             sysread( $servers{$server}{pipehl}, $piperead, 100 );
             ( $servers{$server}{pid}, $servers{$server}{wid} )
@@ -804,7 +790,7 @@ sub open_client_windows(@) {
                 unless $servers{$server}{pid};
             warn("Cannot determ window ID of '$server' window\n")
                 unless $servers{$server}{wid};
-            logmsg( 2, "Done and closing pipe" );
+            $self->debug( 2, "Done and closing pipe" );
 
             close( $servers{$server}{pipehl} );
         }
@@ -817,7 +803,7 @@ sub open_client_windows(@) {
         $self->config->{internal_activate_autoquit}
             = 1;                          # activate auto_quit if in use
     }
-    logmsg( 2, "All client windows opened" );
+    $self->debug( 2, "All client windows opened" );
     $self->config->{internal_total} = int( keys(%servers) );
 
     return $self;
@@ -825,7 +811,7 @@ sub open_client_windows(@) {
 
 sub get_font_size() {
     my ($self) = @_;
-    logmsg( 2, "Fetching font size" );
+    $self->debug( 2, "Fetching font size" );
 
     # get atom name<->number relations
     my $quad_width = $xdisplay->atom("QUAD_WIDTH");
@@ -855,13 +841,13 @@ sub get_font_size() {
         );
     }
 
-    logmsg( 2, "Done with font size" );
+    $self->debug( 2, "Done with font size" );
     return $self;
 }
 
 sub show_console() {
     my ($self) = shift;
-    logmsg( 2, "Sending console to front" );
+    $self->debug( 2, "Sending console to front" );
 
     $self->config->{internal_previous_state} = "mid-change";
 
@@ -902,12 +888,12 @@ sub show_console() {
 sub retile_hosts {
     my ( $self, $force ) = @_;
     $force ||= "";
-    logmsg( 2, "Retiling windows" );
+    $self->debug( 2, "Retiling windows" );
 
     my %config;
 
     if ( $self->config->{window_tiling} ne "yes" && !$force ) {
-        logmsg( 3,
+        $self->debug( 3,
             "Not meant to be tiling; just reshow windows as they were" );
 
         foreach my $server ( reverse( keys(%servers) ) ) {
@@ -920,7 +906,7 @@ sub retile_hosts {
 
     # ALL SIZES SHOULD BE IN PIXELS for consistency
 
-    logmsg( 2, "Count is currently ", $self->config->{internal_total} );
+    $self->debug( 2, "Count is currently ", $self->config->{internal_total} );
 
     if ( $self->config->{internal_total} == 0 ) {
 
@@ -967,8 +953,8 @@ sub retile_hosts {
         ) + 0.999
     );
 
-    logmsg( 2, "Screen Columns: ", $self->config->{internal_columns} );
-    logmsg( 2, "Screen Rows: ",    $self->config->{internal_rows} );
+    $self->debug( 2, "Screen Columns: ", $self->config->{internal_columns} );
+    $self->debug( 2, "Screen Rows: ",    $self->config->{internal_rows} );
 
     # Now adjust the height of the terminal to either the max given,
     # or to get everything on screen
@@ -986,7 +972,7 @@ sub retile_hosts {
             ) / $self->config->{internal_rows}
         );
 
-        logmsg( 2, "Terminal height=$height" );
+        $self->debug( 2, "Terminal height=$height" );
 
         $self->config->{internal_terminal_height} = (
               $height > $self->config->{internal_terminal_height}
@@ -995,13 +981,13 @@ sub retile_hosts {
         );
     }
 
-    $self->config->dump("noexit") if ( $self->getopts->debug > 1 );
+    $self->config->dump("noexit") if ( $self->options->debug > 1 );
 
     # now we have the info, plot first window position
     my @hosts;
     my ( $current_x, $current_y, $current_row, $current_col ) = 0;
     if ( $self->config->{window_tiling_direction} =~ /right/i ) {
-        logmsg( 2, "Tiling top left going bot right" );
+        $self->debug( 2, "Tiling top left going bot right" );
         @hosts     = sort( keys(%servers) );
         $current_x = $self->config->{screen_reserve_left}
             + $self->config->{terminal_reserve_left};
@@ -1011,7 +997,7 @@ sub retile_hosts {
         $current_col = 0;
     }
     else {
-        logmsg( 2, "Tiling bot right going top left" );
+        $self->debug( 2, "Tiling bot right going top left" );
         @hosts = reverse( sort( keys(%servers) ) );
         $current_x
             = $self->config->{screen_reserve_right}
@@ -1032,7 +1018,7 @@ sub retile_hosts {
     # Move windows to new locatation
     # Remap all windows in correct order
     foreach my $server (@hosts) {
-        logmsg( 3,
+        $self->debug( 3,
             "x:$current_x y:$current_y, r:$current_row c:$current_col" );
 
         # sf tracker 3061999
@@ -1042,8 +1028,8 @@ sub retile_hosts {
             $xdisplay->req( 'UnmapWindow', $servers{$server}{wid} );
         }
 
-        logmsg( 2, "Moving $server window" );
-        send_resizemove(
+        $self->debug( 2, "Moving $server window" );
+        $self->send_resizemove(
             $servers{$server}{wid},
             $current_x,
             $current_y,
@@ -1089,7 +1075,7 @@ sub retile_hosts {
     # Now remap in right order to get overlaps correct
     if ( $self->config->{window_tiling_direction} =~ /right/i ) {
         foreach my $server ( reverse(@hosts) ) {
-            logmsg( 2, "Setting focus on $server" );
+            $self->debug( 2, "Setting focus on $server" );
             $xdisplay->req( 'MapWindow', $servers{$server}{wid} );
 
             # flush every time and wait a moment (The WMs are so slow...)
@@ -1099,7 +1085,7 @@ sub retile_hosts {
     }
     else {
         foreach my $server (@hosts) {
-            logmsg( 2, "Setting focus on $server" );
+            $self->debug( 2, "Setting focus on $server" );
             $xdisplay->req( 'MapWindow', $servers{$server}{wid} );
 
             # flush every time and wait a moment (The WMs are so slow...)
@@ -1113,7 +1099,8 @@ sub retile_hosts {
 }
 
 sub capture_terminal() {
-    logmsg( 0, "Stub for capturing a terminal window" );
+    my ($self) = @_;
+    $self->debug( 0, "Stub for capturing a terminal window" );
 
     return if ( $options{debug} < 6 );
 
@@ -1185,7 +1172,7 @@ sub capture_terminal() {
 
 sub toggle_active_state() {
     my ($self) = @_;
-    logmsg( 2, "Toggling active state of all hosts" );
+    $self->debug( 2, "Toggling active state of all hosts" );
 
     foreach my $svr ( sort( keys(%servers) ) ) {
         $servers{$svr}{active} = not $servers{$svr}{active};
@@ -1194,17 +1181,17 @@ sub toggle_active_state() {
 
 sub close_inactive_sessions() {
     my ($self) = @_;
-    logmsg( 2, "Closing all inactive sessions" );
+    $self->debug( 2, "Closing all inactive sessions" );
 
     foreach my $svr ( sort( keys(%servers) ) ) {
-        terminate_host($svr) if ( !$servers{$svr}{active} );
+        $self->terminate_host($svr) if ( !$servers{$svr}{active} );
     }
     $self->build_hosts_menu();
 }
 
 sub add_host_by_name() {
     my ($self) = @_;
-    logmsg( 2, "Adding host to menu here" );
+    $self->debug( 2, "Adding host to menu here" );
 
     $windows{host_entry}->focus();
     my $answer = $windows{addhost}->Show();
@@ -1215,16 +1202,16 @@ sub add_host_by_name() {
     }
 
     if ( $menus{host_entry} ) {
-        logmsg( 2, "host=", $menus{host_entry} );
+        $self->debug( 2, "host=", $menus{host_entry} );
         my @names
             = $self->resolve_names( split( /\s+/, $menus{host_entry} ) );
-        logmsg( 0, 'Opening to: ', join( ' ', @names ) );
+        $self->debug( 0, 'Opening to: ', join( ' ', @names ) );
         $self->open_client_windows(@names);
     }
 
     if ( defined $menus{listbox} && $menus{listbox}->curselection() ) {
         my @hosts = $menus{listbox}->get( $menus{listbox}->curselection() );
-        logmsg( 2, "host=", join( ' ', @hosts ) );
+        $self->debug( 2, "host=", join( ' ', @hosts ) );
         $self->open_client_windows( $self->resolve_names(@hosts) );
     }
 
@@ -1242,23 +1229,23 @@ sub add_host_by_name() {
 
 sub build_hosts_menu() {
     my ($self) = @_;
-    logmsg( 2, "Building hosts menu" );
+    $self->debug( 2, "Building hosts menu" );
 
     # first, empty the hosts menu from the 4th entry on
     my $menu = $menus{bar}->entrycget( 'Hosts', -menu );
     my $host_menu_static_items = 5;
     $menu->delete( $host_menu_static_items, 'end' );
 
-    logmsg( 3, "Menu deleted" );
+    $self->debug( 3, "Menu deleted" );
 
     # add back the separator
     $menus{hosts}->separator;
 
-    logmsg( 3, "Parsing list" );
+    $self->debug( 3, "Parsing list" );
 
     my $menu_item_counter = $host_menu_static_items;
     foreach my $svr ( sort( keys(%servers) ) ) {
-        logmsg( 3, "Checking $svr and restoring active value" );
+        $self->debug( 3, "Checking $svr and restoring active value" );
         my $colbreak = 0;
         if ( $menu_item_counter > $self->config->{max_host_menu_items} ) {
             $colbreak          = 1;
@@ -1271,9 +1258,9 @@ sub build_hosts_menu() {
         );
         $menu_item_counter++;
     }
-    logmsg( 3, "Changing window title" );
+    $self->debug( 3, "Changing window title" );
     $self->change_main_window_title();
-    logmsg( 2, "Done" );
+    $self->debug( 2, "Done" );
 }
 
 sub setup_repeat() {
@@ -1290,20 +1277,20 @@ sub setup_repeat() {
                 ;    # reset if too high
             $self->config->{internal_count}++;
             my $build_menu = 0;
-            logmsg(
+            $self->debug(
                 5,
                 "Running repeat;count=",
                 $self->config->{internal_count}
             );
 
-     #logmsg( 3, "Number of servers in hash is: ", scalar( keys(%servers) ) );
+     #$self->debug( 3, "Number of servers in hash is: ", scalar( keys(%servers) ) );
 
             foreach my $svr ( keys(%servers) ) {
                 if ( defined( $servers{$svr}{pid} ) ) {
                     if ( !kill( 0, $servers{$svr}{pid} ) ) {
                         $build_menu = 1;
                         delete( $servers{$svr} );
-                        logmsg( 0, "$svr session closed" );
+                        $self->debug( 0, "$svr session closed" );
                     }
                 }
                 else {
@@ -1315,12 +1302,12 @@ sub setup_repeat() {
             # get current number of clients
             $self->config->{internal_total} = int( keys(%servers) );
 
-            #logmsg( 3, "Number after tidy is: ", $config{internal_total} );
+            #$self->debug( 3, "Number after tidy is: ", $config{internal_total} );
 
             # get current number of clients
             $self->config->{internal_total} = int( keys(%servers) );
 
-            #logmsg( 3, "Number after tidy is: ", $config{internal_total} );
+            #$self->debug( 3, "Number after tidy is: ", $config{internal_total} );
 
             # If there are no hosts in the list and we are set to autoquit
             if (   $self->config->{internal_total} == 0
@@ -1329,8 +1316,8 @@ sub setup_repeat() {
 
                 # and some clients were actually opened...
                 if ( $self->config->{internal_activate_autoquit} ) {
-                    logmsg( 2, "Autoquitting" );
-                    exit_prog;
+                    $self->debug( 2, "Autoquitting" );
+                    $self->exit_prog;
                 }
             }
 
@@ -1340,10 +1327,10 @@ sub setup_repeat() {
             # clean out text area, anyhow
             $menus{entrytext} = "";
 
-            #logmsg( 3, "repeat completed" );
+            #$self->debug( 3, "repeat completed" );
         }
     );
-    logmsg( 2, "Repeat setup" );
+    $self->debug( 2, "Repeat setup" );
 
     return $self;
 }
@@ -1352,7 +1339,7 @@ sub setup_repeat() {
 
 sub create_windows() {
     my ($self) = @_;
-    logmsg( 2, "create_windows: started" );
+    $self->debug( 2, "create_windows: started" );
     $windows{main_window}
         = MainWindow->new( -title => "ClusterSSH", -class => 'cssh', );
     $windows{main_window}->withdraw;    # leave withdrawn until needed
@@ -1392,7 +1379,7 @@ sub create_windows() {
         );
     }
 
-    $windows{main_window}->bind( '<Destroy>' => \&exit_prog );
+    $windows{main_window}->bind( '<Destroy>' => sub { $self->exit_prog} );
 
     # remove all Paste events so we set them up cleanly
     $windows{main_window}->eventDelete('<<Paste>>');
@@ -1413,7 +1400,7 @@ sub create_windows() {
 
     $windows{main_window}->bind(
         '<<Paste>>' => sub {
-            logmsg( 2, "PASTE EVENT" );
+            $self->debug( 2, "PASTE EVENT" );
 
             $menus{entrytext} = "";
             my $paste_text = '';
@@ -1428,7 +1415,7 @@ sub create_windows() {
                 return;
             }
 
-            logmsg( 2, "Got text :", $paste_text, ":" );
+            $self->debug( 2, "Got text :", $paste_text, ":" );
 
             $self->update_display_text($paste_text);
 
@@ -1513,7 +1500,7 @@ sub create_windows() {
         -labelPack    => [ -side => 'left', ],
         -class        => 'cssh',
     )->pack( -side => 'left' );
-    logmsg( 2, "create_windows: completed" );
+    $self->debug( 2, "create_windows: completed" );
 
     return $self;
 }
@@ -1524,41 +1511,41 @@ sub capture_map_events() {
     # pick up on console minimise/maximise events so we can do all windows
     $windows{main_window}->bind(
         '<Map>' => sub {
-            logmsg( 3, "Entering MAP" );
+            $self->debug( 3, "Entering MAP" );
 
             my $state = $windows{main_window}->state();
-            logmsg(
+            $self->debug(
                 3,
                 "state=$state previous=",
                 $self->config->{internal_previous_state}
             );
-            logmsg( 3, "Entering MAP" );
+            $self->debug( 3, "Entering MAP" );
 
             if ( $self->config->{internal_previous_state} eq $state ) {
-                logmsg( 3, "repeating the same" );
+                $self->debug( 3, "repeating the same" );
             }
 
             if ( $self->config->{internal_previous_state} eq "mid-change" ) {
-                logmsg( 3, "dropping out as mid-change" );
+                $self->debug( 3, "dropping out as mid-change" );
                 return;
             }
 
-            logmsg(
+            $self->debug(
                 3,
                 "state=$state previous=",
                 $self->config->{internal_previous_state}
             );
 
             if ( $self->config->{internal_previous_state} eq "iconic" ) {
-                logmsg( 3, "running retile" );
+                $self->debug( 3, "running retile" );
 
                 $self->retile_hosts();
 
-                logmsg( 3, "done with retile" );
+                $self->debug( 3, "done with retile" );
             }
 
             if ( $self->config->{internal_previous_state} ne $state ) {
-                logmsg( 3, "resetting prev_state" );
+                $self->debug( 3, "resetting prev_state" );
                 $self->config->{internal_previous_state} = $state;
             }
         }
@@ -1566,23 +1553,23 @@ sub capture_map_events() {
 
  #    $windows{main_window}->bind(
  #        '<Unmap>' => sub {
- #            logmsg( 3, "Entering UNMAP" );
+ #            $self->debug( 3, "Entering UNMAP" );
  #
  #            my $state = $windows{main_window}->state();
- #            logmsg( 3,
+ #            $self->debug( 3,
  #                "state=$state previous=$config{internal_previous_state}" );
  #
  #            if ( $config{internal_previous_state} eq $state ) {
- #                logmsg( 3, "repeating the same" );
+ #                $self->debug( 3, "repeating the same" );
  #            }
  #
  #            if ( $config{internal_previous_state} eq "mid-change" ) {
- #                logmsg( 3, "dropping out as mid-change" );
+ #                $self->debug( 3, "dropping out as mid-change" );
  #                return;
  #            }
  #
  #            if ( $config{internal_previous_state} eq "normal" ) {
- #                logmsg( 3, "withdrawing all windows" );
+ #                $self->debug( 3, "withdrawing all windows" );
  #                foreach my $server ( reverse( keys(%servers) ) ) {
  #                    $xdisplay->req( 'UnmapWindow', $servers{$server}{wid} );
  #                    if ( $config{unmap_on_redraw} =~ /yes/i ) {
@@ -1594,7 +1581,7 @@ sub capture_map_events() {
  #            }
  #
  #            if ( $config{internal_previous_state} ne $state ) {
- #                logmsg( 3, "resetting prev_state" );
+ #                $self->debug( 3, "resetting prev_state" );
  #                $config{internal_previous_state} = $state;
  #            }
  #        }
@@ -1614,16 +1601,16 @@ sub key_event {
 
     $menus{entrytext} = "";
 
-    logmsg( 3, "=========" );
-    logmsg( 3, "event    =$event" );
-    logmsg( 3, "keysym   =$keysym (state=$state)" );
-    logmsg( 3, "keysymdec=$keysymdec" );
-    logmsg( 3, "keycode  =$keycode" );
-    logmsg( 3, "state    =$state" );
-    logmsg( 3, "codetosym=$keycodetosym{$keysymdec}" )
+    $self->debug( 3, "=========" );
+    $self->debug( 3, "event    =$event" );
+    $self->debug( 3, "keysym   =$keysym (state=$state)" );
+    $self->debug( 3, "keysymdec=$keysymdec" );
+    $self->debug( 3, "keycode  =$keycode" );
+    $self->debug( 3, "state    =$state" );
+    $self->debug( 3, "codetosym=$keycodetosym{$keysymdec}" )
         if ( $keycodetosym{$keysymdec} );
-    logmsg( 3, "symtocode=$keysymtocode{$keysym}" );
-    logmsg( 3, "keyboard =$keyboardmap{ $keysym }" )
+    $self->debug( 3, "symtocode=$keysymtocode{$keysym}" );
+    $self->debug( 3, "keyboard =$keyboardmap{ $keysym }" )
         if ( $keyboardmap{$keysym} );
 
     #warn("debug stop point here");
@@ -1632,17 +1619,17 @@ sub key_event {
 
         $combo =~ s/Mod\d-//;
 
-        logmsg( 3, "combo=$combo" );
+        $self->debug( 3, "combo=$combo" );
 
         foreach my $hotkey ( grep( /key_/, keys( %{ $self->config } ) ) ) {
             my $key = $self->config->{$hotkey};
             next if ( $key eq "null" );    # ignore disabled keys
 
-            logmsg( 3, "key=:$key:" );
+            $self->debug( 3, "key=:$key:" );
             if ( $combo =~ /^$key$/ ) {
-                logmsg( 3, "matched combo" );
+                $self->debug( 3, "matched combo" );
                 if ( $event eq "KeyRelease" ) {
-                    logmsg( 2, "Received hotkey: $hotkey" );
+                    $self->debug( 2, "Received hotkey: $hotkey" );
                     $self->send_text_to_all_servers('%s')
                         if ( $hotkey eq "key_clientname" );
                     $self->send_text_to_all_servers('%h')
@@ -1654,7 +1641,7 @@ sub key_event {
                     $self->retile_hosts("force")
                         if ( $hotkey eq "key_retilehosts" );
                     $self->show_history() if ( $hotkey eq "key_history" );
-                    exit_prog() if ( $hotkey eq "key_quit" );
+                    $self->exit_prog() if ( $hotkey eq "key_quit" );
                 }
                 return;
             }
@@ -1662,7 +1649,7 @@ sub key_event {
     }
 
     # look for a <Control>-d and no hosts, so quit
-    exit_prog()
+    $self->exit_prog()
         if ( $state =~ /Control/ && $keysym eq "d" and !%servers );
 
     $self->update_display_text( $keycodetosym{$keysymdec} )
@@ -1673,7 +1660,7 @@ sub key_event {
 
         # if active
         if ( $servers{$_}{active} == 1 ) {
-            logmsg( 3,
+            $self->debug( 3,
                 "Sending event $event with code $keycode (state=$state) to window $servers{$_}{wid}"
             );
 
@@ -1700,7 +1687,7 @@ sub key_event {
 
 sub create_menubar() {
     my ($self) = @_;
-    logmsg( 2, "create_menubar: started" );
+    $self->debug( 2, "create_menubar: started" );
     $menus{bar} = $windows{main_window}->Menu();
     $windows{main_window}->configure( -menu => $menus{bar}, );
 
@@ -1714,7 +1701,7 @@ sub create_menubar() {
             ],
             [   "command",
                 "Exit",
-                -command     => \&exit_prog,
+                -command     => sub{ $self->exit_prog },
                 -accelerator => $self->config->{key_quit},
             ]
         ],
@@ -1731,7 +1718,7 @@ sub create_menubar() {
                 -accelerator => $self->config->{key_retilehosts},
             ],
 
-#         [ "command", "Capture Terminal",    -command => \&capture_terminal, ],
+#         [ "command", "Capture Terminal",    -command => sub { $self->capture_terminal), ],
             [   "command",
                 "Toggle active state",
                 -command => sub { $self->toggle_active_state() },
@@ -1770,7 +1757,7 @@ sub create_menubar() {
     $windows{main_window}->bind( '<KeyPress>' => [ $self => 'key_event' ], );
     $windows{main_window}
         ->bind( '<KeyRelease>' => [ $self => 'key_event' ], );
-    logmsg( 2, "create_menubar: completed" );
+    $self->debug( 2, "create_menubar: completed" );
 }
 
 sub populate_send_menu_entries_from_xml {
@@ -1825,7 +1812,7 @@ sub populate_send_menu {
 
     #    my @menu_items = ();
     if ( !-r $self->config->{send_menu_xml_file} ) {
-        logmsg( 2, 'Using default send menu' );
+        $self->debug( 2, 'Using default send menu' );
 
         $menus{send}->checkbutton(
             -label       => 'Use Macros',
@@ -1869,7 +1856,7 @@ sub populate_send_menu {
         );
     }
     else {
-        logmsg(
+        $self->debug(
             2,
             'Using xml send menu definition from ',
             $self->config->{send_menu_xml_file}
@@ -1881,7 +1868,7 @@ sub populate_send_menu {
         my $xml = XML::Simple->new( ForceArray => 1, );
         my $menu_xml = $xml->XMLin( $self->config->{send_menu_xml_file} );
 
-        logmsg( 3, 'xml send menu: ', $/, $xml->XMLout($menu_xml) );
+        $self->debug( 3, 'xml send menu: ', $/, $xml->XMLout($menu_xml) );
 
         if ( $menu_xml->{detach} && $menu_xml->{detach} =~ m/y/i ) {
             $menus{send}->menu->tearOffMenu()->raise;
@@ -1909,7 +1896,7 @@ sub run {
         die("Failed to get X connection\n");
     }
 
-    logmsg( 2, "VERSION: $VERSION" );
+    $self->debug( 2, "VERSION: $VERSION" );
 
     if ( $options{use_all_a_records} ) {
         $self->config->{use_all_a_records}
@@ -1950,7 +1937,7 @@ sub run {
 
     $self->get_font_size();
 
-    load_keyboard_map();
+    $self->load_keyboard_map();
 
     # read in normal cluster files
     $self->config->{extra_cluster_file} .= ',' . $options{'cluster-file'}
@@ -1972,7 +1959,7 @@ sub run {
             "Full clusters dump: ",
             $self->_dump_args_hash( $self->cluster->dump_tags )
         );
-        exit_prog();
+        $self->exit_prog();
     }
 
     if (@ARGV) {
@@ -1994,10 +1981,10 @@ sub run {
 
     $self->change_main_window_title();
 
-    logmsg( 2, "Capture map events" );
+    $self->debug( 2, "Capture map events" );
     $self->capture_map_events();
 
-    logmsg( 0, 'Opening to: ', join( ' ', @servers ) );
+    $self->debug( 0, 'Opening to: ', join( ' ', @servers ) );
     $self->open_client_windows(@servers);
 
     # Check here if we are tiling windows.  Here instead of in func so
@@ -2011,25 +1998,25 @@ sub run {
 
     $self->build_hosts_menu();
 
-    logmsg( 2, "Sleeping for a mo" );
+    $self->debug( 2, "Sleeping for a mo" );
     select( undef, undef, undef, 0.5 );
 
-    logmsg( 2, "Sorting focus on console" );
+    $self->debug( 2, "Sorting focus on console" );
     $windows{text_entry}->focus();
 
-    logmsg( 2, "Marking main window as user positioned" );
+    $self->debug( 2, "Marking main window as user positioned" );
     $windows{main_window}->positionfrom('user')
         ;    # user puts it somewhere, leave it there
 
-    logmsg( 2, "Setting up repeat" );
+    $self->debug( 2, "Setting up repeat" );
     $self->setup_repeat();
 
     # Start event loop
-    logmsg( 2, "Starting MainLoop" );
+    $self->debug( 2, "Starting MainLoop" );
     MainLoop();
 
     # make sure we leave program in an expected way
-    exit_prog();
+    $self->exit_prog();
 }
 
 1;
