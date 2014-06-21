@@ -60,7 +60,9 @@ sub add_option {
         } else {
             $desc .= "--$item";
             $long = "--$item";
-            $accessor=$item if(!$accessor);
+            if(!$accessor) {
+                $accessor=$item;
+            }
         }
         $desc .= " $arg" if($arg);
         $short .= " $arg" if($short && $arg);
@@ -106,6 +108,7 @@ sub add_common_options {
     );
     $self->add_option(
         spec => 'generate-pod',
+        no_accessor => 1,
         hidden => 1,
     );
     $self->add_option(
@@ -259,11 +262,11 @@ sub getopts {
     foreach my $option ( sort keys(%{ $self->{command_options}}) ) {
         my $accessor=$self->{command_options}->{$option}->{accessor};
 
-        if($accessor) {
+        if(my $acc=$accessor) {
             $accessor =~ s/-/_/g;
             no strict 'refs';
             *$accessor = sub {
-                return $options->{$accessor};
+                return $options->{$acc};
             };
         }
     }
@@ -277,7 +280,7 @@ sub getopts {
         $self->debug(2, "Title: " . $self->title );
     }
 
-    if ( $options->{use_all_a_records} ) {
+    if ( $self->use_all_a_records ) {
         $self->parent->config->{use_all_a_records}
             = !$self->parent->config->{use_all_a_records} || 0;
     }
