@@ -1898,17 +1898,6 @@ sub run {
 
     $self->debug( 2, "VERSION: $VERSION" );
 
-    if ( $options{use_all_a_records} ) {
-        $self->config->{use_all_a_records}
-            = !$self->config->{use_all_a_records} || 0;
-    }
-
-    if ( $options{action} ) {
-        $self->config->{command} = $options{action};
-    }
-
-    $self->config->{unique_servers} = 1 if $options{'unique-servers'};
-
     $self->config->{auto_quit} = "yes" if $options{autoquit};
     $self->config->{auto_quit} = "no"  if $options{'no-autoquit'};
     $self->config->{auto_close} = $options{autoclose}
@@ -1917,21 +1906,18 @@ sub run {
     $self->config->{window_tiling} = "yes" if $options{tile};
     $self->config->{window_tiling} = "no"  if $options{'no-tile'};
 
-    $self->config->{user} = $options{username} if ( $options{username} );
-    $self->config->{port} = $options{port}     if ( $options{port} );
-
     $self->config->{show_history} = 1 if $options{'show-history'};
     $self->config->{ssh_args} = $options{options} if ( $options{options} );
 
-    $self->config->{terminal_font} = $options{font} if ( $options{font} );
     $self->config->{terminal_args} = $options{'term-args'}
         if ( $options{'term-args'} );
+
     if ( $self->config->{terminal_args} =~ /-class (\w+)/ ) {
         $self->config->{terminal_allow_send_events}
             = "-xrm '$1.VT100.allowSendEvents:true'";
     }
 
-    $self->config->dump() if ( $options{'output-config'} );
+    $self->config->dump() if ( $self->options->output_config);
 
     $self->evaluate_commands() if ( $options{evaluate} );
 

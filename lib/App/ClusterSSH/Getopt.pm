@@ -275,19 +275,22 @@ sub getopts {
 
     $self->parent->config->load_configs( $self->config_file );
 
-    if($self->{title}) {
-        $self->parent->config->{title} = $self->title;
-        $self->debug(2, "Title: " . $self->title );
-    }
-
     if ( $self->use_all_a_records ) {
         $self->parent->config->{use_all_a_records}
             = !$self->parent->config->{use_all_a_records} || 0;
     }
 
-    if ( $self->action ) {
-        $self->parent->config->{command} = $self->action;
+    if ( $self->unique_servers ) {
+        $self->parent->config->{unique_servers} = ! $self->parent->config->{unique_servers} || 0;
     }
+
+    $self->parent->config->{title}   = $self->title if($self->title);
+    $self->parent->config->{command} = $self->action if ( $self->action );
+    $self->parent->config->{user}    = $self->username if ($self->username);
+    $self->parent->config->{port}    = $self->port if ($self->port);
+
+    $self->parent->config->{terminal_font} = $self->font if ($self->font);
+    $self->parent->config->{terminal_args} = $self->term_args if ($self->term_args);
 
     return $self;
 }
