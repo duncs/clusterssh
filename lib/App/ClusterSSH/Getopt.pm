@@ -82,18 +82,18 @@ sub add_common_options {
     my ( $self ) = @_;
 
     $self->add_option(
-        spec => 'help|h' ,
-        help => $self->loc("Show help text and exit"),
+        spec => 'version|v' ,
+        help => $self->loc("Show version information and exit"),
         no_accessor => 1,
     );
     $self->add_option(
         spec => 'usage|?' ,
-        help => $self->loc('Show basic usage and exit'),
+        help => $self->loc('Show synopsis and exit'),
         no_accessor => 1,
     );
     $self->add_option(
-        spec => 'version|v' ,
-        help => $self->loc("Show version information and exit"),
+        spec => 'help|h' ,
+        help => $self->loc("Show basic help text and exit"),
         no_accessor => 1,
     );
     $self->add_option(
@@ -118,11 +118,7 @@ sub add_common_options {
     );
     $self->add_option(
         spec => 'autoquit|q',
-        help => $self->loc('Enable automatically quiting after the last client window has closed (overriding the config file).  See also L<--no-autoquit>'),
-    );
-    $self->add_option(
-        spec => 'no-autoquit|Q',
-        help => $self->loc('Disable automatically quiting after the last client window has closed (overriding the config file).  See also L<--autoquit>'),
+        help => $self->loc('Toggle automatically quiting after the last client window has closed (overriding the config file).'),
     );
     $self->add_option(
         spec => 'evaluate|e=s',
@@ -154,8 +150,8 @@ sub add_common_options {
         help => $self->loc('List available cluster tags.'),
     );
     $self->add_option(
-        spec => 'output-config|u',
-        help => $self->loc('Output the current configuration in the same format used by the F<$HOME/.clusterssh/config> file.'),
+        spec => 'dump-config|d',
+        help => $self->loc('Dump the current configuration in the same format used by the F<$HOME/.clusterssh/config> file.'),
     );
     $self->add_option(
         spec => 'port|p=i',
@@ -164,15 +160,11 @@ sub add_common_options {
     );
     $self->add_option(
         spec => 'show-history|s',
-        help => $self->loc('IN BETA: Show history within console window.  This code is still being worked upon, but may help some users.'),
+        help => $self->loc('Show history within console window.'),
     );
     $self->add_option(
         spec => 'tile|g',
-        help => $self->loc('Enable window tiling (overriding the config file).  See also --no-tile.'),
-    );
-    $self->add_option(
-        spec => 'no-tile|G',
-        help => $self->loc('Disable window tiling (overriding the config file).  See also --tile.'),
+        help => $self->loc('Toggle window tiling (overriding the config file).'),
     );
     $self->add_option(
         spec => 'term-args|t=s',
@@ -184,8 +176,8 @@ sub add_common_options {
         help => $self->loc('Specify the initial part of the title used in the console and client windows.'),
     );
     $self->add_option(
-        spec => 'unique-servers|m',
-        help => $self->loc('Connect to each host only once.'),
+        spec => 'unique-servers|u',
+        help => $self->loc('Toggle connecting to each host only once.'),
     );
     $self->add_option(
         spec => 'use-all-a-records|A',
