@@ -1917,7 +1917,7 @@ sub run {
             = "-xrm '$1.VT100.allowSendEvents:true'";
     }
 
-    $self->config->dump() if ( $self->options->output_config);
+    $self->config->dump() if ( $self->options->dump_config);
 
     $self->evaluate_commands() if ( $options{evaluate} );
 
