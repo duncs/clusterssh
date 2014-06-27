@@ -288,6 +288,14 @@ sub getopts {
 
     $self->parent->config->{auto_close} = $self->autoclose if($self->autoclose);
 
+    if ( $self->autoquit) {
+        $self->parent->config->{auto_quit} = ! $self->parent->config->{auto_quit} || 0;
+    }
+
+    if ( $self->tile) {
+        $self->parent->config->{window_tiling} = ! $self->parent->config->{window_tiling} || 0;
+    }
+
     return $self;
 }
 
