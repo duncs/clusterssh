@@ -1885,7 +1885,7 @@ sub run {
 
     $self->getopts;
 
-    warn "THROUGH";
+    warn "GETOPTS work in progress";
     #die;
 ### main ###
 
@@ -1906,7 +1906,6 @@ sub run {
     $self->config->{window_tiling} = "yes" if $options{tile};
     $self->config->{window_tiling} = "no"  if $options{'no-tile'};
 
-    $self->config->{show_history} = 1 if $options{'show-history'};
     $self->config->{ssh_args} = $options{options} if ( $options{options} );
 
     $self->config->{terminal_args} = $options{'term-args'}
@@ -1919,7 +1918,7 @@ sub run {
 
     $self->config->dump() if ( $self->options->dump_config);
 
-    $self->evaluate_commands() if ( $options{evaluate} );
+    $self->evaluate_commands() if ( $self->options->evaluate );
 
     $self->get_font_size();
 
@@ -1936,7 +1935,7 @@ sub run {
     $self->cluster->get_tag_entries( split /,/,
         $self->config->{extra_tag_file} || '' );
 
-    if ( $options{'list'} ) {
+    if ( $self->options->list ) {
         print( 'Available cluster tags:', $/ );
         print "\t", $_, $/ foreach ( sort( $self->cluster->list_tags ) );
 

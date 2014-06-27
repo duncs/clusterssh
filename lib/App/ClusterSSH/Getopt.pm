@@ -284,6 +284,10 @@ sub getopts {
     $self->parent->config->{terminal_font} = $self->font if ($self->font);
     $self->parent->config->{terminal_args} = $self->term_args if ($self->term_args);
 
+    $self->parent->config->{show_history} = 1 if($self->show_history);
+
+    $self->parent->config->{auto_close} = $self->autoclose if($self->autoclose);
+
     return $self;
 }
 
