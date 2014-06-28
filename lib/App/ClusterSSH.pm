@@ -54,10 +54,10 @@ sub new {
 
     my $self = $class->SUPER::new(%args);
 
-    $self->{config}  = App::ClusterSSH::Config->new(parent => $self, );
-    $self->{helper}  = App::ClusterSSH::Helper->new(parent => $self, );
-    $self->{cluster} = App::ClusterSSH::Cluster->new(parent => $self, );
-    $self->{options}  = App::ClusterSSH::Getopt->new(parent => $self, );
+    $self->{config} = App::ClusterSSH::Config->new( parent => $self, );
+    $self->{helper} = App::ClusterSSH::Helper->new( parent => $self, );
+    $self->{cluster} = App::ClusterSSH::Cluster->new( parent => $self, );
+    $self->{options} = App::ClusterSSH::Getopt->new( parent => $self, );
 
     # catch and reap any zombies
     $SIG{CHLD} = sub {
@@ -97,7 +97,7 @@ sub getopts {
 }
 
 sub add_option {
-    my ($self, %args) = @_;
+    my ( $self, %args ) = @_;
     return $self->{options}->add_option(%args);
 }
 
@@ -143,7 +143,7 @@ sub pick_color {
 
 # close a specific host session
 sub terminate_host($) {
-    my ($self, $svr ) = @_;
+    my ( $self, $svr ) = @_;
     $self->debug( 2, "Killing session for $svr" );
     if ( !$servers{$svr} ) {
         $self->debug( 2, "Session for $svr not found" );
@@ -177,8 +177,8 @@ sub evaluate_commands {
     my ( $return, $user, $port, $host );
 
     # break apart the given host string to check for user or port configs
-    my $evaluate=$self->options->evaluate;
-    print "{evaluate}=",$evaluate,"\n";
+    my $evaluate = $self->options->evaluate;
+    print "{evaluate}=", $evaluate, "\n";
     $user = $1 if ( ${evaluate} =~ s/^(.*)@// );
     $port = $1 if ( ${evaluate} =~ s/:(\w+)$// );
     $host = ${evaluate};
@@ -304,7 +304,11 @@ sub load_keyboard_map() {
                 {
 
                     # ignore code=0
-                    $self->debug( 2, "Unknown keycode ", $keyboard[$i][$modifier] );
+                    $self->debug(
+                        2,
+                        "Unknown keycode ",
+                        $keyboard[$i][$modifier]
+                    );
                 }
             }
         }
@@ -320,7 +324,7 @@ sub load_keyboard_map() {
 }
 
 sub get_keycode_state($) {
-    my ($self, $keysym) = @_;
+    my ( $self, $keysym ) = @_;
     $keyboardmap{$keysym} =~ m/^(\D+)(\d+)$/;
     my ( $state, $code ) = ( $1, $2 );
 
@@ -378,7 +382,7 @@ sub resolve_names(@) {
                 $self->cluster->register_tag( $dirty, @alladdrs );
                 if ( $#alladdrs > 0 ) {
                     $self->debug( 3, 'Expanded to ',
-                        join(' ', $self->cluster->get_tag($dirty) ) );
+                        join( ' ', $self->cluster->get_tag($dirty) ) );
                     @tag_list = $self->cluster->get_tag($dirty);
                 }
                 else {
@@ -552,12 +556,14 @@ sub send_text($@) {
         $self->debug( 2, "Looking for char :$char: with ord :$ord:" );
         $self->debug( 2, "Looking for keycode :$keycode:" );
         $self->debug( 2, "Looking for keysym  :$keysym:" );
-        $self->debug( 2, "Looking for keyboardmap :", $keyboardmap{$keysym}, ":" );
+        $self->debug( 2, "Looking for keyboardmap :",
+            $keyboardmap{$keysym}, ":" );
         my ( $state, $code ) = $self->get_keycode_state($keysym);
         $self->debug( 2, "Got state :$state: code :$code:" );
 
         for my $event (qw/KeyPress KeyRelease/) {
-            $self->debug( 2, "sending event=$event code=:$code: state=:$state:" );
+            $self->debug( 2,
+                "sending event=$event code=:$code: state=:$state:" );
             $xdisplay->SendEvent(
                 $servers{$svr}{wid},
                 0,
@@ -588,13 +594,13 @@ sub send_text_to_all_servers {
 }
 
 sub send_resizemove($$$$$) {
-    my ( $self,  $win, $x_pos, $y_pos, $x_siz, $y_siz ) = @_;
+    my ( $self, $win, $x_pos, $y_pos, $x_siz, $y_siz ) = @_;
 
     $self->debug( 3,
         "Moving window $win to x:$x_pos y:$y_pos (size x:$x_siz y:$y_siz)" );
 
-    #$self->debug( 2, "resize move normal: ", $xdisplay->atom('WM_NORMAL_HINTS') );
-    #$self->debug( 2, "resize move size:   ", $xdisplay->atom('WM_SIZE_HINTS') );
+#$self->debug( 2, "resize move normal: ", $xdisplay->atom('WM_NORMAL_HINTS') );
+#$self->debug( 2, "resize move size:   ", $xdisplay->atom('WM_SIZE_HINTS') );
 
     # set the window to have "user" set size & position, rather than "program"
     $xdisplay->req(
@@ -1251,7 +1257,7 @@ sub setup_repeat() {
                 $self->config->{internal_count}
             );
 
-     #$self->debug( 3, "Number of servers in hash is: ", scalar( keys(%servers) ) );
+#$self->debug( 3, "Number of servers in hash is: ", scalar( keys(%servers) ) );
 
             foreach my $svr ( keys(%servers) ) {
                 if ( defined( $servers{$svr}{pid} ) ) {
@@ -1270,12 +1276,12 @@ sub setup_repeat() {
             # get current number of clients
             $self->config->{internal_total} = int( keys(%servers) );
 
-            #$self->debug( 3, "Number after tidy is: ", $config{internal_total} );
+        #$self->debug( 3, "Number after tidy is: ", $config{internal_total} );
 
             # get current number of clients
             $self->config->{internal_total} = int( keys(%servers) );
 
-            #$self->debug( 3, "Number after tidy is: ", $config{internal_total} );
+        #$self->debug( 3, "Number after tidy is: ", $config{internal_total} );
 
             # If there are no hosts in the list and we are set to autoquit
             if (   $self->config->{internal_total} == 0
@@ -1347,7 +1353,7 @@ sub create_windows() {
         );
     }
 
-    $windows{main_window}->bind( '<Destroy>' => sub { $self->exit_prog} );
+    $windows{main_window}->bind( '<Destroy>' => sub { $self->exit_prog } );
 
     # remove all Paste events so we set them up cleanly
     $windows{main_window}->eventDelete('<<Paste>>');
@@ -1609,7 +1615,7 @@ sub key_event {
                     $self->retile_hosts("force")
                         if ( $hotkey eq "key_retilehosts" );
                     $self->show_history() if ( $hotkey eq "key_history" );
-                    $self->exit_prog() if ( $hotkey eq "key_quit" );
+                    $self->exit_prog()    if ( $hotkey eq "key_quit" );
                 }
                 return;
             }
@@ -1664,12 +1670,12 @@ sub create_menubar() {
         -menuitems => [
             [   "command",
                 "Show History",
-                -command     => sub{ $self->show_history; },
+                -command => sub { $self->show_history; },
                 -accelerator => $self->config->{key_history},
             ],
             [   "command",
                 "Exit",
-                -command     => sub{ $self->exit_prog },
+                -command => sub { $self->exit_prog },
                 -accelerator => $self->config->{key_quit},
             ]
         ],
@@ -1854,6 +1860,7 @@ sub run {
     $self->getopts;
 
     warn "GETOPTS work in progress";
+
     #die;
 ### main ###
 
@@ -1866,7 +1873,8 @@ sub run {
 
     $self->debug( 2, "VERSION: $VERSION" );
 
-    $self->config->{ssh_args} = $self->options->options if ( $self->options->options );
+    $self->config->{ssh_args} = $self->options->options
+        if ( $self->options->options );
 
     $self->config->{terminal_args} = $self->options->term_args
         if ( $self->options->term_args );
@@ -1876,7 +1884,7 @@ sub run {
             = "-xrm '$1.VT100.allowSendEvents:true'";
     }
 
-    $self->config->dump() if ( $self->options->dump_config);
+    $self->config->dump() if ( $self->options->dump_config );
 
     $self->evaluate_commands() if ( $self->options->evaluate );
 
