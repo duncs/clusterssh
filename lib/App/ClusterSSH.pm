@@ -17,8 +17,6 @@ use App::ClusterSSH::Getopt;
 use FindBin qw($Script);
 
 use POSIX ":sys_wait_h";
-use Pod::Usage;
-use Getopt::Long qw(:config no_ignore_case bundling no_auto_abbrev);
 use POSIX qw/:sys_wait_h strftime mkfifo/;
 use File::Temp qw/:POSIX/;
 use Fcntl;
@@ -103,37 +101,6 @@ sub add_option {
     return $self->{options}->add_option(%args);
 }
 
-# Command line options list
-my @options_spec = (
-    'debug:+',
-    'd',    # backwards compatibility - DEPRECATED
-    'D',    # backwards compatibility - DEPRECATED
-    'version|v',
-    'help|h|?',
-    'man|H',
-    'cluster-file|c=s',
-    'tag-file|r=s',
-    'config-file|C=s',
-    'evaluate|e=s',
-    'tile|g',
-    'no-tile|G',
-    'username|l=s',
-    'master|M=s',
-    'options|o=s',
-    'port|p=i',
-    'autoquit|q',
-    'no-autoquit|Q',
-    'autoclose|K=i',
-    'history|s',
-    'term-args|t=s',
-    'title|T=s',
-    'output-config|u',
-    'font|f=s',
-    'list|L',
-    'use_all_a_records|A',
-    'unique-servers|m',
-);
-my %options;
 my %windows;    # hash for all window definitions
 my %menus;      # hash for all menu definitions
 my @servers;    # array of servers provided on cmdline
@@ -210,10 +177,11 @@ sub evaluate_commands {
     my ( $return, $user, $port, $host );
 
     # break apart the given host string to check for user or port configs
-    print "{evaluate}=$options{evaluate}\n";
-    $user = $1 if ( $options{evaluate} =~ s/^(.*)@// );
-    $port = $1 if ( $options{evaluate} =~ s/:(\w+)$// );
-    $host = $options{evaluate};
+    my $evaluate=$self->options->evaluate;
+    print "{evaluate}=",$evaluate,"\n";
+    $user = $1 if ( ${evaluate} =~ s/^(.*)@// );
+    $port = $1 if ( ${evaluate} =~ s/:(\w+)$// );
+    $host = ${evaluate};
 
     $user = $user ? "-l $user" : "";
     if ( $self->config->{comms} eq "telnet" ) {
@@ -1102,7 +1070,7 @@ sub capture_terminal() {
     my ($self) = @_;
     $self->debug( 0, "Stub for capturing a terminal window" );
 
-    return if ( $options{debug} < 6 );
+    return if ( $self->coptions->debug < 6 );
 
     # should never see this - all experimental anyhow
 
@@ -1898,18 +1866,10 @@ sub run {
 
     $self->debug( 2, "VERSION: $VERSION" );
 
-    $self->config->{auto_quit} = "yes" if $options{autoquit};
-    $self->config->{auto_quit} = "no"  if $options{'no-autoquit'};
-    $self->config->{auto_close} = $options{autoclose}
-        if defined $options{'autoclose'};
+    $self->config->{ssh_args} = $self->options->options if ( $self->options->options );
 
-    $self->config->{window_tiling} = "yes" if $options{tile};
-    $self->config->{window_tiling} = "no"  if $options{'no-tile'};
-
-    $self->config->{ssh_args} = $options{options} if ( $options{options} );
-
-    $self->config->{terminal_args} = $options{'term-args'}
-        if ( $options{'term-args'} );
+    $self->config->{terminal_args} = $self->options->term_args
+        if ( $self->options->term_args );
 
     if ( $self->config->{terminal_args} =~ /-class (\w+)/ ) {
         $self->config->{terminal_allow_send_events}
@@ -1925,10 +1885,10 @@ sub run {
     $self->load_keyboard_map();
 
     # read in normal cluster files
-    $self->config->{extra_cluster_file} .= ',' . $options{'cluster-file'}
-        if ( $options{'cluster-file'} );
-    $self->config->{extra_tag_file} .= ',' . $options{'tag-file'}
-        if ( $options{'tag-file'} );
+    $self->config->{extra_cluster_file} .= ',' . $self->options->cluster_file
+        if ( $self->options->cluster_file );
+    $self->config->{extra_tag_file} .= ',' . $self->options->tag_file
+        if ( $self->options->tag_file );
 
     $self->cluster->get_cluster_entries( split /,/,
         $self->config->{extra_cluster_file} || '' );
