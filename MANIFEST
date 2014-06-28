@@ -1,4 +1,5 @@
 AUTHORS
+bin_PL/_build_docs
 bin_PL/ccon
 bin_PL/crsh
 bin_PL/cscp.x
@@ -6,14 +7,15 @@ bin_PL/cssh
 bin_PL/ctel
 Build.PL
 Changes
-lib/App/ClusterSSH.pm
 lib/App/ClusterSSH/Base.pm
 lib/App/ClusterSSH/Cluster.pm
 lib/App/ClusterSSH/Config.pm
+lib/App/ClusterSSH/Getopt.pm
 lib/App/ClusterSSH/Helper.pm
 lib/App/ClusterSSH/Host.pm
-lib/App/ClusterSSH/L10N.pm
 lib/App/ClusterSSH/L10N/en.pm
+lib/App/ClusterSSH/L10N.pm
+lib/App/ClusterSSH.pm
 Makefile.PL
 MANIFEST
 MANIFEST.SKIP
@@ -23,8 +25,8 @@ README
 t/00-load.t
 t/01l10n.t
 t/02base.t
-t/10host.t
 t/10host_ssh_config
+t/10host.t
 t/15config.t
 t/15config.t.file1
 t/15config.t.file2
@@ -40,8 +42,8 @@ t/80clusterssh.t
 t/boilerplate.t
 t/changes.t
 t/external_cluster_command
+THANKS
 t/manifest.t
+TODO
 t/pod-coverage.t
 t/pod.t
-THANKS
-TODO
