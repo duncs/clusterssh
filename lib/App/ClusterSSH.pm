@@ -2004,6 +2004,8 @@ the code until this time.
 
 =item add_host_by_name
 
+=item add_option
+
 =item build_hosts_menu
 
 =item capture_map_events
@@ -2012,81 +2014,85 @@ the code until this time.
 
 =item change_main_window_title
 
-=item  close_inactive_sessions
+=item close_inactive_sessions
 
-=item  config
+=item config
 
-=item  helper
+=item helper
 
 =item cluster
 
-=item  create_menubar
+=item create_menubar
 
-=item  create_windows
+=item create_windows
 
-=item  dump_config
+=item dump_config
 
-=item  list_tags
+=item getopts
 
-=item  evaluate_commands
+=item list_tags
 
-=item  exit_prog
+=item evaluate_commands
 
-=item  get_clusters
+=item exit_prog
 
-=item  get_font_size
+=item get_clusters
 
-=item  get_keycode_state
+=item get_font_size
 
-=item  key_event
+=item get_keycode_state
 
-=item  load_config_defaults
+=item key_event
 
-=item  load_configfile
+=item load_config_defaults
 
-=item  load_keyboard_map
+=item load_configfile
 
-=item  logmsg
+=item load_keyboard_map
 
-=item  new
+=item logmsg
 
-=item  open_client_windows
+=item new
 
-=item  parse_config_file
+=item open_client_windows
 
-=item  pick_color
+=item options
 
-=item  populate_send_menu
+=item parse_config_file
 
-=item  populate_send_menu_entries_from_xml
+=item pick_color
+
+=item populate_send_menu
+
+=item populate_send_menu_entries_from_xml
 
 =item remove_repeated_servers
 
-=item  resolve_names
+=item resolve_names
 
-=item  retile_hosts
+=item retile_hosts
 
-=item  run
+=item run
 
-=item  send_resizemove
+=item send_resizemove
 
-=item  send_text
+=item send_text
 
-=item  send_text_to_all_servers
+=item send_text_to_all_servers
 
-=item  setup_repeat
+=item setup_repeat
 
-=item  show_console
+=item show_console
 
-=item  show_history
+=item show_history
 
-=item  terminate_host
+=item terminate_host
 
-=item  toggle_active_state
+=item toggle_active_state
 
-=item  update_display_text
+=item update_display_text
 
-=item  write_default_user_config
+=item write_default_user_config
                                            
 =back
 

@@ -1073,13 +1073,43 @@ Object representing application configuration
 
 =over 4
 
-=item $host=ClusterSSH::Helper->new ({ })
+=item $obj=ClusterSSH::Getopts->new ({ })
 
-Create a new helper object.
+Create a new object.
 
-=item $host=ClusterSSH::Helper->script ({ })
+=item $obj=ClusterSSH::Getopts->add_option ({ })
 
-Return the helper script
+Add extra options into the allowed set for parsing from the command line
+
+=item $obj=ClusterSSH::Getopts->add_common_options ({ })
+
+Add common options used by most calling scripts into the allowed set for 
+parsing from the command line
+
+=item $obj=ClusterSSH::Getopts->add_common_session_options ({ })
+
+Add common session options used by most calling scripts into the allowed 
+set for parsing from the command line
+
+=item $obj=ClusterSSH::Getopts->add_common_ssh_options ({ })
+
+Add common ssh options used by most calling scripts into the allowed 
+set for parsing from the command line
+
+=item $obj->getopts
+
+Function to call after all options have been set up; creates methods to
+call for each option on the object, such as $obj->action, or $obj->username
+
+=item output(@)
+
+Simple helper func to print out pod lines with double returns
+
+=item help
+
+=item usage
+
+Functions to output help and usage instructions
 
 =back
 

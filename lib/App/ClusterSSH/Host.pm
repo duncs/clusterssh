@@ -375,6 +375,10 @@ Create a new host object.  'hostname' is a required arg, 'username' and
 
 =item $host->get_master
 
+=item $host->get_geometry
+
+=item $host->get_type
+
 Return specific details about the host
 
 =item $host->set_username
@@ -382,6 +386,10 @@ Return specific details about the host
 =item $host->set_port
 
 =item $host->set_master
+
+=item $host->set_geometry
+
+=item $host->set_type
 
 Set specific details about the host after its been created.
 

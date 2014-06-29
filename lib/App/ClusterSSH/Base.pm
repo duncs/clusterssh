@@ -340,6 +340,11 @@ a wrapper to maketext in Locale::Maketext
 
 Output text on STDOUT.
 
+=item $ovj->parent;
+
+Reutrned the object that is the parent of this one, if it was set when the 
+object was created
+
 =item $obj->exit;
 
 Stub to allow program to exit neatly from wherever in the code
