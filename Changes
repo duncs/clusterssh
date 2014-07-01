@@ -1,3 +1,6 @@
+4.03_01 2014-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net>
+[Options changes]
+- Rework options code
 4.02_04 2014-05-17 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Amend 'Changes' file format to match CPAN specs (see CPAN::Changes)
 - Correct autoclose short option to what is actually used (Github issue 4) (thanks to Simon Fraser)
