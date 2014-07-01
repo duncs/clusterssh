@@ -25,6 +25,7 @@ README
 t/00-load.t
 t/01l10n.t
 t/02base.t
+t/05getopts.t
 t/10host_ssh_config
 t/10host.t
 t/15config.t
