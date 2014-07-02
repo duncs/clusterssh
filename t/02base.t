@@ -136,6 +136,19 @@ is( $trap->die,     undef,    'returned ok' );
 is( $trap->stderr,  '',       'Expecting no STDERR' );
 is( $trap->stdout,  '',       'Expecting no STDOUT' );
 
+$base = undef;
+$get_config;
+my $object;
+trap {
+    $base = App::ClusterSSH::Base->new( debug => 3, parent => 'guardian' );
+};
+isa_ok( $base, 'App::ClusterSSH::Base' );
+is( $trap->leaveby, 'return',   'returned ok' );
+is( $trap->die,     undef,      'returned ok' );
+is( $trap->stderr,  '',         'Expecting no STDERR' );
+is( $trap->stdout,  '',         'Expecting no STDOUT' );
+is( $base->parent,  'guardian', 'Expecting no STDOUT' );
+
 trap {
     $get_config = $base->config();
 };
@@ -207,5 +220,29 @@ like(
 );
 is( $trap->stderr, '', 'Expecting no STDERR' );
 is( $trap->stdout, '', 'Got expected STDOUT' );
+
+# basic checks - validity of config is tested elsewhere
+my %config;
+trap {
+    %config = $object->load_file;
+};
+is( $trap->leaveby, 'die', 'died ok' );
+isa_ok( $trap->die, 'App::ClusterSSH::Exception',
+    'Caught exception object OK' );
+is( $trap->die,
+    q{"filename" arg not passed},
+    'missing filename arg die message'
+);
+is( $trap->stderr, '', 'Expecting no STDERR' );
+is( $trap->stdout, '', 'Got expected STDOUT' );
+
+trap {
+    %config = $object->load_file( filename => $Bin . '/15config.t.file1' );
+};
+is( $trap->leaveby, 'die', 'died ok' );
+isa_ok( $trap->die, 'App::ClusterSSH::Exception',
+    'Caught exception object OK' );
+is( $trap->die, q{"type" arg not passed}, 'missing type arg die message' );
+is( $trap->stderr, '', 'Expecting no STDERR' );
 
 done_testing();

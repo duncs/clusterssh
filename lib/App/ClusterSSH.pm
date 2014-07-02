@@ -642,7 +642,7 @@ sub open_client_windows(@) {
         my $server = $server_object->get_hostname();
         my $master = $server_object->get_master();
 
-        my $given_server_name = $server_object->get_givenname();
+        my $given_server_name = $server_object->get_hostname();
 
         # see if we can find the hostname - if not, drop it
         my $realname = $server_object->get_realname();

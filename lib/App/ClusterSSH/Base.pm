@@ -12,6 +12,7 @@ use Exception::Class (
     },
     'App::ClusterSSH::Exception::Cluster',
     'App::ClusterSSH::Exception::LoadFile',
+    'App::ClusterSSH::Exception::Helper',
 );
 
 # Don't use SVN revision as it can cause problems
@@ -85,10 +86,7 @@ sub loc {
 
 sub set_lang {
     my ( $self, $lang ) = @_;
-    $language = $lang;
-    if ($self) {
-        $self->debug( 6, $self->loc( 'Setting language to "[_1]"', $lang ), );
-    }
+    $self->debug( 6, $self->loc( 'Setting language to "[_1]"', $lang ), );
     return $self;
 }
 
@@ -184,10 +182,10 @@ sub load_file {
         );
     }
 
-    if ( !$args{type} || $args{type} !~ m/cluster|config/ ) {
+    if ( !$args{type} ) {
         croak(
             App::ClusterSSH::Exception->throw(
-                error => '"type" arg invalid'
+                error => '"type" arg not passed'
             )
         );
     }

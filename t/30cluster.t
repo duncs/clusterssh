@@ -88,6 +88,34 @@ is( scalar $cluster1->get_tag('default'),
     'Count correct'
 );
 
+my $tags;
+trap {
+    $tags = $cluster1->get_tag('does_not_exist');
+};
+is( $trap->leaveby, 'return', 'non-existant tag returns correctly' );
+is( $trap->stdout,  '',       'no stdout for non-existant get_tag' );
+is( $trap->stderr,  '',       'no stderr for non-existant get_tag' );
+is( $tags,          undef,    'non-existant tag returns undef' );
+
+@default_expected = sort 
+    qw/ default people tag1 tag2 tag3 tag10 tag20 tag30 tag40 tag50 /;
+trap {
+    @default = $cluster1->list_tags;
+};
+is($trap->leaveby, 'return', 'list_tags returned okay');
+is( $trap->stdout,  '',       'no stdout for non-existant get_tag' );
+is( $trap->stderr,  '',       'no stderr for non-existant get_tag' );
+is_deeply( \@default, \@default_expected, 'tag list correct' );
+
+my $count;
+trap {
+    $count = $cluster1->list_tags;
+};
+is($trap->leaveby, 'return', 'list_tags returned okay');
+is( $trap->stdout,  '',       'no stdout for non-existant get_tag' );
+is( $trap->stderr,  '',       'no stderr for non-existant get_tag' );
+is_deeply( $count, 10, 'tag list count correct' );
+
 # now checks against running an external command
 
 my @external_expected;
@@ -156,6 +184,22 @@ like(
 );
 is( $trap->stdout, '', 'External command: no stdout from perl code' );
 is( $trap->stderr, '', 'External command: no stderr from perl code' );
+
+# check reading of cluster files
+trap {
+    $cluster1->get_cluster_entries( $Bin . '/30cluster.file3' );
+};
+is( $trap->leaveby, 'return', 'exit okay on get_cluster_entries' );
+is( $trap->stdout,  '',       'no stdout for get_cluster_entries' );
+is( $trap->stderr,  '',       'no stderr for get_cluster_entries' );
+
+# check reading of tag files
+trap {
+    $cluster1->get_tag_entries( $Bin . '/30cluster.tag1' );
+};
+is( $trap->leaveby, 'return', 'exit okay on get_tag_entries' );
+is( $trap->stdout,  '',       'no stdout for get_tag_entries' );
+is( $trap->stderr,  '',       'no stderr for get_tag_entries' );
 
 done_testing();
 

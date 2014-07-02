@@ -20,18 +20,87 @@ my $helper;
 $helper = App::ClusterSSH::Helper->new();
 isa_ok( $helper, 'App::ClusterSSH::Helper' );
 
-#note('check failure to write default config is caught');
-#$ENV{HOME} = tempdir( CLEANUP => 1 );
-#mkdir($ENV{HOME}.'/.clusterssh');
-#mkdir($ENV{HOME}.'/.clusterssh/config');
-#$config = App::ClusterSSH::Config->new();
-#trap {
-#    $config->load_configs();
-#};
-#is( $trap->leaveby, 'return', 'returned ok' );
-#isa_ok( $config,    "App::ClusterSSH::Config" );
-#isa_ok( $config, "App::ClusterSSH::Config" );
-#is( $trap->stdout, q{}, 'Expecting no STDOUT' );
-#is( $trap->stderr, q{Unable to write default $HOME/.clusterssh/config: Is a directory}.$/, 'Expecting no STDERR' );
+my $script;
+
+trap {
+    $script = $helper->script;
+};
+is( $trap->leaveby, 'die', 'returned ok' );
+is( $trap->stdout,  q{},   'Expecting no STDOUT' );
+is( $trap->stderr,  q{},   'Expecting no STDERR' );
+is( $trap->die, 'No configuration provided or in wrong format', 'no config' );
+
+trap {
+    $script = $helper->script( something => 'nothing' );
+};
+is( $trap->leaveby, 'die', 'returned ok' );
+is( $trap->stdout,  q{},   'Expecting no STDOUT' );
+is( $trap->stderr,  q{},   'Expecting no STDERR' );
+is( $trap->die, 'No configuration provided or in wrong format',
+    'bad format' );
+
+trap {
+    $script = $helper->script( { something => 'nothing' } );
+};
+is( $trap->leaveby, 'die', 'returned ok' );
+is( $trap->stdout,  q{},   'Expecting no STDOUT' );
+
+# ignore stderr here as it will complain about missing xxx_arg var
+#is( $trap->stderr, q{}, 'Expecting no STDERR' );
+is( $trap->die, q{Config 'comms' not provided}, 'missing arg' );
+
+trap {
+    $script = $helper->script( { comms => 'method' } );
+};
+is( $trap->leaveby, 'die', 'returned ok' );
+is( $trap->stdout,  q{},   'Expecting no STDOUT' );
+is( $trap->stderr,  q{},   'Expecting no STDERR' );
+is( $trap->die, q{Config 'method' not provided}, 'missing arg' );
+
+trap {
+    $script = $helper->script( { comms => 'method', method => 'binary', } );
+};
+is( $trap->leaveby, 'die', 'returned ok' );
+is( $trap->stdout,  q{},   'Expecting no STDOUT' );
+is( $trap->stderr,  q{},   'Expecting no STDERR' );
+is( $trap->die, q{Config 'method_args' not provided}, 'missing arg' );
+
+trap {
+    $script = $helper->script(
+        {   comms       => 'method',
+            method      => 'binary',
+            method_args => 'rubbish',
+            command     => 'echo',
+            auto_close  => 0,
+        }
+    );
+};
+is( $trap->leaveby, 'return', 'returned ok' );
+is( $trap->stdout,  q{},   'Expecting no STDOUT' );
+is( $trap->stderr,  q{},   'Expecting no STDERR' );
+is( $trap->die, undef,     'not died' );
+
+trap {
+    $script = $helper->script(
+        {   comms       => 'method',
+            method      => 'binary',
+            method_args => 'rubbish',
+            command     => 'echo',
+            auto_close  => 5,
+        }
+    );
+};
+is( $trap->leaveby, 'return', 'returned ok' );
+is( $trap->stdout,  q{},   'Expecting no STDOUT' );
+is( $trap->stderr,  q{},   'Expecting no STDERR' );
+is( $trap->die, undef,     'not died' );
+
+trap {
+    eval { $script };
+};
+is( $trap->leaveby, 'return', 'returned ok' );
+is( $trap->stdout,  q{},   'Expecting no STDOUT' );
+is( $trap->stderr,  q{},   'Expecting no STDERR' );
+is( $trap->die, undef,     'not died' );
 
 done_testing();

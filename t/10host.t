@@ -27,6 +27,8 @@ is( $host->get_port,     q{},        'checking set works' );
 is( $host->get_username, q{},        'username is unset' );
 is( $host->get_realname, 'hostname', 'realname set' );
 is( $host->get_geometry, q{},        'geometry set' );
+is( $host->get_master,   q{},        'master set' );
+is( $host->get_type,     q{},        'type set' );
 
 $host->set_port(2323);
 
@@ -36,6 +38,8 @@ is( $host->get_port,     2323,       'checking set works' );
 is( $host->get_username, q{},        'username is unset' );
 is( $host->get_realname, 'hostname', 'realname set' );
 is( $host->get_geometry, q{},        'geometry set' );
+is( $host->get_master,   q{},        'master set' );
+is( $host->get_type,     q{},        'type set' );
 
 $host->set_username('username');
 
@@ -44,6 +48,8 @@ is( $host->get_port,     2323,       'checking set works' );
 is( $host->get_username, 'username', 'username is unset' );
 is( $host->get_realname, 'hostname', 'realname set' );
 is( $host->get_geometry, q{},        'geometry set' );
+is( $host->get_master,   q{},        'master set' );
+is( $host->get_type,     q{},        'type set' );
 
 $host->set_geometry('100x50+100+100');
 
@@ -52,6 +58,28 @@ is( $host->get_port,     2323,             'checking set works' );
 is( $host->get_username, 'username',       'username is unset' );
 is( $host->get_realname, 'hostname',       'realname set' );
 is( $host->get_geometry, '100x50+100+100', 'geometry set' );
+is( $host->get_master,   q{},              'master set' );
+is( $host->get_type,     q{},              'type set' );
+
+$host->set_master('some_host');
+
+is( $host->get_hostname, 'hostname',       'checking set works' );
+is( $host->get_port,     2323,             'checking set works' );
+is( $host->get_username, 'username',       'username is unset' );
+is( $host->get_realname, 'hostname',       'realname set' );
+is( $host->get_geometry, '100x50+100+100', 'geometry set' );
+is( $host->get_master,   'some_host',      'master set' );
+is( $host->get_type,     q{},              'type set' );
+
+$host->set_type('something');
+
+is( $host->get_hostname, 'hostname',       'checking set works' );
+is( $host->get_port,     2323,             'checking set works' );
+is( $host->get_username, 'username',       'username is unset' );
+is( $host->get_realname, 'hostname',       'realname set' );
+is( $host->get_geometry, '100x50+100+100', 'geometry set' );
+is( $host->get_master,   'some_host',      'master set' );
+is( $host->get_type,     'something',      'type set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
@@ -640,7 +668,10 @@ my %parse_tests = (
         geometry => q{},
         type     => 'ipv6',
     },
-    'some.random:host|string:rubbish' => {
+    '2001:0db8:8a2e:0370:7334:2001:0db8:8a2e:0370:7334:4535:3453:3453:3455' => {
+        die      => qr{Unable to parse hostname from}ms,
+    },
+    'some random rubbish' => {
         die      => qr{Unable to parse hostname from}ms,
     },
 );
@@ -690,7 +721,23 @@ foreach my $ident ( keys(%parse_tests) ) {
             "$ident $attr: " . $host->$method
         );
     }
+
+    is( $host->check_ssh_hostname, 0, $ident . ' not from ssh' );
 }
+
+
+# check for a non-existant file
+trap {
+    $host = App::ClusterSSH::Host->new(
+        hostname   => 'ssh_test',
+        ssh_config => $Bin . '/some_bad_filename',
+    );
+};
+is( $trap->leaveby, 'return', 'returned ok' );
+is( $trap->die,     undef,    'returned ok' );
+isa_ok( $host, "App::ClusterSSH::Host" );
+is( $host, 'ssh_test', 'stringify works' );
+is( $host->check_ssh_hostname, 0, 'check_ssh_hostname ok for ssh_test', );
 
 trap {
     $host = App::ClusterSSH::Host->new(
@@ -703,6 +750,7 @@ is( $trap->die,     undef,    'returned ok' );
 isa_ok( $host, "App::ClusterSSH::Host" );
 is( $host, 'ssh_test', 'stringify works' );
 is( $host->check_ssh_hostname, 0, 'check_ssh_hostname ok for ssh_test', );
+is( $host->get_type, q{}, 'hostname type is correct for ssh_test', );
 
 for my $hostname (
     'server1',  'server2',
@@ -729,6 +777,7 @@ for my $hostname (
         'check_ssh_hostname ok for ' . $hostname );
     is( $host->get_realname, $hostname, 'realname set' );
     is( $host->get_geometry, q{},       'geometry set' );
+    is( $host->get_type, 'ssh_alias',   'geometry set' );
 }
 
 done_testing();
