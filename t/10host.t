@@ -309,6 +309,14 @@ my %parse_tests = (
         type     => 'ipv6',
         stderr   => qr{Ambiguous host string:.*Assuming you meant}ms
     },
+    '::1/2323' => {
+        hostname => '::1',
+        port     => 2323,
+        username => q{},
+        realname => '::1',
+        geometry => q{},
+        type     => 'ipv6',
+    },
     '::1:2323=3x3+3+3' => {
         hostname => '::1:2323',
         port     => q{},
@@ -317,6 +325,14 @@ my %parse_tests = (
         geometry => '3x3+3+3',
         type     => 'ipv6',
         stderr   => qr{Ambiguous host string:.*Assuming you meant}ms
+    },
+    '::1/2323=3x3+3+3' => {
+        hostname => '::1',
+        port     => 2323,
+        username => q{},
+        realname => '::1',
+        geometry => '3x3+3+3',
+        type     => 'ipv6',
     },
     'user@::1' => {
         hostname => '::1',
@@ -335,6 +351,14 @@ my %parse_tests = (
         type     => 'ipv6',
         stderr   => qr{Ambiguous host string:.*Assuming you meant}ms
     },
+    'user@::1/4242' => {
+        hostname => '::1',
+        port     => 4242,
+        username => 'user',
+        realname => '::1',
+        geometry => q{},
+        type     => 'ipv6',
+    },
     'user@::1=5x5+5+5' => {
         hostname => '::1',
         port     => q{},
@@ -351,6 +375,14 @@ my %parse_tests = (
         geometry => '5x5+5+5',
         type     => 'ipv6',
         stderr   => qr{Ambiguous host string:.*Assuming you meant}ms
+    },
+    'user@::1/4242=5x5+5+5' => {
+        hostname => '::1',
+        port     => 4242,
+        username => 'user',
+        realname => '::1',
+        geometry => '5x5+5+5',
+        type     => 'ipv6',
     },
     '[::1]' => {
         hostname => '::1',
@@ -448,6 +480,14 @@ my %parse_tests = (
         geometry => q{},
         type     => 'ipv6',
     },
+    '2001:0db8:85a3:0000:0000:8a2e:0370:7334/22' => {
+        hostname => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+        port     => 22,
+        username => q{},
+        realname => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
+        geometry => q{},
+        type     => 'ipv6',
+    },
     '[2001:0db8:85a3:0000:0000:8a2e:0370:7334]' => {
         hostname => '2001:0db8:85a3:0000:0000:8a2e:0370:7334',
         port     => q{},
@@ -497,11 +537,29 @@ my %parse_tests = (
         type     => 'ipv6',
         stderr   => qr{Ambiguous host string:.*Assuming you meant}ms
     },
+    '2001:0db8:85a3::8a2e:0370/7334' => {
+        hostname => '2001:0db8:85a3::8a2e:0370',
+        port     => 7334,
+        username => q{},
+        realname => '2001:0db8:85a3::8a2e:0370',
+        geometry => q{},
+        type     => 'ipv6',
+        stderr   => qr{Ambiguous host string:.*Assuming you meant}ms
+    },
     'pete@2001:0db8:85a3::8a2e:0370:7334' => {
         hostname => '2001:0db8:85a3::8a2e:0370:7334',
         port     => q{},
         username => 'pete',
         realname => '2001:0db8:85a3::8a2e:0370:7334',
+        geometry => q{},
+        type     => 'ipv6',
+        stderr   => qr{Ambiguous host string:.*Assuming you meant}ms
+    },
+    'pete@2001:0db8:85a3::8a2e:0370/7334' => {
+        hostname => '2001:0db8:85a3::8a2e:0370',
+        port     => 7334,
+        username => 'pete',
+        realname => '2001:0db8:85a3::8a2e:0370',
         geometry => q{},
         type     => 'ipv6',
         stderr   => qr{Ambiguous host string:.*Assuming you meant}ms
@@ -515,11 +573,29 @@ my %parse_tests = (
         type     => 'ipv6',
         stderr   => qr{Ambiguous host string:.*Assuming you meant}ms
     },
+    'pete@2001:0db8:85a3::8a2e:0370/7334=2x3+4+5' => {
+        hostname => '2001:0db8:85a3::8a2e:0370',
+        port     => 7334,
+        username => 'pete',
+        realname => '2001:0db8:85a3::8a2e:0370',
+        geometry => '2x3+4+5',
+        type     => 'ipv6',
+        stderr   => qr{Ambiguous host string:.*Assuming you meant}ms
+    },
     '2001:0db8:85a3::8a2e:0370:7334=2x3+4+5' => {
         hostname => '2001:0db8:85a3::8a2e:0370:7334',
         port     => q{},
         username => q{},
         realname => '2001:0db8:85a3::8a2e:0370:7334',
+        geometry => '2x3+4+5',
+        type     => 'ipv6',
+        stderr   => qr{Ambiguous host string:.*Assuming you meant}ms
+    },
+    '2001:0db8:85a3::8a2e:0370/7334=2x3+4+5' => {
+        hostname => '2001:0db8:85a3::8a2e:0370',
+        port     => 7334,
+        username => q{},
+        realname => '2001:0db8:85a3::8a2e:0370',
         geometry => '2x3+4+5',
         type     => 'ipv6',
         stderr   => qr{Ambiguous host string:.*Assuming you meant}ms
@@ -556,25 +632,48 @@ my %parse_tests = (
         geometry => '2x3+4+5',
         type     => 'ipv6',
     },
+    'pete@[2001:0db8:8a2e:0370:7334]' => {
+        hostname => '2001:0db8:8a2e:0370:7334',
+        port     => q{},
+        username => 'pete',
+        realname => '2001:0db8:8a2e:0370:7334',
+        geometry => q{},
+        type     => 'ipv6',
+    },
+    'some.random:host|string:rubbish' => {
+        die      => qr{Unable to parse hostname from}ms,
+    },
 );
 
 foreach my $ident ( keys(%parse_tests) ) {
+    $host = undef;
     trap {
         $host = App::ClusterSSH::Host->parse_host_string($ident);
     };
-    is( $trap->leaveby, 'return', 'returned ok' );
 
-    #is( $trap->die,     undef,    'returned ok' );
-    #is( $trap->stdout,  q{},      'no stdout' );
-    #is( $trap->stderr,  q{},      'no stderr' );
+    if ( $parse_tests{$ident}{die} ) {
+        is( $trap->leaveby, 'die', $ident . ' died correctly' );
+        like( $trap->die, $parse_tests{$ident}{die}, $ident . ' died correctly' );
+        next;
+    }
+
+    is( $trap->leaveby, 'return', $ident . ' returned correctly' );
+    is( $host, $parse_tests{$ident}{hostname}, 'stringify works on: '.$ident );
+
     isa_ok( $host, "App::ClusterSSH::Host" );
-    is( $host, $parse_tests{$ident}{hostname}, 'stringify works' );
 
-    for my $trap_undef (qw/ die /) {
-        is( $trap->$trap_undef,
-            $parse_tests{$ident}{$trap_undef},
-            "$ident $trap_undef"
-        );
+    for my $trap_type (qw/ die /) {
+        if ( ! $parse_tests{$ident}{$trap_type} ) {
+            is( $trap->$trap_type,
+                $parse_tests{$ident}{$trap_type},
+                "$ident $trap_type"
+            );
+        } else {
+            like( $trap->$trap_type,
+                $parse_tests{$ident}{$trap_type},
+                "$ident $trap_type"
+            );
+        }
     }
 
     for my $trap_empty (qw/ stdout stderr /) {

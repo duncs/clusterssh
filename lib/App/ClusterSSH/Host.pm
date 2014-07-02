@@ -216,14 +216,14 @@ sub parse_host_string {
         $username = $1 || q{};
     }
 
-    # Cannot check for a port with this type of IPv6 string
-    #if ( $host_string =~ s/\A(?::(\d+)\A)// ) {
-    #   $port = $1 || q{};
-    #}
-
     # check for any geometry settings
     if ( $host_string =~ s/(?:=(.*?)$)// ) {
         $geometry = $1 || q{};
+    }
+
+    # Check for a '/nnnn' port definition 
+    if ( $host_string =~ s!(?:/(\d+)$)!! ) {
+       $port = $1 || q{};
     }
 
     # use number of colons as a possible indicator
@@ -277,7 +277,7 @@ sub parse_host_string {
             type         => 'ipv6',
         );
     }
-    else {
+    elsif ( $colon_count == 9 ) {
         if ( $host_string =~ s/:(\d+)\A// ) {
             $port = $1;
         }
@@ -301,8 +301,6 @@ sub parse_host_string {
             type         => 'name',
         );
     }
-
-    # Due to above rules, we'll never get this far anyhow
 
     # if we got this far, we didnt parse the host_string properly
     croak(
