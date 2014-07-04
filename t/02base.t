@@ -137,8 +137,6 @@ is( $trap->stderr,  '',       'Expecting no STDERR' );
 is( $trap->stdout,  '',       'Expecting no STDOUT' );
 
 $base = undef;
-$get_config;
-my $object;
 trap {
     $base = App::ClusterSSH::Base->new( debug => 3, parent => 'guardian' );
 };

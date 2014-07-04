@@ -13,6 +13,7 @@ use Exception::Class (
     'App::ClusterSSH::Exception::Cluster',
     'App::ClusterSSH::Exception::LoadFile',
     'App::ClusterSSH::Exception::Helper',
+    'App::ClusterSSH::Exception::Getopt',
 );
 
 # Don't use SVN revision as it can cause problems

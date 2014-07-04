@@ -704,7 +704,6 @@ sub open_client_windows(@) {
         }
 
         if ( $servers{$server}{pid} == 0 ) {
-
           # this is the child
           # Since this is the child, we can mark any server unresolved without
           # affecting the main program

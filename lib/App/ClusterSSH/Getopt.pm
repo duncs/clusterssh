@@ -37,6 +37,13 @@ sub new {
 sub add_option {
     my ( $self, %args ) = @_;
     my $spec = $args{spec};
+    if ( !$spec ) {
+        croak(
+            App::ClusterSSH::Exception::Getopt->throw(
+                error => 'No "spec" passed to add_option',
+            ),
+        );
+    }
     my ( $option, $arg ) = $spec =~ m/^(.*?)(?:[\+=:](.*))?$/;
     if ($arg) {
         my $arg_type = defined $args{arg_desc} ? "<$args{arg_desc}>" : undef;
@@ -264,18 +271,12 @@ sub getopts {
     pod2usage( -verbose => 1 ) if ( $options->{'h'} || $options->{help} );
     pod2usage( -verbose => 2 ) if ( $options->{H}   || $options->{man} );
 
+    # record what was given on the command line in case this 
+    # object is ever dumped out
+    $self->{options_parsed} = $options;
+
     if ( $options->{'generate-pod'} ) {
         $self->_generate_pod;
-        $self->exit;
-    }
-
-    if ( $options->{usage} ) {
-        $self->usage;
-        $self->exit;
-    }
-
-    if ( $options->{help} ) {
-        $self->help;
         $self->exit;
     }
 
@@ -291,11 +292,20 @@ sub getopts {
     foreach my $option ( sort keys( %{ $self->{command_options} } ) ) {
         my $accessor = $self->{command_options}->{$option}->{accessor};
 
+        my $default = $self->{command_options}->{$option}->{default};
+
         if ( my $acc = $accessor ) {
             $accessor =~ s/-/_/g;
             no strict 'refs';
+
+          # hide warnings when getopts is run multiple times, esp. for testing
+            no warnings 'redefine';
             *$accessor = sub {
-                return $options->{$acc};
+                return $options->{$acc} || $default;
+#                      defined $options->{$acc} ? $options->{$acc}
+#                    : defined $self->{command_options}->{$acc}->{default}
+#                    ? $self->{command_options}->{$acc}->{default}
+#                    : undef;
             };
         }
     }
@@ -314,10 +324,14 @@ sub getopts {
             = !$self->parent->config->{unique_servers} || 0;
     }
 
-    $self->parent->config->{title}   = $self->title    if ( $self->title );
-    $self->parent->config->{command} = $self->action   if ( $self->action );
-    $self->parent->config->{user}    = $self->username if ( $self->username );
-    $self->parent->config->{port}    = $self->port     if ( $self->port );
+    $self->parent->config->{title} = $self->title    if ( $self->title );
+    $self->parent->config->{user}  = $self->username if ( $self->username );
+    $self->parent->config->{port}  = $self->port     if ( $self->port );
+
+    # note, need to check if these actions can be performed as they are
+    # not common acorss all communiction methods
+    $self->parent->config->{command} = $self->action
+        if ( $self->can('action') && $self->action );
 
     $self->parent->config->{terminal_font} = $self->font if ( $self->font );
     $self->parent->config->{terminal_args} = $self->term_args
@@ -337,32 +351,6 @@ sub getopts {
         $self->parent->config->{window_tiling}
             = !$self->parent->config->{window_tiling} || 0;
     }
-
-    return $self;
-}
-
-sub usage {
-    my ($self) = @_;
-
-    #print $self->loc('US
-
-    my $options_pod;
-    $options_pod .= "=over\n\n";
-
-    foreach my $option ( sort keys( %{ $self->{command_options} } ) ) {
-        my ( $short, $long )
-            = $self->{command_options}{$option}{help} =~ m/^(.*)\n\t(.*)/;
-        $options_pod .= "=item $short\n\n";
-        $options_pod .= "$long\n\n";
-    }
-    $options_pod .= "=back\n\n";
-    return $self;
-}
-
-sub help {
-    my ($self) = @_;
-
-    warn "** HELP **";
 
     return $self;
 }
@@ -454,7 +442,7 @@ This will test the mechanisms used to open windows to hosts.  This could be due 
         next if ( $self->{command_options}->{$longopt}->{hidden} );
 
         output '=item ', $self->{command_options}->{$longopt}->{option_desc};
-        output $self->{command_options}->{$longopt}->{help};
+        output $self->{command_options}->{$longopt}->{help} || 'No help';
 
         if ( $self->{command_options}->{$longopt}->{default} ) {
             output $self->loc('Default'), ': ',
@@ -1018,40 +1006,6 @@ See http://dev.perl.org/licenses/ for more information.
 
     return $self;
 }
-
-sub _pod_output_list_section {
-    my ( $self, $section ) = @_;
-
-    output '=over';
-    for ( 1 .. 50 ) {
-
-        # there might not be 10 sections so catch errors
-        my ( $item, $text );
-        eval { $item = $self->loc( '_' . $section . '_ITEM_' . $_ ); };
-        eval { $text = $self->loc( '_' . $section . '_TEXT_' . $_ ); };
-
-        # and if there is an error we have gone past the last item
-        #last if($@);
-        if ($item) {
-            output '=item ', $item;
-        }
-        if ($text) {
-            output '=item *' if ( !$item );
-            output $text;
-        }
-    }
-    output '=back';
-
-    return $self;
-}
-
-#use overload (
-#    q{""} => sub {
-#        my ($self) = @_;
-#        return $self->{hostname};
-#    },
-#    fallback => 1,
-#);
 
 1;
 

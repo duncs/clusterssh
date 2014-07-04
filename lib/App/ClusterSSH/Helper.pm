@@ -22,7 +22,7 @@ sub new {
 sub script {
     my ( $self, $config ) = @_;
 
-    if(! defined $config || ref $config ne "HASH") {
+    if(! defined $config || ! ref $config || ref $config ne "App::ClusterSSH::Config") {
         croak(
             App::ClusterSSH::Exception::Helper->throw(
                 error => 'No configuration provided or in wrong format',
