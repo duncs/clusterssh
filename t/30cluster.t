@@ -12,11 +12,47 @@ use English '-no_match_vars';
 
 use Readonly;
 
+package Test::ClusterSSH::Mock;
+
+# generate purpose object used to simplfy testing
+
+sub new {
+    my ( $class, %args ) = @_;
+    my $config = {%args};
+    return bless $config, $class;
+}
+
+sub parent {
+    my ($self) = @_;
+    return $self;
+}
+
+sub config {
+    my ($self) = @_;
+    return $self;
+}
+
+sub load_configs {
+    my ($self) = @_;
+    return $self;
+}
+
+sub config_file {
+    my ($self) = @_;
+    return {};
+}
+
+1;
+
+package main;
+
 BEGIN {
     use_ok("App::ClusterSSH::Cluster") || BAIL_OUT('failed to use module');
 }
 
-my $cluster1 = App::ClusterSSH::Cluster->new();
+my $mock_object = Test::ClusterSSH::Mock->new();
+
+my $cluster1 = App::ClusterSSH::Cluster->new( parent => $mock_object );
 isa_ok( $cluster1, 'App::ClusterSSH::Cluster' );
 
 my $cluster2 = App::ClusterSSH::Cluster->new();
@@ -97,12 +133,12 @@ is( $trap->stdout,  '',       'no stdout for non-existant get_tag' );
 is( $trap->stderr,  '',       'no stderr for non-existant get_tag' );
 is( $tags,          undef,    'non-existant tag returns undef' );
 
-@default_expected = sort 
-    qw/ default people tag1 tag2 tag3 tag10 tag20 tag30 tag40 tag50 /;
+@default_expected
+    = sort qw/ default people tag1 tag2 tag3 tag10 tag20 tag30 tag40 tag50 /;
 trap {
     @default = $cluster1->list_tags;
 };
-is($trap->leaveby, 'return', 'list_tags returned okay');
+is( $trap->leaveby, 'return', 'list_tags returned okay' );
 is( $trap->stdout,  '',       'no stdout for non-existant get_tag' );
 is( $trap->stderr,  '',       'no stderr for non-existant get_tag' );
 is_deeply( \@default, \@default_expected, 'tag list correct' );
@@ -111,7 +147,7 @@ my $count;
 trap {
     $count = $cluster1->list_tags;
 };
-is($trap->leaveby, 'return', 'list_tags returned okay');
+is( $trap->leaveby, 'return', 'list_tags returned okay' );
 is( $trap->stdout,  '',       'no stdout for non-existant get_tag' );
 is( $trap->stderr,  '',       'no stderr for non-existant get_tag' );
 is_deeply( $count, 10, 'tag list count correct' );
@@ -119,31 +155,35 @@ is_deeply( $count, 10, 'tag list count correct' );
 # now checks against running an external command
 
 my @external_expected;
+$mock_object->{external_cluster_command} = "$Bin/external_cluster_command";
 
-@external_expected
-    = $cluster1->get_external_clusters("$Bin/external_cluster_command");
+@external_expected = $cluster1->list_external_clusters();
+is_deeply(
+    \@external_expected,
+    [qw/ tag100 tag200 tag300 tag400 /],
+    'External command no args'
+);
+is( scalar $cluster1->list_external_clusters, 4, 'External command tag count');
+
+@external_expected = $cluster1->get_external_clusters();
 is_deeply( \@external_expected, [], 'External command no args' );
 
-@external_expected = $cluster1->get_external_clusters(
-    "$Bin/external_cluster_command tag1 tag2");
+@external_expected = $cluster1->get_external_clusters("tag1 tag2");
 is_deeply( \@external_expected, [qw/tag1 tag2 /],
     'External command: 2 args passed through' );
 
-@external_expected = $cluster1->get_external_clusters(
-    "$Bin/external_cluster_command tag100");
+@external_expected = $cluster1->get_external_clusters("tag100");
 is_deeply( \@external_expected, [qw/host100 /],
     'External command: 1 tag expanded to one host' );
 
-@external_expected = $cluster1->get_external_clusters(
-    "$Bin/external_cluster_command tag200");
+@external_expected = $cluster1->get_external_clusters("tag200");
 is_deeply(
     \@external_expected,
     [qw/host200 host205 host210 /],
     'External command: 1 tag expanded to 3 hosts and sorted'
 );
 
-@external_expected = $cluster1->get_external_clusters(
-    "$Bin/external_cluster_command tag400");
+@external_expected = $cluster1->get_external_clusters("tag400");
 is_deeply(
     \@external_expected,
     [   qw/host100 host200 host205 host210 host300 host325 host350 host400 host401 /
@@ -162,8 +202,7 @@ if ( $ENV{TEST_VERBOSE} ) {
 }
 
 trap {
-    @external_expected = $cluster1->get_external_clusters(
-        "$Bin/external_cluster_command -x $redirect");
+    @external_expected = $cluster1->get_external_clusters("-x $redirect");
 };
 like(
     $trap->die,
@@ -174,8 +213,7 @@ is( $trap->stdout, '', 'External command: no stdout from perl code' );
 is( $trap->stderr, '', 'External command: no stderr from perl code' );
 
 trap {
-    @external_expected = $cluster1->get_external_clusters(
-        "$Bin/external_cluster_command -q $redirect");
+    @external_expected = $cluster1->get_external_clusters("-q $redirect");
 };
 like(
     $trap->die,

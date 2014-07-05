@@ -1,5 +1,6 @@
 4.03_01 2014-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Amended host parsing to include alternative IPv6 address port definitions, e.g. 1:2:3:4/5567
+- List of available external tags with -L option and in 'Add Host' in UI
 [NOTE: Some options have changed!]
 - Rework options code
 4.02_04 2014-05-17 Duncan Ferguson <duncan_ferguson@user.sf.net>

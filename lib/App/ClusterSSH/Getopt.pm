@@ -620,9 +620,11 @@ C<< <tag3> = <tag1> <tag2> >>}
 
     output '=item external_cluster_command = <null>';
     output $self->loc(
-        q{Define the full path to an external command that can be used to resolve tags to host names.  This command can be written in any language.  The script must accept a list of tags to resolve and output a list of hosts on a single line.  Any tags that cannot be resolved should be returned unchanged.
+        q{Define the full path to an external command that can be used to resolve tags to host names.  This command can be written in any language.  The script must accept a list of tags to resolve and output a list of hosts (space separated on a single line).  Any tags that cannot be resolved should be returned unchanged.
 
-A non-0 exit code will be counted as an error, a warning will be printed and output ignored.}
+A non-0 exit code will be counted as an error, a warning will be printed and output ignored.
+
+If the external command is given a C<-L> option it should output a list of tags (space separated on a single line) it can resolve}
     );
 
     output '=item extra_cluster_file = <null>';

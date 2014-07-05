@@ -54,9 +54,9 @@ sub new {
 
     my $self = $class->SUPER::new(%args);
 
+    $self->{cluster} = App::ClusterSSH::Cluster->new( parent => $self, );
     $self->{config} = App::ClusterSSH::Config->new( parent => $self, );
     $self->{helper} = App::ClusterSSH::Helper->new( parent => $self, );
-    $self->{cluster} = App::ClusterSSH::Cluster->new( parent => $self, );
     $self->{options} = App::ClusterSSH::Getopt->new( parent => $self, );
 
     # catch and reap any zombies
@@ -166,7 +166,7 @@ sub exit_prog() {
     # finished starting or received the kill signal, do it like this
     while (%servers) {
         foreach my $svr ( keys(%servers) ) {
-            terminate_host($svr);
+            $self->terminate_host($svr);
         }
     }
     exit 0;
@@ -413,8 +413,7 @@ sub resolve_names(@) {
         my @new_servers;
         eval {
             @new_servers
-                = $self->cluster->get_external_clusters(
-                $self->config->{external_cluster_command}, @servers );
+                = $self->cluster->get_external_clusters( @servers );
         };
 
         if ($@) {
@@ -1169,7 +1168,7 @@ sub add_host_by_name() {
     $windows{host_entry}->focus();
     my $answer = $windows{addhost}->Show();
 
-    if ( $answer ne "Add" ) {
+    if ( !$answer || $answer ne "Add" ) {
         $menus{host_entry} = "";
         return;
     }
@@ -1441,15 +1440,19 @@ sub create_windows() {
         -class          => 'cssh',
     );
 
+    my @tags = $self->cluster->list_tags();
+    my @external_tags = map { "$_ *" } $self->cluster->list_external_clusters();
+    push (@tags, @external_tags);
+
     if ( $self->config->{max_addhost_menu_cluster_items}
-        && scalar $self->cluster->list_tags() )
+        && scalar @tags )
     {
-        if (scalar scalar $self->cluster->list_tags()
+        if (scalar @tags
             < $self->config->{max_addhost_menu_cluster_items} )
         {
             $menus{listbox} = $windows{addhost}->Listbox(
                 -selectmode => 'extended',
-                -height     => scalar $self->cluster->list_tags(),
+                -height     => scalar @tags,
                 -class      => 'cssh',
             )->pack();
         }
@@ -1462,7 +1465,17 @@ sub create_windows() {
                 -class  => 'cssh',
             )->pack();
         }
-        $menus{listbox}->insert( 'end', sort $self->cluster->list_tags() );
+        $menus{listbox}->insert( 'end', sort @tags );
+
+        if(@external_tags) {
+            $menus{addhost_text} = $windows{addhost}->add(
+              'Label',  
+              -class => 'cssh',
+              -text => '* is external',
+            )->pack();
+
+            #$menus{addhost_text}->insert('end','lkjh lkjj sdfl jklsj dflj ');
+        }
     }
 
     $windows{host_entry} = $windows{addhost}->add(
@@ -1858,9 +1871,6 @@ sub run {
 
     $self->getopts;
 
-    warn "GETOPTS work in progress";
-
-    #die;
 ### main ###
 
     # only get xdisplay if we got past usage and help stuff
@@ -1905,6 +1915,9 @@ sub run {
     if ( $self->options->list ) {
         print( 'Available cluster tags:', $/ );
         print "\t", $_, $/ foreach ( sort( $self->cluster->list_tags ) );
+
+        print( 'Available external command tags:', $/ );
+        print "\t", $_, $/ foreach ( sort( $self->cluster->list_external_clusters ) );
 
         $self->debug(
             4,
