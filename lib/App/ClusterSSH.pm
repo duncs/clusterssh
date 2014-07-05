@@ -3,7 +3,7 @@ package App::ClusterSSH;
 use 5.008.004;
 use warnings;
 use strict;
-use version; our $VERSION = version->new('4.02_03');
+use version; our $VERSION = version->new('4.02_04');
 
 use Carp;
 
@@ -405,12 +405,14 @@ sub resolve_names(@) {
             my $hostobj = gethostbyname($dirty);
             if ( defined($hostobj) ) {
                 my @alladdrs = map { inet_ntoa($_) } @{ $hostobj->addr_list };
+                $self->cluster->register_tag( $dirty, @alladdrs );
                 if ( $#alladdrs > 0 ) {
-                    $self->cluster->register_tag( $dirty, @alladdrs );
                     logmsg( 3, 'Expanded to ',
-                        $self->cluster->get_tag($dirty) );
+                        join(' ', $self->cluster->get_tag($dirty) ) );
+                    @tag_list = $self->cluster->get_tag($dirty);
                 }
                 else {
+                    # don't expand if there is only one record found
                     logmsg( 3, 'Only one A record' );
                 }
             }
@@ -1174,6 +1176,27 @@ sub toggle_active_state() {
     }
 }
 
+sub set_all_active() {
+    my ($self) = @_;
+    logmsg( 2, "Setting all hosts to be active" );
+
+    foreach my $svr ( keys(%servers) ) {
+        $servers{$svr}{active} = 1;
+    }
+
+}
+
+sub set_half_inactive() {
+    my ($self) = @_;
+    logmsg( 2, "Setting approx half of all hosts to inactive" );
+
+	my(@keys) = keys(%servers);
+	$#keys /= 2;
+    foreach my $svr ( @keys ) {
+        $servers{$svr}{active} = 0;
+    }
+}
+
 sub close_inactive_sessions() {
     my ($self) = @_;
     logmsg( 2, "Closing all inactive sessions" );
@@ -1715,6 +1738,14 @@ sub create_menubar() {
 
 #         [ "command", "Capture Terminal",    -command => \&capture_terminal, ],
             [   "command",
+                "Set all active",
+                -command => sub { $self->set_all_active() },
+            ],
+            [   "command",
+                "Set half inactive",
+                -command => sub { $self->set_half_inactive() },
+            ],
+            [   "command",
                 "Toggle active state",
                 -command => sub { $self->toggle_active_state() },
             ],
@@ -1921,6 +1952,11 @@ sub run {
     logmsg( 2, "VERSION: $VERSION" );
 
     $self->config->load_configs( $options{'config-file'} );
+
+    if ( $options{title} ) {
+        $self->config->{title} = $options{title};
+        logmsg( 2, "Title: " . $self->config->{title} );
+    }
 
     if ( $options{use_all_a_records} ) {
         $self->config->{use_all_a_records}
