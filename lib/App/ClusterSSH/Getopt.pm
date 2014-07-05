@@ -212,19 +212,12 @@ sub add_common_options {
     );
     $self->add_option(
         spec => 'unique-servers|u',
-        help => $self->loc('Toggle connecting to each host only once.'),
+        help => $self->loc('Toggle connecting to each host only once when a hostname has been specified multiple times.'),
     );
     $self->add_option(
         spec => 'use-all-a-records|A',
         help => $self->loc(
             'If a hostname resolves to multiple IP addresses, toggle whether or not to connect to all of them, or just the first one (see also config file entry).'
-        ),
-    );
-    $self->add_option(
-        spec     => 'username|l=s',
-        arg_desc => 'username',
-        help     => $self->loc(
-            'Specify the default username to use for connections (if different from the currently logged in user).  B<NOTE:> will be overridden by <user>@<host>.'
         ),
     );
 
@@ -250,6 +243,13 @@ sub add_common_ssh_options {
 sub add_common_session_options {
     my ($self) = @_;
 
+    $self->add_option(
+        spec     => 'username|l=s',
+        arg_desc => 'username',
+        help     => $self->loc(
+            'Specify the default username to use for connections (if different from the currently logged in user).  B<NOTE:> will be overridden by <user>@<host>.'
+        ),
+    );
     $self->add_option(
         spec     => 'action|a=s',
         arg_desc => 'command',
@@ -325,13 +325,14 @@ sub getopts {
     }
 
     $self->parent->config->{title} = $self->title    if ( $self->title );
-    $self->parent->config->{user}  = $self->username if ( $self->username );
     $self->parent->config->{port}  = $self->port     if ( $self->port );
 
     # note, need to check if these actions can be performed as they are
     # not common acorss all communiction methods
     $self->parent->config->{command} = $self->action
         if ( $self->can('action') && $self->action );
+    $self->parent->config->{user}  = $self->username 
+        if ( $self->can('username') && $self->username );
 
     $self->parent->config->{terminal_font} = $self->font if ( $self->font );
     $self->parent->config->{terminal_args} = $self->term_args
@@ -358,6 +359,7 @@ sub getopts {
 sub output {
     my (@text) = @_;
 
+    confess if( exists $text[1] && !$text[1]);
     print @text, $/, $/;
 }
 
@@ -389,9 +391,9 @@ sub _generate_pod {
 
 This tool is intended for (but not limited to) cluster administration where the same configuration or commands must be run on each node within the cluster.  Performing these commands all at once via this tool ensures all nodes are kept in sync.
 
-Connections are opened via ssh, so a correctly installed and configured ssh installation is required.  If, however, the program is called by "crsh" then the rsh protocol is used (and the communications channel is insecure), or by "ctel" then telnet is used, or by "ccon" then console is used.
+Connections are opened using [_1] which must be correctly installed and configured.
 
-Extra caution should be taken when editing system files such as /etc/inet/hosts as lines may not necessarily be in the same order.  Assuming line 5 is the same across all servers and modifying that is dangerous.  It's better to search for the specific line to be changed and double-check before changes are committed.}
+Extra caution should be taken when editing files as lines may not necessarily be in the same order;  assuming line 5 is the same across all servers and modifying that is dangerous.  It's better to search for the specific line to be changed and double-check all terminals are as expected before changes are committed.}, $self->parent->config->{comms}
     );
 
     output '=head2 ', $self->loc('Further Notes');
@@ -417,7 +419,7 @@ Extra caution should be taken when editing system files such as /etc/inet/hosts 
     );
     output '=item *';
     output $self->loc(
-        q{When using cssh on a large number of systems to connect back to a single system (e.g. you issue a command to the cluster to scp a file from a given location) and when these connections require authentication (i.e. you are going to authenticate with a password), the sshd daemon at that location may refuse connects after the number specified by MaxStartups in sshd_config is exceeded.  (If this value is not set, it defaults to 10.)  This is expected behavior; sshd uses this mechanism to prevent DoS attacks from unauthenticated sources.  Please tune sshd_config and reload the SSH daemon, or consider using the [_1] mechanism for authentication if you encounter this problem.},
+        q{When using ClusterSSH on a large number of systems to connect to a single system using an SSH utility (e.g. you issue a command to to copy a file using scp from the remote computers to a single host) and when these connections require authentication (i.e. you are going to authenticate with a password), the sshd daemon at that location may refuse connections after the number C<MaxStartups> limit in F<sshd_config> is exceeded.  (If this value is not set, it defaults to 10).  This is expected behavior; sshd uses this mechanism to prevent DoS attacks from unauthenticated sources.  Please tune sshd_config and reload the SSH daemon, or consider using the [_1] mechanism for authentication if you encounter this problem.},
         'F<~/.ssh/authorized_keys>'
     );
     output '=item *';
@@ -426,9 +428,9 @@ Extra caution should be taken when editing system files such as /etc/inet/hosts 
 
 [_1]
 
-This will test the mechanisms used to open windows to hosts.  This could be due to either the [_2] terminal option which enables [_3] (some terminals do not require this option, other terminals have another method for enabling it - see your terminal documentation) or the [_4] ssh option (see the configuration option [_5] or file [_6] below to resolve this).},
-        'C<< cssh -e {single host name} >>', 'C<-xrm>', 'C<AllowSendEvents>',
-        'C<ConnectTimeout>', 'C<-o>', 'C<$HOME/.clusterssh/config>'
+This will test the mechanisms used to open windows to hosts.  This could be due to either the [_2] terminal option which enables [_3] (some terminals do not require this option, other terminals have another method for enabling it - see your terminal documentation) or the configuration of [_4].},
+        "C<< $Script -e {single host name} >>", 'C<-xrm>', 'C<AllowSendEvents>',
+        'C<'.$self->parent->config->{comms}.'>', 
     );
     output '=back';
 
@@ -456,7 +458,7 @@ This will test the mechanisms used to open windows to hosts.  This could be due 
     output '=over';
     output '=item [user@]<hostname>[:port] ...';
     output $self->loc(
-        'Open an xterm to the given hostname and connect to the administration console.  An optional port number can be used if sshd is not listening on the standard port (i.e., not listening on port 22) and ssh_config cannot be used.'
+        'Open an xterm to the given hostname and connect to the administration console.  The optional port number can be used if the server is not listening on the standard port.'
     );
     output '=item <tag> ...';
     output $self->loc(
@@ -472,14 +474,11 @@ B<Note:> specifying a username on a cluster tag will override any usernames defi
         'The following key shortcuts are available within the console window, and all of them may be changed via the configuration files.'
     );
     output '=over';
-    output '=item Control-q';
-    output $self->loc(
-        'Quit the program and close all connections and windows.');
-    output '=item Control-+';
+    output '=item  ', $self->parent->config->{key_addhost};
     output $self->loc(
         q{Open the 'Add Host(s) or Cluster(s)' dialogue box.  Multiple host or cluster names can be entered, separated by spaces.}
     );
-    output '=item Alt-n';
+    output '=item ', $self->parent->config->{key_clientname};
     output $self->loc(
         q{Paste in the hostname part of the specific connection string to each client, minus any username or port, e.g.
 
@@ -487,36 +486,41 @@ C<< scp /etc/hosts server:files/<Alt-n>.hosts >>
 
 would replace the <Alt-n> with the client's name in each window.}
     );
-    output '=item Alt-r';
+    output '=item ', $self->parent->config->{key_localname};
+    output $self->loc(
+        q{Paste in the hostname of the server cssh is ebing run on}
+    );
+    output '=item ', $self->parent->config->{key_quit};
+    output $self->loc(
+        'Quit the program and close all connections and windows.');
+    output '=item ', $self->parent->config->{key_retilehosts};
     output $self->loc(q{Retile all the client windows.});
+    output '=item ', $self->parent->config->{key_username};
+    output $self->loc(
+        q{Paste in the username for the connection}
+    );
     output '=back';
 
     output '=head1 ' . $self->loc('EXAMPLES');
     output '=over';
     output '=item ', $self->loc(q{Open up a session to 3 servers});
-    output q{S<$ cssh server1 server2 server3>};
+    output q{S<$ }.$Script.q{ server1 server2 server3>};
     output '=item ',
         $self->loc(
-        q{Open up a session to a cluster of servers identified by the tag 'farm1' and give the controlling window a specific title, where the cluster is defined in one of the default configuration files}
+        q{Open up a session to a cluster of servers identified by the tag 'farm1' and give the controlling window a specific title, where the tag is defined in one of the default configuration files}
         );
-    output q{S<$ cssh -T 'Web Farm Cluster 1' farm1>};
+    output q{S<$ }.$Script.q{ -T 'Web Farm Cluster 1' farm1>};
     output '=item ',
         $self->loc(
-        q{Connect to different servers using different login names.  NOTE: this can also be achieved by setting up appropriate options in the F<.ssh/config> file.  Do not close cssh when the last terminal exits.}
+        q{Connect to different servers using different login names.  NOTE: this can also be achieved by setting up appropriate options in the configuration files.  Do not close the console when the last terminal exits.}
         );
-    output q{S<$ cssh -Q user1@server1 admin@server2>};
+    output q{S<$ }.$Script.q{ -Q user1@server1 admin@server2>};
     output '=item ',
         $self->loc(
         q{Open up a cluster defined in a non-default configuration file});
-    output q{S<$ cssh -c $HOME/cssh.config db_cluster>};
-    output '=item ', $self->loc(q{Use telnet on port 2022 instead of ssh});
-    output q{S<$ ctel -p 2022 server1 server2>};
-    output '=item ', $self->loc(q{Use rsh instead of ssh});
-    output q{S<$ crsh server1 server2>};
-    output '=item ',
-        $self->loc(
-        q{Use console with master as the primary server instead of ssh});
-    output q{S<$ ccon -M master server1 server2>};
+    output q{S<$ }.$Script.q{ -c $HOME/cssh.extra_clusters db_cluster>};
+    output '=item ', $self->loc(q{Connect on port 2022 instead of the default port});
+    output q{S<$ }.$Script.q{ -p 2022 server1 server2>};
     output '=back';
 
     output '=head1 ' . $self->loc('FILES');
@@ -525,12 +529,12 @@ would replace the <Alt-n> with the client's name in each window.}
     output $self->loc(
         q{These files contain a list of tags to server names mappings.  When any name is used on the command line it is checked to see if it is a tag.  If it is a tag, then the tag is replaced with the list of servers.  The format is as follows:}
     );
-    output 'S<< <tag> [user@]<server> [user@]<server> [...] >>';
+    output 'S<< <tag> [user@]<server>[:port] [user@]<server>[:port] [...] >>';
     output $self->loc(
         'e.g.
 
     # List of servers in live
-    live admin1@server1 admin2@server2 server3 server4'
+    live admin1@server1 admin2@server2:2022 server3 server4'
     );
     output $self->loc(
         q{All comments (marked by a #) and blank lines are ignored.  Tags may be nested, but be aware of using recursive tags as they are not checked for.}
@@ -545,7 +549,7 @@ would replace the <Alt-n> with the client's name in each window.}
         'B<NOTE:> the last tag read overwrites any pre-existing tag of that name.'
     );
     output $self->loc(
-        'B<NOTE:> there is a special cluster tag called [_1] - any tags or hosts included within this tag will be automatically opened if no other tags are specified on the command line.',
+        'B<NOTE:> there is a special cluster tag called [_1] - any tags or hosts included within this tag will be automatically opened if nothing is specified on the command line.',
         'C<default>'
     );
 
@@ -586,29 +590,13 @@ would replace the <Alt-n> with the client's name in each window.}
         'L<--autoclose>', '--no-autoclose'
     );
 
-    output '=item auto_quit = yes';
+    output '=item auto_quit = 1';
     output $self->loc(
-        'Automatically quit after the last client window closes.  Set to anything other than "yes" to disable.  See also [_1] and [_2]',
-        'L<--autoquit>', 'L<--no-autoquit>'
+        'Automatically quit after the last client window closes.  Set to 0 to disable.  See also [_1]',
+        'L<--autoquit>',
     );
 
-    output '=item clusters = <blank>';
-    output $self->loc(
-        'Define a number of cluster tags in addition to (or to replace) tags defined in the [_1] file.  The format is:',
-        'F<clusters>'
-    );
-    output(
-        q{C<< clusters = <tag1> <tag2> <tag3> >>
-C<< <tag1> = host1 host2 host3 >>
-C<< <tag2> = user@host4 user@host5 host6 >>
-C<< <tag3> = <tag1> <tag2> >>}
-    );
-    output $self->loc(
-        'As with the [_1] file, be sure not to create recursively nested tags.',
-        'F<clusters>'
-    );
-
-    output '=item comms = ssh';
+    output '=item comms = ' . $self->parent->config->{comms};
     output $self->loc(
         'Sets the default communication method (initially taken from the name of the program, but can be overridden here).'
     );
@@ -713,9 +701,9 @@ If the external command is given a C<-L> option it should output a list of tags 
         'L<KEY SHORTCUTS>'
     );
 
-    output '=item rsh = rsh';
-    output '=item ssh = ssh';
-    output '=item telnet = telnet';
+    output '=item rsh = /path/to/rsh';
+    output '=item ssh = /path/to/ssh';
+    output '=item telnet = /path/to/telnet';
     output $self->loc(
         q{Set the path to the specific binary to use for the communication method, else uses the first match found in [_1]},
         'C<$PATH>'
@@ -739,12 +727,6 @@ B<NOTE:> Any "generic" change to the method (e.g., specifying the ssh port to us
     output '=item screen_reserve_right = 0';
     output $self->loc(
         q{Number of pixels from the screen's side to reserve when calculating screen geometry for tiling.  Setting this to something like 50 will help keep cssh from positioning windows over your window manager's menu bar if it draws one at that side of the screen.}
-    );
-
-    output '=item rsh = /path/to/rsh';
-    output '=item ssh = /path/to/ssh';
-    output $self->loc(
-        q{Depending on the value of comms, set the path of the communication binary.}
     );
 
     output '=item terminal = /path/to/xterm';
@@ -805,24 +787,24 @@ B<NOTE:> Any "generic" change to the method (e.g., specifying the ssh port to us
         q{Tell Tk to use the UnmapWindow request before redrawing terminal windows.  This defaults to "no" as it causes some problems with the FVWM window manager.  If you are experiencing problems with redraws, you can set it to "yes" to allow the window to be unmapped before it is repositioned.}
     );
 
-    output '=item use_all_a_records = no';
+    output '=item use_all_a_records = 0';
     output $self->loc(
-        q{If a hostname resolves to multiple IP addresses, set to [_1] to connect to all of them, not just the first one found.},
-        'C<yes>'
+        q{If a hostname resolves to multiple IP addresses, set to [_1] to connect to all of them, not just the first one found.  See also [_2]},
+        'C<1>', 'C<--use-all-a-records>}'
     );
 
-    output '=item use_hotkeys = yes';
+    output '=item use_hotkeys = 1';
     output $self->loc(
-        q{Setting to anything other than [_1] will disable all hotkeys.},
-        'C<yes>' );
+        q{Setting to [_1] will disable all hotkeys.},
+        'C<0>' );
 
     output '=item user = $LOGNAME';
     output $self->loc(
         q{Sets the default user for running commands on clients.});
 
-    output '=item window_tiling = yes';
+    output '=item window_tiling = 1';
     output $self->loc( q{Perform window tiling (set to [_1] to disable)},
-        'C<no>' );
+        'C<0>' );
 
     output '=item window_tiling_direction = right';
     output $self->loc(
@@ -923,12 +905,12 @@ B<NOTE:> Any "generic" change to the method (e.g., specifying the ssh port to us
     output '=over';
     output '=item *';
     output $self->loc(
-        q{If you have issues running cssh, first try:
+        q{If you have issues running [_1], first try:
 
-[_1]
+[_2]
 
-This performs two tests to confirm cssh is able to work properly with the settings provided within the [_2] file (or internal defaults).
-}, 'C<< cssh -e [user@]<hostname>[:port] >>', 'F<$HOME/.clusterssh/config>'
+This performs two tests to confirm cssh is able to work properly with the settings provided within the [_3] file (or internal defaults).
+}, $Script, 'C<< '.$Script.' -e [user@]<hostname>[:port] >>', 'F<$HOME/.clusterssh/config>'
     );
 
     output '=over';
@@ -937,7 +919,7 @@ This performs two tests to confirm cssh is able to work properly with the settin
         q{Test the terminal window works with the options provided});
     output '=item 2';
     output $self->loc(
-        q{Test ssh works to a host with the configured arguments});
+        q{Test [_1] works to a host with the configured arguments}, $self->parent->config->{comms});
     output '=back';
 
     output $self->loc(q{Configuration options to watch for in ssh are});
@@ -989,7 +971,7 @@ C<perl>}
     output '=head1 ', $self->loc('CREDITS');
     output $self->loc(
         'A web site for comments, requests, bug reports and bug fixes/patches is available at: [_1]',
-        'L<http://clusterssh.sourceforge.net/>'
+        'L<https://github.com/duncs/clusterssh>'
     );
 
     output '=head1 ', $self->loc('AUTHOR');

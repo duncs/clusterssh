@@ -7,7 +7,16 @@ package Test::ClusterSSH::Mock;
 
 sub new {
     my ( $class, %args ) = @_;
-    my $config = {%args};
+    my $config = {
+        comms           => 'testing',
+        key_addhost     => 'x',
+        key_clientname  => 'x',
+        key_localname   => 'x',
+        key_quit        => 'x',
+        key_retilehosts => 'x',
+        key_username    => 'x',
+        %args
+    };
     return bless $config, $class;
 }
 
@@ -336,49 +345,47 @@ is( $trap->die, undef, 'Expecting no die message' );
 
 # test some common options
 @ARGV = (
-    '--unique-servers', '--title', 'title', '-l',
-    'username',         '-p',      '22',    '--autoquit',
-    '--tile', '--autoclose','10',
+    '--unique-servers', '--title',    'title',  '-p',
+    '22',               '--autoquit', '--tile', '--autoclose',
+    '10',
 );
-$mock_object->{auto_close}    = 0;
-$mock_object->{auto_quit}     = 0;
-$mock_object->{window_tiling} = 0;
-$mock_object->{show_history}  = 0;
-$mock_object->{use_all_a_records}  = 1;
+$mock_object->{auto_close}        = 0;
+$mock_object->{auto_quit}         = 0;
+$mock_object->{window_tiling}     = 0;
+$mock_object->{show_history}      = 0;
+$mock_object->{use_all_a_records} = 1;
 $getopts = App::ClusterSSH::Getopt->new( parent => $mock_object, );
 trap {
     $getopts->getopts;
 };
-is( $trap->leaveby, 'return', 'adding an empty option failed' );
-is( $trap->die,     undef,    'no error when spec provided' );
-is( $trap->stdout,  '',       'Expecting no STDOUT' );
-is( $trap->stderr,  '',       'Expecting no STDERR' );
-is( $trap->die,     undef,    'Expecting no die message' );
-is( $mock_object->{auto_close}, 10, 'auto_close set right');
-is( $mock_object->{auto_quit}, 1, 'auto_quit set right');
-is( $mock_object->{window_tiling}, 1, 'window_tiling set right');
-is( $mock_object->{show_history}, 0, 'show_history set right');
-is( $mock_object->{use_all_a_records}, 1, 'use_all_a_records set right');
+is( $trap->leaveby,             'return', 'adding an empty option failed' );
+is( $trap->die,                 undef,    'no error when spec provided' );
+is( $trap->stdout,              '',       'Expecting no STDOUT' );
+is( $trap->stderr,              '',       'Expecting no STDERR' );
+is( $trap->die,                 undef,    'Expecting no die message' );
+is( $mock_object->{auto_close}, 10,       'auto_close set right' );
+is( $mock_object->{auto_quit},  1,        'auto_quit set right' );
+is( $mock_object->{window_tiling},     1, 'window_tiling set right' );
+is( $mock_object->{show_history},      0, 'show_history set right' );
+is( $mock_object->{use_all_a_records}, 1, 'use_all_a_records set right' );
 
 @ARGV = (
-    '--unique-servers', '--title', 'title', '-l',
-    'username',         '-p',      '22',    '--autoquit',
+    '--unique-servers', '--title', 'title', '-p', '22', '--autoquit',
     '--tile', '--show-history', '-A',
 );
 $getopts = App::ClusterSSH::Getopt->new( parent => $mock_object, );
 trap {
     $getopts->getopts;
 };
-is( $trap->leaveby, 'return', 'adding an empty option failed' );
-is( $trap->die,     undef,    'no error when spec provided' );
-is( $trap->stdout,  '',       'Expecting no STDOUT' );
-is( $trap->stderr,  '',       'Expecting no STDERR' );
-is( $trap->die,     undef,    'Expecting no die message' );
-is( $mock_object->{auto_close}, 10, 'auto_close set right');
-is( $mock_object->{auto_quit}, 0, 'auto_quit set right');
-is( $mock_object->{window_tiling}, 0, 'window_tiling set right');
-is( $mock_object->{show_history}, 1, 'show_history set right');
-is( $mock_object->{use_all_a_records}, 0, 'use_all_a_records set right');
-
+is( $trap->leaveby,             'return', 'adding an empty option failed' );
+is( $trap->die,                 undef,    'no error when spec provided' );
+is( $trap->stdout,              '',       'Expecting no STDOUT' );
+is( $trap->stderr,              '',       'Expecting no STDERR' );
+is( $trap->die,                 undef,    'Expecting no die message' );
+is( $mock_object->{auto_close}, 10,       'auto_close set right' );
+is( $mock_object->{auto_quit},  0,        'auto_quit set right' );
+is( $mock_object->{window_tiling},     0, 'window_tiling set right' );
+is( $mock_object->{show_history},      1, 'show_history set right' );
+is( $mock_object->{use_all_a_records}, 0, 'use_all_a_records set right' );
 
 done_testing;
