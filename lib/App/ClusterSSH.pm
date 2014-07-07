@@ -1251,7 +1251,7 @@ sub build_hosts_menu() {
 
     # first, empty the hosts menu from the 4th entry on
     my $menu = $menus{bar}->entrycget( 'Hosts', -menu );
-    my $host_menu_static_items = 5;
+    my $host_menu_static_items = 7;
     $menu->delete( $host_menu_static_items, 'end' );
 
     logmsg( 3, "Menu deleted" );

@@ -1,3 +1,6 @@
+4.02_05 ????-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net>
+- Add in 'Set all active' and 'Set half active' host menu options (thanks to Andrew Stevenson)
+
 4.02_04 2014-05-17 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Amend 'Changes' file format to match CPAN specs (see CPAN::Changes)
 - Correct autoclose short option to what is actually used (Github issue 4) (thanks to Simon Fraser)
