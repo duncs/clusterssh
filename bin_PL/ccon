@@ -1,0 +1,22 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use FindBin;
+use lib $FindBin::Bin. '/../lib';
+use lib $FindBin::Bin. '/../lib/perl5';
+use App::ClusterSSH;
+
+my $app = App::ClusterSSH->new();
+
+#$app->options->add_common_ssh_options;
+#$app->options->add_common_session_options;
+
+$app->add_option(
+    spec => 'master|M=s',
+    help => $app->loc("The console client program polls master as the primary server, rather than the default set at compile time (typically ``console'')."),
+);
+
+$app->run();
+
+1;

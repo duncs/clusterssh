@@ -17,7 +17,7 @@ use App::ClusterSSH::Cluster;
 
 my $clusters;
 my %old_clusters;
-my @app_specific = (qw/ command title comms method /);
+my @app_specific = (qw/ command title comms method parent /);
 
 # list of config items to not write out when writing the default config
 my @ignore_default_config = (qw/ user /);

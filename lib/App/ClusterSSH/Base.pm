@@ -12,6 +12,8 @@ use Exception::Class (
     },
     'App::ClusterSSH::Exception::Cluster',
     'App::ClusterSSH::Exception::LoadFile',
+    'App::ClusterSSH::Exception::Helper',
+    'App::ClusterSSH::Exception::Getopt',
 );
 
 # Don't use SVN revision as it can cause problems
@@ -85,10 +87,7 @@ sub loc {
 
 sub set_lang {
     my ( $self, $lang ) = @_;
-    $language = $lang;
-    if ($self) {
-        $self->debug( 6, $self->loc( 'Setting language to "[_1]"', $lang ), );
-    }
+    $self->debug( 6, $self->loc( 'Setting language to "[_1]"', $lang ), );
     return $self;
 }
 
@@ -184,10 +183,10 @@ sub load_file {
         );
     }
 
-    if ( !$args{type} || $args{type} !~ m/cluster|config/ ) {
+    if ( !$args{type} ) {
         croak(
             App::ClusterSSH::Exception->throw(
-                error => '"type" arg invalid'
+                error => '"type" arg not passed'
             )
         );
     }
@@ -267,6 +266,11 @@ sub load_file {
     return %results;
 }
 
+sub parent {
+    my ($self) = @_;
+    return $self->{parent};
+}
+
 1;
 
 =pod
@@ -334,6 +338,11 @@ a wrapper to maketext in Locale::Maketext
 =item $obj->output(@);
 
 Output text on STDOUT.
+
+=item $ovj->parent;
+
+Reutrned the object that is the parent of this one, if it was set when the 
+object was created
 
 =item $obj->exit;
 

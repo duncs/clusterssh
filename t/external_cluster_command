@@ -7,7 +7,14 @@ use warnings;
 use Getopt::Std;
 
 my $opt = {};
-getopts( 'qx', $opt );
+getopts( 'Lqx', $opt );
+
+my %tag_lookup = (
+    tag100 => [qw/ host100 /],
+    tag200 => [qw/ host200 host210 host205 /],
+    tag300 => [qw/ host300 host350 host325 /],
+    tag400 => [qw/ tag100 tag200 tag300 host400 host401 /],
+);
 
 # if we get '-q' option, force an error
 if ( $opt->{q} ) {
@@ -21,12 +28,11 @@ if ( $opt->{x} ) {
     exit 5;
 }
 
-my %tag_lookup = (
-    tag100 => [qw/ host100 /],
-    tag200 => [qw/ host200 host210 host205 /],
-    tag300 => [qw/ host300 host350 host325 /],
-    tag400 => [qw/ tag100 tag200 tag300 host400 host401 /],
-);
+# '-L' means list out available tags
+if ( $opt->{L} ) {
+    print join(' ', sort keys %tag_lookup), $/;
+    exit 0;
+}
 
 my @lookup = @ARGV;
 

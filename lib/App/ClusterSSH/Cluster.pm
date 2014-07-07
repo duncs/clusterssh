@@ -48,14 +48,32 @@ sub get_tag_entries {
     return $self;
 }
 
+sub list_external_clusters {
+    my ( $self, ) = @_;
+
+    my @list =  $self->_run_external_clusters('-L');
+    return
+        wantarray
+        ? sort @list
+        : scalar @list;
+}
+
 sub get_external_clusters {
-    my ( $self, $external_command, @tags ) = @_;
+    my ( $self, @tags ) = @_;
+
+    return $self->_run_external_clusters(@tags);
+}
+
+sub _run_external_clusters {
+    my ( $self, @args ) = @_;
+
+    my $external_command = $self->parent->config->{external_cluster_command};
 
     $self->debug( 3, 'Running tags through external command' );
     $self->debug( 4, 'External command: ', $external_command );
-    $self->debug( 3, 'Tags: ', join( ',', @tags ) );
+    $self->debug( 3, 'Args ', join( ',', @args ) );
 
-    my $command = "$external_command @tags";
+    my $command = "$external_command @args";
 
     $self->debug( 3, 'Running ', $command );
 
@@ -219,9 +237,13 @@ Create a new object.  Object should be common across all invocations.
 Read in /etc/clusters, $HOME/.clusterssh/clusters and any other given 
 file name and register the tags found.
 
-=item @resolved_tags=get_external_clusters($path_to_binary, @tags)
+=item @external_tags=list_external_clusters()
 
-Define and use an external script to resolve tags into hostnames.
+Call an external script suing C<-L> to list available tags
+
+=item @resolved_tags=get_external_clusters(@tags)
+
+Use an external script to resolve C<@tags> into hostnames.
 
 =item $cluster->get_tag_entries($filename);
 

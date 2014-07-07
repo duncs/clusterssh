@@ -1,11 +1,14 @@
 use strict;
 use warnings;
+use Cwd;
 
 use Module::Build;
 
 my $class = Module::Build->subclass(
     class => "Module::Build::Custom",
     code  => q{
+        use File::Slurp;
+
         sub ACTION_email {
             my ($self, @args) = @_;
 
@@ -39,6 +42,7 @@ SF release: http://sourceforge.net/projects/clusterssh/files/2.%20ClusterSSH%20S
 SF/net git repo: https://sourceforge.net/scm/?type=git&group_id=89139
 ==========
 EOF
+            return $self;
         }
     },
 );
@@ -76,12 +80,16 @@ my $build = $class->new(
         'Test::DistManifest'  => 0,
         'Test::Differences'   => 0,
         'CPAN::Changes'       => 0.27,
+        'File::Slurp'         => 0,
     },
     configure_requires => { 'Module::Build' => 0, },
     add_to_cleanup     => ['App-ClusterSSH-*'],
     create_makefile_pl => 'traditional',
     script_files       => 'bin',
     get_options => { changes => { type => '=s' }, },
+    PL_files => {
+        'bin_PL/_build_docs' => [],
+    },
 );
 
 $build->create_build_script;
