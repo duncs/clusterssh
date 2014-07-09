@@ -281,7 +281,7 @@ sub getopts {
     }
 
     if ( $options->{version} ) {
-        print "Version: $VERSION\n";
+        print 'Version: ', $self->parent->VERSION, $/;
         $self->exit;
     }
 
