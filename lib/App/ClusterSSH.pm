@@ -2121,6 +2121,10 @@ the code until this time.
 
 =item send_text_to_all_servers
 
+=item set_all_active
+
+=item set_half_inactive
+
 =item setup_repeat
 
 =item show_console
