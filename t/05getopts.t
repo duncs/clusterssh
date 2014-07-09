@@ -25,6 +25,11 @@ sub parent {
     return $self;
 }
 
+sub VERSION {
+    my ($self) = @_;
+    return 'TESTING';
+}
+
 sub config {
     my ($self) = @_;
     return $self;
