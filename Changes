@@ -1,4 +1,4 @@
-4.03_01 2014-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net>
+4.03_01 2014-07-09 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Amended host parsing to include alternative IPv6 address port definitions, e.g. 1::2::3::4/5567
 - List available external tags with -L option and also add into 'Add Host' in UI
 [NOTE: Some options have changed!]

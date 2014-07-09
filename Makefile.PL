@@ -7,6 +7,7 @@ WriteMakefile
   'PREREQ_PM' => {
                    'CPAN::Changes' => '0.27',
                    'Exception::Class' => '1.31',
+                   'File::Slurp' => 0,
                    'File::Temp' => 0,
                    'File::Which' => 0,
                    'Locale::Maketext' => 0,
@@ -25,10 +26,11 @@ WriteMakefile
   'EXE_FILES' => [
                    'bin/ccon',
                    'bin/crsh',
-                   'bin/cscp',
                    'bin/cssh',
                    'bin/ctel'
                  ],
-  'PL_FILES' => {}
+  'PL_FILES' => {
+                  'bin_PL/_build_docs' => []
+                }
 )
 ;
