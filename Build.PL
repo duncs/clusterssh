@@ -26,6 +26,8 @@ my $class = Module::Build->subclass(
             }
 
             print $/;
+            print 'Subject: ClusterSSH ', $self->dist_version, ' release', $/;
+            print $/;
 
             foreach my $change ( 1 .. $change_count ) {
                 print $changes[ 0 - $change]->serialize;
