@@ -592,6 +592,15 @@ sub send_text_to_all_servers {
     }
 }
 
+sub send_variable_text_to_all_servers($&) {
+    my($self, $code) = @_;
+
+    foreach my $svr ( keys(%servers) ) {
+        $self->send_text( $svr, $code->($svr) )
+            if ( $servers{$svr}{active} == 1 );
+    }
+}
+
 sub send_resizemove($$$$$) {
     my ( $self, $win, $x_pos, $y_pos, $x_siz, $y_siz ) = @_;
 
@@ -1867,6 +1876,14 @@ sub populate_send_menu {
                 $self->send_text_to_all_servers( 'echo ClusterSSH Version: '
                         . $self->config->{macro_version}
                         . $self->config->{macro_newline} );
+            },
+        );
+        $menus{send}->command(
+            -label   => 'Random Number',
+            -command => sub {
+                $self->send_variable_text_to_all_servers(
+                    sub { int(rand(1024)) }
+                ),
             },
         );
     }
