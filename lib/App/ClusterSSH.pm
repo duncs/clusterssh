@@ -1165,8 +1165,8 @@ sub set_half_inactive() {
     my ($self) = @_;
     logmsg( 2, "Setting approx half of all hosts to inactive" );
 
-	my(@keys) = keys(%servers);
-	$#keys /= 2;
+    my(@keys) = keys(%servers);
+    $#keys /= 2;
     foreach my $svr ( @keys ) {
         $servers{$svr}{active} = 0;
     }
