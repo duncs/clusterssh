@@ -69,6 +69,11 @@ sub _run_external_clusters {
 
     my $external_command = $self->parent->config->{external_cluster_command};
 
+    if(!$external_command || ! -x $external_command) {
+        $self->debug( 1, 'Cannot run external cluster command: ', $external_command || '');
+        return;
+    }
+
     $self->debug( 3, 'Running tags through external command' );
     $self->debug( 4, 'External command: ', $external_command );
     $self->debug( 3, 'Args ', join( ',', @args ) );
