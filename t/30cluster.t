@@ -109,8 +109,7 @@ $expected{tag20} = [ 'host10', ];
 $expected{tag30} = [ 'host10', ];
 $expected{tag40} = [ 'host20', 'host30', ];
 $expected{tag50} = [ 'host30', ];
-$cluster1->read_tag_file( $Bin . '/30cluster.tag1' );
-test_expected( 'tag 1', %expected );
+$cluster1->read_tag_file( $Bin . '/30cluster.tag1' ); test_expected( 'tag 1', %expected );
 
 $cluster1->read_cluster_file( $Bin . '/30cluster.file3' );
 my @default_expected = (qw/ host7 host8 host9 /);
@@ -155,6 +154,22 @@ is_deeply( $count, 10, 'tag list count correct' );
 # now checks against running an external command
 
 my @external_expected;
+
+# text fetching external clusters when no command set or runnable
+#$mock_object->{external_cluster_command} = '/tmp/doesnt_exist';
+trap {
+@external_expected = $cluster1->_run_external_clusters();
+};
+is( $trap->leaveby, 'return', 'non-existant tag returns correctly' );
+is( $trap->stdout,  '',       'no stdout for non-existant get_tag' );
+is( $trap->stderr,  '',       'no stderr for non-existant get_tag' );
+is( $tags,          undef,    'non-existant tag returns undef' );
+@external_expected = $cluster1->list_external_clusters();
+is_deeply( \@external_expected, [],
+    'External command doesnt exist'
+);
+is( scalar $cluster1->list_external_clusters, 0, 'External command failed tag count');
+
 $mock_object->{external_cluster_command} = "$Bin/external_cluster_command";
 
 @external_expected = $cluster1->list_external_clusters();

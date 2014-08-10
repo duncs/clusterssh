@@ -3,7 +3,7 @@ package App::ClusterSSH;
 use 5.008.004;
 use warnings;
 use strict;
-use version; our $VERSION = version->new('4.03_01');
+use version; our $VERSION = version->new('4.03_02');
 
 use Carp;
 
@@ -1945,8 +1945,11 @@ sub run {
         print( 'Available cluster tags:', $/ );
         print "\t", $_, $/ foreach ( sort( $self->cluster->list_tags ) );
 
-        print( 'Available external command tags:', $/ );
-        print "\t", $_, $/ foreach ( sort( $self->cluster->list_external_clusters ) );
+        my @external_clusters = $self->cluster->list_external_clusters;
+        if(@external_clusters) {
+            print( 'Available external command tags:', $/ );
+            print "\t", $_, $/ foreach ( sort( @external_clusters ) );
+        }
 
         $self->debug(
             4,
