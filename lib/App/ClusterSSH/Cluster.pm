@@ -51,9 +51,8 @@ sub get_tag_entries {
 sub list_external_clusters {
     my ( $self, ) = @_;
 
-    my @list =  $self->_run_external_clusters('-L');
-    return
-        wantarray
+    my @list = $self->_run_external_clusters('-L');
+    return wantarray
         ? sort @list
         : scalar @list;
 }
@@ -69,8 +68,12 @@ sub _run_external_clusters {
 
     my $external_command = $self->parent->config->{external_cluster_command};
 
-    if(!$external_command || ! -x $external_command) {
-        $self->debug( 1, 'Cannot run external cluster command: ', $external_command || '');
+    if ( !$external_command || !-x $external_command ) {
+        $self->debug(
+            1,
+            'Cannot run external cluster command: ',
+            $external_command || ''
+        );
         return;
     }
 
@@ -184,8 +187,7 @@ sub get_tag {
             join( ' ', sort @{ $self->{tags}->{$tag} } )
         );
 
-        return
-            wantarray
+        return wantarray
             ? sort @{ $self->{tags}->{$tag} }
             : scalar @{ $self->{tags}->{$tag} };
     }
@@ -196,8 +198,7 @@ sub get_tag {
 
 sub list_tags {
     my ($self) = @_;
-    return
-        wantarray
+    return wantarray
         ? sort keys( %{ $self->{tags} } )
         : scalar keys( %{ $self->{tags} } );
 }

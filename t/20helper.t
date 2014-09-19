@@ -14,7 +14,7 @@ use Readonly;
 package App::ClusterSSH::Config;
 
 sub new {
-    my ($class, %args) = @_;
+    my ( $class, %args ) = @_;
     my $self = {%args};
     return bless $self, $class;
 }
@@ -51,7 +51,7 @@ is( $trap->die, 'No configuration provided or in wrong format',
 
 my $mock_config = App::ClusterSSH::Config->new();
 trap {
-    $script = $helper->script( $mock_config );
+    $script = $helper->script($mock_config);
 };
 is( $trap->leaveby, 'die', 'returned ok' );
 is( $trap->stdout,  q{},   'Expecting no STDOUT' );
@@ -62,16 +62,16 @@ is( $trap->die, q{Config 'comms' not provided}, 'missing arg' );
 
 $mock_config->{comms} = 'method';
 trap {
-    $script = $helper->script( $mock_config );
+    $script = $helper->script($mock_config);
 };
-is( $trap->leaveby, 'die', 'returned ok' );
-is( $trap->stdout,  q{},   'Expecting no STDOUT' );
-is( $trap->stderr,  q{},   'Expecting no STDERR' );
-is( $trap->die, q{Config 'method' not provided}, 'missing arg' );
+is( $trap->leaveby, 'die',                           'returned ok' );
+is( $trap->stdout,  q{},                             'Expecting no STDOUT' );
+is( $trap->stderr,  q{},                             'Expecting no STDERR' );
+is( $trap->die,     q{Config 'method' not provided}, 'missing arg' );
 
 $mock_config->{method} = 'binary';
 trap {
-    $script = $helper->script( $mock_config );
+    $script = $helper->script($mock_config);
 };
 is( $trap->leaveby, 'die', 'returned ok' );
 is( $trap->stdout,  q{},   'Expecting no STDOUT' );
@@ -79,22 +79,22 @@ is( $trap->stderr,  q{},   'Expecting no STDERR' );
 is( $trap->die, q{Config 'method_args' not provided}, 'missing arg' );
 
 $mock_config->{method_args} = 'rubbish';
-$mock_config->{command} = 'echo';
-$mock_config->{auto_close} = 5;
+$mock_config->{command}     = 'echo';
+$mock_config->{auto_close}  = 5;
 trap {
-    $script = $helper->script( $mock_config );
+    $script = $helper->script($mock_config);
 };
 is( $trap->leaveby, 'return', 'returned ok' );
-is( $trap->stdout,  q{},   'Expecting no STDOUT' );
-is( $trap->stderr,  q{},   'Expecting no STDERR' );
-is( $trap->die, undef,     'not died' );
+is( $trap->stdout,  q{},      'Expecting no STDOUT' );
+is( $trap->stderr,  q{},      'Expecting no STDERR' );
+is( $trap->die,     undef,    'not died' );
 
 trap {
-    eval { $script };
+    eval {$script};
 };
 is( $trap->leaveby, 'return', 'returned ok' );
-is( $trap->stdout,  q{},   'Expecting no STDOUT' );
-is( $trap->stderr,  q{},   'Expecting no STDERR' );
-is( $trap->die, undef,     'not died' );
+is( $trap->stdout,  q{},      'Expecting no STDOUT' );
+is( $trap->stderr,  q{},      'Expecting no STDERR' );
+is( $trap->die,     undef,    'not died' );
 
 done_testing();

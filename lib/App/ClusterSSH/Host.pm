@@ -73,7 +73,7 @@ sub get_username {
 
 sub get_type {
     my ($self) = @_;
-    if($self->check_ssh_hostname) {
+    if ( $self->check_ssh_hostname ) {
         return 'ssh_alias';
     }
     return $self->{type} || q{};
@@ -165,7 +165,10 @@ sub parse_host_string {
     {
         $self->debug(
             5,
-            $self->loc( 'bracketed IPv6: u=[_1] h=[_2] p=[_3] g=[_4]', $1, $2, $3, $4 ),
+            $self->loc(
+                'bracketed IPv6: u=[_1] h=[_2] p=[_3] g=[_4]',
+                $1, $2, $3, $4
+            ),
         );
         return __PACKAGE__->new(
             parse_string => $parse_string,
@@ -188,8 +191,12 @@ sub parse_host_string {
         }xms
         )
     {
-        $self->debug( 5,
-            $self->loc( 'std IPv4: u=[_1] h=[_2] p=[_3] g=[_4]', $1, $2, $3, $4 ),
+        $self->debug(
+            5,
+            $self->loc(
+                'std IPv4: u=[_1] h=[_2] p=[_3] g=[_4]',
+                $1, $2, $3, $4
+            ),
         );
         return __PACKAGE__->new(
             parse_string => $parse_string,
@@ -218,9 +225,9 @@ sub parse_host_string {
         $geometry = $1;
     }
 
-    # Check for a '/nnnn' port definition 
+    # Check for a '/nnnn' port definition
     if ( $host_string =~ s!(?:/(\d+)$)!! ) {
-       $port = $1;
+        $port = $1;
     }
 
     # use number of colons as a possible indicator
@@ -230,7 +237,7 @@ sub parse_host_string {
     # if its 8 then assumed full IPv6 address with a port
     # also catch localhost address here
     if ( $colon_count == 7 || $colon_count == 8 || $host_string eq '::1' ) {
-        if( $colon_count == 8) {
+        if ( $colon_count == 8 ) {
             $host_string =~ s/(?::(\d+?))$//;
             $port = $1;
         }
@@ -251,8 +258,7 @@ sub parse_host_string {
         );
     }
     if (   $colon_count > 1
-        && $colon_count < 8
-    )
+        && $colon_count < 8 )
     {
         warn 'Ambiguous host string: "', $host_string, '"',   $/;
         warn 'Assuming you meant "[',    $host_string, ']"?', $/;
@@ -260,8 +266,8 @@ sub parse_host_string {
         $self->debug(
             5,
             $self->loc(
-                'Ambiguous IPv6 u=[_1] h=[_2] p=[_3] g=[_4]', $username,
-                $host_string, $port, $geometry,
+                'Ambiguous IPv6 u=[_1] h=[_2] p=[_3] g=[_4]',
+                $username, $host_string, $port, $geometry,
             )
         );
 

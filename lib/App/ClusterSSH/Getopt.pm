@@ -212,7 +212,9 @@ sub add_common_options {
     );
     $self->add_option(
         spec => 'unique-servers|u',
-        help => $self->loc('Toggle connecting to each host only once when a hostname has been specified multiple times.'),
+        help => $self->loc(
+            'Toggle connecting to each host only once when a hostname has been specified multiple times.'
+        ),
     );
     $self->add_option(
         spec => 'use-all-a-records|A',
@@ -271,7 +273,7 @@ sub getopts {
     pod2usage( -verbose => 1 ) if ( $options->{'h'} || $options->{help} );
     pod2usage( -verbose => 2 ) if ( $options->{H}   || $options->{man} );
 
-    # record what was given on the command line in case this 
+    # record what was given on the command line in case this
     # object is ever dumped out
     $self->{options_parsed} = $options;
 
@@ -302,12 +304,13 @@ sub getopts {
             no warnings 'redefine';
             *$accessor = sub {
                 return $options->{$acc} || $default;
-#                      defined $options->{$acc} ? $options->{$acc}
-#                    : defined $self->{command_options}->{$acc}->{default}
-#                    ? $self->{command_options}->{$acc}->{default}
-#                    : undef;
+
+    #                      defined $options->{$acc} ? $options->{$acc}
+    #                    : defined $self->{command_options}->{$acc}->{default}
+    #                    ? $self->{command_options}->{$acc}->{default}
+    #                    : undef;
             };
-            my $accessor_default=$accessor.'_default';
+            my $accessor_default = $accessor . '_default';
             *$accessor_default = sub { return $default; };
         }
     }
@@ -326,14 +329,14 @@ sub getopts {
             = !$self->parent->config->{unique_servers} || 0;
     }
 
-    $self->parent->config->{title} = $self->title    if ( $self->title );
-    $self->parent->config->{port}  = $self->port     if ( $self->port );
+    $self->parent->config->{title} = $self->title if ( $self->title );
+    $self->parent->config->{port}  = $self->port  if ( $self->port );
 
     # note, need to check if these actions can be performed as they are
     # not common acorss all communiction methods
     $self->parent->config->{command} = $self->action
         if ( $self->can('action') && $self->action );
-    $self->parent->config->{user}  = $self->username 
+    $self->parent->config->{user} = $self->username
         if ( $self->can('username') && $self->username );
 
     $self->parent->config->{terminal_font} = $self->font if ( $self->font );
@@ -361,7 +364,7 @@ sub getopts {
 sub output {
     my (@text) = @_;
 
-    confess if( exists $text[1] && !$text[1]);
+    confess if ( exists $text[1] && !$text[1] );
     print @text, $/, $/;
 }
 
@@ -395,7 +398,8 @@ This tool is intended for (but not limited to) cluster administration where the 
 
 Connections are opened using [_1] which must be correctly installed and configured.
 
-Extra caution should be taken when editing files as lines may not necessarily be in the same order;  assuming line 5 is the same across all servers and modifying that is dangerous.  It's better to search for the specific line to be changed and double-check all terminals are as expected before changes are committed.}, $self->parent->config->{comms}
+Extra caution should be taken when editing files as lines may not necessarily be in the same order;  assuming line 5 is the same across all servers and modifying that is dangerous.  It's better to search for the specific line to be changed and double-check all terminals are as expected before changes are committed.},
+        $self->parent->config->{comms}
     );
 
     output '=head2 ', $self->loc('Further Notes');
@@ -431,8 +435,9 @@ Extra caution should be taken when editing files as lines may not necessarily be
 [_1]
 
 This will test the mechanisms used to open windows to hosts.  This could be due to either the [_2] terminal option which enables [_3] (some terminals do not require this option, other terminals have another method for enabling it - see your terminal documentation) or the configuration of [_4].},
-        "C<< $Script -e {single host name} >>", 'C<-xrm>', 'C<AllowSendEvents>',
-        'C<'.$self->parent->config->{comms}.'>', 
+        "C<< $Script -e {single host name} >>", 'C<-xrm>',
+        'C<AllowSendEvents>',
+        'C<' . $self->parent->config->{comms} . '>',
     );
     output '=back';
 
@@ -490,39 +495,37 @@ would replace the <Alt-n> with the client's name in each window.}
     );
     output '=item ', $self->parent->config->{key_localname};
     output $self->loc(
-        q{Paste in the hostname of the server cssh is ebing run on}
-    );
+        q{Paste in the hostname of the server cssh is ebing run on});
     output '=item ', $self->parent->config->{key_quit};
     output $self->loc(
         'Quit the program and close all connections and windows.');
     output '=item ', $self->parent->config->{key_retilehosts};
     output $self->loc(q{Retile all the client windows.});
     output '=item ', $self->parent->config->{key_username};
-    output $self->loc(
-        q{Paste in the username for the connection}
-    );
+    output $self->loc(q{Paste in the username for the connection});
     output '=back';
 
     output '=head1 ' . $self->loc('EXAMPLES');
     output '=over';
     output '=item ', $self->loc(q{Open up a session to 3 servers});
-    output q{S<$ }.$Script.q{ server1 server2 server3>};
+    output q{S<$ } . $Script . q{ server1 server2 server3>};
     output '=item ',
         $self->loc(
         q{Open up a session to a cluster of servers identified by the tag 'farm1' and give the controlling window a specific title, where the tag is defined in one of the default configuration files}
         );
-    output q{S<$ }.$Script.q{ -T 'Web Farm Cluster 1' farm1>};
+    output q{S<$ } . $Script . q{ -T 'Web Farm Cluster 1' farm1>};
     output '=item ',
         $self->loc(
         q{Connect to different servers using different login names.  NOTE: this can also be achieved by setting up appropriate options in the configuration files.  Do not close the console when the last terminal exits.}
         );
-    output q{S<$ }.$Script.q{ -Q user1@server1 admin@server2>};
+    output q{S<$ } . $Script . q{ -Q user1@server1 admin@server2>};
     output '=item ',
         $self->loc(
         q{Open up a cluster defined in a non-default configuration file});
-    output q{S<$ }.$Script.q{ -c $HOME/cssh.extra_clusters db_cluster>};
-    output '=item ', $self->loc(q{Connect on port 2022 instead of the default port});
-    output q{S<$ }.$Script.q{ -p 2022 server1 server2>};
+    output q{S<$ } . $Script . q{ -c $HOME/cssh.extra_clusters db_cluster>};
+    output '=item ',
+        $self->loc(q{Connect on port 2022 instead of the default port});
+    output q{S<$ } . $Script . q{ -p 2022 server1 server2>};
     output '=back';
 
     output '=head1 ' . $self->loc('FILES');
@@ -796,9 +799,7 @@ B<NOTE:> Any "generic" change to the method (e.g., specifying the ssh port to us
     );
 
     output '=item use_hotkeys = 1';
-    output $self->loc(
-        q{Setting to [_1] will disable all hotkeys.},
-        'C<0>' );
+    output $self->loc( q{Setting to [_1] will disable all hotkeys.}, 'C<0>' );
 
     output '=item user = $LOGNAME';
     output $self->loc(
@@ -912,7 +913,8 @@ B<NOTE:> Any "generic" change to the method (e.g., specifying the ssh port to us
 [_2]
 
 This performs two tests to confirm cssh is able to work properly with the settings provided within the [_3] file (or internal defaults).
-}, $Script, 'C<< '.$Script.' -e [user@]<hostname>[:port] >>', 'F<$HOME/.clusterssh/config>'
+}, $Script, 'C<< ' . $Script . ' -e [user@]<hostname>[:port] >>',
+        'F<$HOME/.clusterssh/config>'
     );
 
     output '=over';
@@ -921,7 +923,8 @@ This performs two tests to confirm cssh is able to work properly with the settin
         q{Test the terminal window works with the options provided});
     output '=item 2';
     output $self->loc(
-        q{Test [_1] works to a host with the configured arguments}, $self->parent->config->{comms});
+        q{Test [_1] works to a host with the configured arguments},
+        $self->parent->config->{comms} );
     output '=back';
 
     output $self->loc(q{Configuration options to watch for in ssh are});

@@ -83,15 +83,14 @@ my $build = $class->new(
         'Test::Differences'   => 0,
         'CPAN::Changes'       => 0.27,
         'File::Slurp'         => 0,
+        'Test::PerlTidy'      => 0,
     },
     configure_requires => { 'Module::Build' => 0, },
     add_to_cleanup     => ['App-ClusterSSH-*'],
     create_makefile_pl => 'traditional',
     script_files       => 'bin',
-    get_options => { changes => { type => '=s' }, },
-    PL_files => {
-        'bin_PL/_build_docs' => [],
-    },
+    get_options => { changes              => { type => '=s' }, },
+    PL_files    => { 'bin_PL/_build_docs' => [], },
 );
 
 $build->create_build_script;

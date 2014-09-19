@@ -46,5 +46,7 @@ t/external_cluster_command
 THANKS
 t/manifest.t
 TODO
+t/perltidy.t
+t/perltidyrc
 t/pod-coverage.t
 t/pod.t

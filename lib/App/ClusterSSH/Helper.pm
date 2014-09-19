@@ -22,7 +22,10 @@ sub new {
 sub script {
     my ( $self, $config ) = @_;
 
-    if(! defined $config || ! ref $config || ref $config ne "App::ClusterSSH::Config") {
+    if (   !defined $config
+        || !ref $config
+        || ref $config ne "App::ClusterSSH::Config" )
+    {
         croak(
             App::ClusterSSH::Exception::Helper->throw(
                 error => 'No configuration provided or in wrong format',
@@ -30,9 +33,10 @@ sub script {
         );
     }
 
-    foreach my $arg ( "comms", $config->{comms}, $config->{comms} . '_args', 'command', 'auto_close'
-    ) {
-        if( !defined $config->{ $arg } ) {
+    foreach my $arg ( "comms", $config->{comms}, $config->{comms} . '_args',
+        'command', 'auto_close' )
+    {
+        if ( !defined $config->{$arg} ) {
             croak(
                 App::ClusterSSH::Exception::Helper->throw(
                     error => "Config '$arg' not provided",

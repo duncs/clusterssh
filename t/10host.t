@@ -668,12 +668,9 @@ my %parse_tests = (
         geometry => q{},
         type     => 'ipv6',
     },
-    '2001:0db8:8a2e:0370:7334:2001:0db8:8a2e:0370:7334:4535:3453:3453:3455' => {
-        die      => qr{Unable to parse hostname from}ms,
-    },
-    'some random rubbish' => {
-        die      => qr{Unable to parse hostname from}ms,
-    },
+    '2001:0db8:8a2e:0370:7334:2001:0db8:8a2e:0370:7334:4535:3453:3453:3455'
+        => { die => qr{Unable to parse hostname from}ms, },
+    'some random rubbish' => { die => qr{Unable to parse hostname from}ms, },
 );
 
 foreach my $ident ( keys(%parse_tests) ) {
@@ -684,23 +681,32 @@ foreach my $ident ( keys(%parse_tests) ) {
 
     if ( $parse_tests{$ident}{die} ) {
         is( $trap->leaveby, 'die', $ident . ' died correctly' );
-        like( $trap->die, $parse_tests{$ident}{die}, $ident . ' died correctly' );
+        like(
+            $trap->die,
+            $parse_tests{$ident}{die},
+            $ident . ' died correctly'
+        );
         next;
     }
 
     is( $trap->leaveby, 'return', $ident . ' returned correctly' );
-    is( $host, $parse_tests{$ident}{hostname}, 'stringify works on: '.$ident );
+    is( $host,
+        $parse_tests{$ident}{hostname},
+        'stringify works on: ' . $ident
+    );
 
     isa_ok( $host, "App::ClusterSSH::Host" );
 
     for my $trap_type (qw/ die /) {
-        if ( ! $parse_tests{$ident}{$trap_type} ) {
+        if ( !$parse_tests{$ident}{$trap_type} ) {
             is( $trap->$trap_type,
                 $parse_tests{$ident}{$trap_type},
                 "$ident $trap_type"
             );
-        } else {
-            like( $trap->$trap_type,
+        }
+        else {
+            like(
+                $trap->$trap_type,
                 $parse_tests{$ident}{$trap_type},
                 "$ident $trap_type"
             );
@@ -724,7 +730,6 @@ foreach my $ident ( keys(%parse_tests) ) {
 
     is( $host->check_ssh_hostname, 0, $ident . ' not from ssh' );
 }
-
 
 # check for a non-existant file
 trap {
@@ -775,9 +780,9 @@ for my $hostname (
     is( $host, $hostname, 'stringify works' );
     is( $host->check_ssh_hostname, 1,
         'check_ssh_hostname ok for ' . $hostname );
-    is( $host->get_realname, $hostname, 'realname set' );
-    is( $host->get_geometry, q{},       'geometry set' );
-    is( $host->get_type, 'ssh_alias',   'geometry set' );
+    is( $host->get_realname, $hostname,   'realname set' );
+    is( $host->get_geometry, q{},         'geometry set' );
+    is( $host->get_type,     'ssh_alias', 'geometry set' );
 }
 
 done_testing();

@@ -518,7 +518,7 @@ sub send_text($@) {
             my $macro_servername = $self->config->{macro_servername};
             my $servername       = $svr;
             $servername =~ s/\s+//;
-            $text       =~ s/$macro_servername/$servername/xsmg;
+            $text =~ s/$macro_servername/$servername/xsmg;
         }
         $text =~ s/%h/hostname()/xsmeg;
 
@@ -592,7 +592,7 @@ sub send_text_to_all_servers {
 }
 
 sub send_variable_text_to_all_servers($&) {
-    my($self, $code) = @_;
+    my ( $self, $code ) = @_;
 
     foreach my $svr ( keys(%servers) ) {
         $self->send_text( $svr, $code->($svr) )
@@ -1881,8 +1881,8 @@ sub populate_send_menu {
             -label   => 'Random Number',
             -command => sub {
                 $self->send_variable_text_to_all_servers(
-                    sub { int(rand(1024)) }
-                ),
+                    sub { int( rand(1024) ) } ),
+                    ;
             },
         );
     }
