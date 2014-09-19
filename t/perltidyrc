@@ -1,0 +1,2 @@
+# perltidy to Perl Best Practices standard
+-pbp -nst -nse 
