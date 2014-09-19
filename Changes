@@ -1,5 +1,6 @@
 4.03_03 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Force tests to have English locale when user has something else set (Github issue: 10) (thanks to Emanuele Tomasi)
+- Skip permissions check test when run as root as the results are invalid (Github issue: 11) (thanks to Deny Dias)
 
 4.03_02 2014-08-10 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Fix behaviour when external cluster command is not defined or doesn't exist

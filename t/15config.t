@@ -1,10 +1,10 @@
 use strict;
 use warnings;
 
-# Force use of English in tests for the moment, for those users that 
+# Force use of English in tests for the moment, for those users that
 # have a different locale set, since errors are hardcoded below
 use POSIX qw(setlocale locale_h);
-setlocale(LC_ALL, "C");
+setlocale( LC_ALL, "C" );
 
 use FindBin qw($Bin $Script);
 use lib "$Bin/../lib";
@@ -468,28 +468,32 @@ is( $trap->stderr,
     'Expecting no STDERR'
 );
 
-note('move of .csshrc failure');
-$ENV{HOME} = tempdir( CLEANUP => 1 );
-open( $csshrc, '>', $ENV{HOME} . '/.csshrc' );
-print $csshrc "Something",$/;
-close($csshrc);
-open( $csshrc, '>', $ENV{HOME} . '/.csshrc.DISABLED' );
-print $csshrc "Something else",$/;
-close($csshrc);
-chmod(0666, $ENV{HOME} . '/.csshrc.DISABLED', $ENV{HOME} );
-$config = App::ClusterSSH::Config->new();
-trap {
-    $config->write_user_config_file();
-};
-is( $trap->leaveby, 'die', 'died ok' );
-isa_ok( $config, "App::ClusterSSH::Config" );
-is( $trap->stdout, q{}, 'Expecting no STDOUT' );
-is( $trap->stderr, q{}, 'Expecting no STDERR' );
-is( $trap->die,
-    q{Unable to create directory $HOME/.clusterssh: Permission denied} . $/,
-    'Expected die msg ' . $trap->stderr
-);
-chmod (0755 , $ENV{HOME} . '/.csshrc.DISABLED', $ENV{HOME} );
+SKIP: {
+    skip "Test inappropriate when running as root", 5, $< == 0;
+    note('move of .csshrc failure');
+    $ENV{HOME} = tempdir( CLEANUP => 1 );
+    open( $csshrc, '>', $ENV{HOME} . '/.csshrc' );
+    print $csshrc "Something", $/;
+    close($csshrc);
+    open( $csshrc, '>', $ENV{HOME} . '/.csshrc.DISABLED' );
+    print $csshrc "Something else", $/;
+    close($csshrc);
+    chmod( 0666, $ENV{HOME} . '/.csshrc.DISABLED', $ENV{HOME} );
+    $config = App::ClusterSSH::Config->new();
+    trap {
+        $config->write_user_config_file();
+    };
+    is( $trap->leaveby, 'die', 'died ok' );
+    isa_ok( $config, "App::ClusterSSH::Config" );
+    is( $trap->stdout, q{}, 'Expecting no STDOUT' );
+    is( $trap->stderr, q{}, 'Expecting no STDERR' );
+    is( $trap->die,
+        q{Unable to create directory $HOME/.clusterssh: Permission denied}
+            . $/,
+        'Expected die msg ' . $trap->stderr
+    );
+    chmod( 0755, $ENV{HOME} . '/.csshrc.DISABLED', $ENV{HOME} );
+}
 
 note('check failure to write default config is caught');
 $ENV{HOME} = tempdir( CLEANUP => 1 );
