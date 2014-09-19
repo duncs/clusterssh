@@ -1,6 +1,11 @@
 use strict;
 use warnings;
 
+# Force use of English in tests for the moment, for those users that 
+# have a different locale set, since errors are hardcoded below
+use POSIX qw(setlocale locale_h);
+setlocale(LC_ALL, "C");
+
 use FindBin qw($Bin $Script);
 use lib "$Bin/../lib";
 
