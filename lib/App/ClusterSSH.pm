@@ -2158,6 +2158,8 @@ the code until this time.
 
 =item setup_repeat
 
+=item send_variable_text_to_all_servers
+
 =item show_console
 
 =item show_history
