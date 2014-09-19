@@ -307,6 +307,8 @@ sub getopts {
 #                    ? $self->{command_options}->{$acc}->{default}
 #                    : undef;
             };
+            my $accessor_default=$accessor.'_default';
+            *$accessor_default = sub { return $default; };
         }
     }
 
