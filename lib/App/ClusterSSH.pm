@@ -452,6 +452,8 @@ sub show_history() {
     my ($self) = @_;
     if ( $self->config->{show_history} ) {
         $windows{history}->packForget();
+        $windows{history}->selectAll();
+        $windows{history}->deleteSelected();
         $self->config->{show_history} = 0;
     }
     else {
