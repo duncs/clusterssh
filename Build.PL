@@ -7,7 +7,11 @@ use Module::Build;
 my $class = Module::Build->subclass(
     class => "Module::Build::Custom",
     code  => q{
-        use File::Slurp;
+    # don't check for errors; 'build_requires' should get this sorted
+    eval {
+        require File::Slurp;
+        require CPAN::Changes;
+    };
 
         sub ACTION_email {
             my ($self, @args) = @_;
@@ -18,7 +22,6 @@ my $class = Module::Build->subclass(
             print "Use '--changes <N>' to define how many to output.  Default: 1", $/;
             my $change_count = $self->args('changes') || 1;
 
-            use CPAN::Changes;
             my @changes = CPAN::Changes->load( 'Changes' )->releases;
 
             if($changes[-1]->date =~ m/^0000/) {
