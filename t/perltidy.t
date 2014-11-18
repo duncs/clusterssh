@@ -1,4 +1,4 @@
-#!perl -T
+#!perl
 
 use strict;
 use warnings;
@@ -12,5 +12,5 @@ plan skip_all => "Test::PerlTidy required for testing code" if $@;
 
 run_tests(
     perltidyrc => $Bin . '/perltidyrc',
-    exclude    => [ '_build/', 'blib/' ]
+    exclude    => [ '_build/', 'blib/', 'Makefile.PL', ]
 );
