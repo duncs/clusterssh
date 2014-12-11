@@ -1209,7 +1209,7 @@ sub add_host_by_name() {
         $self->debug( 2, "host=", $menus{host_entry} );
         my @names
             = $self->resolve_names( split( /\s+/, $menus{host_entry} ) );
-        $self->debug( 0, 'Opening to: ', join( ' ', @names ) );
+        $self->debug( 0, 'Opening to: ', join( ' ', @names ) ) if (@names);
         $self->open_client_windows(@names);
     }
 
@@ -2011,7 +2011,7 @@ sub run {
     $self->debug( 2, "Capture map events" );
     $self->capture_map_events();
 
-    $self->debug( 0, 'Opening to: ', join( ' ', @servers ) );
+    $self->debug( 0, 'Opening to: ', join( ' ', @servers ) ) if (@servers);
     $self->open_client_windows(@servers);
 
     # Check here if we are tiling windows.  Here instead of in func so
