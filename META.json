@@ -23,6 +23,7 @@
             "Readonly" : "0",
             "Test::Differences" : "0",
             "Test::DistManifest" : "0",
+            "Test::PerlTidy" : "0",
             "Test::Pod" : "0",
             "Test::Pod::Coverage" : "0",
             "Test::Trap" : "0"
@@ -47,7 +48,7 @@
    "provides" : {
       "App::ClusterSSH" : {
          "file" : "lib/App/ClusterSSH.pm",
-         "version" : "4.03_02"
+         "version" : "4.03_03"
       },
       "App::ClusterSSH::Base" : {
          "file" : "lib/App/ClusterSSH/Base.pm",
@@ -94,5 +95,5 @@
          "http://github.com/duncs/clusterssh"
       ]
    },
-   "version" : "4.03_02"
+   "version" : "4.03_03"
 }
