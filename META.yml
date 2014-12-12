@@ -26,7 +26,7 @@ name: App-ClusterSSH
 provides:
   App::ClusterSSH:
     file: lib/App/ClusterSSH.pm
-    version: 4.03_03
+    version: 4.03_04
   App::ClusterSSH::Base:
     file: lib/App/ClusterSSH/Base.pm
     version: 0.02
@@ -63,4 +63,4 @@ resources:
   bugtracker: http://sourceforge.net/tracker/?group_id=89139
   homepage: http://clusterssh.sourceforge.net/
   license: http://dev.perl.org/licenses/
-version: 4.03_03
+version: 4.03_04

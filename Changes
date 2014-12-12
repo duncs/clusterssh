@@ -1,4 +1,4 @@
-4.04_04 ????-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net>
+4.04_04 2014-12-12 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Do not use system perl but whatever is found in PATH (to stop breaking perlbrew based builds)
 - Warn when the configured terminal isn't installed/found
 - Don't show 'Opening to:' when no servers are given

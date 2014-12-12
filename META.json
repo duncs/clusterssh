@@ -48,7 +48,7 @@
    "provides" : {
       "App::ClusterSSH" : {
          "file" : "lib/App/ClusterSSH.pm",
-         "version" : "4.03_03"
+         "version" : "4.03_04"
       },
       "App::ClusterSSH::Base" : {
          "file" : "lib/App/ClusterSSH/Base.pm",
@@ -95,5 +95,5 @@
          "http://github.com/duncs/clusterssh"
       ]
    },
-   "version" : "4.03_03"
+   "version" : "4.03_04"
 }
