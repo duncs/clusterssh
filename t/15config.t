@@ -251,7 +251,7 @@ isa_ok( $config, "App::ClusterSSH::Config" );
 is( $trap->stdout, q{}, 'Expecting no STDOUT' );
 is( $trap->stderr, q{}, 'Expecting no STDERR' );
 is_deeply( $config, \%expected, 'amended config is correct' );
-is( $path, which('ls'), 'Found correct path to "ls"' );
+is( $path, 'ls', 'Found correct path to "ls"' );
 
 # check for a binary already found
 my $newpath;
@@ -264,8 +264,8 @@ isa_ok( $config, "App::ClusterSSH::Config" );
 is( $trap->stdout, q{}, 'Expecting no STDOUT' );
 is( $trap->stderr, q{}, 'Expecting no STDERR' );
 is_deeply( $config, \%expected, 'amended config is correct' );
-is( $path, which('ls'), 'Found correct path to "ls"' );
-is( $path, $newpath,    'No change made from find_binary' );
+is( $path, 'ls',     'Found correct path to "ls"' );
+is( $path, $newpath, 'No change made from find_binary' );
 
 # give false path to force another search
 trap {
@@ -277,8 +277,8 @@ isa_ok( $config, "App::ClusterSSH::Config" );
 is( $trap->stdout, q{}, 'Expecting no STDOUT' );
 is( $trap->stderr, q{}, 'Expecting no STDERR' );
 is_deeply( $config, \%expected, 'amended config is correct' );
-is( $path, which('ls'), 'Found correct path to "ls"' );
-is( $path, $newpath,    'No change made from find_binary' );
+is( $path, 'ls',     'Found correct path to "ls"' );
+is( $path, $newpath, 'No change made from find_binary' );
 
 note('Checks on loading configs');
 note('empty dir');
@@ -376,9 +376,9 @@ is_deeply( $config, \%expected, 'amended config is correct' );
 
 note('no .csshrc warning, .clusterssh dir plus config + extra config');
 open( $csshrc, '>', $ENV{HOME} . '/clusterssh.config' );
-print $csshrc 'terminal = something', $/;
+print $csshrc 'terminal_args = something', $/;
 close($csshrc);
-$expected{terminal} = 'something';
+$expected{terminal_args} = 'something';
 $config = App::ClusterSSH::Config->new();
 trap {
     $config->load_configs( $ENV{HOME} . '/clusterssh.config' );

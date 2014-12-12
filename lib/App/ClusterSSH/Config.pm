@@ -179,12 +179,10 @@ sub validate_args {
         );
     }
 
-    #    # Don't search for the path to the binary - assume it is on the path
-    #    # or defined correctly in the config.
-    #    if( !-e $self->{ $self->{comms} } )
-    #    {
-    #        $self->{ $self->{comms} } = $self->find_binary( $self->{comms} );
-    #    }
+    # check the terminal has been found correctly
+    if ( !-e $self->{terminal} ) {
+        $self->{terminal} = $self->find_binary( $self->{terminal} );
+    }
 
     return $self;
 }
@@ -387,6 +385,25 @@ sub write_user_config_file {
     return $self;
 }
 
+# search given directories for the given file
+sub search_dirs {
+    my ( $self, $file, @directories ) = @_;
+
+    my $path;
+
+    foreach my $dir (@directories) {
+        $self->debug( 3, "Looking for $file in $dir" );
+
+        if ( -f $dir . '/' . $file && -x $dir . '/' . $file ) {
+            $path = $dir . '/' . $file;
+            $self->debug( 2, "Found at $path" );
+            last;
+        }
+    }
+
+    return $path;
+}
+
 # could use File::Which for some of this but we also search a few other places
 # just in case $PATH isnt set up right
 sub find_binary {
@@ -405,39 +422,39 @@ sub find_binary {
     # if not found, strip the path and look again
     if ( $binary =~ m!^/! ) {
         if ( -f $binary ) {
-            $self->debug( 2, "$binary already fully qualified" );
+            $self->debug( 2, "Already have full path to in $binary" );
             return $binary;
         }
         else {
-            $self->debug( 2, "$binary not found - re-searching" );
+            $self->debug( 2, "Full path for $binary incorrect; searching" );
             $binary =~ s!^.*/!!;
         }
     }
 
     my $path;
     if ( !-x $binary || substr( $binary, 0, 1 ) ne '/' ) {
+        $path = $self->search_dirs( $binary, split( /:/, $ENV{PATH} ) );
 
-        foreach (
-            split( /:/, $ENV{PATH} ), qw!
-            /bin
-            /sbin
-            /usr/sbin
-            /usr/bin
-            /usr/local/bin
-            /usr/local/sbin
-            /opt/local/bin
-            /opt/local/sbin
-            !
-            )
-        {
-            $self->debug( 3, "Looking in $_" );
-
-            if ( -f $_ . '/' . $binary && -x $_ . '/' . $binary ) {
-                $path = $_ . '/' . $binary;
-                $self->debug( 2, "Found at $path" );
-                last;
-            }
+        # if it is on $PATH then no need to qualitfy the path to it
+        # keep it as it is
+        if ($path) {
+            return $binary;
         }
+        else {
+            $path = $self->search_dirs(
+                $binary, qw!
+                    /bin
+                    /sbin
+                    /usr/sbin
+                    /usr/bin
+                    /usr/local/bin
+                    /usr/local/sbin
+                    /opt/local/bin
+                    /opt/local/sbin
+                    !
+            );
+        }
+
     }
     else {
         $self->debug( 2, "Already configured OK" );
@@ -516,6 +533,10 @@ Read in configuration from given filename
 =item $config->validate_args();
 
 Validate and apply all configuration loaded at this point
+
+=item $path = $config->search_dirs('<name>', @seaarch_directories);
+
+Search the given directories for the name given.  Return undef if not found.
 
 =item $path = $config->find_binary('<name>');
 
