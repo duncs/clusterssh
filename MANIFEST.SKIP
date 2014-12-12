@@ -1,4 +1,6 @@
 ^App-ClusterSSH-.*
+.*\.bak$
+^bin/
 ^blib/
 ^_build/
 ^Build$
@@ -14,4 +16,3 @@ pm_to_blib
 .*\.swp$
 ^TOAD$
 ^WIP_TASKS$
-^bin/

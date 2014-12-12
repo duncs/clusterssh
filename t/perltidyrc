@@ -1,2 +1,4 @@
 # perltidy to Perl Best Practices standard
 -pbp -nst -nse 
+## For use in ~/.perltidyrc
+# --backup-and-modify-in-place
