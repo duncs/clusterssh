@@ -54,10 +54,10 @@ sub new {
 
     my $self = $class->SUPER::new(%args);
 
-    $self->{cluster} = App::ClusterSSH::Cluster->new( parent => $self, );
-    $self->{config}  = App::ClusterSSH::Config->new( parent => $self, );
-    $self->{helper}  = App::ClusterSSH::Helper->new( parent => $self, );
     $self->{options} = App::ClusterSSH::Getopt->new( parent => $self, );
+    $self->{config}  = App::ClusterSSH::Config->new( parent => $self, );
+    $self->{cluster} = App::ClusterSSH::Cluster->new( parent => $self, );
+    $self->{helper} = App::ClusterSSH::Helper->new( parent => $self, );
 
     # catch and reap any zombies
     $SIG{CHLD} = sub {
