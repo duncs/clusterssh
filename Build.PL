@@ -74,6 +74,7 @@ my $build = $class->new(
         'Locale::Maketext' => 0,
         'Exception::Class' => '1.31',
         'Try::Tiny'        => 0,
+        'Getopt::Long'     => 0,
     },
     build_requires => {
         'Test::Pod::Coverage' => 0,

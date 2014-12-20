@@ -133,12 +133,12 @@ is( $trap->stderr,     '',       'Expecting no STDERR' );
 is( $trap->die,        undef,    'Expecting no die message' );
 is( $getopts->option1, 1,        'Expecting no die message' );
 
-local @ARGV = undef;
+local @ARGV = '';    # @ARGV is never undef, but an empty string
 $getopts = App::ClusterSSH::Getopt->new( parent => $mock_object );
 trap {
     $getopts->add_option( spec => 'option1', default => 5 );
 };
-is( $trap->leaveby, 'return', 'adding an empty option failed' );
+is( $trap->leaveby, 'return', 'adding an empty option with a default value' );
 is( $trap->die,     undef,    'no error when spec provided' );
 is( $trap->stdout,  '',       'Expecting no STDOUT' );
 is( $trap->stderr,  '',       'Expecting no STDERR' );
@@ -289,7 +289,7 @@ $getopts->add_option(
     help    => 'long opt help',
     default => 'default string'
 );
-$getopts->add_option( spec => 'another_long_opt|L=i', );
+$getopts->add_option( spec => 'another_long_opt|n=i', );
 $getopts->add_option( spec => 'a=s', help => 'short option only', );
 $getopts->add_option( spec => 'long', help => 'long option only', );
 trap {
@@ -392,5 +392,32 @@ is( $mock_object->{auto_quit},  0,        'auto_quit set right' );
 is( $mock_object->{window_tiling},     0, 'window_tiling set right' );
 is( $mock_object->{show_history},      1, 'show_history set right' );
 is( $mock_object->{use_all_a_records}, 0, 'use_all_a_records set right' );
+
+TODO: {
+    local $TODO = "explitely test for duplicate options";
+    $getopts = App::ClusterSSH::Getopt->new(
+        parent => Test::ClusterSSH::Mock->new() );
+    trap {
+        $getopts->add_option( spec => 'option1' );
+    };
+    is( $trap->leaveby, 'return', 'adding an empty option failed' );
+    is( $trap->die,     undef,    'no error when spec provided' );
+    is( $trap->stdout,  '',       'Expecting no STDOUT' );
+    is( $trap->stderr,  '',       'Expecting no STDERR' );
+    trap {
+        $getopts->add_option( spec => 'option1' );
+    };
+    is( $trap->leaveby, 'die',         'adding an empty option failed' );
+    is( $trap->die,     "bling bling", 'no error when spec provided' );
+    is( $trap->stdout,  'bling bling', 'Expecting no STDOUT' );
+    is( $trap->stderr,  'bling bling', 'Expecting no STDERR' );
+    trap {
+        $getopts->getopts;
+    };
+    is( $trap->leaveby, 'return', 'getops on object with spec okay' );
+    is( $trap->stdout,  '',       'Expecting no STDOUT' );
+    is( $trap->stderr,  '',       'Expecting no STDERR' );
+    is( $trap->die,     undef,    'Expecting no die message' );
+}
 
 done_testing;
