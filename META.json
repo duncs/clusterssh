@@ -4,7 +4,7 @@
       "Duncan Ferguson <duncan_j_ferguson@yahoo.co.uk>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.4003, CPAN::Meta::Converter version 2.133380",
+   "generated_by" : "Module::Build version 0.38, CPAN::Meta::Converter version 2.120351",
    "license" : [
       "perl_5"
    ],
@@ -37,6 +37,7 @@
       "runtime" : {
          "requires" : {
             "Exception::Class" : "1.31",
+            "Getopt::Long" : "0",
             "Locale::Maketext" : "0",
             "Tk" : "800.022",
             "Try::Tiny" : "0",
@@ -48,7 +49,7 @@
    "provides" : {
       "App::ClusterSSH" : {
          "file" : "lib/App/ClusterSSH.pm",
-         "version" : "4.03_04"
+         "version" : "4.03_05"
       },
       "App::ClusterSSH::Base" : {
          "file" : "lib/App/ClusterSSH/Base.pm",
@@ -75,10 +76,12 @@
          "version" : "0.03"
       },
       "App::ClusterSSH::L10N" : {
-         "file" : "lib/App/ClusterSSH/L10N.pm"
+         "file" : "lib/App/ClusterSSH/L10N.pm",
+         "version" : 0
       },
       "App::ClusterSSH::L10N::en" : {
-         "file" : "lib/App/ClusterSSH/L10N/en.pm"
+         "file" : "lib/App/ClusterSSH/L10N/en.pm",
+         "version" : 0
       }
    },
    "release_status" : "testing",
@@ -95,5 +98,5 @@
          "http://github.com/duncs/clusterssh"
       ]
    },
-   "version" : "4.03_04"
+   "version" : "4.03_05"
 }
