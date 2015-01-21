@@ -1164,7 +1164,7 @@ sub toggle_active_state() {
 
 sub set_all_active() {
     my ($self) = @_;
-    logmsg( 2, "Setting all hosts to be active" );
+    $self->debug( 2, "Setting all hosts to be active" );
 
     foreach my $svr ( keys(%servers) ) {
         $servers{$svr}{active} = 1;
@@ -1174,7 +1174,7 @@ sub set_all_active() {
 
 sub set_half_inactive() {
     my ($self) = @_;
-    logmsg( 2, "Setting approx half of all hosts to inactive" );
+    $self->debug( 2, "Setting approx half of all hosts to inactive" );
 
     my (@keys) = keys(%servers);
     $#keys /= 2;
@@ -2123,8 +2123,6 @@ the code until this time.
 =item load_configfile
 
 =item load_keyboard_map
-
-=item logmsg
 
 =item new
 
