@@ -1,3 +1,6 @@
+4.03_06 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net>
+- Remoe references to 'logmsg' preventing the history window from working (thanks to Andrew Stevenson)
+
 4.03_05 2014-12-20 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Fix options parsing tests picked up via cpantesters on different version of perl
 
