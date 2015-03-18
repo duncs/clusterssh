@@ -109,6 +109,8 @@ my $xdisplay;
 my %keyboardmap;
 my $sysconfigdir = "/etc";
 my %ssh_hostnames;
+my $host_menu_static_items; # number of items in the host menu that should
+                            # not be touched by build_host_menu
 
 $keysymtocode{unknown_sym} = 0xFFFFFF;    # put in a default "unknown" entry
 $keysymtocode{EuroSign}
@@ -1235,9 +1237,8 @@ sub build_hosts_menu() {
     my ($self) = @_;
     $self->debug( 2, "Building hosts menu" );
 
-    # first, empty the hosts menu from the 4th entry on
+    # first, empty the hosts menu from the last static entry + 1 on
     my $menu = $menus{bar}->entrycget( 'Hosts', -menu );
-    my $host_menu_static_items = 7;
     $menu->delete( $host_menu_static_items, 'end' );
 
     $self->debug( 3, "Menu deleted" );
@@ -1725,10 +1726,7 @@ sub create_menubar() {
         -tearoff => 0,
     );
 
-    $menus{hosts} = $menus{bar}->cascade(
-        -label     => 'Hosts',
-        -tearoff   => 1,
-        -menuitems => [
+    my $host_menu_items = [
             [   "command",
                 "Retile Windows",
                 -command => sub { $self->retile_hosts },
@@ -1757,9 +1755,17 @@ sub create_menubar() {
                 -command => sub { $self->add_host_by_name, },
                 -accelerator => $self->config->{key_addhost},
             ],
-            '',
-        ],
+            '' # this is needed as build_host_menu always drops the
+               # last item
+        ];
+
+    $menus{hosts} = $menus{bar}->cascade(
+        -label     => 'Hosts',
+        -tearoff   => 1,
+        -menuitems => $host_menu_items
     );
+
+    $host_menu_static_items = scalar(@{$host_menu_items});
 
     $menus{send} = $menus{bar}->cascade(
         -label   => 'Send',
