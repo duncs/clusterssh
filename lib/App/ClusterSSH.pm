@@ -5,7 +5,7 @@ use warnings;
 use strict;
 use version; our $VERSION = version->new('4.03_06');
 
-use Carp qw/cluck/;
+use Carp qw/cluck :DEFAULT/;
 
 use base qw/ App::ClusterSSH::Base /;
 use App::ClusterSSH::Host;
@@ -33,7 +33,6 @@ use X11::Keysyms '%keysymtocode', 'MISCELLANY', 'XKB_KEYS', '3270', 'LATIN1',
     'TECHNICAL', 'SPECIAL', 'PUBLISHING', 'APL', 'HEBREW', 'THAI', 'KOREAN';
 use File::Basename;
 use Net::hostent;
-use Carp;
 use Sys::Hostname;
 use English;
 use Socket;
