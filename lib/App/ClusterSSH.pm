@@ -5,7 +5,7 @@ use warnings;
 use strict;
 use version; our $VERSION = version->new('4.03_06');
 
-use Carp qw/cluck/;
+use Carp qw/cluck :DEFAULT/;
 
 use base qw/ App::ClusterSSH::Base /;
 use App::ClusterSSH::Host;
@@ -32,8 +32,8 @@ use X11::Keysyms '%keysymtocode', 'MISCELLANY', 'XKB_KEYS', '3270', 'LATIN1',
     'LATIN2', 'LATIN3', 'LATIN4', 'KATAKANA', 'ARABIC', 'CYRILLIC', 'GREEK',
     'TECHNICAL', 'SPECIAL', 'PUBLISHING', 'APL', 'HEBREW', 'THAI', 'KOREAN';
 use File::Basename;
+use Module::Load;
 use Net::hostent;
-use Carp;
 use Sys::Hostname;
 use English;
 use Socket;
@@ -112,6 +112,9 @@ my %ssh_hostnames;
 my $host_menu_static_items; # number of items in the host menu that should
                             # not be touched by build_host_menu
 my(@dead_hosts); # list of hosts whose sessions are now closed
+my $sort = sub { sort @_ }; # reference to our sort function which may later
+                            # be changed in run() if the user has asked for
+                            # natural sorting
 
 $keysymtocode{unknown_sym} = 0xFFFFFF;    # put in a default "unknown" entry
 $keysymtocode{EuroSign}
@@ -974,7 +977,7 @@ sub retile_hosts {
     my ( $current_x, $current_y, $current_row, $current_col ) = 0;
     if ( $self->config->{window_tiling_direction} =~ /right/i ) {
         $self->debug( 2, "Tiling top left going bot right" );
-        @hosts     = sort( keys(%servers) );
+        @hosts     = $sort->( keys(%servers) );
         $current_x = $self->config->{screen_reserve_left}
             + $self->config->{terminal_reserve_left};
         $current_y = $self->config->{screen_reserve_top}
@@ -984,7 +987,7 @@ sub retile_hosts {
     }
     else {
         $self->debug( 2, "Tiling bot right going top left" );
-        @hosts = reverse( sort( keys(%servers) ) );
+        @hosts = reverse( $sort->( keys(%servers) ) );
         $current_x
             = $self->config->{screen_reserve_right}
             - $self->config->{internal_screen_width}
@@ -1275,7 +1278,7 @@ sub build_hosts_menu() {
     $self->debug( 3, "Parsing list" );
 
     my $menu_item_counter = $host_menu_static_items;
-    foreach my $svr ( sort( keys(%servers) ) ) {
+    foreach my $svr ( $sort->( keys(%servers) ) ) {
         $self->debug( 3, "Checking $svr and restoring active value" );
         my $colbreak = 0;
         if ( $menu_item_counter > $self->config->{max_host_menu_items} ) {
@@ -1988,6 +1991,20 @@ sub run {
         $self->config->{terminal_allow_send_events}
             = "-xrm '$1.VT100.allowSendEvents:true'";
     }
+
+    # if the user has asked for natural sorting we need to include an extra
+    # module
+    if ($self->config()->{'use_natural_sort'}) {
+        eval {
+            Module::Load::load('Sort::Naturally');
+        };
+        if ($@) {
+            warn("natural sorting requested but unable to load Sort::Naturally: $@\n");
+        } else {
+            $sort = sub { Sort::Naturally::nsort( @_ ) };
+        }
+    }
+
 
     $self->config->dump() if ( $self->options->dump_config );
 

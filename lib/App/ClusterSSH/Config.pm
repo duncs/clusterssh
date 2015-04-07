@@ -45,6 +45,7 @@ my %default_config = (
     mouse_paste             => "Button-2",
     auto_quit               => "yes",
     auto_close              => 5,
+    use_natural_sort        => 0,
     window_tiling           => "yes",
     window_tiling_direction => "right",
     console_position        => "",
