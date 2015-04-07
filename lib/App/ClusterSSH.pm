@@ -109,6 +109,9 @@ my $xdisplay;
 my %keyboardmap;
 my $sysconfigdir = "/etc";
 my %ssh_hostnames;
+my $host_menu_static_items; # number of items in the host menu that should
+                            # not be touched by build_host_menu
+my(@dead_hosts); # list of hosts whose sessions are now closed
 
 $keysymtocode{unknown_sym} = 0xFFFFFF;    # put in a default "unknown" entry
 $keysymtocode{EuroSign}
@@ -1231,13 +1234,37 @@ sub add_host_by_name() {
     }
 }
 
+# attempt to re-add any hosts that have been closed since we started
+# the session - either through errors or deliberate log-outs
+sub re_add_closed_sessions() {
+    my ($self) = @_;
+    $self->debug( 2, "add closed sessions" );
+
+    return if (scalar(@dead_hosts) == 0);
+
+    my @new_hosts = @dead_hosts;
+    # clear out the list in case open fails
+    @dead_hosts = qw//;
+    # try to open
+    $self->open_client_windows(@new_hosts);
+    # update hosts list with current state
+    $self->build_hosts_menu();
+
+    # retile, or bring console to front
+    if ( $self->config->{window_tiling} eq "yes" ) {
+        return $self->retile_hosts();
+    }
+    else {
+        return $self->show_console();
+    }
+}
+
 sub build_hosts_menu() {
     my ($self) = @_;
     $self->debug( 2, "Building hosts menu" );
 
-    # first, empty the hosts menu from the 4th entry on
+    # first, empty the hosts menu from the last static entry + 1 on
     my $menu = $menus{bar}->entrycget( 'Hosts', -menu );
-    my $host_menu_static_items = 7;
     $menu->delete( $host_menu_static_items, 'end' );
 
     $self->debug( 3, "Menu deleted" );
@@ -1293,6 +1320,7 @@ sub setup_repeat() {
                 if ( defined( $servers{$svr}{pid} ) ) {
                     if ( !kill( 0, $servers{$svr}{pid} ) ) {
                         $build_menu = 1;
+                        push(@dead_hosts, $servers{$svr}{givenname});
                         delete( $servers{$svr} );
                         $self->debug( 0, "$svr session closed" );
                     }
@@ -1725,10 +1753,7 @@ sub create_menubar() {
         -tearoff => 0,
     );
 
-    $menus{hosts} = $menus{bar}->cascade(
-        -label     => 'Hosts',
-        -tearoff   => 1,
-        -menuitems => [
+    my $host_menu_items = [
             [   "command",
                 "Retile Windows",
                 -command => sub { $self->retile_hosts },
@@ -1757,9 +1782,21 @@ sub create_menubar() {
                 -command => sub { $self->add_host_by_name, },
                 -accelerator => $self->config->{key_addhost},
             ],
-            '',
-        ],
+            [   "command",
+                "Re-add closed session(s)",
+                -command => sub { $self->re_add_closed_sessions() },
+            ],
+            '' # this is needed as build_host_menu always drops the
+               # last item
+        ];
+
+    $menus{hosts} = $menus{bar}->cascade(
+        -label     => 'Hosts',
+        -tearoff   => 1,
+        -menuitems => $host_menu_items
     );
+
+    $host_menu_static_items = scalar(@{$host_menu_items});
 
     $menus{send} = $menus{bar}->cascade(
         -label   => 'Send',
