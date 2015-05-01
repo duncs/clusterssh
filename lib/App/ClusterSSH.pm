@@ -5,7 +5,7 @@ use warnings;
 use strict;
 use version; our $VERSION = version->new('4.03_07');
 
-use Carp qw/cluck/;
+use Carp qw/cluck :DEFAULT/;
 
 use base qw/ App::ClusterSSH::Base /;
 use App::ClusterSSH::Host;
@@ -32,8 +32,8 @@ use X11::Keysyms '%keysymtocode', 'MISCELLANY', 'XKB_KEYS', '3270', 'LATIN1',
     'LATIN2', 'LATIN3', 'LATIN4', 'KATAKANA', 'ARABIC', 'CYRILLIC', 'GREEK',
     'TECHNICAL', 'SPECIAL', 'PUBLISHING', 'APL', 'HEBREW', 'THAI', 'KOREAN';
 use File::Basename;
+use Module::Load;
 use Net::hostent;
-use Carp;
 use Sys::Hostname;
 use English;
 use Socket;
@@ -109,6 +109,12 @@ my $xdisplay;
 my %keyboardmap;
 my $sysconfigdir = "/etc";
 my %ssh_hostnames;
+my $host_menu_static_items; # number of items in the host menu that should
+                            # not be touched by build_host_menu
+my(@dead_hosts); # list of hosts whose sessions are now closed
+my $sort = sub { sort @_ }; # reference to our sort function which may later
+                            # be changed in run() if the user has asked for
+                            # natural sorting
 
 $keysymtocode{unknown_sym} = 0xFFFFFF;    # put in a default "unknown" entry
 $keysymtocode{EuroSign}
@@ -971,7 +977,7 @@ sub retile_hosts {
     my ( $current_x, $current_y, $current_row, $current_col ) = 0;
     if ( $self->config->{window_tiling_direction} =~ /right/i ) {
         $self->debug( 2, "Tiling top left going bot right" );
-        @hosts     = sort( keys(%servers) );
+        @hosts     = $sort->( keys(%servers) );
         $current_x = $self->config->{screen_reserve_left}
             + $self->config->{terminal_reserve_left};
         $current_y = $self->config->{screen_reserve_top}
@@ -981,7 +987,7 @@ sub retile_hosts {
     }
     else {
         $self->debug( 2, "Tiling bot right going top left" );
-        @hosts = reverse( sort( keys(%servers) ) );
+        @hosts = reverse( $sort->( keys(%servers) ) );
         $current_x
             = $self->config->{screen_reserve_right}
             - $self->config->{internal_screen_width}
@@ -1231,13 +1237,37 @@ sub add_host_by_name() {
     }
 }
 
+# attempt to re-add any hosts that have been closed since we started
+# the session - either through errors or deliberate log-outs
+sub re_add_closed_sessions() {
+    my ($self) = @_;
+    $self->debug( 2, "add closed sessions" );
+
+    return if (scalar(@dead_hosts) == 0);
+
+    my @new_hosts = @dead_hosts;
+    # clear out the list in case open fails
+    @dead_hosts = qw//;
+    # try to open
+    $self->open_client_windows(@new_hosts);
+    # update hosts list with current state
+    $self->build_hosts_menu();
+
+    # retile, or bring console to front
+    if ( $self->config->{window_tiling} eq "yes" ) {
+        return $self->retile_hosts();
+    }
+    else {
+        return $self->show_console();
+    }
+}
+
 sub build_hosts_menu() {
     my ($self) = @_;
     $self->debug( 2, "Building hosts menu" );
 
-    # first, empty the hosts menu from the 4th entry on
+    # first, empty the hosts menu from the last static entry + 1 on
     my $menu = $menus{bar}->entrycget( 'Hosts', -menu );
-    my $host_menu_static_items = 7;
     $menu->delete( $host_menu_static_items, 'end' );
 
     $self->debug( 3, "Menu deleted" );
@@ -1248,7 +1278,7 @@ sub build_hosts_menu() {
     $self->debug( 3, "Parsing list" );
 
     my $menu_item_counter = $host_menu_static_items;
-    foreach my $svr ( sort( keys(%servers) ) ) {
+    foreach my $svr ( $sort->( keys(%servers) ) ) {
         $self->debug( 3, "Checking $svr and restoring active value" );
         my $colbreak = 0;
         if ( $menu_item_counter > $self->config->{max_host_menu_items} ) {
@@ -1293,6 +1323,7 @@ sub setup_repeat() {
                 if ( defined( $servers{$svr}{pid} ) ) {
                     if ( !kill( 0, $servers{$svr}{pid} ) ) {
                         $build_menu = 1;
+                        push(@dead_hosts, $servers{$svr}{givenname});
                         delete( $servers{$svr} );
                         $self->debug( 0, "$svr session closed" );
                     }
@@ -1725,10 +1756,7 @@ sub create_menubar() {
         -tearoff => 0,
     );
 
-    $menus{hosts} = $menus{bar}->cascade(
-        -label     => 'Hosts',
-        -tearoff   => 1,
-        -menuitems => [
+    my $host_menu_items = [
             [   "command",
                 "Retile Windows",
                 -command => sub { $self->retile_hosts },
@@ -1757,9 +1785,21 @@ sub create_menubar() {
                 -command => sub { $self->add_host_by_name, },
                 -accelerator => $self->config->{key_addhost},
             ],
-            '',
-        ],
+            [   "command",
+                "Re-add closed session(s)",
+                -command => sub { $self->re_add_closed_sessions() },
+            ],
+            '' # this is needed as build_host_menu always drops the
+               # last item
+        ];
+
+    $menus{hosts} = $menus{bar}->cascade(
+        -label     => 'Hosts',
+        -tearoff   => 1,
+        -menuitems => $host_menu_items
     );
+
+    $host_menu_static_items = scalar(@{$host_menu_items});
 
     $menus{send} = $menus{bar}->cascade(
         -label   => 'Send',
@@ -1951,6 +1991,20 @@ sub run {
         $self->config->{terminal_allow_send_events}
             = "-xrm '$1.VT100.allowSendEvents:true'";
     }
+
+    # if the user has asked for natural sorting we need to include an extra
+    # module
+    if ($self->config()->{'use_natural_sort'}) {
+        eval {
+            Module::Load::load('Sort::Naturally');
+        };
+        if ($@) {
+            warn("natural sorting requested but unable to load Sort::Naturally: $@\n");
+        } else {
+            $sort = sub { Sort::Naturally::nsort( @_ ) };
+        }
+    }
+
 
     $self->config->dump() if ( $self->options->dump_config );
 
