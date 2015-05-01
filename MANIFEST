@@ -1,6 +1,7 @@
 AUTHORS
 bin_PL/_build_docs
 bin_PL/ccon
+bin_PL/clusterssh_bash_completion.dist
 bin_PL/crsh
 bin_PL/cscp.x
 bin_PL/cssh

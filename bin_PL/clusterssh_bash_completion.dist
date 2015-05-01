@@ -1,0 +1,70 @@
+# -*- mode: shell-script; sh-basic-offset: 8; indent-tabs-mode: t -*-
+# ex: ts=8 sw=8 noet filetype=sh
+#
+# cssh(1) completion by Aaron Spettl <aaron@spettl.de>, adapted from the
+# Debian GNU/Linux dput(1) completion by Roland Mas <lolando@debian.org>
+#
+# On Debian (and Debian based distributions) drop this file into 
+#   /etc/bash_completion.d 
+# and source the /etc/bash_completion script - or just restart bash.
+
+have cssh &&
+_cssh()
+{
+	local cur prev options paroptions clusters extra_cluster_file_line clusters_line extra_cluster_file
+
+	COMPREPLY=()
+	cur=${COMP_WORDS[COMP_CWORD]}
+	prev=${COMP_WORDS[COMP_CWORD-1]}
+
+	# all options understood by cssh
+	options='-c --cluster-file -C --config-file --debug -e --evaluate \
+	         -g --tile -G --no-tile -h --help -H --man -l --username \
+	         -o --options -p --port -q --autoquit -Q --no-autoquit \
+	         -s --show-history -t --term-args -T --title \
+	         -u --output-config -v --version'
+
+	# find the extra cluster file line in the .csshrc or, alternatively, /etc/csshrc
+	extra_cluster_file_line="`grep '^[[:space:]]*extra_cluster_file' $HOME/.csshrc 2> /dev/null`"
+	[ -z "$extra_cluster_file_line" ] && extra_cluster_file_line="`grep '^[[:space:]]*extra_cluster_file' /etc/csshrc 2> /dev/null`"
+
+	# find the clusters line in the .csshrc or, alternatively, /etc/csshrc
+	clusters_line="`grep '^[[:space:]]*clusters' $HOME/.csshrc 2> /dev/null`"
+	[ -z "$clusters_line" ] && clusters_line="`grep '^[[:space:]]*clusters' /etc/csshrc 2> /dev/null`"
+
+	# extract the location of the extra cluster file
+	extra_cluster_file="`echo $extra_cluster_file_line | cut -f 2- -d '='`"
+	[ -n "$extra_cluster_file" ] && extra_cluster_file="`eval echo $extra_cluster_file`"
+	                                                   # TODO: don't use eval to expand ~ and $HOME
+
+	# get the names of all defined clusters
+	clusters=$(
+	{
+		[ -n "$clusters_line" ] && echo "$clusters_line" | cut -f 2- -d '=' | tr "$IFS" "\n" || /bin/true
+		[ -n "$extra_cluster_file" ] && sed -e 's/^\([a-z0-9.-]\+\).*$/\1/i' "$extra_cluster_file" 2> /dev/null || /bin/true
+		sed -e 's/^\([a-z0-9.-]\+\).*$/\1/i' /etc/clusters 2> /dev/null || /bin/true
+	} | sort -u)
+
+	# use options and clusters for tab completion, except there isn't yet
+	# at least one character to filter by
+	# reason: don't show options if the user types "cssh <tab><tab>"
+	paroptions="$clusters"
+	[ -n "$cur" ] && paroptions="$paroptions $options"
+
+	case $prev in
+	--cluster-file|-c|--config-file|-C)
+		COMPREPLY=( $( compgen -o filenames -G "$cur*" ) )
+		;;
+	*)
+		COMPREPLY=()
+
+		# also use ssh hosts for tab completion if function _known_hosts is present
+		[ "`type -t _known_hosts`" = "function" ] && _known_hosts -a
+
+		COMPREPLY=( "${COMPREPLY[@]}" $( compgen -W "$paroptions" | grep "^$cur") )
+		;;
+	esac
+
+	return 0
+}
+[ "$have" ] && complete -F _cssh cssh crsh ctel

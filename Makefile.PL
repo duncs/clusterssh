@@ -9,6 +9,7 @@ WriteMakefile
   'NAME' => 'App::ClusterSSH',
   'EXE_FILES' => [
                    'bin/ccon',
+                   'bin/clusterssh_bash_completion.dist',
                    'bin/crsh',
                    'bin/cssh',
                    'bin/ctel'
