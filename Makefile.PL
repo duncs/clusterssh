@@ -2,11 +2,29 @@
 use ExtUtils::MakeMaker;
 WriteMakefile
 (
-  'PL_FILES' => {
-                  'bin_PL/_build_docs' => []
-                },
-  'INSTALLDIRS' => 'site',
   'NAME' => 'App::ClusterSSH',
+  'VERSION_FROM' => 'lib/App/ClusterSSH.pm',
+  'PREREQ_PM' => {
+                   'CPAN::Changes' => '0.27',
+                   'Exception::Class' => '1.31',
+                   'File::Slurp' => 0,
+                   'File::Temp' => 0,
+                   'File::Which' => 0,
+                   'Getopt::Long' => 0,
+                   'Locale::Maketext' => 0,
+                   'Readonly' => 0,
+                   'Test::Differences' => 0,
+                   'Test::DistManifest' => 0,
+                   'Test::PerlTidy' => 0,
+                   'Test::Pod' => 0,
+                   'Test::Pod::Coverage' => 0,
+                   'Test::Trap' => 0,
+                   'Tk' => '800.022',
+                   'Try::Tiny' => 0,
+                   'X11::Protocol' => '0.56',
+                   'version' => '0'
+                 },
+  'INSTALLDIRS' => 'site',
   'EXE_FILES' => [
                    'bin/ccon',
                    'bin/clusterssh_bash_completion.dist',
@@ -14,26 +32,8 @@ WriteMakefile
                    'bin/cssh',
                    'bin/ctel'
                  ],
-  'VERSION_FROM' => 'lib/App/ClusterSSH.pm',
-  'PREREQ_PM' => {
-                   'Test::Trap' => 0,
-                   'File::Which' => 0,
-                   'Test::Pod' => 0,
-                   'X11::Protocol' => '0.56',
-                   'CPAN::Changes' => '0.27',
-                   'Tk' => '800.022',
-                   'File::Slurp' => 0,
-                   'Try::Tiny' => 0,
-                   'Getopt::Long' => 0,
-                   'Test::Pod::Coverage' => 0,
-                   'version' => '0',
-                   'Readonly' => 0,
-                   'Exception::Class' => '1.31',
-                   'Test::Differences' => 0,
-                   'Test::DistManifest' => 0,
-                   'File::Temp' => 0,
-                   'Test::PerlTidy' => 0,
-                   'Locale::Maketext' => 0
-                 }
+  'PL_FILES' => {
+                  'bin_PL/_build_docs' => []
+                }
 )
 ;

@@ -109,12 +109,12 @@ my $xdisplay;
 my %keyboardmap;
 my $sysconfigdir = "/etc";
 my %ssh_hostnames;
-my $host_menu_static_items; # number of items in the host menu that should
-                            # not be touched by build_host_menu
-my(@dead_hosts); # list of hosts whose sessions are now closed
-my $sort = sub { sort @_ }; # reference to our sort function which may later
-                            # be changed in run() if the user has asked for
-                            # natural sorting
+my $host_menu_static_items;    # number of items in the host menu that should
+                               # not be touched by build_host_menu
+my (@dead_hosts);              # list of hosts whose sessions are now closed
+my $sort = sub { sort @_ };   # reference to our sort function which may later
+                              # be changed in run() if the user has asked for
+                              # natural sorting
 
 $keysymtocode{unknown_sym} = 0xFFFFFF;    # put in a default "unknown" entry
 $keysymtocode{EuroSign}
@@ -1243,13 +1243,16 @@ sub re_add_closed_sessions() {
     my ($self) = @_;
     $self->debug( 2, "add closed sessions" );
 
-    return if (scalar(@dead_hosts) == 0);
+    return if ( scalar(@dead_hosts) == 0 );
 
     my @new_hosts = @dead_hosts;
+
     # clear out the list in case open fails
     @dead_hosts = qw//;
+
     # try to open
     $self->open_client_windows(@new_hosts);
+
     # update hosts list with current state
     $self->build_hosts_menu();
 
@@ -1323,7 +1326,7 @@ sub setup_repeat() {
                 if ( defined( $servers{$svr}{pid} ) ) {
                     if ( !kill( 0, $servers{$svr}{pid} ) ) {
                         $build_menu = 1;
-                        push(@dead_hosts, $servers{$svr}{givenname});
+                        push( @dead_hosts, $servers{$svr}{givenname} );
                         delete( $servers{$svr} );
                         $self->debug( 0, "$svr session closed" );
                     }
@@ -1757,41 +1760,41 @@ sub create_menubar() {
     );
 
     my $host_menu_items = [
-            [   "command",
-                "Retile Windows",
-                -command => sub { $self->retile_hosts },
-                -accelerator => $self->config->{key_retilehosts},
-            ],
+        [   "command",
+            "Retile Windows",
+            -command => sub { $self->retile_hosts },
+            -accelerator => $self->config->{key_retilehosts},
+        ],
 
 #         [ "command", "Capture Terminal",    -command => sub { $self->capture_terminal), ],
-            [   "command",
-                "Set all active",
-                -command => sub { $self->set_all_active() },
-            ],
-            [   "command",
-                "Set half inactive",
-                -command => sub { $self->set_half_inactive() },
-            ],
-            [   "command",
-                "Toggle active state",
-                -command => sub { $self->toggle_active_state() },
-            ],
-            [   "command",
-                "Close inactive sessions",
-                -command => sub { $self->close_inactive_sessions() },
-            ],
-            [   "command",
-                "Add Host(s) or Cluster(s)",
-                -command => sub { $self->add_host_by_name, },
-                -accelerator => $self->config->{key_addhost},
-            ],
-            [   "command",
-                "Re-add closed session(s)",
-                -command => sub { $self->re_add_closed_sessions() },
-            ],
-            '' # this is needed as build_host_menu always drops the
-               # last item
-        ];
+        [   "command",
+            "Set all active",
+            -command => sub { $self->set_all_active() },
+        ],
+        [   "command",
+            "Set half inactive",
+            -command => sub { $self->set_half_inactive() },
+        ],
+        [   "command",
+            "Toggle active state",
+            -command => sub { $self->toggle_active_state() },
+        ],
+        [   "command",
+            "Close inactive sessions",
+            -command => sub { $self->close_inactive_sessions() },
+        ],
+        [   "command",
+            "Add Host(s) or Cluster(s)",
+            -command => sub { $self->add_host_by_name, },
+            -accelerator => $self->config->{key_addhost},
+        ],
+        [   "command",
+            "Re-add closed session(s)",
+            -command => sub { $self->re_add_closed_sessions() },
+        ],
+        ''      # this is needed as build_host_menu always drops the
+                # last item
+    ];
 
     $menus{hosts} = $menus{bar}->cascade(
         -label     => 'Hosts',
@@ -1799,7 +1802,7 @@ sub create_menubar() {
         -menuitems => $host_menu_items
     );
 
-    $host_menu_static_items = scalar(@{$host_menu_items});
+    $host_menu_static_items = scalar( @{$host_menu_items} );
 
     $menus{send} = $menus{bar}->cascade(
         -label   => 'Send',
@@ -1994,17 +1997,17 @@ sub run {
 
     # if the user has asked for natural sorting we need to include an extra
     # module
-    if ($self->config()->{'use_natural_sort'}) {
-        eval {
-            Module::Load::load('Sort::Naturally');
-        };
+    if ( $self->config()->{'use_natural_sort'} ) {
+        eval { Module::Load::load('Sort::Naturally'); };
         if ($@) {
-            warn("natural sorting requested but unable to load Sort::Naturally: $@\n");
-        } else {
-            $sort = sub { Sort::Naturally::nsort( @_ ) };
+            warn(
+                "natural sorting requested but unable to load Sort::Naturally: $@\n"
+            );
+        }
+        else {
+            $sort = sub { Sort::Naturally::nsort(@_) };
         }
     }
-
 
     $self->config->dump() if ( $self->options->dump_config );
 
