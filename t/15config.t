@@ -103,6 +103,7 @@ Readonly::Hash my %default_config => {
     menu_host_autotearoff          => 0,
 
     use_all_a_records => 0,
+    use_natural_sort  => 0,
 
     send_menu_xml_file => $ENV{HOME} . '/.csshrc_send_menu',
 
@@ -581,6 +582,7 @@ terminal_title_opt=-T
 unmap_on_redraw=no
 use_all_a_records=0
 use_hotkeys=yes
+use_natural_sort=0
 #user=
 window_tiling=yes
 window_tiling_direction=right
