@@ -4,6 +4,12 @@ use Cwd;
 
 use Module::Build;
 
+my %project_info = (
+    tracker    => 'https://github.com/duncs/clusterssh/issues',
+    repository => 'http://github.com/duncs/clusterssh',
+    homepage   => 'http://clusterssh.sourceforge.net/',
+);
+
 my $class = Module::Build->subclass(
     class => "Module::Build::Custom",
     code  => q{
@@ -40,8 +46,9 @@ my $class = Module::Build->subclass(
 
             print <<"EOF";
 ==========
-Bug Reports and Issues: https://github.com/duncs/clusterssh/issues
-Project Repository: http://github.com/duncs/clusterssh
+Home page: $project_info{homepage},
+Bug Reports and Issues: $project_info{tracker}
+Project Repository: $project_info{repository}
 CPAN release: http://search.cpan.org/~duncs/App-ClusterSSH-$v
 SF release: http://sourceforge.net/projects/clusterssh/files/2.%20ClusterSSH%20Series%204/App-ClusterSSH-${v}.tar.gz/download
 SF/net git repo: https://sourceforge.net/scm/?type=git&group_id=89139
@@ -57,10 +64,10 @@ my $build = $class->new(
         resources => {
             Repository => [
                 'http://clusterssh.git.sourceforge.net/',
-                'http://github.com/duncs/clusterssh',
+                $project_info{repository},
             ],
-            bugtracker => 'http://sourceforge.net/tracker/?group_id=89139',
-            homepage   => 'http://clusterssh.sourceforge.net/',
+            bugtracker => $project_info{tracker},
+            homepage   => $project_info{homepage},
         },
     },
     module_name       => 'App::ClusterSSH',

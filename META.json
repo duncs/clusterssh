@@ -49,7 +49,7 @@
    "provides" : {
       "App::ClusterSSH" : {
          "file" : "lib/App/ClusterSSH.pm",
-         "version" : "4.03_06"
+         "version" : "4.03_07"
       },
       "App::ClusterSSH::Base" : {
          "file" : "lib/App/ClusterSSH/Base.pm",
@@ -85,7 +85,7 @@
    "release_status" : "testing",
    "resources" : {
       "bugtracker" : {
-         "web" : "http://sourceforge.net/tracker/?group_id=89139"
+         "web" : "https://github.com/duncs/clusterssh/issues"
       },
       "homepage" : "http://clusterssh.sourceforge.net/",
       "license" : [
@@ -96,5 +96,5 @@
          "http://github.com/duncs/clusterssh"
       ]
    },
-   "version" : "4.03_06"
+   "version" : "4.03_07"
 }

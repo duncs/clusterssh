@@ -17,7 +17,7 @@ build_requires:
 configure_requires:
   Module::Build: '0'
 dynamic_config: 1
-generated_by: 'Module::Build version 0.421, CPAN::Meta::Converter version 2.143240'
+generated_by: 'Module::Build version 0.421, CPAN::Meta::Converter version 2.142690'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -26,7 +26,7 @@ name: App-ClusterSSH
 provides:
   App::ClusterSSH:
     file: lib/App/ClusterSSH.pm
-    version: 4.03_06
+    version: 4.03_07
   App::ClusterSSH::Base:
     file: lib/App/ClusterSSH/Base.pm
     version: '0.02'
@@ -61,7 +61,7 @@ resources:
   Repository:
     - http://clusterssh.git.sourceforge.net/
     - http://github.com/duncs/clusterssh
-  bugtracker: http://sourceforge.net/tracker/?group_id=89139
+  bugtracker: https://github.com/duncs/clusterssh/issues
   homepage: http://clusterssh.sourceforge.net/
   license: http://dev.perl.org/licenses/
-version: 4.03_06
+version: 4.03_07
