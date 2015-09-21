@@ -1975,16 +1975,19 @@ sub run {
     # only use ssh_args from options if config file ssh_args not set AND
     # options is not the default value otherwise the default options
     # value is used instead of the config file
-    if ( $self->config->{ssh_args} ) {
-        if (   $self->options->options
-            && $self->options->options ne $self->options->options_default )
-        {
-            $self->config->{ssh_args} = $self->options->options;
+    if ( $self->config->{comms} eq 'ssh' ) {
+        if ( $self->config->{ssh_args} ) {
+            if (   $self->options->options
+                && $self->options->options ne
+                $self->options->options_default )
+            {
+                $self->config->{ssh_args} = $self->options->options;
+            }
         }
-    }
-    else {
-        $self->config->{ssh_args} = $self->options->options
-            if ( $self->options->options );
+        else {
+            $self->config->{ssh_args} = $self->options->options
+                if ( $self->options->options );
+        }
     }
 
     $self->config->{terminal_args} = $self->options->term_args
@@ -2194,6 +2197,8 @@ the code until this time.
 =item populate_send_menu
 
 =item populate_send_menu_entries_from_xml
+
+=item re_add_closed_sessions
 
 =item remove_repeated_servers
 
