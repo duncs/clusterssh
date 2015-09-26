@@ -97,7 +97,7 @@ my %default_config = (
 
     use_all_a_records => 0,
 
-    send_menu_xml_file => $ENV{HOME} . '/.csshrc_send_menu',
+    send_menu_xml_file => $ENV{HOME} . '/.clusterssh/send_menu',
 
     # don't set username here as takes precendence over ssh config
     user => '',
