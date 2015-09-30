@@ -801,6 +801,12 @@ B<NOTE:> Any "generic" change to the method (e.g., specifying the ssh port to us
     output '=item use_hotkeys = 1';
     output $self->loc( q{Setting to [_1] will disable all hotkeys.}, 'C<0>' );
 
+    output '=item use_natural_sort = 0';
+    output $self->loc(
+        q{Windows will normally sort in alphabetical order, i.e.: host1, host11, host2.  Setting to this [_1] will change the sort order, i.e.: host1, host2, host11. NOTE: You must have the perl module [_2] installed.},
+        'C<1>', 'L<Sort::Naturally>'
+    );
+
     output '=item user = $LOGNAME';
     output $self->loc(
         q{Sets the default user for running commands on clients.});
