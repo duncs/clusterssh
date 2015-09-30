@@ -140,9 +140,6 @@ sub get_realname {
                 : $self->{hostname};
         }
     }
-    else {
-        $self->{realname} = $self->{hostname};
-    }
     return $self->{realname};
 }
 
