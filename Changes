@@ -4,6 +4,7 @@
 - Allow sorting windows in natural order (Github issue #28 - thanks to Andrew Stevenson)
 - Fix links in metadata files to trackers (Github issue #41)
 - Fix ctel and ccon not working correctly (Github issue #35)
+- Amend t/10host.t to use a random hostname to prevent clashes (Github issue #23)
 
 4.03_06 2015-01-31 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Remove references to 'logmsg' preventing the history window from working (thanks to Andrew Stevenson)
