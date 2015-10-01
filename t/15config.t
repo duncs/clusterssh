@@ -105,7 +105,7 @@ Readonly::Hash my %default_config => {
     use_all_a_records => 0,
     use_natural_sort  => 0,
 
-    send_menu_xml_file => $ENV{HOME} . '/.csshrc_send_menu',
+    send_menu_xml_file => $ENV{HOME} . '/.clusterssh/send_menu',
 
     # other bits inheritted from App::ClusterSSH::Base
     debug => 0,
@@ -517,7 +517,7 @@ is( $trap->stderr,
 
 note('Checking dump');
 $config = App::ClusterSSH::Config->new(
-    send_menu_xml_file => $ENV{HOME} . '/.csshrc_send_menu' );
+    send_menu_xml_file => $ENV{HOME} . '/.clusterssh/send_menu' );
 trap {
     $config->dump();
 };
@@ -559,7 +559,7 @@ screen_reserve_bottom=60
 screen_reserve_left=0
 screen_reserve_right=0
 screen_reserve_top=0
-send_menu_xml_file=} . $ENV{HOME} . qq{/.csshrc_send_menu
+send_menu_xml_file=} . $ENV{HOME} . qq{/.clusterssh/send_menu
 show_history=0
 ssh=ssh
 ssh_args=

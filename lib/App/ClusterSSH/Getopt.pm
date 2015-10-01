@@ -828,7 +828,7 @@ B<NOTE:> Any "generic" change to the method (e.g., specifying the ssh port to us
         'C<Control>', 'C<Alt>', 'C<Shift>', 'C<null>'
     );
 
-    output q{=item F<$HOME/.csshrc_send_menu>};
+    output q{=item F<$HOME/.clusterssh/send_menu>};
     output $self->loc(
         q{This (optional) file contains items to populate the send menu.  The default entry could be written as:}
     );
