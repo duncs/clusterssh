@@ -518,13 +518,13 @@ would replace the <Alt-n> with the client's name in each window.}
         $self->loc(
         q{Connect to different servers using different login names.  NOTE: this can also be achieved by setting up appropriate options in the configuration files.  Do not close the console when the last terminal exits.}
         );
-    output q{S<$ } . $Script . q{ -Q user1@server1 admin@server2>};
+    output q{S<$ } . $Script . q{ user1@server1 admin@server2>};
     output '=item ',
         $self->loc(
         q{Open up a cluster defined in a non-default configuration file});
     output q{S<$ } . $Script . q{ -c $HOME/cssh.extra_clusters db_cluster>};
     output '=item ',
-        $self->loc(q{Connect on port 2022 instead of the default port});
+        $self->loc(q{Override the configured/default port to use 2022 instead});
     output q{S<$ } . $Script . q{ -p 2022 server1 server2>};
     output '=back';
 
@@ -991,7 +991,7 @@ C<perl>}
     output '=head1 ', $self->loc('LICENSE AND COPYRIGHT');
     output $self->loc(
         q{
-Copyright 1999-2014 Duncan Ferguson.
+Copyright 1999-2015 Duncan Ferguson.
 
 This program is free software; you can redistribute it and/or modify it under the terms of either: the GNU General Public License as published by the Free Software Foundation; or the Artistic License.
 
@@ -1068,7 +1068,7 @@ Duncan Ferguson, C<< <duncan_j_ferguson at yahoo.co.uk> >>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 1999-2010 Duncan Ferguson.
+Copyright 1999-2015 Duncan Ferguson.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published
