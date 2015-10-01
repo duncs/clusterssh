@@ -14,7 +14,7 @@ where the same configuration or commands must be run on each node
 within the cluster.  Performing these commands all at once via this
 tool ensures all nodes are kept in sync.
 
-For more information, go to http://clusterssh.sourceforge.net
+For more information, go to https://github.com/duncs/clusterssh
 
 INSTALLATION
 
@@ -38,12 +38,11 @@ or (if your MANPATH is set up appropriately)
 
 You can also look for information at:
 
-    Web site and SourceForge project page
-        http://clusterssh.sourceforge.net
-        http://sourceforge.net/projects/clusterssh/
+    Web site and HitHub project page
+        https://github.com/duncs/clusterssh
 
     Project support area
-        https://sourceforge.net/projects/clusterssh/support
+        https://github.com/duncs/clusterssh/issues
 
     AnnoCPAN, Annotated CPAN documentation
         http://annocpan.org/dist/App-ClusterSSH
@@ -57,7 +56,7 @@ You can also look for information at:
 
 COPYRIGHT AND LICENCE
 
-Copyright (C) 1999-2010 Duncan Ferguson
+Copyright (C) 1999-2015 Duncan Ferguson
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published
