@@ -35,6 +35,9 @@
          }
       },
       "runtime" : {
+         "recommends" : {
+            "Sort::Naturally" : "0"
+         },
          "requires" : {
             "Exception::Class" : "1.31",
             "Getopt::Long" : "0",
@@ -49,7 +52,7 @@
    "provides" : {
       "App::ClusterSSH" : {
          "file" : "lib/App/ClusterSSH.pm",
-         "version" : "4.03_07"
+         "version" : "4.04"
       },
       "App::ClusterSSH::Base" : {
          "file" : "lib/App/ClusterSSH/Base.pm",
@@ -82,12 +85,12 @@
          "file" : "lib/App/ClusterSSH/L10N/en.pm"
       }
    },
-   "release_status" : "testing",
+   "release_status" : "stable",
    "resources" : {
       "bugtracker" : {
          "web" : "https://github.com/duncs/clusterssh/issues"
       },
-      "homepage" : "http://clusterssh.sourceforge.net/",
+      "homepage" : "http://github.com/duncs/clusterssh/wiki",
       "license" : [
          "http://dev.perl.org/licenses/"
       ],
@@ -96,5 +99,5 @@
          "http://github.com/duncs/clusterssh"
       ]
    },
-   "version" : "4.03_07"
+   "version" : "4.04"
 }

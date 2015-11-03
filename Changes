@@ -1,4 +1,4 @@
-4.03_07 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net>
+4.04 2015-11-03 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Include bash completion script in distribution (Github issue #29)
 - Allow re-adding closed session (Github issue #27 - thanks to Andrew Stevenson)
 - Allow sorting windows in natural order (Github issue #28 - thanks to Andrew Stevenson)
