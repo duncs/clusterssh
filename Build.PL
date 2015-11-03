@@ -7,12 +7,18 @@ use Module::Build;
 my %project_info = (
     tracker    => 'https://github.com/duncs/clusterssh/issues',
     repository => 'http://github.com/duncs/clusterssh',
-    homepage   => 'http://clusterssh.sourceforge.net/',
+    homepage   => 'http://github.com/duncs/clusterssh/wiki',
 );
 
 my $class = Module::Build->subclass(
     class => "Module::Build::Custom",
-    code  => q{
+    code  => qq{
+        my \%project_info = ( 
+            tracker => '$project_info{tracker}', 
+            homepage => '$project_info{homepage}',
+            repository => '$project_info{repository}',
+        );
+    } . q{
     # don't check for errors; 'build_requires' should get this sorted
     eval {
         require File::Slurp;
@@ -51,7 +57,6 @@ Bug Reports and Issues: $project_info{tracker}
 Project Repository: $project_info{repository}
 CPAN release: http://search.cpan.org/~duncs/App-ClusterSSH-$v
 SF release: http://sourceforge.net/projects/clusterssh/files/2.%20ClusterSSH%20Series%204/App-ClusterSSH-${v}.tar.gz/download
-SF/net git repo: https://sourceforge.net/scm/?type=git&group_id=89139
 ==========
 EOF
             return $self;
