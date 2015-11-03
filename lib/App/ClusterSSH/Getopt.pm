@@ -524,7 +524,8 @@ would replace the <Alt-n> with the client's name in each window.}
         q{Open up a cluster defined in a non-default configuration file});
     output q{S<$ } . $Script . q{ -c $HOME/cssh.extra_clusters db_cluster>};
     output '=item ',
-        $self->loc(q{Override the configured/default port to use 2022 instead});
+        $self->loc(
+        q{Override the configured/default port to use 2022 instead});
     output q{S<$ } . $Script . q{ -p 2022 server1 server2>};
     output '=back';
 
