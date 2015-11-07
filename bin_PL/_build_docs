@@ -33,7 +33,7 @@ for my $source (glob("*")) {
     if($source ne "clusterssh_bash_completion.dist") {
         print $dfh "\n\n__END__\n\n";
 
-        my $pod= qx{ ./$source --generate-pod };
+        my $pod= qx{ $^X ./$source --generate-pod };
         die "Failed to generate pod" if($?);
         print $dfh $pod;
     }
