@@ -745,11 +745,15 @@ B<NOTE:> Any "generic" change to the method (e.g., specifying the ssh port to us
     );
 
     output '=item terminal_chdir = 0';
-    output $self->loc(q{When non-0, set the working directory for each terminal as per '[_1]'}, 'L<terminal_chdir_path>' );
+    output $self->loc(
+        q{When non-0, set the working directory for each terminal as per '[_1]'},
+        'L<terminal_chdir_path>'
+    );
 
     output '=item terminal_chdir_path = $HOME/.clusterssh/work/%s';
     output $self->loc(
-        q{Path to use as working directory for each terminal when '[_1]' is enabled.  The path provided is passed through the macro parser (see the section above on '[_2]'.','L<terminal_chdir>','L<macros_enabled>' },
+        q{Path to use as working directory for each terminal when '[_1]' is enabled.  The path provided is passed through the macro parser (see the section above on '[_2]'.},
+        'L<terminal_chdir>', 'L<macros_enabled>',
     );
 
     output '=item terminal_font = 6x13';
