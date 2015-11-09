@@ -553,35 +553,6 @@ sub send_text($@) {
 
     $text = $self->substitute_macros( $svr, $text );
 
-    #    # command macro substitution
-    #    if ( $self->config->{macros_enabled} eq 'yes' ) {
-    #
-    #        # $svr contains a trailing space here, so ensure its stripped off
-    #        {
-    #            my $macro_servername = $self->config->{macro_servername};
-    #            my $servername       = $svr;
-    #            $servername =~ s/\s+//;
-    #            $text =~ s/$macro_servername/$servername/xsmg;
-    #        }
-    #        $text =~ s/%h/hostname()/xsmeg;
-    #
-    #        # use connection username, else default to current username
-    #        {
-    #            my $macro_username = $self->config->{macro_username};
-    #            my $username       = $servers{$svr}{username};
-    #            $username ||= getpwuid($UID);
-    #            $text =~ s/$macro_username/$username/xsmg;
-    #        }
-    #        {
-    #            my $macro_newline = $self->config->{macro_newline};
-    #            $text =~ s/$macro_newline/\n/xsmg;
-    #        }
-    #        {
-    #            my $macro_version = $self->config->{macro_version};
-    #            $text =~ s/$macro_version/$VERSION/xsmg;
-    #        }
-    #    }
-
     foreach my $char ( split( //, $text ) ) {
         next if ( !defined($char) );
         my $ord = ord($char);
