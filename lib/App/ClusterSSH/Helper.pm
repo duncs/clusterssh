@@ -63,6 +63,7 @@ sub script {
            my \$port=shift;
            my \$mstr=shift;
            my \$command="$comms $comms_args ";
+           my \$cwd=qx!pwd!;
            open(PIPE, ">", \$pipe) or die("Failed to open pipe: \$!\\n");
            print PIPE "\$\$:\$ENV{WINDOWID}" 
                or die("Failed to write to pipe: $!\\n");
@@ -99,7 +100,10 @@ sub script {
             \$command .= " \\\"$config_command\\\"";
            }
            \$command .= " ; $postcommand";
-           warn("Running:\$command\\n"); # for debug purposes
+           # provide some info for debugging purposes
+           warn("Running: \\n");
+           warn("  pwd: \$cwd"); # already has newline
+           warn("  cmd: \$command\\n");
            exec(\$command);
     HERE
 

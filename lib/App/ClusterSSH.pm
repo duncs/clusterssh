@@ -37,6 +37,7 @@ use Net::hostent;
 use Sys::Hostname;
 use English;
 use Socket;
+use File::Path qw(make_path);
 
 # Notes on general order of processing
 #
@@ -510,6 +511,38 @@ SWITCH: {
     return $self;
 }
 
+sub substitute_macros {
+    my ( $self, $svr, $text ) = @_;
+
+    return $text unless ( $self->config->{macros_enabled} eq 'yes' );
+
+    {
+        my $macro_servername = $self->config->{macro_servername};
+        ( my $servername = $svr ) =~ s/\s+//;
+        $text =~ s!$macro_servername!$servername!xsmg;
+    }
+    {
+        my $macro_hostname = $self->config->{macro_hostname};
+        my $hostname       = $servers{$svr}{givenname};
+        $text =~ s!$macro_hostname!$hostname!xsmg;
+    }
+    {
+        my $macro_username = $self->config->{macro_username};
+        my $username       = $servers{$svr}{username};
+        $text =~ s!$macro_username!$username!xsmg;
+    }
+    {
+        my $macro_newline = $self->config->{macro_newline};
+        $text =~ s!$macro_newline!$/!xsmg;
+    }
+    {
+        my $macro_version = $self->config->{macro_version};
+        $text =~ s/$macro_version/$VERSION/xsmg;
+    }
+
+    return $text;
+}
+
 sub send_text($@) {
     my $self = shift;
     my $svr  = shift;
@@ -518,34 +551,36 @@ sub send_text($@) {
     $self->debug( 2, "servers{$svr}{wid}=$servers{$svr}{wid}" );
     $self->debug( 3, "Sending to '$svr' text:$text:" );
 
-    # command macro substitution
-    if ( $self->config->{macros_enabled} eq 'yes' ) {
+    $text = $self->substitute_macros( $svr, $text );
 
-        # $svr contains a trailing space here, so ensure its stripped off
-        {
-            my $macro_servername = $self->config->{macro_servername};
-            my $servername       = $svr;
-            $servername =~ s/\s+//;
-            $text =~ s/$macro_servername/$servername/xsmg;
-        }
-        $text =~ s/%h/hostname()/xsmeg;
-
-        # use connection username, else default to current username
-        {
-            my $macro_username = $self->config->{macro_username};
-            my $username       = $servers{$svr}{username};
-            $username ||= getpwuid($UID);
-            $text =~ s/$macro_username/$username/xsmg;
-        }
-        {
-            my $macro_newline = $self->config->{macro_newline};
-            $text =~ s/$macro_newline/\n/xsmg;
-        }
-        {
-            my $macro_version = $self->config->{macro_version};
-            $text =~ s/$macro_version/$VERSION/xsmg;
-        }
-    }
+    #    # command macro substitution
+    #    if ( $self->config->{macros_enabled} eq 'yes' ) {
+    #
+    #        # $svr contains a trailing space here, so ensure its stripped off
+    #        {
+    #            my $macro_servername = $self->config->{macro_servername};
+    #            my $servername       = $svr;
+    #            $servername =~ s/\s+//;
+    #            $text =~ s/$macro_servername/$servername/xsmg;
+    #        }
+    #        $text =~ s/%h/hostname()/xsmeg;
+    #
+    #        # use connection username, else default to current username
+    #        {
+    #            my $macro_username = $self->config->{macro_username};
+    #            my $username       = $servers{$svr}{username};
+    #            $username ||= getpwuid($UID);
+    #            $text =~ s/$macro_username/$username/xsmg;
+    #        }
+    #        {
+    #            my $macro_newline = $self->config->{macro_newline};
+    #            $text =~ s/$macro_newline/\n/xsmg;
+    #        }
+    #        {
+    #            my $macro_version = $self->config->{macro_version};
+    #            $text =~ s/$macro_version/$VERSION/xsmg;
+    #        }
+    #    }
 
     foreach my $char ( split( //, $text ) ) {
         next if ( !defined($char) );
@@ -724,6 +759,28 @@ sub open_client_windows(@) {
           # Since this is the child, we can mark any server unresolved without
           # affecting the main program
             $servers{$server}{realname} .= "==" if ( !$realname );
+
+            # If set, use the chdir path
+            if ( $self->config->{terminal_chdir} ) {
+                my $chdir_path = $self->substitute_macros( $server,
+                    $self->config->{terminal_chdir_path} );
+
+                if ( !-d $chdir_path ) {
+                    $self->debug( 1,
+                        "Creating terminal directory path '$chdir_path'" );
+                    make_path($chdir_path)
+                        || $self->debug( 0,
+                        "WARNING: Could not create '$chdir_path'" );
+                }
+                $self->debug( 1,
+                    "Changing directory to $chdir_path for terminal to $given_server_name"
+                );
+                chdir($chdir_path)
+                    || $self->debug( 0,
+                    "WARNING: Could not change directory to '$chdir_path': $!"
+                    );
+            }
+
             my $exec = join( ' ',
                 $self->config->{terminal},
                 $color,
@@ -1681,11 +1738,14 @@ sub key_event {
                 $self->debug( 3, "matched combo" );
                 if ( $event eq "KeyRelease" ) {
                     $self->debug( 2, "Received hotkey: $hotkey" );
-                    $self->send_text_to_all_servers('%s')
+                    $self->send_text_to_all_servers(
+                        $self->config->{macro_servername} )
                         if ( $hotkey eq "key_clientname" );
-                    $self->send_text_to_all_servers('%h')
+                    $self->send_text_to_all_servers(
+                        $self->config->{macro_hostname} )
                         if ( $hotkey eq "key_localname" );
-                    $self->send_text_to_all_servers('%u')
+                    $self->send_text_to_all_servers(
+                        $self->config->{macro_username} )
                         if ( $hotkey eq "key_username" );
                     $self->add_host_by_name()
                         if ( $hotkey eq "key_addhost" );
@@ -2225,6 +2285,8 @@ the code until this time.
 =item show_console
 
 =item show_history
+
+=item substitute_macros
 
 =item terminate_host
 

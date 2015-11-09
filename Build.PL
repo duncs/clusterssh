@@ -87,6 +87,7 @@ my $build = $class->new(
         'Exception::Class' => '1.31',
         'Try::Tiny'        => 0,
         'Getopt::Long'     => 0,
+        'File::Path'       => 0,
     },
     build_requires => {
         'Test::Pod::Coverage' => 0,

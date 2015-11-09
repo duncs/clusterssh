@@ -1,5 +1,6 @@
 4.04_01 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Ensure documentation is generated using same perl as the build (Github issue #45)
+- New config file settings to allow terminals to run from different directories (Github issue #42)
 
 4.04 2015-11-03 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Include bash completion script in distribution (Github issue #29)
