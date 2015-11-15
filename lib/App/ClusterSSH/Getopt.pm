@@ -222,6 +222,10 @@ sub add_common_options {
             'If a hostname resolves to multiple IP addresses, toggle whether or not to connect to all of them, or just the first one (see also config file entry).'
         ),
     );
+    $self->add_option(
+        spec => 'quiet|Q',
+        help => $self->loc('Do not output extra text when using some options'),
+    );
 
     return $self;
 }

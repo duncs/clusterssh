@@ -2,6 +2,7 @@
 - Ensure documentation is generated using same perl as the build (Github issue #45)
 - Pass '--action' through macro parsing (Github issue #42)
 - Workaround for glitch in KDE where windows can become unmoveable (Github issue #46) (thanks to Brandon Perkins)
+- Add in '--quiet | -Q ' option to reduce output in certian scenarios
 
 4.04 2015-11-03 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Include bash completion script in distribution (Github issue #29)
