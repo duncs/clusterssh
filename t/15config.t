@@ -76,6 +76,8 @@ Readonly::Hash my %default_config => {
     telnet_args  => "",
     ssh          => 'ssh',
     ssh_args     => "",
+    sftp         => 'sftp',
+    sftp_args    => "",
 
     extra_cluster_file       => "",
     external_cluster_command => '',
@@ -561,6 +563,8 @@ screen_reserve_left=0
 screen_reserve_right=0
 screen_reserve_top=0
 send_menu_xml_file=} . $ENV{HOME} . qq{/.clusterssh/send_menu
+sftp=sftp
+sftp_args=
 show_history=0
 ssh=ssh
 ssh_args=

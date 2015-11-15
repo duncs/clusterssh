@@ -46,19 +46,28 @@ sub add_option {
     }
     my ( $option, $arg ) = $spec =~ m/^(.*?)(?:[\+=:](.*))?$/;
     if ($arg) {
-        my $arg_type = defined $args{arg_desc} ? "<$args{arg_desc}>" : undef;
+        my $arg_open  = '<';
+        my $arg_close = '>';
+        if ( $args{arg_optional} ) {
+            $arg_open  = '[';
+            $arg_close = ']';
+        }
+        my $arg_type
+            = defined $args{arg_desc}
+            ? "${arg_open}$args{arg_desc}${arg_close}"
+            : undef;
         $arg =~ s/\+/[[...] || <INTEGER>]/g;
         if ( $arg eq 'i' ) {
             $arg
                 = defined $arg_type
                 ? $arg_type
-                : q{<} . $self->loc('INTEGER') . q{>};
+                : $arg_open . $self->loc('INTEGER') . $arg_close;
         }
         if ( $arg eq 's' ) {
             $arg
                 = defined $arg_type
                 ? "'$arg_type'"
-                : q{'<} . $self->loc('STRING') . q{>'};
+                : "'" . $arg_open . $self->loc('STRING') . $arg_close . "'";
         }
     }
     my ( $desc, $long, $short, $accessor );
@@ -175,8 +184,12 @@ sub add_common_options {
         ),
     );
     $self->add_option(
-        spec => 'list|L',
-        help => $self->loc('List available cluster tags.'),
+        spec => 'list|L:s',
+        help => $self->loc(
+            'List available cluster tags. Tag is optional.  If a tag is provided then hosts for that tag are listed.  NOTE: format of output changes when using "--quiet" or "-Q" option.'
+        ),
+        arg_desc     => 'tag',
+        arg_optional => 1,
     );
     $self->add_option(
         spec => 'dump-config|d',
@@ -308,7 +321,7 @@ sub getopts {
           # hide warnings when getopts is run multiple times, esp. for testing
             no warnings 'redefine';
             *$accessor = sub {
-                return $options->{$acc} || $default;
+                return defined $options->{$acc} ? $options->{$acc} : $default;
 
     #                      defined $options->{$acc} ? $options->{$acc}
     #                    : defined $self->{command_options}->{$acc}->{default}

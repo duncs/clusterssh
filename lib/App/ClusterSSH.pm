@@ -2045,16 +2045,32 @@ sub run {
     $self->cluster->get_tag_entries( split /,/,
         $self->config->{extra_tag_file} || '' );
 
-    if ( $self->options->list ) {
-        print( 'Available cluster tags:', $/ )
-            unless ( $self->options->quiet );
-        print "\t", $_, $/ foreach ( sort( $self->cluster->list_tags ) );
-
-        my @external_clusters = $self->cluster->list_external_clusters;
-        if (@external_clusters) {
-            print( 'Available external command tags:', $/ )
+    if ( defined $self->options->list ) {
+        my $eol = $self->options->quiet ? ' ' : $/;
+        my $tab = $self->options->quiet ? ''  : "\t";
+        if ( !$self->options->list ) {
+            print( 'Available cluster tags:', $/ )
                 unless ( $self->options->quiet );
-            print "\t", $_, $/ foreach ( sort(@external_clusters) );
+            print $tab, $_, $eol
+                foreach ( sort( $self->cluster->list_tags ) );
+
+            my @external_clusters = $self->cluster->list_external_clusters;
+            if (@external_clusters) {
+                print( 'Available external command tags:', $/ )
+                    unless ( $self->options->quiet );
+                print $tab, $_, $eol foreach ( sort(@external_clusters) );
+                print $/;
+            }
+        }
+        else {
+            print 'Tag resolved to hosts: ', $/
+                unless ( $self->options->quiet );
+            @servers = $self->resolve_names( $self->options->list );
+
+            foreach my $svr (@servers) {
+                print $tab, $svr, $eol;
+            }
+            print $/;
         }
 
         $self->debug(
