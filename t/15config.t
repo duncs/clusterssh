@@ -28,8 +28,6 @@ isa_ok( $config, 'App::ClusterSSH::Config' );
 
 Readonly::Hash my %default_config => {
     terminal                   => "xterm",
-    terminal_chdir             => 0,
-    terminal_chdir_path        => $ENV{HOME} . '/.clusterssh/work/%s',
     terminal_args              => "",
     terminal_title_opt         => "-T",
     terminal_colorize          => 1,
@@ -519,9 +517,7 @@ is( $trap->stderr,
 
 note('Checking dump');
 $config = App::ClusterSSH::Config->new(
-    send_menu_xml_file  => $ENV{HOME} . '/.clusterssh/send_menu',
-    terminal_chdir_path => $ENV{HOME} . '/.clusterssh/work/%s',
-);
+    send_menu_xml_file => $ENV{HOME} . '/.clusterssh/send_menu', );
 
 trap {
     $config->dump();
@@ -574,8 +570,6 @@ terminal=xterm
 terminal_allow_send_events=-xrm '*.VT100.allowSendEvents:true'
 terminal_args=
 terminal_bg_style=dark
-terminal_chdir=0
-terminal_chdir_path=} . $ENV{HOME} . qq{/.clusterssh/work/%s
 terminal_colorize=1
 terminal_decoration_height=10
 terminal_decoration_width=8

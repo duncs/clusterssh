@@ -63,9 +63,6 @@ my %default_config = (
     terminal_decoration_height => 10,
     terminal_decoration_width  => 8,
 
-    terminal_chdir_path => $ENV{HOME} . '/.clusterssh/work/%s',
-    terminal_chdir      => 0,
-
     console      => 'console',
     console_args => '',
     rsh          => 'rsh',

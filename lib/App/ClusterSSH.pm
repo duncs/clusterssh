@@ -529,11 +529,12 @@ sub substitute_macros {
     {
         my $macro_username = $self->config->{macro_username};
         my $username       = $servers{$svr}{username};
+        $username ||= getpwuid($UID);
         $text =~ s!$macro_username!$username!xsmg;
     }
     {
         my $macro_newline = $self->config->{macro_newline};
-        $text =~ s!$macro_newline!$/!xsmg;
+        $text =~ s!$macro_newline!\n!xsmg;
     }
     {
         my $macro_version = $self->config->{macro_version};
@@ -730,26 +731,10 @@ sub open_client_windows(@) {
           # affecting the main program
             $servers{$server}{realname} .= "==" if ( !$realname );
 
-            # If set, use the chdir path
-            if ( $self->config->{terminal_chdir} ) {
-                my $chdir_path = $self->substitute_macros( $server,
-                    $self->config->{terminal_chdir_path} );
-
-                if ( !-d $chdir_path ) {
-                    $self->debug( 1,
-                        "Creating terminal directory path '$chdir_path'" );
-                    make_path($chdir_path)
-                        || $self->debug( 0,
-                        "WARNING: Could not create '$chdir_path'" );
-                }
-                $self->debug( 1,
-                    "Changing directory to $chdir_path for terminal to $given_server_name"
-                );
-                chdir($chdir_path)
-                    || $self->debug( 0,
-                    "WARNING: Could not change directory to '$chdir_path': $!"
-                    );
-            }
+            # copy and amend the config provided to the helper script
+            my $local_config = $self->config;
+            $local_config->{command} = $self->substitute_macros( $server,
+                $local_config->{command} );
 
             my $exec = join( ' ',
                 $self->config->{terminal},
