@@ -2046,12 +2046,14 @@ sub run {
         $self->config->{extra_tag_file} || '' );
 
     if ( $self->options->list ) {
-        print( 'Available cluster tags:', $/ ) unless($self->options->quiet);
+        print( 'Available cluster tags:', $/ )
+            unless ( $self->options->quiet );
         print "\t", $_, $/ foreach ( sort( $self->cluster->list_tags ) );
 
         my @external_clusters = $self->cluster->list_external_clusters;
         if (@external_clusters) {
-            print( 'Available external command tags:', $/ ) unless($self->options->quiet);
+            print( 'Available external command tags:', $/ )
+                unless ( $self->options->quiet );
             print "\t", $_, $/ foreach ( sort(@external_clusters) );
         }
 
@@ -2085,7 +2087,8 @@ sub run {
     $self->debug( 2, "Capture map events" );
     $self->capture_map_events();
 
-    $self->debug( 0, 'Opening to: ', join( ' ', @servers ) ) if (@servers && ! $self->options->quiet);
+    $self->debug( 0, 'Opening to: ', join( ' ', @servers ) )
+        if ( @servers && !$self->options->quiet );
     $self->open_client_windows(@servers);
 
     # Check here if we are tiling windows.  Here instead of in func so

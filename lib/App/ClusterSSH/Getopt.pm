@@ -224,7 +224,8 @@ sub add_common_options {
     );
     $self->add_option(
         spec => 'quiet|Q',
-        help => $self->loc('Do not output extra text when using some options'),
+        help =>
+            $self->loc('Do not output extra text when using some options'),
     );
 
     return $self;
