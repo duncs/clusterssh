@@ -71,6 +71,8 @@ my %default_config = (
     telnet_args  => "",
     ssh          => 'ssh',
     ssh_args     => "",
+    sftp         => 'sftp',
+    sftp_args    => "",
 
     extra_cluster_file       => '',
     external_cluster_command => '',
@@ -113,9 +115,10 @@ sub new {
     $comms = 'telnet'  if ( $comms eq 'tel' );
     $comms = 'console' if ( $comms eq 'con' );
     $comms = 'ssh'     if ( $comms eq 'lusterssh' );
+    $comms = 'sftp'    if ( $comms eq 'sftp' );
 
     # list of allowed comms methods
-    if ( 'ssh rsh telnet console' !~ m/\b$comms\b/ ) {
+    if ( 'ssh rsh telnet sftp console' !~ m/\b$comms\b/ ) {
         $self->{comms} = 'ssh';
     }
     else {

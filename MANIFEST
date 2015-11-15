@@ -4,6 +4,7 @@ bin_PL/ccon
 bin_PL/clusterssh_bash_completion.dist
 bin_PL/crsh
 bin_PL/cscp.x
+bin_PL/csftp
 bin_PL/cssh
 bin_PL/ctel
 Build.PL
