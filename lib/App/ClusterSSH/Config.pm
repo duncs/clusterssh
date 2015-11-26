@@ -33,7 +33,7 @@ my %default_config = (
     terminal_size              => "80x24",
 
     use_hotkeys             => "yes",
-    key_quit                => "Control-q",
+    key_quit                => "Alt-q",
     key_addhost             => "Control-Shift-plus",
     key_clientname          => "Alt-n",
     key_history             => "Alt-h",
