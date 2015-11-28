@@ -13,6 +13,9 @@ if(! -d $bindir) {
     mkdir $bindir || die "Could not mkdir $bindir: $!";
 }
 
+print "Using perl binary: $^X",$/;
+print "Using perl version $^V",$/;
+
 for my $source (glob("*")) {
     my $dest="$bindir/$source";
 
