@@ -1,4 +1,7 @@
-4.05 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net>
+4.05_01 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net>
+- Failure to find the terminal binary should not be fatal
+
+4.05 2015-11-28 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Change default key_quit from 'Control-q' to 'Alt-q' (Github issue #50)
 - Amend tests to always use C locale as some error messages are hardcoded in English (Github issue #49)
 

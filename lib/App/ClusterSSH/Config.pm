@@ -184,8 +184,14 @@ sub validate_args {
     }
 
     # check the terminal has been found correctly
+    # looking for the terminal should not be fatal
     if ( !-e $self->{terminal} ) {
-        $self->{terminal} = $self->find_binary( $self->{terminal} );
+        eval {
+            $self->{terminal} = $self->find_binary( $self->{terminal} );
+        };
+        if($@) {
+            warn $@->message;
+        }
     }
 
     return $self;
