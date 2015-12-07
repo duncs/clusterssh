@@ -33,7 +33,7 @@ NOTE: the default language of this module is English.
 
 =head1 METHODS
 
-See Locale::Maketext - there are curently no extra methods in this module.
+See Locale::Maketext - there are currently no extra methods in this module.
 
 =head1 AUTHOR
 
