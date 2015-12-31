@@ -4,7 +4,7 @@
       "Duncan Ferguson <duncan_j_ferguson@yahoo.co.uk>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.3901, CPAN::Meta::Converter version 2.150005",
+   "generated_by" : "Module::Build version 0.4214",
    "license" : [
       "perl_5"
    ],
@@ -53,7 +53,7 @@
    "provides" : {
       "App::ClusterSSH" : {
          "file" : "lib/App/ClusterSSH.pm",
-         "version" : "4.04_01"
+         "version" : "4.05_01"
       },
       "App::ClusterSSH::Base" : {
          "file" : "lib/App/ClusterSSH/Base.pm",
@@ -100,6 +100,6 @@
          "http://github.com/duncs/clusterssh"
       ]
    },
-   "version" : "4.04_01",
-   "x_serialization_backend" : "JSON::PP version 2.27203"
+   "version" : "4.05_01",
+   "x_serialization_backend" : "JSON::PP version 2.27300"
 }
