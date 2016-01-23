@@ -5,6 +5,7 @@ command=
 comms=ssh
 console_position=
 extra_cluster_file=
+extra_tag_file=
 history_height=10
 history_width=40
 key_addhost=Control-Shift-plus

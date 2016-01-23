@@ -79,6 +79,7 @@ Readonly::Hash my %default_config => {
     sftp         => 'sftp',
     sftp_args    => "",
 
+    extra_tag_file           => "",
     extra_cluster_file       => "",
     external_cluster_command => '',
 
@@ -533,6 +534,7 @@ console_position=
 debug=0
 external_cluster_command=
 extra_cluster_file=
+extra_tag_file=
 history_height=10
 history_width=40
 key_addhost=Control-Shift-plus

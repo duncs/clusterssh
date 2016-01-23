@@ -74,6 +74,7 @@ my %default_config = (
     sftp         => 'sftp',
     sftp_args    => "",
 
+    extra_tag_file           => '',
     extra_cluster_file       => '',
     external_cluster_command => '',
 
@@ -186,10 +187,8 @@ sub validate_args {
     # check the terminal has been found correctly
     # looking for the terminal should not be fatal
     if ( !-e $self->{terminal} ) {
-        eval {
-            $self->{terminal} = $self->find_binary( $self->{terminal} );
-        };
-        if($@) {
+        eval { $self->{terminal} = $self->find_binary( $self->{terminal} ); };
+        if ($@) {
             warn $@->message;
         }
     }

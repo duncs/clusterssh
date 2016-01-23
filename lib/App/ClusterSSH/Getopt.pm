@@ -646,6 +646,13 @@ If the external command is given a C<-L> option it should output a list of tags 
     );
     output 'C<< extra_cluster_file = ~/clusters, $HOME/clus >>';
 
+    output '=item extra_tag_file = <null>';
+    output $self->loc(
+        q{Define an extra tag file in the format of [_1].  Multiple files can be specified, separated by commas.  Both ~ and $HOME are acceptable as a reference to the user's home directory, e.g.},
+        'F</etc/tags>'
+    );
+    output 'C<< extra_tag_file = ~/tags, $HOME/tags >>';
+
     output '=item key_addhost = Control-Shift-plus';
     output $self->loc(
         q{Default key sequence to open AddHost menu.  See [_1] for more information.},
