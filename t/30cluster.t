@@ -55,7 +55,8 @@ BEGIN {
     use_ok("App::ClusterSSH::Cluster") || BAIL_OUT('failed to use module');
 }
 
-my $mock_object = Test::ClusterSSH::Mock->new();
+my $mock_object = Test::ClusterSSH::Mock->new(
+    shell_expansion => "/bin/bash -c 'shopt -s extglob\n echo %items%'", );
 
 my $cluster1 = App::ClusterSSH::Cluster->new( parent => $mock_object );
 isa_ok( $cluster1, 'App::ClusterSSH::Cluster' );
@@ -259,6 +260,86 @@ trap {
 is( $trap->leaveby, 'return', 'exit okay on get_tag_entries' );
 is( $trap->stdout,  '',       'no stdout for get_tag_entries' );
 is( $trap->stderr,  '',       'no stderr for get_tag_entries' );
+
+# test bash expansion
+my @expected = ( 'aa', 'ab', 'ac' );
+$cluster1->register_tag( 'glob1', 'a{a,b,c}' );
+@got = $cluster2->get_tag('glob1');
+is_deeply( \@got, \@expected, 'glob1 expansion, words' )
+    or diag explain @got;
+
+@expected = ( 'ax', 'ay', 'az' );
+$cluster1->register_tag( 'glob2', 'a{x..z}' );
+@got = $cluster2->get_tag('glob2');
+is_deeply( \@got, \@expected, 'glob2 expansion, words' )
+    or diag explain @got;
+
+@expected = ( 'b1', 'b2', 'b3' );
+$cluster1->register_tag( 'glob3', 'b{1..3}' );
+@got = $cluster2->get_tag('glob3');
+is_deeply( \@got, \@expected, 'glob3 expansion, number range' )
+    or diag explain @got;
+
+@expected = ( 'ca', 'cb', 'cc', 'd7', 'd8', 'd9' );
+$cluster1->register_tag( 'glob4', 'c{a..c}', 'd{7..9}' );
+@got = $cluster2->get_tag('glob4');
+is_deeply( \@got, \@expected, 'glob4 expansion, mixed' )
+    or diag explain @got;
+
+# make sure reasonable expansions get through with no nasty metachars
+@expected = ( 'cd..f}', 'c{a..c' );
+$cluster1->register_tag( 'glob5', 'c{a..c', 'cd..f}' );
+@got = $cluster2->get_tag('glob5');
+is_deeply( \@got, \@expected, 'glob5 expansion, mixed' )
+    or diag explain @got;
+
+@expected = ();
+trap {
+    $cluster1->register_tag( 'glob6', 'c{a..c} ; echo NASTY' );
+};
+is( $trap->leaveby, 'return', 'didnt die on nasty chars' );
+is( $trap->die,     undef,    'didnt die on nasty chars' );
+is( $trap->stdout,  q{},      'Expecting no STDOUT' );
+like(
+    $trap->stderr,
+    qr/Bad characters picked up in tag 'glob6':.*/,
+    'warned on nasty chars'
+);
+@got = $cluster2->get_tag('glob6');
+is_deeply( \@got, \@expected, 'glob6 expansion, nasty chars' )
+    or diag explain @got;
+
+@expected = ();
+trap {
+    $cluster1->register_tag( 'glob7', 'c{a..b} `echo NASTY`' );
+};
+is( $trap->leaveby, 'return', 'didnt die on nasty chars' );
+is( $trap->die,     undef,    'didnt die on nasty chars' );
+is( $trap->stdout,  q{},      'Expecting no STDOUT' );
+like(
+    $trap->stderr,
+    qr/Bad characters picked up in tag 'glob7':.*/,
+    'warned on nasty chars'
+);
+@got = $cluster2->get_tag('glob7');
+is_deeply( \@got, \@expected, 'glob7 expansion, nasty chars' )
+    or diag explain @got;
+
+@expected = ();
+trap {
+    $cluster1->register_tag( 'glob8', 'c{a..b} $!', );
+};
+is( $trap->leaveby, 'return', 'didnt die on nasty chars' );
+is( $trap->die,     undef,    'didnt die on nasty chars' );
+is( $trap->stdout,  q{},      'Expecting no STDOUT' );
+like(
+    $trap->stderr,
+    qr/Bad characters picked up in tag 'glob8':.*/,
+    'warned on nasty chars'
+);
+@got = $cluster2->get_tag('glob8');
+is_deeply( \@got, \@expected, 'glob8 expansion, nasty chars' )
+    or diag explain @got;
 
 done_testing();
 

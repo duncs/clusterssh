@@ -153,6 +153,8 @@ sub register_host {
     my ( $self, $node, @tags ) = @_;
     $self->debug( 2, "Registering node $node on tags:", join( ' ', @tags ) );
 
+    @tags = $self->expand_glob( 'node', $node, @tags );
+
     foreach my $tag (@tags) {
         if ( $self->{tags}->{$tag} ) {
             $self->{tags}->{$tag}
@@ -170,11 +172,47 @@ sub register_host {
 sub register_tag {
     my ( $self, $tag, @nodes ) = @_;
 
+    #warn "b4 nodes=@nodes";
+    @nodes = $self->expand_glob( 'tag', $tag, @nodes );
+
+    #warn "af nodes=@nodes";
+
     $self->debug( 2, "Registering tag $tag: ", join( ' ', @nodes ) );
 
     $self->{tags}->{$tag} = \@nodes;
 
     return $self;
+}
+
+sub expand_glob {
+    my ( $self, $type, $name, @items ) = @_;
+
+    my @expanded;
+
+    # skip expanding anything that appears to have nasty metachars
+    if ( !grep {m/[\`\!\$;]/} @items ) {
+        if ( grep {m/[{]/} @items ) {
+
+      #@expanded = split / /, `/bin/bash -c 'shopt -s extglob\n echo @items'`;
+            my $cmd = $self->parent->config->{shell_expansion};
+            $cmd =~ s/%items%/@items/;
+            @expanded = split / /, `$cmd`;
+            chomp(@expanded);
+        }
+        else {
+            @expanded = map { glob $_ } @items;
+        }
+    }
+    else {
+        warn(
+            $self->loc(
+                "Bad characters picked up in [_1] '[_2]': [_3]",
+                $type, $name, join( ' ', @items )
+            ),
+        );
+    }
+
+    return @expanded;
 }
 
 sub get_tag {
@@ -286,6 +324,10 @@ Return an array of all available tag names
 =item %tags = $cluster->dump_tags();
 
 Returns a hash of all tag data.
+
+=item @tags = $cluster->expand_glob( $type, $name, @items );
+
+Use shell expansion against each item in @items, where $type is either 'node', or 'tag' and $name is the node or tag name.  These attributes are presented to the user in the event of an issue with the expanion to track down the source.
 
 =back
 

@@ -563,11 +563,23 @@ would replace the <Alt-n> with the client's name in each window.}
     output $self->loc(
         q{All comments (marked by a #) and blank lines are ignored.  Tags may be nested, but be aware of using recursive tags as they are not checked for.}
     );
+    output $self->loc(q{Servers can be defined using bash shell expansion:});
+    output 'C<< webservers websvr{a,b,c} >>';
+    output $self->loc(q{would be expanded to});
+    output 'C<< webservers websvra websvrb websvrc >>';
+    output $self->loc(q{and});
+    output 'C<< webservers websvr{6..9} >>';
+    output $self->loc(q{would be expanded to});
+    output 'C<< webservers websvr6 websvr7 websvr8 websvr9 >>';
+    output $self->loc(
+        q{B<NOTE:> this requires [_1] to be installed on your system (see [_2] configuration option },
+        '/bin/bash', 'C<shell_expansion>'
+    );
     output $self->loc(
         q{Extra cluster files may also be specified either as an option on the command line (see [_1]) or in the user's [_2] file (see [_3] configuration option).},
         'C<cluster-file>',
         'F<$HOME/.clusterssh/config>',
-        'C<extra_cluster_file>'
+        'L</extra_cluster_file>'
     );
     output $self->loc(
         'B<NOTE:> the last tag read overwrites any pre-existing tag of that name.'
@@ -758,6 +770,13 @@ B<NOTE:> Any "generic" change to the method (e.g., specifying the ssh port to us
     output '=item screen_reserve_right = 0';
     output $self->loc(
         q{Number of pixels from the screen's side to reserve when calculating screen geometry for tiling.  Setting this to something like 50 will help keep cssh from positioning windows over your window manager's menu bar if it draws one at that side of the screen.}
+    );
+
+    output
+        q{=item shell_expansion = /bin/bash -c 'shopt -s extglob\n echo %items%'"};
+    output $self->loc(
+        q{Command used to expand a given string (provided by the macro [_1]) - used for expanding host names when a [_2] is in the name.  See [_3]},
+        'C<%items%>', 'C<{>', 'L<bash/EXPANSION>'
     );
 
     output '=item terminal = /path/to/xterm';
