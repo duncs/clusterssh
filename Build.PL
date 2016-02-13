@@ -106,9 +106,19 @@ my $build = $class->new(
     configure_requires => { 'Module::Build'   => 0, },
     add_to_cleanup     => ['App-ClusterSSH-*'],
     create_makefile_pl => 'traditional',
-    script_files       => [ 'bin/cssh', 'bin/csftp', 'bin/ccon', 'bin/crsh', 'bin/ctel', 'bin/clusterssh_bash_completion.dist'],
-    get_options => { changes              => { type => '=s' }, },
-    PL_files    => { 'bin_PL/_build_docs' => [ 'bin/cssh', 'bin/csftp', 'bin/ccon', 'bin/crsh', 'bin/ctel', 'bin/clusterssh_bash_completion.dist'], },
+    script_files       => [
+        'bin/cssh', 'bin/csftp',
+        'bin/ccon', 'bin/crsh',
+        'bin/ctel', 'bin/clusterssh_bash_completion.dist'
+    ],
+    get_options => { changes => { type => '=s' }, },
+    PL_files    => {
+        'bin_PL/_build_docs' => [
+            'bin/cssh', 'bin/csftp',
+            'bin/ccon', 'bin/crsh',
+            'bin/ctel', 'bin/clusterssh_bash_completion.dist'
+        ],
+    },
 );
 
 $build->create_build_script;
