@@ -114,8 +114,36 @@ sub _run_external_clusters {
     return @results;
 }
 
+sub expand_filename {
+    my ( $self, $filename ) = @_;
+    my $home;
+
+    # try to determine the home directory
+    if (! defined($home = $ENV{'HOME'})) {
+        $home = (getpwuid($>))[5];
+    }
+    if (! defined($home)) {
+        $self->debug( 3, 'No home found so leaving filename ', $filename, ' unexpanded' );
+        return $filename;
+    }
+    $self->debug( 4, 'Using ', $home, ' as home directory' );
+
+    # expand ~ or $HOME
+    my $new_name = $filename;
+    $new_name =~ s!^~/!$home/!g;
+    $new_name =~ s!^\$HOME/!$home/!g;
+
+    $self->debug( 2, 'Expanding ', $filename, ' to ', $new_name )
+        unless ( $filename eq $new_name );
+
+    return $new_name;
+}
+
 sub read_tag_file {
     my ( $self, $filename ) = @_;
+
+    $filename = $self->expand_filename( $filename );
+
     $self->debug( 2, 'Reading tags from file ', $filename );
     if ( -f $filename ) {
         my %hosts
@@ -133,6 +161,9 @@ sub read_tag_file {
 
 sub read_cluster_file {
     my ( $self, $filename ) = @_;
+
+    $filename = $self->expand_filename( $filename );
+
     $self->debug( 2, 'Reading clusters from file ', $filename );
 
     if ( -f $filename ) {
