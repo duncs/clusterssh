@@ -330,6 +330,10 @@ file name and register the tags found.
 
 Read in the given cluster file and register the tags found
 
+=item $cluster->expand_filename($filename);
+
+Expand ~ or $HOME in a filename
+
 =item $cluster->read_tag_file($filename);
 
 Read in the given tag file and register the tags found
