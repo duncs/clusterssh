@@ -119,11 +119,12 @@ sub expand_filename {
     my $home;
 
     # try to determine the home directory
-    if (! defined($home = $ENV{'HOME'})) {
-        $home = (getpwuid($>))[5];
+    if ( !defined( $home = $ENV{'HOME'} ) ) {
+        $home = ( getpwuid($>) )[5];
     }
-    if (! defined($home)) {
-        $self->debug( 3, 'No home found so leaving filename ', $filename, ' unexpanded' );
+    if ( !defined($home) ) {
+        $self->debug( 3, 'No home found so leaving filename ',
+            $filename, ' unexpanded' );
         return $filename;
     }
     $self->debug( 4, 'Using ', $home, ' as home directory' );
@@ -142,7 +143,7 @@ sub expand_filename {
 sub read_tag_file {
     my ( $self, $filename ) = @_;
 
-    $filename = $self->expand_filename( $filename );
+    $filename = $self->expand_filename($filename);
 
     $self->debug( 2, 'Reading tags from file ', $filename );
     if ( -f $filename ) {
@@ -162,7 +163,7 @@ sub read_tag_file {
 sub read_cluster_file {
     my ( $self, $filename ) = @_;
 
-    $filename = $self->expand_filename( $filename );
+    $filename = $self->expand_filename($filename);
 
     $self->debug( 2, 'Reading clusters from file ', $filename );
 
@@ -328,6 +329,10 @@ file name and register the tags found.
 =item $cluster->read_cluster_file($filename);
 
 Read in the given cluster file and register the tags found
+
+=item $cluster->expand_filename($filename);
+
+Expand ~ or $HOME in a filename
 
 =item $cluster->read_tag_file($filename);
 
