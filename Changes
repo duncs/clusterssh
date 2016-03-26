@@ -1,4 +1,4 @@
-4.05_01 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net>
+4.06 2016-03-26 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Failure to find the terminal binary should not be fatal
 - Fix processing of '--extra_tag_file' and its configuration item (Github issue #51)
 - Add bash shell expansion on host names containing a '{' character (Github issue #53)

@@ -53,7 +53,7 @@
    "provides" : {
       "App::ClusterSSH" : {
          "file" : "lib/App/ClusterSSH.pm",
-         "version" : "4.05_01"
+         "version" : "4.06"
       },
       "App::ClusterSSH::Base" : {
          "file" : "lib/App/ClusterSSH/Base.pm",
@@ -86,7 +86,7 @@
          "file" : "lib/App/ClusterSSH/L10N/en.pm"
       }
    },
-   "release_status" : "testing",
+   "release_status" : "stable",
    "resources" : {
       "bugtracker" : {
          "web" : "https://github.com/duncs/clusterssh/issues"
@@ -100,6 +100,6 @@
          "http://github.com/duncs/clusterssh"
       ]
    },
-   "version" : "4.05_01",
+   "version" : "4.06",
    "x_serialization_backend" : "JSON::PP version 2.27203"
 }
