@@ -3,6 +3,8 @@
 - Fix processing of '--extra_tag_file' and its configuration item (Github issue #51)
 - Add bash shell expansion on host names containing a '{' character (Github issue #53)
 - Fix tests when running on a server without xterm installed (such as Travis CI via GitHub)
+- Expand $HOME and ~ correctly when looking for files (thanks to Andrew Stevenson)
+- Typo correction in README (thanks to Ankit Vadehra)
 
 4.05 2015-11-28 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Change default key_quit from 'Control-q' to 'Alt-q' (Github issue #50)
