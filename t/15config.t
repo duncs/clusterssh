@@ -9,6 +9,12 @@ setlocale( LC_ALL, "C" );
 use FindBin qw($Bin $Script);
 use lib "$Bin/../lib";
 
+# fix path for finding our fake xterm on headless systems that do
+# not have it installed, such as TravisCI via github
+BEGIN {
+    $ENV{PATH} = $ENV{PATH} . ':' . $Bin . '/bin';
+}
+
 use Test::More;
 use Test::Trap;
 use File::Which qw(which);

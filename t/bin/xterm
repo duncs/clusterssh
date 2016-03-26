@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# small 'fake' script to allow xterm to be found when performing tests
+# on systems that do not have it
+
+exit 0
