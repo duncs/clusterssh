@@ -42,13 +42,15 @@ t/30cluster.file3
 t/30cluster.t
 t/30cluster.tag1
 t/80clusterssh.t
+t/bin/xterm
 t/boilerplate.t
 t/changes.t
 t/external_cluster_command
 THANKS
 t/manifest.t
 TODO
-t/perltidy.t
 t/perltidyrc
+t/perltidy.t
 t/pod-coverage.t
 t/pod.t
+.travis.yml
