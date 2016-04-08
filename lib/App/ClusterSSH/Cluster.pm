@@ -226,7 +226,10 @@ sub expand_glob {
         if ( grep {m/[{]/} @items ) {
 
       #@expanded = split / /, `/bin/bash -c 'shopt -s extglob\n echo @items'`;
-            my $cmd = $self->parent->config->{shell_expansion};
+            my $shell = $self->config->find_binary(
+                $self->parent->config->{shell} );
+            my $cmd
+                = $shell . q{ } . $self->parent->config->{shell_expansion};
             $cmd =~ s/%items%/@items/;
             @expanded = split / /, `$cmd`;
             chomp(@expanded);

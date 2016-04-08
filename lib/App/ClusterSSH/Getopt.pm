@@ -573,7 +573,7 @@ would replace the <Alt-n> with the client's name in each window.}
     output 'C<< webservers websvr6 websvr7 websvr8 websvr9 >>';
     output $self->loc(
         q{B<NOTE:> this requires [_1] to be installed on your system (see [_2] configuration option },
-        '/bin/bash', 'C<shell_expansion>'
+        'bash', 'C<shell_expansion>'
     );
     output $self->loc(
         q{Extra cluster files may also be specified either as an option on the command line (see [_1]) or in the user's [_2] file (see [_3] configuration option).},
@@ -772,8 +772,8 @@ B<NOTE:> Any "generic" change to the method (e.g., specifying the ssh port to us
         q{Number of pixels from the screen's side to reserve when calculating screen geometry for tiling.  Setting this to something like 50 will help keep cssh from positioning windows over your window manager's menu bar if it draws one at that side of the screen.}
     );
 
-    output
-        q{=item shell_expansion = /bin/bash -c 'shopt -s extglob\n echo %items%'"};
+    output q{=item shell = bash};
+    output q{=item shell_expansion = -c 'shopt -s extglob\n echo %items%'"};
     output $self->loc(
         q{Command used to expand a given string (provided by the macro [_1]) - used for expanding host names when a [_2] is in the name.  See [_3]},
         'C<%items%>', 'C<{>', 'L<bash/EXPANSION>'

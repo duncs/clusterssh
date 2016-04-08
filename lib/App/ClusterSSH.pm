@@ -3,7 +3,7 @@ package App::ClusterSSH;
 use 5.008.004;
 use warnings;
 use strict;
-use version; our $VERSION = version->new('4.06');
+use version; our $VERSION = version->new('4.07_1');
 
 use Carp qw/cluck :DEFAULT/;
 
