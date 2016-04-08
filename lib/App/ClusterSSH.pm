@@ -60,7 +60,7 @@ sub new {
     $self->{config}  = App::ClusterSSH::Config->new( parent => $self, );
     $self->{helper}  = App::ClusterSSH::Helper->new( parent => $self, );
 
-    $self->set_config($self->config);
+    $self->set_config( $self->config );
 
     # catch and reap any zombies
     $SIG{CHLD} = sub {
