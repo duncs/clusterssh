@@ -1,5 +1,6 @@
 4.07_1 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Fixed tests on systems where bash is not installed in /bin/bash (Github issue #60)
+- Include link to travis-ci site in release emails for automated build and test reports
 
 4.06 2016-03-26 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Failure to find the terminal binary should not be fatal

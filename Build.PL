@@ -8,6 +8,7 @@ my %project_info = (
     tracker    => 'https://github.com/duncs/clusterssh/issues',
     repository => 'http://github.com/duncs/clusterssh',
     homepage   => 'http://github.com/duncs/clusterssh/wiki',
+    ci         => 'https://travis-ci.org/duncs/clusterssh',
 );
 
 my $class = Module::Build->subclass(
@@ -55,6 +56,7 @@ my $class = Module::Build->subclass(
 Home page: $project_info{homepage},
 Bug Reports and Issues: $project_info{tracker}
 Project Repository: $project_info{repository}
+Automated Testing: $project_info{ci}
 CPAN release: http://search.cpan.org/~duncs/App-ClusterSSH-$v
 SF release: http://sourceforge.net/projects/clusterssh/files/2.%20ClusterSSH%20Series%204/App-ClusterSSH-${v}.tar.gz/download
 ==========
