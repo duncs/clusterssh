@@ -18,6 +18,7 @@ lib/App/ClusterSSH/Host.pm
 lib/App/ClusterSSH/L10N/en.pm
 lib/App/ClusterSSH/L10N.pm
 lib/App/ClusterSSH.pm
+lib/App/ClusterSSH/Range.pm
 Makefile.PL
 MANIFEST
 MANIFEST.SKIP
@@ -53,4 +54,5 @@ t/perltidyrc
 t/perltidy.t
 t/pod-coverage.t
 t/pod.t
+t/range.t
 .travis.yml
