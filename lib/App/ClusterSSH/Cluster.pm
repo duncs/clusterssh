@@ -11,6 +11,7 @@ use Try::Tiny;
 use English qw( -no_match_vars );
 
 use base qw/ App::ClusterSSH::Base /;
+use App::ClusterSSH::Range;
 
 our $master_object_ref;
 
@@ -220,23 +221,18 @@ sub expand_glob {
     my ( $self, $type, $name, @items ) = @_;
 
     my @expanded;
+    my $range = App::ClusterSSH::Range->new();
 
     # skip expanding anything that appears to have nasty metachars
     if ( !grep {m/[\`\!\$;]/} @items ) {
-        if ( grep {m/[{]/} @items ) {
 
-      #@expanded = split / /, `/bin/bash -c 'shopt -s extglob\n echo @items'`;
-            my $shell = $self->config->find_binary(
-                $self->parent->config->{shell} );
-            my $cmd
-                = $shell . q{ } . $self->parent->config->{shell_expansion};
-            $cmd =~ s/%items%/@items/;
-            @expanded = split / /, `$cmd`;
-            chomp(@expanded);
-        }
-        else {
-            @expanded = map { glob $_ } @items;
-        }
+        $self->debug( 4, "Non-expanded: @items" );
+
+        @items = $range->expand(@items);
+
+     # run glob over anything left incase there are numeric and textual ranges
+        @expanded = map { glob $_ } @items;
+        $self->debug( 4, "Final expansion: @expanded" );
     }
     else {
         warn(

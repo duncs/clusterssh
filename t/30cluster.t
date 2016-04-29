@@ -56,10 +56,7 @@ BEGIN {
     use_ok("App::ClusterSSH::Config")  || BAIL_OUT('failed to use module');
 }
 
-my $mock_object = Test::ClusterSSH::Mock->new(
-    shell           => which("bash"),
-    shell_expansion => "-c 'shopt -s extglob\n echo %items%'",
-);
+my $mock_object = Test::ClusterSSH::Mock->new();
 
 my $cluster1 = App::ClusterSSH::Cluster->new( parent => $mock_object );
 isa_ok( $cluster1, 'App::ClusterSSH::Cluster' );

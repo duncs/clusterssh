@@ -102,9 +102,6 @@ my %default_config = (
 
     send_menu_xml_file => $ENV{HOME} . '/.clusterssh/send_menu',
 
-    shell           => "bash",
-    shell_expansion => "-c 'shopt -s extglob\n echo %items%'",
-
     # don't set username here as takes precendence over ssh config
     user => '',
 );

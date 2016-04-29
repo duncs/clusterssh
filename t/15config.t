@@ -116,9 +116,6 @@ Readonly::Hash my %default_config => {
 
     send_menu_xml_file => $ENV{HOME} . '/.clusterssh/send_menu',
 
-    shell           => "bash",
-    shell_expansion => "-c 'shopt -s extglob\n echo %items%'",
-
     # other bits inheritted from App::ClusterSSH::Base
     debug => 0,
     lang  => 'en',
@@ -576,8 +573,6 @@ screen_reserve_top=0
 send_menu_xml_file=} . $ENV{HOME} . qq{/.clusterssh/send_menu
 sftp=sftp
 sftp_args=
-shell=bash
-shell_expansion=-c \'shopt -s extglob\n echo %items%\'
 show_history=0
 ssh=ssh
 ssh_args=
