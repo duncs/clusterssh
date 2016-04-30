@@ -7,25 +7,49 @@ package App::ClusterSSH::Range;
 
 =head1 SYNOPSIS
 
-use App::ClusterSSH::Range;
-my $range=App::ClusterSSH::Range->new();
-my @list = $range->expand('range{0..5}');
+    use App::ClusterSSH::Range;
+    my $range=App::ClusterSSH::Range->new();
+    my @list = $range->expand('range{0..5}');
 
 =head1 DESCRIPTION
 
-This module adds in the numbered range specification as found in Bash 
-EXPANSIONS (see the bash S<man> page) before putting the same string 
-through C<bsd_glob>.
+Perform string expansion looking for ranges before then finishing off
+using C<File::Glob::bsd_glob>.
 
 =cut
 
 use File::Glob ':bsd_glob';
+
+=head1 METHODS
+
+=over 4
+
+=item $range = App::ClusterSSH::Range->new();
+
+Create a new object to perform range processing
+
+=cut
 
 sub new {
     my ( $class, %args ) = @_;
     my $self = {%args};
     return bless $self, $class;
 }
+
+=item @expanded = $range->expand(@strings);
+
+Expand the given strings.  Ranges are checked for and processed.  The 
+resulting string is then put through File::Glob::bsd_glob before being returned.
+
+Ranges are of the form:
+
+ base{start..stop}
+ a{0..3} => a0 a1 a2 a3 
+ b{4..6,9,12..14} => b4 b5 b6 b9 b12 b13 b14
+
+=back
+
+=cut
 
 sub expand {
     my ( $self, @items ) = @_;
