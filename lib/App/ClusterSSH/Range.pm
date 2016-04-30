@@ -18,7 +18,7 @@ using C<File::Glob::bsd_glob>.
 
 =cut
 
-use File::Glob ':bsd_glob';
+use File::Glob;
 
 =head1 METHODS
 
@@ -80,7 +80,7 @@ sub expand {
         }
     }
 
-    my @text = map { bsd_glob($_) } @newlist;
+    my @text = map { File::Glob::bsd_glob($_) } @newlist;
 
     return wantarray ? @text : "@text";
 }
