@@ -18,6 +18,7 @@ my $class = Module::Build->subclass(
             tracker => '$project_info{tracker}', 
             homepage => '$project_info{homepage}',
             repository => '$project_info{repository}',
+            ci => '$project_info{ci}',
         );
     } . q{
     # don't check for errors; 'build_requires' should get this sorted
