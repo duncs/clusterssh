@@ -71,8 +71,8 @@ sub expand {
                 ( $start, $end ) = split( /\.\./, $section, 2 );
             }
 
-            $start=$section if(!defined($start));
-            $end=$start if(!defined($end));
+            $start = $section if ( !defined($start) );
+            $end   = $start   if ( !defined($end) );
 
             foreach my $number ( $start .. $end ) {
                 push( @newlist, "$base$number" );
