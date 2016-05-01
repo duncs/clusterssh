@@ -52,6 +52,7 @@ sub config_file {
 package main;
 
 BEGIN {
+    $ENV{PATH} = $ENV{PATH} . ':' . $Bin . '/bin';
     use_ok("App::ClusterSSH::Cluster") || BAIL_OUT('failed to use module');
     use_ok("App::ClusterSSH::Config")  || BAIL_OUT('failed to use module');
 }
