@@ -1,52 +1,15 @@
 Overview of tasks
 =================
 
-Config file
-===========
-
-Convert from file ~/.cssrch to directory ~/.clusterssh
-For conversion process
-- clusters in .csshrc should be placed into 'default.cluster'
-- all other config should go into 'config'
-- create default menu file 
-
-New feature - if cssh -s symlinked to c_xxx then search for xxx as a cluster
-file in .clutersshrc and open that
-
-Getopts usage
-=============
-
-Set up similar to Nagios::Plugin where Getopts::Long is subclassed
-Sort out docs too
-
-Add in '-l' to list all available tags
-Add in '-l <tag>' to list all hosts for the given tag
-Idea from Markus Manzke
-
-Change way commands generated
-=============================
-
-Each script file (cssh, crsh, ctel, ccon, cscp, crsync) should define how
-the command is created/used and also none-common options
-
-# Something like the following (needs refinement):
-
-$app->setup_command(
-    "ssh %PORT% %USER% %HOSTNAME%",
-    {
-        %PORT% => [ $app->getopt->port, "-p %PORT%" ],
-        %USER% => [ $app->getopt->username, "-l %USER%" ],
-    }
-)
-
 Change way terminal windows are created
 =======================================
 
-Set up terminal windows in Tk to embedd termainl session into it, such as with
-xterm
+Set up terminal windows in Tk to embed termainal session into it, such 
+as with xterm:
+
   xterm -wid <wid> ....
 
-This may limit to terminal thats can reparent into a given window id though.
+This may limit what terminals can be used, though
 
 See also:
 http://www.perlmonks.org/?node_id=359764
