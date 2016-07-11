@@ -24,6 +24,7 @@ WriteMakefile
                    'Tk' => '800.022',
                    'Try::Tiny' => 0,
                    'X11::Protocol' => '0.56',
+                   'X11::Protocol::WM' => 0,
                    'version' => '0'
                  },
   'INSTALLDIRS' => 'site',

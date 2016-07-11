@@ -86,6 +86,7 @@ my $build = $class->new(
         'version'          => '0',
         'Tk'               => '800.022',
         'X11::Protocol'    => '0.56',
+        'X11::Protocol::WM' => '0',
         'Locale::Maketext' => 0,
         'Exception::Class' => '1.31',
         'Try::Tiny'        => 0,
