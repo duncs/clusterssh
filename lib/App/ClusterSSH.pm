@@ -892,11 +892,11 @@ sub show_console() {
 # the equivalent of //= but works in older Perls (e.g. 5.8)
 sub slash_slash_equal(\$$) {
 
-    if (! defined(${$_[0]})) {
-        ${$_[0]} = $_[1];
+    if ( !defined( ${ $_[0] } ) ) {
+        ${ $_[0] } = $_[1];
     }
 
-    return ${$_[0]};
+    return ${ $_[0] };
 }
 
 # leave function def open here so we can be flexible in how it's called
@@ -999,25 +999,31 @@ sub retile_hosts {
     $self->config->dump("noexit") if ( $self->options->debug > 1 );
 
     # now find the size of the window decorations
-    if (! exists($self->config->{internal_terminal_wm_decoration_left})) {
+    if ( !exists( $self->config->{internal_terminal_wm_decoration_left} ) ) {
 
         # use the first window as exemplary
-        my($wid) = $servers{(keys(%servers))[0]}{wid};
+        my ($wid) = $servers{ ( keys(%servers) )[0] }{wid};
 
-        if (defined($wid)) {
+        if ( defined($wid) ) {
+
             # get the WM decoration sizes
-            ($self->config->{internal_terminal_wm_decoration_left},
+            (   $self->config->{internal_terminal_wm_decoration_left},
                 $self->config->{internal_terminal_wm_decoration_right},
                 $self->config->{internal_terminal_wm_decoration_top},
-                $self->config->{internal_terminal_wm_decoration_bottom}) =
-                    X11::Protocol::WM::get_net_frame_extents($xdisplay, $wid);
+                $self->config->{internal_terminal_wm_decoration_bottom}
+                )
+                = X11::Protocol::WM::get_net_frame_extents( $xdisplay, $wid );
         }
 
         # in case the WM call failed we set some defaults
-        slash_slash_equal($self->config->{internal_terminal_wm_decoration_left}, 0);
-        slash_slash_equal($self->config->{internal_terminal_wm_decoration_right}, 0);
-        slash_slash_equal($self->config->{internal_terminal_wm_decoration_top}, 0);
-        slash_slash_equal($self->config->{internal_terminal_wm_decoration_bottom}, 0);
+        slash_slash_equal(
+            $self->config->{internal_terminal_wm_decoration_left}, 0 );
+        slash_slash_equal(
+            $self->config->{internal_terminal_wm_decoration_right}, 0 );
+        slash_slash_equal(
+            $self->config->{internal_terminal_wm_decoration_top}, 0 );
+        slash_slash_equal(
+            $self->config->{internal_terminal_wm_decoration_bottom}, 0 );
     }
 
     # now we have the info, plot first window position
