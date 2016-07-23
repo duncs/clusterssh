@@ -2,6 +2,7 @@
 - Add perl-5.8, 5.10 and 5.12 to Travis-CI automated testing
 - Fix building and testing on perl-5.8.9
 - Improve testing on systems that do not have xterm installed
+- Take into account WM decorations when tiling (Github pull request #66) (thanks to Andrew Stevenson)
 
 4.07 2016-04-30 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Fixed tests on systems where bash is not installed in /bin/bash (Github issue #60)
