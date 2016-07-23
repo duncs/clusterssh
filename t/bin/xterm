@@ -1,6 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env perl
 
 # small 'fake' script to allow xterm to be found when performing tests
 # on systems that do not have it
+
+warn "$_=$ENV{$_}",$/ for (sort keys %ENV) if ( $ENV{TEST_VERBOSE} );;
 
 exit 0
