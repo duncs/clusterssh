@@ -479,7 +479,7 @@ is( $trap->stderr,
 );
 
 SKIP: {
-    skip "Test inappropriate when running as root", 5, $< == 0;
+    skip "Test inappropriate when running as root", 5 if $< == 0;
     note('move of .csshrc failure');
     $ENV{HOME} = tempdir( CLEANUP => 1 );
     open( $csshrc, '>', $ENV{HOME} . '/.csshrc' );
