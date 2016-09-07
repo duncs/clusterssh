@@ -668,6 +668,11 @@ If the external command is given a C<-L> option it should output a list of tags 
         'L<KEY SHORTCUTS>'
     );
 
+    output '=item hide_menu = 0';
+    output $self->loc(
+        q{If set to 1, hide the menu bar (File, Hosts, Send, Help) in the console.},
+    );
+
     output '=item key_clientname = Alt-n';
     output $self->loc(
         q{Default key sequence to send cssh client names to client.  See [_1] for more information.},

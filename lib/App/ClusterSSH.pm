@@ -1325,6 +1325,9 @@ sub re_add_closed_sessions() {
 
 sub build_hosts_menu() {
     my ($self) = @_;
+
+    return if ( $self->config->{hide_menu} );
+
     $self->debug( 2, "Building hosts menu" );
 
     # first, empty the hosts menu from the last static entry + 1 on
@@ -1800,7 +1803,9 @@ sub create_menubar() {
     my ($self) = @_;
     $self->debug( 2, "create_menubar: started" );
     $menus{bar} = $windows{main_window}->Menu();
-    $windows{main_window}->configure( -menu => $menus{bar}, );
+
+    $windows{main_window}->configure( -menu => $menus{bar}, )
+        unless $self->config->{hide_menu};
 
     $menus{file} = $menus{bar}->cascade(
         -label     => 'File',

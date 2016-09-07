@@ -98,6 +98,7 @@ Readonly::Hash my %default_config => {
     command             => q{},
     title               => q{15CONFIG.T},
     comms               => q{ssh},
+    hide_menu           => 0,
     max_host_menu_items => 30,
 
     macros_enabled   => 'yes',
@@ -541,6 +542,7 @@ debug=0
 external_cluster_command=
 extra_cluster_file=
 extra_tag_file=
+hide_menu=0
 history_height=10
 history_width=40
 key_addhost=Control-Shift-plus

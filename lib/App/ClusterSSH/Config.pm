@@ -85,6 +85,7 @@ my %default_config = (
     history_height => 10,
 
     command             => q{},
+    hide_menu           => 0,
     max_host_menu_items => 30,
 
     macros_enabled   => 'yes',
