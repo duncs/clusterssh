@@ -513,7 +513,7 @@ would replace the <Alt-n> with the client's name in each window.}
     );
     output '=item ', $self->parent->config->{key_localname};
     output $self->loc(
-        q{Paste in the hostname of the server cssh is ebing run on});
+        q{Paste in the hostname of the server cssh is being run on});
     output '=item ', $self->parent->config->{key_quit};
     output $self->loc(
         'Quit the program and close all connections and windows.');
