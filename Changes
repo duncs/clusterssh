@@ -1,4 +1,4 @@
-4.08_01 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net>
+4.08 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Add perl-5.8, 5.10 and 5.12 to Travis-CI automated testing
 - Fix building and testing on perl-5.8.9
 - Improve testing on systems that do not have xterm installed
