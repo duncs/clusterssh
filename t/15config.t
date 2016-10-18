@@ -112,6 +112,7 @@ Readonly::Hash my %default_config => {
     menu_send_autotearoff          => 0,
     menu_host_autotearoff          => 0,
 
+    unique_servers    => 0,
     use_all_a_records => 0,
     use_natural_sort  => 0,
 
@@ -594,6 +595,7 @@ terminal_reserve_right=0
 terminal_reserve_top=5
 terminal_size=80x24
 terminal_title_opt=-T
+unique_servers=0
 unmap_on_redraw=no
 use_all_a_records=0
 use_hotkeys=yes

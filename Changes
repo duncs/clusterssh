@@ -4,6 +4,7 @@
 - Improve testing on systems that do not have xterm installed
 - Take into account WM decorations when tiling (Github pull request #66) (thanks to Andrew Stevenson)
 - Add option in the config file to hide the menu (Github issue #69)
+- Add 'unique_servers' into the configuration file to match command line option (Github issue #70)
 
 4.07 2016-04-30 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Fixed tests on systems where bash is not installed in /bin/bash (Github issue #60)

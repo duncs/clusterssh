@@ -99,6 +99,7 @@ my %default_config = (
     menu_send_autotearoff          => 0,
     menu_host_autotearoff          => 0,
 
+    unique_servers    => 0,
     use_all_a_records => 0,
 
     send_menu_xml_file => $ENV{HOME} . '/.clusterssh/send_menu',
