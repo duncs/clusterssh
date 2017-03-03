@@ -19,7 +19,7 @@ isa_ok( $base, 'App::ClusterSSH::Base' );
 
 diag('testing output') if ( $ENV{TEST_VERBOSE} );
 trap {
-    $base->output('testing');
+    $base->stdout_output('testing');
 };
 is( $trap->leaveby,           'return', 'returned ok' );
 is( $trap->die,               undef,    'returned ok' );

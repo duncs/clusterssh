@@ -112,7 +112,7 @@ sub debug_level {
     return $debug_level;
 }
 
-sub output {
+sub stdout_output {
     my ( $self, @text ) = @_;
     print @text, $/;
     return $self;
@@ -121,7 +121,7 @@ sub output {
 sub debug {
     my ( $self, $level, @text ) = @_;
     if ( $level <= $debug_level ) {
-        $self->output(@text);
+        $self->stdout_output(@text);
     }
     return $self;
 }
@@ -335,7 +335,7 @@ Using the App::ClusterSSH/L10N/{lang}.pm module convert the  given text to
 appropriate language.  See L<App::ClusterSSH::L10N> for more details.  Essentially 
 a wrapper to maketext in Locale::Maketext
 
-=item $obj->output(@);
+=item $obj->stdout_output(@);
 
 Output text on STDOUT.
 

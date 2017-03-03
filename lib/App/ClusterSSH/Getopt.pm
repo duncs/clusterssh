@@ -18,7 +18,7 @@ sub new {
     my ( $class, %args ) = @_;
 
     # basic setup that is over-rideable by each script as needs may be
-    # different depending ont he command used
+    # different depending on the command used
     my %setup = (
         usage => [
             '-h|--help', '[options] [[user@]<server>[:port]|<tag>] [...] ',
@@ -126,7 +126,7 @@ sub add_common_options {
     $self->add_option(
         spec => 'debug:+',
         help => $self->loc(
-            "Enable debugging.  Either a level can be provided or the option can be repeated multiple times.  Maximum level is 4."
+            "Enable debugging.  Either a level can be provided or the option can be repeated multiple times.  Maximum level is 9."
         ),
         default => 0,
     );
@@ -306,10 +306,14 @@ sub getopts {
     }
 
     $options->{debug} ||= 0;
-    $options->{debug} = 4 if ( $options->{debug} && $options->{debug} > 4 );
+    $options->{debug} = 9 if ( $options->{debug} && $options->{debug} > 9 );
 
     # Now all options are set to the correct values, generate accessor methods
     foreach my $option ( sort keys( %{ $self->{command_options} } ) ) {
+
+        # skip some accessors as they are already defined elsewhere
+        next if $option =~ m/^(debug)\W/;
+
         my $accessor = $self->{command_options}->{$option}->{accessor};
 
         my $default = $self->{command_options}->{$option}->{default};
@@ -333,7 +337,7 @@ sub getopts {
         }
     }
 
-    $self->set_debug_level( $self->debug );
+    $self->set_debug_level( $options->{debug} );
 
     $self->parent->config->load_configs( $self->config_file );
 
