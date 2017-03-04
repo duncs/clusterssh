@@ -29,13 +29,13 @@ sub new {
     my ( $class, %args ) = @_;
 
     my $config = {
-        lang  => 'en',
+        lang => 'en',
         %args,
     };
 
     my $self = bless $config, $class;
 
-    $self->set_debug_level( $config->{debug} ) if( $config->{debug} );
+    $self->set_debug_level( $config->{debug} ) if ( $config->{debug} );
     $self->set_lang( $config->{lang} );
 
     $self->debug(

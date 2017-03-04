@@ -119,8 +119,7 @@ Readonly::Hash my %default_config => {
     send_menu_xml_file => $ENV{HOME} . '/.clusterssh/send_menu',
 
     # other bits inheritted from App::ClusterSSH::Base
-    lang  => 'en',
-
+    lang => 'en',
     user => '',
 };
 my %expected = %default_config;
