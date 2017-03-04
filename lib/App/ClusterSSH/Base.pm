@@ -20,7 +20,7 @@ use Exception::Class (
 use version;
 our $VERSION = version->new('0.02');
 
-my $debug_level = 4;
+my $debug_level = 0;
 our $language = 'en';
 our $language_handle;
 our $app_configuration;
@@ -30,13 +30,12 @@ sub new {
 
     my $config = {
         lang  => 'en',
-        debug => 0,
         %args,
     };
 
     my $self = bless $config, $class;
 
-    $self->set_debug_level( $config->{debug} );
+    $self->set_debug_level( $config->{debug} ) if( $config->{debug} );
     $self->set_lang( $config->{lang} );
 
     $self->debug(
