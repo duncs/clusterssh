@@ -996,7 +996,7 @@ sub retile_hosts {
         );
     }
 
-    $self->config->dump("noexit") if ( $self->options->debug > 1 );
+    $self->config->dump("noexit") if ( $self->options->debug_level > 1 );
 
     # now find the size of the window decorations
     if ( !exists( $self->config->{internal_terminal_wm_decoration_left} ) ) {
@@ -1149,7 +1149,7 @@ sub capture_terminal() {
     my ($self) = @_;
     $self->debug( 0, "Stub for capturing a terminal window" );
 
-    return if ( $self->coptions->debug < 6 );
+    return if ( $self->options->debug_level < 6 );
 
     # should never see this - all experimental anyhow
 
