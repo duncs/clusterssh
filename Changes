@@ -2,6 +2,7 @@
 - Add perl-5.24 Travis-CI automated testing config
 - Correct a logic bug around the --debug option (Github issue #75)
 - Fix 'Re-add closed windows' not using the correct username (Github issue #72)
+- Update copyright year
 
 4.08 2016-10-18 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Add perl-5.8, 5.10 and 5.12 to Travis-CI automated testing
