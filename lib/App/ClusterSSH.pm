@@ -1387,7 +1387,7 @@ sub setup_repeat() {
                 if ( defined( $servers{$svr}{pid} ) ) {
                     if ( !kill( 0, $servers{$svr}{pid} ) ) {
                         $build_menu = 1;
-                        push( @dead_hosts, $servers{$svr}{givenname} );
+                        push( @dead_hosts, $servers{$svr}{connect_string} );
                         delete( $servers{$svr} );
                         $self->debug( 0, "$svr session closed" );
                     }
