@@ -119,7 +119,6 @@ Readonly::Hash my %default_config => {
     send_menu_xml_file => $ENV{HOME} . '/.clusterssh/send_menu',
 
     # other bits inheritted from App::ClusterSSH::Base
-    debug => 0,
     lang  => 'en',
 
     user => '',
@@ -533,13 +532,12 @@ $config = App::ClusterSSH::Config->new(
 trap {
     $config->dump();
 };
-my $expected = qq{# Configuration dump produced by "cssh -u"
+my $expected = qq{# Configuration dump produced by "cssh -d"
 auto_close=5
 auto_quit=yes
 console=console
 console_args=
 console_position=
-debug=0
 external_cluster_command=
 extra_cluster_file=
 extra_tag_file=
