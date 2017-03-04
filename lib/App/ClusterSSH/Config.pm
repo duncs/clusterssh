@@ -491,7 +491,7 @@ sub dump {
     my ( $self, $no_exit, ) = @_;
 
     $self->debug( 3, 'Dumping config to STDOUT' );
-    print( '# Configuration dump produced by "cssh -u"', $/ );
+    print( '# Configuration dump produced by "cssh -d"', $/ );
 
     foreach my $key ( sort keys %$self ) {
         my $comment = '';
