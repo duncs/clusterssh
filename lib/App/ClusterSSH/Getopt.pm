@@ -633,6 +633,11 @@ would replace the <Alt-n> with the client's name in each window.}
         'L<--autoquit>',
     );
 
+    output '=item auto_wm_decoration_offsets = no';
+    output $self->loc(
+        'Enable or disable alternative algorithm for calculating terminal positioning.',
+    );
+
     output '=item comms = ' . $self->parent->config->{comms};
     output $self->loc(
         'Sets the default communication method (initially taken from the name of the program, but can be overridden here).'

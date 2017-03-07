@@ -104,6 +104,8 @@ my %default_config = (
 
     send_menu_xml_file => $ENV{HOME} . '/.clusterssh/send_menu',
 
+    auto_wm_decoration_offsets => "no",    # Debian #842965
+
     # don't set username here as takes precendence over ssh config
     user => '',
 );

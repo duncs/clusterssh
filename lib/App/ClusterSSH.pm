@@ -1001,18 +1001,26 @@ sub retile_hosts {
     # now find the size of the window decorations
     if ( !exists( $self->config->{internal_terminal_wm_decoration_left} ) ) {
 
-        # use the first window as exemplary
-        my ($wid) = $servers{ ( keys(%servers) )[0] }{wid};
+   # Debian #842965 (https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=842965)
+   # disable behavior added in https://github.com/duncs/clusterssh/pull/66
+   # unless explicitly enabled with auto_wm_decoration_offsets => yes
 
-        if ( defined($wid) ) {
+        if ( $self->config->{auto_wm_decoration_offsets} =~ /yes/i ) {
 
-            # get the WM decoration sizes
-            (   $self->config->{internal_terminal_wm_decoration_left},
-                $self->config->{internal_terminal_wm_decoration_right},
-                $self->config->{internal_terminal_wm_decoration_top},
-                $self->config->{internal_terminal_wm_decoration_bottom}
-                )
-                = X11::Protocol::WM::get_net_frame_extents( $xdisplay, $wid );
+            # use the first window as exemplary
+            my ($wid) = $servers{ ( keys(%servers) )[0] }{wid};
+
+            if ( defined($wid) ) {
+
+                # get the WM decoration sizes
+                (   $self->config->{internal_terminal_wm_decoration_left},
+                    $self->config->{internal_terminal_wm_decoration_right},
+                    $self->config->{internal_terminal_wm_decoration_top},
+                    $self->config->{internal_terminal_wm_decoration_bottom}
+                    )
+                    = X11::Protocol::WM::get_net_frame_extents( $xdisplay,
+                    $wid );
+            }
         }
 
         # in case the WM call failed we set some defaults

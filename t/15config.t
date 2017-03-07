@@ -118,6 +118,9 @@ Readonly::Hash my %default_config => {
 
     send_menu_xml_file => $ENV{HOME} . '/.clusterssh/send_menu',
 
+    # Debian #842965
+    auto_wm_decoration_offsets => "no",
+
     # other bits inheritted from App::ClusterSSH::Base
     lang => 'en',
     user => '',
@@ -534,6 +537,7 @@ trap {
 my $expected = qq{# Configuration dump produced by "cssh -d"
 auto_close=5
 auto_quit=yes
+auto_wm_decoration_offsets=no
 console=console
 console_args=
 console_position=
