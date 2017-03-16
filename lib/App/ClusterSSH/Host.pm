@@ -37,21 +37,22 @@ sub new {
 
     # load in ssh hostname for later use
     if ( !%ssh_hostname_for || !$ssh_configs_read{ $self->{ssh_config} } ) {
-        $self->read_ssh_file($self, $self->{ssh_config});
+        $self->read_ssh_file( $self, $self->{ssh_config} );
 
         $self->debug( 5, 'Have the following ssh hostnames' );
-        $self->debug( 5, '  "', $_, '"' ) foreach ( sort keys %ssh_hostname_for );
+        $self->debug( 5, '  "', $_, '"' )
+            foreach ( sort keys %ssh_hostname_for );
     }
 
     return $self;
 }
 
 sub read_ssh_file($$) {
-    my ( $self ) = shift;
-    my ( $filename ) = glob(shift);
-    $self->debug(3, 'Reading SSH file: ', $filename);
+    my ($self)     = shift;
+    my ($filename) = glob(shift);
+    $self->debug( 3, 'Reading SSH file: ', $filename );
 
-    $ssh_configs_read{ $filename } = 1;
+    $ssh_configs_read{$filename} = 1;
 
     if ( open( my $ssh_config_fh, '<', $filename ) ) {
         while ( my $line = <$ssh_config_fh> ) {
@@ -70,8 +71,7 @@ sub read_ssh_file($$) {
         close($ssh_config_fh);
     }
     else {
-        $self->debug( 3, 'Unable to read ',
-            $filename, ': ', $!, $/ );
+        $self->debug( 3, 'Unable to read ', $filename, ': ', $!, $/ );
     }
 }
 
