@@ -1,0 +1,2 @@
+include 10host_ssh_config
+host server_ssh_included
