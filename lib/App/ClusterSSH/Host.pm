@@ -37,7 +37,7 @@ sub new {
 
     # load in ssh hostname for later use
     if ( !%ssh_hostname_for || !$ssh_configs_read{ $self->{ssh_config} } ) {
-        $self->read_ssh_file( $self, $self->{ssh_config} );
+        $self->read_ssh_file( $self->{ssh_config} );
 
         $self->debug( 5, 'Have the following ssh hostnames' );
         $self->debug( 5, '  "', $_, '"' )

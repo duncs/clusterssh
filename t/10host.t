@@ -752,6 +752,7 @@ trap {
 };
 is( $trap->leaveby, 'return', 'returned ok' );
 is( $trap->die,     undef,    'returned ok' );
+is ($trap->stdout,  '',       'No unexpected STDOUT' );
 isa_ok( $host, "App::ClusterSSH::Host" );
 is( $host, 'ssh_test', 'stringify works' );
 is( $host->check_ssh_hostname, 0, 'check_ssh_hostname ok for ssh_test', );
@@ -764,6 +765,7 @@ trap {
 };
 is( $trap->leaveby, 'return', 'returned ok' );
 is( $trap->die,     undef,    'returned ok' );
+is ($trap->stdout,  '',       'No unexpected STDOUT' );
 isa_ok( $host, "App::ClusterSSH::Host" );
 is( $host, 'ssh_test', 'stringify works' );
 is( $host->check_ssh_hostname, 0, 'check_ssh_hostname ok for ssh_test', );
@@ -788,6 +790,7 @@ for my $hostname (
     };
     is( $trap->leaveby, 'return', 'returned ok' );
     is( $trap->die,     undef,    'returned ok' );
+    is ($trap->stdout,  '',       'No unexpected STDOUT' );
     isa_ok( $host, "App::ClusterSSH::Host" );
     is( $host, $hostname, 'stringify works' );
     is( $host->check_ssh_hostname, 1,
