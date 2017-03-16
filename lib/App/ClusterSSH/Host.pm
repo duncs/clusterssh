@@ -37,28 +37,42 @@ sub new {
 
     # load in ssh hostname for later use
     if ( !%ssh_hostname_for || !$ssh_configs_read{ $self->{ssh_config} } ) {
-        $ssh_configs_read{ $self->{ssh_config} } = 1;
-        if ( open( my $ssh_config_fh, '<', $self->{ssh_config} ) ) {
-            while ( my $line = <$ssh_config_fh> ) {
-                chomp $line;
-                next unless ( $line =~ m/^\s*host\s+(.*)/i );
+        $self->read_ssh_file( $self->{ssh_config} );
 
-                # account for multiple declarations of hosts
-                $ssh_hostname_for{$_} = 1 foreach ( split( /\s+/, $1 ) );
-            }
-            close($ssh_config_fh);
-
-            $self->debug( 5, 'Have the following ssh hostnames' );
-            $self->debug( 5, '  "', $_, '"' )
-                foreach ( sort keys %ssh_hostname_for );
-        }
-        else {
-            $self->debug( 3, 'Unable to read ',
-                $self->{ssh_config}, ': ', $!, $/ );
-        }
+        $self->debug( 5, 'Have the following ssh hostnames' );
+        $self->debug( 5, '  "', $_, '"' )
+            foreach ( sort keys %ssh_hostname_for );
     }
 
     return $self;
+}
+
+sub read_ssh_file($$) {
+    my ($self)     = shift;
+    my ($filename) = glob(shift);
+    $self->debug( 3, 'Reading SSH file: ', $filename );
+
+    $ssh_configs_read{$filename} = 1;
+
+    if ( open( my $ssh_config_fh, '<', $filename ) ) {
+        while ( my $line = <$ssh_config_fh> ) {
+            chomp $line;
+
+            if ( $line =~ /^\s*include\s+(.+)/i ) {
+                $self->read_ssh_file($1);
+                next;
+            }
+
+            next unless ( $line =~ m/^\s*host\s+(.*)/i );
+
+            # account for multiple declarations of hosts
+            $ssh_hostname_for{$_} = 1 foreach ( split( /\s+/, $1 ) );
+        }
+        close($ssh_config_fh);
+    }
+    else {
+        $self->debug( 3, 'Unable to read ', $filename, ': ', $!, $/ );
+    }
 }
 
 sub get_hostname {
@@ -385,6 +399,11 @@ Given a host string, returns a host object.  Parses hosts such as
 
 Check the objects hostname to see whether or not it may be configured within 
 the users F< $HOME/.ssh/config > configuration file
+
+=item read_ssh_file
+
+Method to ease reading in ssh configuration files.  Used for grabbing
+hostnames for validation when used in clusters
 
 =over 4
 

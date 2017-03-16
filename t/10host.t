@@ -752,6 +752,7 @@ trap {
 };
 is( $trap->leaveby, 'return', 'returned ok' );
 is( $trap->die,     undef,    'returned ok' );
+is( $trap->stdout,  '',       'No unexpected STDOUT' );
 isa_ok( $host, "App::ClusterSSH::Host" );
 is( $host, 'ssh_test', 'stringify works' );
 is( $host->check_ssh_hostname, 0, 'check_ssh_hostname ok for ssh_test', );
@@ -764,37 +765,43 @@ trap {
 };
 is( $trap->leaveby, 'return', 'returned ok' );
 is( $trap->die,     undef,    'returned ok' );
+is( $trap->stdout,  '',       'No unexpected STDOUT' );
 isa_ok( $host, "App::ClusterSSH::Host" );
 is( $host, 'ssh_test', 'stringify works' );
 is( $host->check_ssh_hostname, 0, 'check_ssh_hostname ok for ssh_test', );
 is( $host->get_type, q{}, 'hostname type is correct for ssh_test', );
 
-for my $hostname (
-    'server1',  'server2',
-    'server3',  'server4',
-    'server-5', 'server5.domain.name',
-    'server-6.domain.name'
-    )
-{
+for my $ssh_file (qw/ 10host_ssh_config 10host_ssh_include/) {
+    my @hosts = (
+        'server1',  'server2',
+        'server3',  'server4',
+        'server-5', 'server5.domain.name',
+        'server-6.domain.name'
+    );
+    push @hosts, 'server_ssh_included' if($ssh_file =~ m/include/);
+    for my $hostname (@hosts)
+    {
 
-    $host = undef;
-    is( $host, undef, 'starting afresh for ssh hostname checks' );
+        $host = undef;
+        is( $host, undef, 'starting afresh for ssh hostname checks' );
 
-    trap {
-        $host = App::ClusterSSH::Host->new(
-            hostname   => $hostname,
-            ssh_config => $Bin . '/10host_ssh_config',
-        );
-    };
-    is( $trap->leaveby, 'return', 'returned ok' );
-    is( $trap->die,     undef,    'returned ok' );
-    isa_ok( $host, "App::ClusterSSH::Host" );
-    is( $host, $hostname, 'stringify works' );
-    is( $host->check_ssh_hostname, 1,
-        'check_ssh_hostname ok for ' . $hostname );
-    is( $host->get_realname, $hostname,   'realname set' );
-    is( $host->get_geometry, q{},         'geometry set' );
-    is( $host->get_type,     'ssh_alias', 'geometry set' );
+        trap {
+            $host = App::ClusterSSH::Host->new(
+                hostname   => $hostname,
+                ssh_config => $Bin . '/'. $ssh_file,
+            );
+        };
+        is( $trap->leaveby, 'return', 'returned ok' );
+        is( $trap->die,     undef,    'returned ok' );
+        is( $trap->stdout,  '',       'No unexpected STDOUT' );
+        isa_ok( $host, "App::ClusterSSH::Host" );
+        is( $host, $hostname, 'stringify works' );
+        is( $host->check_ssh_hostname, 1,
+            'check_ssh_hostname ok for ' . $hostname );
+        is( $host->get_realname, $hostname,   'realname set' );
+        is( $host->get_geometry, q{},         'geometry set' );
+        is( $host->get_type,     'ssh_alias', 'geometry set' );
+    }
 }
 
 done_testing();
