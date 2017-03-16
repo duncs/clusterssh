@@ -400,6 +400,11 @@ Given a host string, returns a host object.  Parses hosts such as
 Check the objects hostname to see whether or not it may be configured within 
 the users F< $HOME/.ssh/config > configuration file
 
+=item read_ssh_file
+
+Method to ease reading in ssh configuration files.  Used for grabbing
+hostnames for validation when used in clusters
+
 =over 4
 
 =item host
