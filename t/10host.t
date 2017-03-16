@@ -778,9 +778,8 @@ for my $ssh_file (qw/ 10host_ssh_config 10host_ssh_include/) {
         'server-5', 'server5.domain.name',
         'server-6.domain.name'
     );
-    push @hosts, 'server_ssh_included' if($ssh_file =~ m/include/);
-    for my $hostname (@hosts)
-    {
+    push @hosts, 'server_ssh_included' if ( $ssh_file =~ m/include/ );
+    for my $hostname (@hosts) {
 
         $host = undef;
         is( $host, undef, 'starting afresh for ssh hostname checks' );
@@ -788,7 +787,7 @@ for my $ssh_file (qw/ 10host_ssh_config 10host_ssh_include/) {
         trap {
             $host = App::ClusterSSH::Host->new(
                 hostname   => $hostname,
-                ssh_config => $Bin . '/'. $ssh_file,
+                ssh_config => $Bin . '/' . $ssh_file,
             );
         };
         is( $trap->leaveby, 'return', 'returned ok' );
