@@ -64,6 +64,16 @@ SF release: http://sourceforge.net/projects/clusterssh/files/2.%20ClusterSSH%20S
 EOF
             return $self;
         }
+
+        sub ACTION_dist {
+            my ($self, @args) = @_;
+
+            print "Creating README", $/;
+
+            qx{ $^X bin_PL/cssh --generate-pod | pod2text > README };
+
+            $self->SUPER::ACTION_dist;
+        }
     },
 );
 

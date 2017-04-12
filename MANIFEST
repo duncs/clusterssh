@@ -9,6 +9,7 @@ bin_PL/cssh
 bin_PL/ctel
 Build.PL
 Changes
+INSTALL
 lib/App/ClusterSSH/Base.pm
 lib/App/ClusterSSH/Cluster.pm
 lib/App/ClusterSSH/Config.pm

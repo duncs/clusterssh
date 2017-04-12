@@ -1,5 +1,6 @@
 4.10 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Allow 'include' directives when reading SSH configuration files (Github issue #77) (thanks to Azenet)
+- Generate README when creating the distribution from cssh man page so www.cpan.org and www.metacpan.org can display documentation
 
 4.09 2017-03-11 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Add perl-5.24 Travis-CI automated testing config
