@@ -5,7 +5,7 @@ use Cwd;
 use Module::Build;
 
 # touch README
-open(my $fh, '>>', 'README');
+open( my $fh, '>>', 'README' );
 close($fh);
 
 my %project_info = (
