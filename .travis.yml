@@ -9,3 +9,12 @@ perl:
   - "5.12"
   - "5.10"
   - "5.8"
+matrix:
+  include:
+    - perl: 5.24
+      env: COVERAGE=1
+  allow_failures:
+    - perl: blead
+sudo: false
+before_install:
+  - eval $(curl https://travis-perl.github.io/init) --auto
