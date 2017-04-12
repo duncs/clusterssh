@@ -1,4 +1,4 @@
-4.10 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net>
+4.10_01 2017-04-12 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Allow 'include' directives when reading SSH configuration files (Github issue #77) (thanks to Azenet)
 - Generate README when creating the distribution from cssh man page so www.cpan.org and www.metacpan.org can display documentation
 
