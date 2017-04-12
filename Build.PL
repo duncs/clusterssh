@@ -4,6 +4,10 @@ use Cwd;
 
 use Module::Build;
 
+# touch README
+open(my $fh, '>>', 'README');
+close($fh);
+
 my %project_info = (
     tracker    => 'https://github.com/duncs/clusterssh/issues',
     repository => 'http://github.com/duncs/clusterssh',
