@@ -4,6 +4,7 @@
 ^blib/
 ^_build/
 ^Build$
+^Build.run$
 ^cover_db/
 ^.git/
 ^.gitignore
