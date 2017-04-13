@@ -399,7 +399,7 @@ sub _generate_pod {
     output '=head1 ',    $self->loc('NAME');
     output "$Script - ", $self->loc("Cluster administration tool");
     output '=head1 ',    $self->loc('VERSION');
-    output $self->loc( "This documenation is for version: [_1]",
+    output $self->loc( "This documentation is for version: [_1]",
         $self->parent->VERSION );
     output '=head1 ', $self->loc('SYNOPSIS');
 
