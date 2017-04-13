@@ -1,20 +1,27 @@
 language: perl
 perl:
-  - "5.24"
-  - "5.22"
-  - "5.20"
-  - "5.18"
-  - "5.16"
-  - "5.14"
-  - "5.12"
-  - "5.10"
-  - "5.8"
+  - blead
+  - dev
+  - 5.24
+  - 5.22
+  - 5.20
+  - 5.18
+  - 5.16
+  - 5.14
+  - 5.12
+  - 5.10
+  - 5.8
 matrix:
   include:
     - perl: 5.24
       env: COVERAGE=1
   allow_failures:
     - perl: blead
+    - perl: blead-thr
 sudo: false
+env:
+  global:
+    - RELEASE_TESTING=1
+    - AUTHOR_TESTING=1
 before_install:
   - eval $(curl https://travis-perl.github.io/init) --auto
