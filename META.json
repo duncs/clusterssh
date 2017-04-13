@@ -103,7 +103,8 @@
       "x_Repository" : [
          "http://clusterssh.git.sourceforge.net/",
          "http://github.com/duncs/clusterssh"
-      ]
+      ],
+      "x_coverage" : "https://coveralls.io/github/duncs/clusterssh"
    },
    "version" : "4.10_02",
    "x_serialization_backend" : "JSON::PP version 2.27400"

@@ -65,6 +65,7 @@ requires:
   X11::Protocol::WM: '0'
   version: '0'
 resources:
+  Coverage: https://coveralls.io/github/duncs/clusterssh
   Repository:
     - http://clusterssh.git.sourceforge.net/
     - http://github.com/duncs/clusterssh
