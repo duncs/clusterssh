@@ -13,6 +13,7 @@ my %project_info = (
     repository => 'http://github.com/duncs/clusterssh',
     homepage   => 'http://github.com/duncs/clusterssh/wiki',
     ci         => 'https://travis-ci.org/duncs/clusterssh',
+    coverage   => 'https://coveralls.io/github/duncs/clusterssh',
 );
 
 my $class = Module::Build->subclass(
@@ -23,6 +24,7 @@ my $class = Module::Build->subclass(
             homepage => '$project_info{homepage}',
             repository => '$project_info{repository}',
             ci => '$project_info{ci}',
+            coverage => '$project_info{coverage}',
         );
     } . q{
     # don't check for errors; 'build_requires' should get this sorted
@@ -62,6 +64,7 @@ Home page: $project_info{homepage},
 Bug Reports and Issues: $project_info{tracker}
 Project Repository: $project_info{repository}
 Automated Testing: $project_info{ci}
+Automated test coverage: $project_info{coverage}
 CPAN release: http://search.cpan.org/~duncs/App-ClusterSSH-$v
 SF release: http://sourceforge.net/projects/clusterssh/files/2.%20ClusterSSH%20Series%204/App-ClusterSSH-${v}.tar.gz/download
 ==========
@@ -90,6 +93,7 @@ my $build = $class->new(
             ],
             bugtracker => $project_info{tracker},
             homepage   => $project_info{homepage},
+            coverage   => $project_info{coverage},
         },
     },
     module_name       => 'App::ClusterSSH',
