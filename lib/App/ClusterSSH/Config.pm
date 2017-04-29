@@ -108,6 +108,8 @@ my %default_config = (
 
     # don't set username here as takes precendence over ssh config
     user => '',
+    rows => -1,
+    cols => -1,
 );
 
 sub new {

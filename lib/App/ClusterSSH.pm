@@ -950,24 +950,43 @@ sub retile_hosts {
     $self->config->{internal_screen_width}  = $xdisplay->{width_in_pixels};
 
     # Now, work out how many columns of terminals we can fit on screen
-    $self->config->{internal_columns} = int(
-        (         $self->config->{internal_screen_width}
-                - $self->config->{screen_reserve_left}
-                - $self->config->{screen_reserve_right}
-        ) / (
-            $self->config->{internal_terminal_width}
-                + $self->config->{terminal_reserve_left}
-                + $self->config->{terminal_reserve_right}
-        )
-    );
+    if ( $self->config->{rows} != -1 || $self->config->{cols} != -1 ) {
+        if ( $self->config->{rows} != -1 ) {
+            $self->config->{internal_rows}    = $self->config->{rows};
+            $self->config->{internal_columns} = int(
+                (         $self->config->{internal_total}
+                        / $self->config->{internal_rows}
+                ) + 0.999
+            );
+        }
+        else {
+            $self->config->{internal_columns} = $self->config->{cols};
+            $self->config->{internal_rows}    = int(
+                (         $self->config->{internal_total}
+                        / $self->config->{internal_columns}
+                ) + 0.999
+            );
+        }
+    }
+    else {
+        $self->config->{internal_columns} = int(
+            (         $self->config->{internal_screen_width}
+                    - $self->config->{screen_reserve_left}
+                    - $self->config->{screen_reserve_right}
+            ) / (
+                $self->config->{internal_terminal_width}
+                    + $self->config->{terminal_reserve_left}
+                    + $self->config->{terminal_reserve_right}
+            )
+        );
 
-    # Work out the number of rows we need to use to fit everything on screen
-    $self->config->{internal_rows} = int(
-        (         $self->config->{internal_total}
-                / $self->config->{internal_columns}
-        ) + 0.999
-    );
-
+      # Work out the number of rows we need to use to fit everything on screen
+        $self->config->{internal_rows} = int(
+            (         $self->config->{internal_total}
+                    / $self->config->{internal_columns}
+            ) + 0.999
+        );
+    }
     $self->debug( 2, "Screen Columns: ", $self->config->{internal_columns} );
     $self->debug( 2, "Screen Rows: ",    $self->config->{internal_rows} );
 

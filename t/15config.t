@@ -124,6 +124,8 @@ Readonly::Hash my %default_config => {
     # other bits inheritted from App::ClusterSSH::Base
     lang => 'en',
     user => '',
+    rows => -1,
+    cols => -1,
 };
 my %expected = %default_config;
 is_deeply( $config, \%expected, 'default config is correct' );
@@ -538,6 +540,7 @@ my $expected = qq{# Configuration dump produced by "cssh -d"
 auto_close=5
 auto_quit=yes
 auto_wm_decoration_offsets=no
+cols=-1
 console=console
 console_args=
 console_position=
@@ -568,6 +571,7 @@ max_host_menu_items=30
 menu_host_autotearoff=0
 menu_send_autotearoff=0
 mouse_paste=Button-2
+rows=-1
 rsh=rsh
 rsh_args=
 screen_reserve_bottom=60
