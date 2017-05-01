@@ -126,6 +126,8 @@ Readonly::Hash my %default_config => {
     user => '',
     rows => -1,
     cols => -1,
+
+    fillscreen => 'no',
 };
 my %expected = %default_config;
 is_deeply( $config, \%expected, 'default config is correct' );
@@ -547,6 +549,7 @@ console_position=
 external_cluster_command=
 extra_cluster_file=
 extra_tag_file=
+fillscreen=no
 hide_menu=0
 history_height=10
 history_width=40

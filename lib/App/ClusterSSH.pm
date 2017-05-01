@@ -989,10 +989,11 @@ sub retile_hosts {
     }
     $self->debug( 2, "Screen Columns: ", $self->config->{internal_columns} );
     $self->debug( 2, "Screen Rows: ",    $self->config->{internal_rows} );
+    $self->debug( 2, "Fill scree: ",     $self->config->{fillscreen} );
 
     # Now adjust the height of the terminal to either the max given,
     # or to get everything on screen
-    {
+    if ( $self->config->{fillscreen} ne 'yes' ) {
         my $height = int(
             (   (         $self->config->{internal_screen_height}
                         - $self->config->{screen_reserve_top}
@@ -1005,15 +1006,41 @@ sub retile_hosts {
                 )
             ) / $self->config->{internal_rows}
         );
-
-        $self->debug( 2, "Terminal height=$height" );
-
         $self->config->{internal_terminal_height} = (
               $height > $self->config->{internal_terminal_height}
             ? $self->config->{internal_terminal_height}
             : $height
         );
     }
+    else {
+        $self->config->{internal_terminal_height} = int(
+            (   (         $self->config->{internal_screen_height}
+                        - $self->config->{screen_reserve_top}
+                        - $self->config->{screen_reserve_bottom}
+                ) - (
+                    $self->config->{internal_rows} * (
+                              $self->config->{terminal_reserve_top}
+                            + $self->config->{terminal_reserve_bottom}
+                    )
+                )
+            ) / $self->config->{internal_rows}
+        );
+        $self->config->{internal_terminal_width} = int(
+            (   (         $self->config->{internal_screen_width}
+                        - $self->config->{screen_reserve_left}
+                        - $self->config->{screen_reserve_right}
+                ) - (
+                    $self->config->{internal_columns} * (
+                              $self->config->{terminal_reserve_left}
+                            + $self->config->{terminal_reserve_right}
+                    )
+                )
+            ) / $self->config->{internal_columns}
+        );
+    }
+    $self->debug( 2, "Terminal h: ",
+        $self->config->{internal_terminal_height},
+        ", w: ", $self->config->{internal_terminal_width} );
 
     $self->config->dump("noexit") if ( $self->options->debug_level > 1 );
 
@@ -2409,3 +2436,4 @@ See http://dev.perl.org/licenses/ for more information.
 =cut
 
 1;
+

@@ -250,6 +250,13 @@ sub add_common_options {
         arg_desc => 'rows',
         help     => $self->loc('Number of rows'),
     );
+
+    $self->add_option(
+        spec => 'fillscreen',
+        help => $self->loc(
+            'Resize terminal windows to fill the whole available screen'),
+    );
+
     return $self;
 }
 
@@ -395,6 +402,8 @@ sub getopts {
     if ( $self->cols ) {
         $self->parent->config->{cols} = $self->cols;
     }
+    $self->parent->config->{fillscreen} = "yes"
+        if ( $self->fillscreen );
     return $self;
 }
 

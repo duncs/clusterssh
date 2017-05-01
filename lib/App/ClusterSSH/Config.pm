@@ -110,6 +110,9 @@ my %default_config = (
     user => '',
     rows => -1,
     cols => -1,
+
+    fillscreen => "no",
+
 );
 
 sub new {
