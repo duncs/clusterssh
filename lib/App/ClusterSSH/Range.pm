@@ -54,7 +54,7 @@ Ranges are of the form:
 sub expand {
     my ( $self, @items ) = @_;
 
-    my $range_regexp = qr/^\w+\{[\w\.,]+\}$/;
+    my $range_regexp = qr/^[\w-]+\{[\w\.,]+\}$/;
     my @newlist;
     foreach my $item (@items) {
         if ( $item !~ m/$range_regexp/ ) {

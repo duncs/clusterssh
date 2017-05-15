@@ -29,6 +29,10 @@ my %tests = (
     #    print join(q{ }, bsd_glob("o{a,b,c")).$/
     'o{a,b,c' => 'o',
     'p{0..2'  => 'p',
+
+    # Reported as bug in github issue #89
+    'q-0{0,1}'          => 'q-00 q-01',
+    'q-0{0..1}'         => 'q-00 q-01',
 );
 
 my $range = App::ClusterSSH::Range->new();

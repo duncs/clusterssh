@@ -1,6 +1,7 @@
 4.10_02 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Include coverage tests in the resources
 - Include the version of cssh in the utility documentation and README
+- Fix dashes (-) not being accepted in hostname range expansion (Github issue #89)
 
 4.10_01 2017-04-12 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Allow 'include' directives when reading SSH configuration files (Github issue #77) (thanks to Azenet)
