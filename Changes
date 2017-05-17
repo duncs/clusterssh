@@ -2,6 +2,7 @@
 - Include coverage tests in the resources
 - Include the version of cssh in the utility documentation and README
 - Fix dashes (-) not being accepted in hostname range expansion (Github issue #89)
+- Amend ranges to work on ports, FQDN's and IP addresses
 
 4.10_01 2017-04-12 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Allow 'include' directives when reading SSH configuration files (Github issue #77) (thanks to Azenet)

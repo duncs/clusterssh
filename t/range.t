@@ -33,6 +33,19 @@ my %tests = (
     # Reported as bug in github issue #89
     'q-0{0,1}'  => 'q-00 q-01',
     'q-0{0..1}' => 'q-00 q-01',
+
+    # expand pure ranges
+    '{10..12}' => '10 11 12',
+
+    # expand ports
+    'lh:{22001..22003}' => 'lh:22001 lh:22002 lh:22003',
+
+    # FQDN's
+    'lh{1..3}.dot.com' => 'lh1.dot.com lh2.dot.com lh3.dot.com',
+
+    # IP addresses
+    '127.0.0.{10..12}' => '127.0.0.10 127.0.0.11 127.0.0.12',
+    '127.0.{20..22}.1' => '127.0.20.1 127.0.21.1 127.0.22.1',
 );
 
 my $range = App::ClusterSSH::Range->new();

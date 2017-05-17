@@ -54,7 +54,7 @@ Ranges are of the form:
 sub expand {
     my ( $self, @items ) = @_;
 
-    my $range_regexp = qr/^[\w-]+\{[\w\.,]+\}$/;
+    my $range_regexp = qr/[\w-]*:?\{[\w\.,]+\}/;
     my @newlist;
     foreach my $item (@items) {
         if ( $item !~ m/$range_regexp/ ) {
@@ -62,7 +62,7 @@ sub expand {
             next;
         }
 
-        my ( $base, $spec ) = $item =~ m/^(.*)?\{(.*)\}$/;
+        my ( $base, $spec ) = $item =~ m/^(.*?\{(.*)\}.*?)$/;
 
         for my $section ( split( /,/, $spec ) ) {
             my ( $start, $end );
@@ -75,7 +75,8 @@ sub expand {
             $end   = $start   if ( !defined($end) );
 
             foreach my $number ( $start .. $end ) {
-                push( @newlist, "$base$number" );
+                ( my $changed = $base ) =~ s/\{$spec\}/$number/;
+                push( @newlist, $changed );
             }
         }
     }
