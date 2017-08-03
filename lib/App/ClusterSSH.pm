@@ -1,4 +1,4 @@
-package App::ClusterSSH;
+tackage App::ClusterSSH;
 
 use 5.008.004;
 use warnings;
@@ -2337,9 +2337,7 @@ slash_slash_equal($a, 0) is equivalent to $a //= 0
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-app-clusterssh at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=App-ClusterSSH>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
+Please report any bugs or feature requests via L<https://github.com/duncs/clusterssh/issues>. 
 
 =head1 SUPPORT
 
@@ -2351,9 +2349,9 @@ You can also look for information at:
 
 =over 4
 
-=item * RT: CPAN's request tracker
+=item * Github issue tracker
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=App-ClusterSSH>
+L<https://github.com/duncs/clusterssh/issues>
 
 =item * AnnoCPAN: Annotated CPAN documentation
 
@@ -2379,7 +2377,7 @@ Duncan Ferguson, C<< <duncan_j_ferguson at yahoo.co.uk> >>
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 1999-2016 Duncan Ferguson, all rights reserved.
+Copyright 1999-2017 Duncan Ferguson, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published
