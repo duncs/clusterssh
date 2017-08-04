@@ -20,7 +20,7 @@ use Exception::Class (
 use version;
 our $VERSION = version->new('0.02');
 
-my $debug_level = 0;
+my $debug_level = $ENV{CLUSTERSSH_DEBUG} || 0;
 our $language = 'en';
 our $language_handle;
 our $app_configuration;
