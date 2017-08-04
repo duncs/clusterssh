@@ -1,4 +1,4 @@
-tackage App::ClusterSSH;
+package App::ClusterSSH;
 
 use 5.008.004;
 use warnings;
