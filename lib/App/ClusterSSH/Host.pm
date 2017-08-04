@@ -309,9 +309,11 @@ sub check_ssh_hostname {
         $self->get_hostname );
 
     if ( $ssh_hostname_for{ $self->get_hostname } ) {
+        $self->debug( 5, 'Found' );
         return 1;
     }
     else {
+        $self->debug( 5, 'Not found' );
         return 0;
     }
 }
