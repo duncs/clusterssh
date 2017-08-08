@@ -950,30 +950,50 @@ sub retile_hosts {
     $self->config->{internal_screen_width}  = $xdisplay->{width_in_pixels};
 
     # Now, work out how many columns of terminals we can fit on screen
-    $self->config->{internal_columns} = int(
-        (         $self->config->{internal_screen_width}
-                - $self->config->{screen_reserve_left}
-                - $self->config->{screen_reserve_right}
-        ) / (
-            $self->config->{internal_terminal_width}
-                + $self->config->{terminal_reserve_left}
-                + $self->config->{terminal_reserve_right}
-        )
-    );
+    if ( $self->config->{rows} != -1 || $self->config->{cols} != -1 ) {
+        if ( $self->config->{rows} != -1 ) {
+            $self->config->{internal_rows}    = $self->config->{rows};
+            $self->config->{internal_columns} = int(
+                (         $self->config->{internal_total}
+                        / $self->config->{internal_rows}
+                ) + 0.999
+            );
+        }
+        else {
+            $self->config->{internal_columns} = $self->config->{cols};
+            $self->config->{internal_rows}    = int(
+                (         $self->config->{internal_total}
+                        / $self->config->{internal_columns}
+                ) + 0.999
+            );
+        }
+    }
+    else {
+        $self->config->{internal_columns} = int(
+            (         $self->config->{internal_screen_width}
+                    - $self->config->{screen_reserve_left}
+                    - $self->config->{screen_reserve_right}
+            ) / (
+                $self->config->{internal_terminal_width}
+                    + $self->config->{terminal_reserve_left}
+                    + $self->config->{terminal_reserve_right}
+            )
+        );
 
-    # Work out the number of rows we need to use to fit everything on screen
-    $self->config->{internal_rows} = int(
-        (         $self->config->{internal_total}
-                / $self->config->{internal_columns}
-        ) + 0.999
-    );
-
+      # Work out the number of rows we need to use to fit everything on screen
+        $self->config->{internal_rows} = int(
+            (         $self->config->{internal_total}
+                    / $self->config->{internal_columns}
+            ) + 0.999
+        );
+    }
     $self->debug( 2, "Screen Columns: ", $self->config->{internal_columns} );
     $self->debug( 2, "Screen Rows: ",    $self->config->{internal_rows} );
+    $self->debug( 2, "Fill scree: ",     $self->config->{fillscreen} );
 
     # Now adjust the height of the terminal to either the max given,
     # or to get everything on screen
-    {
+    if ( $self->config->{fillscreen} ne 'yes' ) {
         my $height = int(
             (   (         $self->config->{internal_screen_height}
                         - $self->config->{screen_reserve_top}
@@ -986,15 +1006,41 @@ sub retile_hosts {
                 )
             ) / $self->config->{internal_rows}
         );
-
-        $self->debug( 2, "Terminal height=$height" );
-
         $self->config->{internal_terminal_height} = (
               $height > $self->config->{internal_terminal_height}
             ? $self->config->{internal_terminal_height}
             : $height
         );
     }
+    else {
+        $self->config->{internal_terminal_height} = int(
+            (   (         $self->config->{internal_screen_height}
+                        - $self->config->{screen_reserve_top}
+                        - $self->config->{screen_reserve_bottom}
+                ) - (
+                    $self->config->{internal_rows} * (
+                              $self->config->{terminal_reserve_top}
+                            + $self->config->{terminal_reserve_bottom}
+                    )
+                )
+            ) / $self->config->{internal_rows}
+        );
+        $self->config->{internal_terminal_width} = int(
+            (   (         $self->config->{internal_screen_width}
+                        - $self->config->{screen_reserve_left}
+                        - $self->config->{screen_reserve_right}
+                ) - (
+                    $self->config->{internal_columns} * (
+                              $self->config->{terminal_reserve_left}
+                            + $self->config->{terminal_reserve_right}
+                    )
+                )
+            ) / $self->config->{internal_columns}
+        );
+    }
+    $self->debug( 2, "Terminal h: ",
+        $self->config->{internal_terminal_height},
+        ", w: ", $self->config->{internal_terminal_width} );
 
     $self->config->dump("noexit") if ( $self->options->debug_level > 1 );
 
@@ -2388,3 +2434,4 @@ See http://dev.perl.org/licenses/ for more information.
 =cut
 
 1;
+

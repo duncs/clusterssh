@@ -4,6 +4,7 @@
 - Fix dashes (-) not being accepted in hostname range expansion (Github issue #89)
 - Amend ranges to work on ports, FQDN's and IP addresses
 - Fix bug tracker links in the main documentation (Github issue #92)
+- New options to specify --rows, --columns and --fillscreen (Github pull request #88) (Thanks to AsharLohmar)
 
 4.10_01 2017-04-12 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Allow 'include' directives when reading SSH configuration files (Github issue #77) (thanks to Azenet)
