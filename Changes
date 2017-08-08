@@ -1,4 +1,4 @@
-4.10_02 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net>
+4.10_02 2017-08-08 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Include coverage tests in the resources
 - Include the version of cssh in the utility documentation and README
 - Fix dashes (-) not being accepted in hostname range expansion (Github issue #89)
