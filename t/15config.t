@@ -124,6 +124,10 @@ Readonly::Hash my %default_config => {
     # other bits inheritted from App::ClusterSSH::Base
     lang => 'en',
     user => '',
+    rows => -1,
+    cols => -1,
+
+    fillscreen => 'no',
 };
 my %expected = %default_config;
 is_deeply( $config, \%expected, 'default config is correct' );
@@ -538,12 +542,14 @@ my $expected = qq{# Configuration dump produced by "cssh -d"
 auto_close=5
 auto_quit=yes
 auto_wm_decoration_offsets=no
+cols=-1
 console=console
 console_args=
 console_position=
 external_cluster_command=
 extra_cluster_file=
 extra_tag_file=
+fillscreen=no
 hide_menu=0
 history_height=10
 history_width=40
@@ -568,6 +574,7 @@ max_host_menu_items=30
 menu_host_autotearoff=0
 menu_send_autotearoff=0
 mouse_paste=Button-2
+rows=-1
 rsh=rsh
 rsh_args=
 screen_reserve_bottom=60

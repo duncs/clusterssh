@@ -240,6 +240,22 @@ sub add_common_options {
         help =>
             $self->loc('Do not output extra text when using some options'),
     );
+    $self->add_option(
+        spec     => 'cols|x=i',
+        arg_desc => 'cols',
+        help     => $self->loc('Number of columns'),
+    );
+    $self->add_option(
+        spec     => 'rows|y=i',
+        arg_desc => 'rows',
+        help     => $self->loc('Number of rows'),
+    );
+
+    $self->add_option(
+        spec => 'fillscreen',
+        help => $self->loc(
+            'Resize terminal windows to fill the whole available screen'),
+    );
 
     return $self;
 }
@@ -380,6 +396,14 @@ sub getopts {
             = !$self->parent->config->{window_tiling} || 0;
     }
 
+    if ( $self->rows ) {
+        $self->parent->config->{rows} = $self->rows;
+    }
+    if ( $self->cols ) {
+        $self->parent->config->{cols} = $self->cols;
+    }
+    $self->parent->config->{fillscreen} = "yes"
+        if ( $self->fillscreen );
     return $self;
 }
 
