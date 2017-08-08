@@ -2,7 +2,8 @@ language: perl
 perl:
   - blead
   - dev
-  - 5.26
+#  No clean build due to removal of '.' from lib path
+#  - 5.26
   - 5.24
   - 5.22
   - 5.20
