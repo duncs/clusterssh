@@ -12,7 +12,6 @@ use lib "$Bin/../lib";
 use Test::More;
 use Test::Trap;
 use File::Which qw(which);
-use File::Temp qw(tempdir);
 use English '-no_match_vars';
 
 use Readonly;
