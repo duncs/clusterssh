@@ -12,7 +12,8 @@ perl:
   - 5.14
   - 5.12
   - 5.10
-  - 5.8
+#  stopping builds; is anyone really still using this version?
+#  - 5.8
 matrix:
   include:
     - perl: 5.24
