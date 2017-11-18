@@ -62,7 +62,7 @@ sub expand {
             next;
         }
 
-        my ( $base, $spec ) = $item =~ m/^(.*?\{(.*)\}.*?)$/;
+        my ( $base, $spec ) = $item =~ m/^(.*?\{(.*?)\}.*?)$/;
 
         for my $section ( split( /,/, $spec ) ) {
             my ( $start, $end );

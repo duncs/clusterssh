@@ -23,6 +23,8 @@ my %tests = (
     'l{0..2,7..9,e..g}' => 'l0 l1 l2 l7 l8 l9 le lf lg',
     'm{0,1}'            => 'm0 m1',
     'n0..2}'            => 'n0..2}',
+    'host{a,b}-test{1,2}' =>
+        'hosta-test1 hosta-test2 hostb-test1 hostb-test2',
 
     # NOTE: the following are not "as expected" in line with above tests
     # due to bsd_glob functionality.  See output from:
