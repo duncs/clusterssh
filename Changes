@@ -1,4 +1,4 @@
-4.10_03 ????-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net>
+4.10_03 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Fix for multiple range expansion, as in 'h{a,b}{1,2}' (Github issue #97) (Thanks to lazyfrosch)
 
 4.10_02 2017-08-08 Duncan Ferguson <duncan_ferguson@user.sf.net>
