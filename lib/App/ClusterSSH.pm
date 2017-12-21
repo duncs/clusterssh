@@ -1509,10 +1509,10 @@ sub create_windows() {
         -insertborderwidth => 4,
         -width             => 25,
         -class             => 'cssh',
-        )->pack(
+    )->pack(
         -fill   => "x",
         -expand => 1,
-        );
+    );
 
     $windows{history} = $windows{main_window}->Scrolled(
         "ROText",
