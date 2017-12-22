@@ -171,6 +171,22 @@ sub exit_prog() {
     my ($self) = @_;
     $self->debug( 3, "Exiting via normal routine" );
 
+    if ( $self->config->{external_command_pipe}
+        && -e $self->config->{external_command_pipe} )
+    {
+        close( $self->{external_command_pipe_fh} )
+            or warn(
+            "Could not close pipe "
+                . $self->config->{external_command_pipe} . ": ",
+            $!
+            );
+        $self->debug( 2, "Removing external command pipe" );
+        unlink( $self->config->{external_command_pipe} )
+            || warn "Could not unlink "
+            . $self->config->{external_command_pipe}
+            . ": ", $!;
+    }
+
     # for each of the client windows, send a kill.
     # to make sure we catch all children, even when they haven't
     # finished starting or received the kill signal, do it like this
@@ -1435,6 +1451,35 @@ sub setup_repeat() {
                 $self->config->{internal_count}
             );
 
+            # See if there are any commands in the external command pipe
+            {
+                my $ext_cmd;
+                sysread( $self->{external_command_pipe_fh}, $ext_cmd, 400 );
+                if ($ext_cmd) {
+                    my @external_commands = split( /\n/, $ext_cmd );
+                    for my $cmd_line (@external_commands) {
+                        chomp($cmd_line);
+                        my ( $cmd, @tags ) = split /\s+/, $cmd_line;
+                        $self->debug( 2,
+                            "Got external command: $cmd -> @tags" );
+
+                        for ($cmd) {
+                            if (m/^open$/) {
+                                my @new_hosts = $self->resolve_names(@tags);
+                                $self->open_client_windows(@new_hosts);
+                                $self->build_hosts_menu();
+                                last;
+                            }
+                            if (m/^retile$/) {
+                                $self->retile_hosts();
+                                last;
+                            }
+                            warn "Unknown external command: $cmd_line", $/;
+                        }
+                    }
+                }
+            }
+
 #$self->debug( 3, "Number of servers in hash is: ", scalar( keys(%servers) ) );
 
             foreach my $svr ( keys(%servers) ) {
@@ -2232,6 +2277,44 @@ sub run {
     $self->debug( 2, "Marking main window as user positioned" );
     $windows{main_window}->positionfrom('user')
         ;    # user puts it somewhere, leave it there
+
+    # set up external command pipe
+    if ( $self->config->{external_command_pipe} ) {
+
+        if ( -e $self->config->{external_command_pipe} ) {
+            $self->debug( 1, "Removing pre-existing external command pipe" );
+            unlink( $self->config->{external_command_pipe} )
+                or die(
+                "Could not remove "
+                    . $self->config->{external_command_pipe}
+                    . " prior to creation: "
+                    . $!,
+                $/
+                );
+        }
+
+        $self->debug( 2, "Creating external command pipe" );
+
+        mkfifo(
+            $self->config->{external_command_pipe},
+            oct( $self->config->{external_command_mode} )
+            )
+            or die(
+            "Could not create "
+                . $self->config->{external_command_pipe} . ": ",
+            $!
+            );
+
+        sysopen(
+            $self->{external_command_pipe_fh},
+            $self->config->{external_command_pipe},
+            O_NONBLOCK | O_RDONLY
+            )
+            or die(
+            "Could not open " . $self->config->{external_command_pipe} . ": ",
+            $!
+            );
+    }
 
     $self->debug( 2, "Setting up repeat" );
     $self->setup_repeat();

@@ -88,6 +88,8 @@ Readonly::Hash my %default_config => {
     extra_tag_file           => "",
     extra_cluster_file       => "",
     external_cluster_command => '',
+    external_command_mode    => '0600',
+    external_command_pipe    => '',
 
     unmap_on_redraw => "no",
 
@@ -547,6 +549,8 @@ console=console
 console_args=
 console_position=
 external_cluster_command=
+external_command_mode=0600
+external_command_pipe=
 extra_cluster_file=
 extra_tag_file=
 fillscreen=no

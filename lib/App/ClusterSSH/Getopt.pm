@@ -675,6 +675,22 @@ would replace the <Alt-n> with the client's name in each window.}
         q{Set the initial position of the console - if empty then let the window manager decide.  Format is '+<x>+<y>', i.e. '+0+0' is top left hand corner of the screen, '+0-70' is bottom left hand side of screen (more or less).}
     );
 
+    output '=item external_command_mode = 0600';
+    output $self->loc(q{File mode bits for the external_command_pipe.});
+
+    output '=item external_command_pipe = <null>';
+    output $self->loc(
+        q{Define the full path to an external command pipe that can be written to for controlling some aspects of ClusterSSH, such as opening sessions to more clusters.
+
+Commands:
+
+C<< open <tag|hostname> >> - open new sessions to provided tag or hostname
+
+C<< retile >> - force window retiling
+    
+e.g.: C<< echo 'open localhost' >> /path/to/external_command_pipe >>}
+    );
+
     output '=item external_cluster_command = <null>';
     output $self->loc(
         q{Define the full path to an external command that can be used to resolve tags to host names.  This command can be written in any language.  The script must accept a list of tags to resolve and output a list of hosts (space separated on a single line).  Any tags that cannot be resolved should be returned unchanged.

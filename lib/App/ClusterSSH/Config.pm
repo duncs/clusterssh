@@ -77,6 +77,8 @@ my %default_config = (
     extra_tag_file           => '',
     extra_cluster_file       => '',
     external_cluster_command => '',
+    external_command_mode    => '0600',
+    external_command_pipe    => '',
 
     unmap_on_redraw => "no",    # Debian #329440
 
