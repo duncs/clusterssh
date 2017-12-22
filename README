@@ -2,7 +2,7 @@ NAME
     cssh - Cluster administration tool
 
 VERSION
-    This documentation is for version: 4.10_02
+    This documentation is for version: 4.11
 
 SYNOPSIS
     cssh [-a '<command>'] [-K <seconds>] [-q] [-c '<filename>'] [-x <cols>]
@@ -340,6 +340,23 @@ FILES
             window manager decide. Format is '+<x>+<y>', i.e. '+0+0' is top
             left hand corner of the screen, '+0-70' is bottom left hand side
             of screen (more or less).
+
+        external_command_mode = 0600
+            File mode bits for the external_command_pipe.
+
+        external_command_pipe = <null>
+            Define the full path to an external command pipe that can be
+            written to for controlling some aspects of ClusterSSH, such as
+            opening sessions to more clusters.
+
+            Commands:
+
+            "open <tag|hostname>" - open new sessions to provided tag or
+            hostname
+
+            "retile" - force window retiling
+
+            e.g.: "echo 'open localhost'" /path/to/external_command_pipe >>
 
         external_cluster_command = <null>
             Define the full path to an external command that can be used to

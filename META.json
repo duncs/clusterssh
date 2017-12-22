@@ -4,13 +4,13 @@
       "Duncan Ferguson <duncan_j_ferguson@yahoo.co.uk>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.4216",
+   "generated_by" : "Module::Build version 0.4224",
    "license" : [
       "perl_5"
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
-      "version" : "2"
+      "version" : 2
    },
    "name" : "App-ClusterSSH",
    "prereqs" : {
@@ -20,6 +20,7 @@
             "File::Slurp" : "0",
             "File::Temp" : "0",
             "File::Which" : "0",
+            "Perl::Tidy" : "20171214",
             "Readonly" : "0",
             "Test::Differences" : "0",
             "Test::DistManifest" : "0",
@@ -48,14 +49,14 @@
             "Try::Tiny" : "0",
             "X11::Protocol" : "0.56",
             "X11::Protocol::WM" : "0",
-            "version" : "0"
+            "version" : "0.77"
          }
       }
    },
    "provides" : {
       "App::ClusterSSH" : {
          "file" : "lib/App/ClusterSSH.pm",
-         "version" : "4.10_02"
+         "version" : "4.11"
       },
       "App::ClusterSSH::Base" : {
          "file" : "lib/App/ClusterSSH/Base.pm",
@@ -91,7 +92,7 @@
          "file" : "lib/App/ClusterSSH/Range.pm"
       }
    },
-   "release_status" : "testing",
+   "release_status" : "stable",
    "resources" : {
       "bugtracker" : {
          "web" : "https://github.com/duncs/clusterssh/issues"
@@ -106,6 +107,6 @@
       ],
       "x_coverage" : "https://coveralls.io/github/duncs/clusterssh"
    },
-   "version" : "4.10_02",
-   "x_serialization_backend" : "JSON::PP version 2.27400"
+   "version" : "4.11",
+   "x_serialization_backend" : "JSON::PP version 2.94"
 }
