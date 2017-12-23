@@ -142,7 +142,15 @@ sub config {
         );
     }
 
-    return $app_configuration;
+    return $self->{parent}->{config} if $self->{parent} && $self->{parent}->{config};
+
+    #return $app_configuration;
+}
+
+sub options {
+    my ($self) = @_;
+    return $self->{parent}->{options} if $self->{parent} && $self->{parent}->{options};
+    return undef;
 }
 
 sub set_config {
@@ -268,6 +276,30 @@ sub load_file {
 sub parent {
     my ($self) = @_;
     return $self->{parent};
+}
+
+sub sort {
+    my ($self) = @_;
+
+    my $sort = sub { sort @_ };
+
+    return $sort unless defined $self->config()->{'use_natural_sort'};
+
+    # if the user has asked for natural sorting we need to include an extra
+    # module
+    if ( $self->config()->{'use_natural_sort'} ) {
+        eval { Module::Load::load('Sort::Naturally'); };
+        if ($@) {
+            warn(
+                "natural sorting requested but unable to load Sort::Naturally: $@\n"
+            );
+        }
+        else {
+            $sort = sub { Sort::Naturally::nsort(@_) };
+        }
+    }
+
+    return $sort;
 }
 
 1;
