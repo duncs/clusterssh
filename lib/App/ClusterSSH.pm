@@ -3,7 +3,7 @@ package App::ClusterSSH;
 use 5.008.004;
 use warnings;
 use strict;
-use version; our $VERSION = version->new('4.11');
+use version; our $VERSION = version->new('4.12');
 
 use Carp qw/cluck :DEFAULT/;
 
@@ -1452,7 +1452,7 @@ sub setup_repeat() {
             );
 
             # See if there are any commands in the external command pipe
-            {
+            if ( defined $self->{external_command_pipe_fh} ) {
                 my $ext_cmd;
                 sysread( $self->{external_command_pipe_fh}, $ext_cmd, 400 );
                 if ($ext_cmd) {

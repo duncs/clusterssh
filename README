@@ -2,7 +2,7 @@ NAME
     cssh - Cluster administration tool
 
 VERSION
-    This documentation is for version: 4.11
+    This documentation is for version: 4.12
 
 SYNOPSIS
     cssh [-a '<command>'] [-K <seconds>] [-q] [-c '<filename>'] [-x <cols>]

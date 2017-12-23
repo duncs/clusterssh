@@ -1,3 +1,6 @@
+4.12 2017-12-23 Duncan Ferguson <duncan_ferguson@user.sf.net>
+- Fix 'undefined value' error
+
 4.11 2017-12-22 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Fix for multiple range expansion, as in 'h{a,b}{1,2}' (Github issue #97) (Thanks to lazyfrosch)
 - Upgrade Perl::Tidy requirement to version 20171214 (Github issue #99) (Thanks to eserte)
