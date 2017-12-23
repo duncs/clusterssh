@@ -1,3 +1,6 @@
+4.12_01 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net>
+- Ensure ssh_args is keep unset if it is emptied in the configuration file
+
 4.12 2017-12-23 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Fix 'undefined value' error
 

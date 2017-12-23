@@ -3,7 +3,7 @@ package App::ClusterSSH;
 use 5.008.004;
 use warnings;
 use strict;
-use version; our $VERSION = version->new('4.12');
+use version; our $VERSION = version->new('4.12_01');
 
 use Carp qw/cluck :DEFAULT/;
 
@@ -2140,7 +2140,7 @@ sub run {
     # options is not the default value otherwise the default options
     # value is used instead of the config file
     if ( $self->config->{comms} eq 'ssh' ) {
-        if ( $self->config->{ssh_args} ) {
+        if ( defined $self->config->{ssh_args} ) {
             if (   $self->options->options
                 && $self->options->options ne
                 $self->options->options_default )
