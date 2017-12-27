@@ -63,6 +63,7 @@ my $class = Module::Build->subclass(
 Home page: $project_info{homepage},
 Bug Reports and Issues: $project_info{tracker}
 Project Repository: $project_info{repository}
+Full Changes log: $project_info{repository}/blob/release-$v/Changes
 Automated Testing: $project_info{ci}
 Automated test coverage: $project_info{coverage}
 CPAN release: http://search.cpan.org/~duncs/App-ClusterSSH-$v
