@@ -22,7 +22,6 @@ use POSIX qw/:sys_wait_h strftime mkfifo/;
 use File::Temp qw/:POSIX/;
 use Fcntl;
 use File::Basename;
-use Module::Load;
 use Net::hostent;
 use Sys::Hostname;
 use English;

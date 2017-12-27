@@ -109,6 +109,7 @@ like(
 );
 
 $base = undef;
+my $get_config;
 trap {
     $base = App::ClusterSSH::Base->new( debug => 7, );
 };
@@ -123,9 +124,14 @@ like(
     'got expected new() output'
 );
 
+trap {
+    $get_config = $base->config();
+};
+$trap->quiet("No issus with config call");
+is( $get_config, undef, "config set undef as expected" );
+
 # config tests
 $base = undef;
-my $get_config;
 my $object;
 trap {
     $base = App::ClusterSSH::Base->new( debug => 3, );
@@ -242,5 +248,104 @@ isa_ok( $trap->die, 'App::ClusterSSH::Exception',
     'Caught exception object OK' );
 is( $trap->die, q{"type" arg not passed}, 'missing type arg die message' );
 is( $trap->stderr, '', 'Expecting no STDERR' );
+
+my $get_options;
+
+$base = undef;
+trap {
+    $base = App::ClusterSSH::Base->new( debug => 3 );
+};
+isa_ok( $base, 'App::ClusterSSH::Base' );
+is( $trap->leaveby, 'return', 'returned ok' );
+is( $trap->die,     undef,    'returned ok' );
+is( $trap->stderr,  '',       'Expecting no STDERR' );
+is( $trap->stdout,  '',       'Expecting no STDOUT' );
+is( $base->parent,  undef,    'Expecting no parent set' );
+
+trap {
+    $get_options = $base->options();
+};
+$trap->quiet("No extra output");
+is( $get_options, undef, "options call correctly unset" );
+
+$base = undef;
+trap {
+    $base = App::ClusterSSH::Base->new( debug => 3, parent => 'guardian' );
+};
+isa_ok( $base, 'App::ClusterSSH::Base' );
+is( $trap->leaveby, 'return',   'returned ok' );
+is( $trap->die,     undef,      'returned ok' );
+is( $trap->stderr,  '',         'Expecting no STDERR' );
+is( $trap->stdout,  '',         'Expecting no STDOUT' );
+is( $base->parent,  'guardian', 'Expecting no STDOUT' );
+
+trap {
+    $get_options = $base->options();
+};
+$trap->quiet("No extra output");
+is( $get_options, undef, "options call correctly unset" );
+
+$base = undef;
+trap {
+    $base = App::ClusterSSH::Base->new(
+        debug  => 3,
+        parent => { config => 'set', options => 'set' }
+    );
+};
+isa_ok( $base, 'App::ClusterSSH::Base' );
+is( $trap->leaveby,          'return', 'returned ok' );
+is( $trap->die,              undef,    'returned ok' );
+is( $trap->stderr,           '',       'Expecting no STDERR' );
+is( $trap->stdout,           '',       'Expecting no STDOUT' );
+is( ref( $base->parent ),    'HASH',   'Expecting no STDOUT' );
+is( $base->parent->{config}, 'set',    'Expecting no STDOUT' );
+
+trap {
+    $get_options = $base->options();
+};
+is( ref($get_options), '',    "options call correctly set" );
+is( $get_options,      'set', "options call hash value correctly set" );
+$trap->quiet("No extra output");
+
+my $sort;
+trap {
+    $sort = $base->sort;
+};
+$trap->quiet("No errors getting 'sort'");
+
+# NOTE: trap doesnt like passing code refs, so recreate here
+$sort = $base->sort;
+is( ref($sort), 'CODE', "got results from sort" );
+my @sorted = $sort->( 4, 8, 1, 5, 3 );
+my @expected = ( 1, 3, 4, 5, 8 );
+is_deeply( \@sorted, \@expected, "simple sort results okay" );
+
+$base = undef;
+trap {
+    $base = App::ClusterSSH::Base->new(
+        debug  => 3,
+        parent => { config => { use_natural_sort => 1 }, options => 'set' }
+    );
+};
+isa_ok( $base, 'App::ClusterSSH::Base' );
+is( $trap->leaveby, 'return', 'returned ok' );
+is( $trap->die,     undef,    'returned ok' );
+is( $trap->stderr,  '',       'Expecting no STDERR' );
+is( $trap->stdout,  '',       'Expecting no STDOUT' );
+
+trap {
+    $sort = $base->sort;
+};
+
+# May get an error here if Sort::Naturally is not installed
+# $trap->quiet("No errors getting 'sort'");
+is( $trap->leaveby, 'return', 'returned ok' );
+is( $trap->die,     undef,    'returned ok' );
+#
+$sort = $base->sort;
+is( ref($sort), 'CODE', "got results from sort" );
+@sorted = $sort->( 4, 8, 1, 5, 3 );
+@expected = ( 1, 3, 4, 5, 8 );
+is_deeply( \@sorted, \@expected, "simple sort results okay" );
 
 done_testing();

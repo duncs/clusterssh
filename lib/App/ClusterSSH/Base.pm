@@ -5,6 +5,8 @@ use strict;
 use Carp;
 use App::ClusterSSH::L10N;
 
+use Module::Load;
+
 use Exception::Class (
     'App::ClusterSSH::Exception',
     'App::ClusterSSH::Exception::Config' => {
@@ -154,7 +156,7 @@ sub options {
     my ($self) = @_;
     return $self->{parent}->{options}
         if $self->{parent} && $self->{parent}->{options};
-    return undef;
+    return;
 }
 
 sub set_config {
@@ -283,11 +285,13 @@ sub parent {
 }
 
 sub sort {
-    my ($self) = @_;
+    my $self = shift;
 
     my $sort = sub { sort @_ };
 
-    return $sort unless defined $self->config()->{'use_natural_sort'};
+    return $sort
+        unless ref( $self->config() ) eq "HASH"
+        && $self->config()->{'use_natural_sort'};
 
     # if the user has asked for natural sorting we need to include an extra
     # module
