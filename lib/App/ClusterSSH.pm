@@ -644,7 +644,7 @@ Duncan Ferguson, C<< <duncan_j_ferguson at yahoo.co.uk> >>
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 1999-2017 Duncan Ferguson, all rights reserved.
+Copyright 1999-2018 Duncan Ferguson, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published

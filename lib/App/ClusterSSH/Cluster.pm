@@ -372,7 +372,7 @@ Duncan Ferguson, C<< <duncan_j_ferguson at yahoo.co.uk> >>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 1999-2016 Duncan Ferguson.
+Copyright 1999-2018 Duncan Ferguson.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published
