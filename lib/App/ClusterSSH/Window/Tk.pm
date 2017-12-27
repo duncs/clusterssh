@@ -749,7 +749,7 @@ sub show_console() {
     $windows{main_window}->update();
 
     select( undef, undef, undef, 0.2 );    #sleep for a mo
-    $windows{main_window}->withdraw;
+    $windows{main_window}->withdraw  if $windows{main_window}->state ne "withdrawn";
 
     # Sleep for a moment to give WM time to bring console back
     select( undef, undef, undef, 0.5 );
