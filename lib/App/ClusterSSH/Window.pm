@@ -39,3 +39,41 @@ sub new {
 }
 
 1;
+
+=pod
+
+=head1 NAME
+
+App::ClusterSSH::Window - Base obejct for different types of window module
+
+=head1 DESCRIPTION
+
+Base object to allow for configuring and using different types of windows libraries
+
+=head1 METHODS
+
+=over 4
+
+=item $obj = App::ClusterSSH::Window->new({});
+
+Creates object
+
+=back
+
+=head1 AUTHOR
+
+Duncan Ferguson, C<< <duncan_j_ferguson at yahoo.co.uk> >>
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright 1999-2016 Duncan Ferguson.
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of either: the GNU General Public License as published
+by the Free Software Foundation; or the Artistic License.
+
+See http://dev.perl.org/licenses/ for more information.
+
+=cut
+
+1;

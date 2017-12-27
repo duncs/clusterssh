@@ -142,14 +142,18 @@ sub config {
         );
     }
 
-    return $self->{parent}->{config} if $self->{parent} && $self->{parent}->{config};
+    return $self->{parent}->{config}
+        if $self->{parent}
+        && ref $self->{parent} eq "HASH"
+        && $self->{parent}->{config};
 
-    #return $app_configuration;
+    return $app_configuration;
 }
 
 sub options {
     my ($self) = @_;
-    return $self->{parent}->{options} if $self->{parent} && $self->{parent}->{options};
+    return $self->{parent}->{options}
+        if $self->{parent} && $self->{parent}->{options};
     return undef;
 }
 
@@ -370,10 +374,14 @@ a wrapper to maketext in Locale::Maketext
 
 Output text on STDOUT.
 
-=item $ovj->parent;
+=item $obj->parent;
 
-Reutrned the object that is the parent of this one, if it was set when the 
+Returned the object that is the parent of this one, if it was set when the 
 object was created
+
+=item %obj->options;
+
+Accessor to configured options, if it is set up by this point
 
 =item $obj->exit;
 
@@ -387,6 +395,11 @@ hasnt been called
 =item $obj->set_config($config);
 
 Set the config to the given value - croaks if has already been called
+
+=item $sort = $obj->sort
+
+Code reference used to sort lists; if configured (and installed) use
+Sort;:Naturally, else use perl sort
 
 =item %results = $obj->load_file( filename => '/path/to/file', type => '(cluster|config}' )
 

@@ -100,7 +100,6 @@ sub window {
     return $self->{window};
 }
 
-
 # Set up UTF-8 on STDOUT
 binmode STDOUT, ":utf8";
 
@@ -594,6 +593,10 @@ slash_slash_equal($a, 0) is equivalent to $a //= 0
 =item toggle_active_state
 
 =item update_display_text
+
+=item window
+
+Method to access assosiated window module
 
 =item write_default_user_config
                                            

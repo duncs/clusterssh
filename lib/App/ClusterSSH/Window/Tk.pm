@@ -749,7 +749,8 @@ sub show_console() {
     $windows{main_window}->update();
 
     select( undef, undef, undef, 0.2 );    #sleep for a mo
-    $windows{main_window}->withdraw  if $windows{main_window}->state ne "withdrawn";
+    $windows{main_window}->withdraw
+        if $windows{main_window}->state ne "withdrawn";
 
     # Sleep for a moment to give WM time to bring console back
     select( undef, undef, undef, 0.5 );
@@ -946,8 +947,11 @@ sub retile_hosts {
         }
 
         # in case the WM call failed we set some defaults
-        for my $v (qw/ internal_terminal_wm_decoration_left internal_terminal_wm_decoration_right internal_terminal_wm_decoration_top internal_terminal_wm_decoration_bottom /) {
-            $self->config->{ $v } = 0 if(!defined $self->config->{ $v });
+        for my $v (
+            qw/ internal_terminal_wm_decoration_left internal_terminal_wm_decoration_right internal_terminal_wm_decoration_top internal_terminal_wm_decoration_bottom /
+            )
+        {
+            $self->config->{$v} = 0 if ( !defined $self->config->{$v} );
         }
     }
 
@@ -1129,7 +1133,7 @@ sub setup_repeat() {
             );
 
             # See if there are any commands in the external command pipe
-            if(defined $self->{external_command_pipe_fh} ) {
+            if ( defined $self->{external_command_pipe_fh} ) {
                 my $ext_cmd;
                 sysread( $self->{external_command_pipe_fh}, $ext_cmd, 400 );
                 if ($ext_cmd) {
@@ -1254,7 +1258,8 @@ sub create_windows() {
         );
     }
 
-    $windows{main_window}->bind( '<Destroy>' => sub { $self->parent->exit_prog } );
+    $windows{main_window}
+        ->bind( '<Destroy>' => sub { $self->parent->exit_prog } );
 
     # remove all Paste events so we set them up cleanly
     $windows{main_window}->eventDelete('<<Paste>>');
@@ -1344,7 +1349,8 @@ sub create_windows() {
     );
 
     my @tags = $self->{parent}->cluster->list_tags();
-    my @external_tags = map {"$_ *"} $self->parent->cluster->list_external_clusters();
+    my @external_tags
+        = map {"$_ *"} $self->parent->cluster->list_external_clusters();
     push( @tags, @external_tags );
 
     if ( $self->config->{max_addhost_menu_cluster_items}
@@ -1532,7 +1538,7 @@ sub key_event {
                     $self->retile_hosts("force")
                         if ( $hotkey eq "key_retilehosts" );
                     $self->show_history() if ( $hotkey eq "key_history" );
-                    $self->parent->exit_prog()    if ( $hotkey eq "key_quit" );
+                    $self->parent->exit_prog() if ( $hotkey eq "key_quit" );
                 }
                 return;
             }
@@ -1798,7 +1804,7 @@ sub populate_send_menu {
 }
 
 sub console_focus {
-    my($self) = @_;
+    my ($self) = @_;
 
     $self->debug( 2, "Sorting focus on console" );
     $windows{text_entry}->focus();
@@ -1812,11 +1818,113 @@ sub console_focus {
 }
 
 sub mainloop {
-    my($self) = @_;
+    my ($self) = @_;
 
     $self->debug( 2, "Starting MainLoop" );
     MainLoop();
     return $self;
 }
+
+1;
+
+=pod
+
+=head1 NAME
+
+App::ClusterSSH::Window::TK - Base Tk windows object
+
+=head1 DESCRIPTION
+
+Base object for using Tk - must be pulled into App::ClusterSSH::Window for use
+
+=head1 METHODS
+
+=over 4
+
+=item add_host_by_name
+
+=item build_hosts_menu
+
+=item capture_map_events
+
+=item change_main_window_title
+
+=item close_inactive_sessions
+
+=item console_focus
+
+=item create_menubar
+
+=item create_windows
+
+=item get_font_size
+
+=item get_keycode_state
+
+=item initialise
+
+=item key_event
+
+=item load_keyboard_map
+
+=item mainloop
+
+=item open_client_windows
+
+=item pick_color
+
+=item populate_send_menu
+
+=item populate_send_menu_entries_from_xml
+
+=item re_add_closed_sessions
+
+=item retile_hosts
+
+=item send_resizemove
+
+=item send_text
+
+=item send_text_to_all_servers
+
+=item send_variable_text_to_all_servers
+
+=item set_all_active
+
+=item set_half_inactive
+
+=item setup_repeat
+
+=item show_console
+
+=item show_history
+
+=item substitute_macros
+
+=item terminate_all_hosts
+
+=item terminate_host
+
+=item toggle_active_state
+
+=item update_display_text
+
+=back
+
+=head1 AUTHOR
+
+Duncan Ferguson, C<< <duncan_j_ferguson at yahoo.co.uk> >>
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright 1999-2016 Duncan Ferguson.
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of either: the GNU General Public License as published
+by the Free Software Foundation; or the Artistic License.
+
+See http://dev.perl.org/licenses/ for more information.
+
+=cut
 
 1;

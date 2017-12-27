@@ -20,6 +20,8 @@ lib/App/ClusterSSH/L10N/en.pm
 lib/App/ClusterSSH/L10N.pm
 lib/App/ClusterSSH.pm
 lib/App/ClusterSSH/Range.pm
+lib/App/ClusterSSH/Window.pm
+lib/App/ClusterSSH/Window/Tk.pm
 Makefile.PL
 MANIFEST
 MANIFEST.SKIP
