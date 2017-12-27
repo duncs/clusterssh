@@ -29,4 +29,24 @@ $app = App::ClusterSSH->new();
 isa_ok( $app,         'App::ClusterSSH' );
 isa_ok( $app->config, 'App::ClusterSSH::Config' );
 
+for my $submod (qw/ cluster helper options window /) {
+    trap {
+        $app->$submod;
+    };
+    $trap->quiet("$submod loaded okay");
+}
+
+trap {
+    $app->exit_prog;
+};
+$trap->quiet("No errors from exit_prog call");
+
+my @provided = (qw/ one one one two two three four four four /);
+my @expected = sort (qw/ one two three four /);
+my @got;
+trap {
+    @got = sort $app->remove_repeated_servers(@provided);
+};
+is_deeply( \@got, \@expected, "Repeated servers removed okay" );
+
 done_testing();

@@ -261,7 +261,7 @@ sub resolve_names(@) {
 
     if ( $self->config->{unique_servers} ) {
         $self->debug( 3, 'removing duplicate server names' );
-        @servers = remove_repeated_servers(@servers);
+        @servers = $self->remove_repeated_servers(@servers);
     }
 
     $self->debug( 3, 'leaving with ', $_ ) foreach (@servers);
@@ -270,7 +270,8 @@ sub resolve_names(@) {
 }
 
 sub remove_repeated_servers {
-    my %all = ();
+    my $self = shift;
+    my %all  = ();
     @all{@_} = 1;
     return ( keys %all );
 }
