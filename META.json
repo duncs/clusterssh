@@ -56,7 +56,7 @@
    "provides" : {
       "App::ClusterSSH" : {
          "file" : "lib/App/ClusterSSH.pm",
-         "version" : "4.12"
+         "version" : "4.13"
       },
       "App::ClusterSSH::Base" : {
          "file" : "lib/App/ClusterSSH/Base.pm",
@@ -107,6 +107,6 @@
       ],
       "x_coverage" : "https://coveralls.io/github/duncs/clusterssh"
    },
-   "version" : "4.12",
+   "version" : "4.13",
    "x_serialization_backend" : "JSON::PP version 2.94"
 }
