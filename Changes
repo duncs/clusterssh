@@ -1,3 +1,6 @@
+4.13_01 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net>
+- Move all Tk code into its own module as-is
+
 4.13 2017-12-27 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Ensure ssh_args is keep unset if it is emptied in the configuration file
 - Obey configured console position (Debian bug 758215) (Github issue #100)
