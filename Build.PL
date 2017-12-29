@@ -102,6 +102,7 @@ my $build = $class->new(
     dist_author       => q{Duncan Ferguson <duncan_j_ferguson@yahoo.co.uk>},
     dist_version_from => 'lib/App/ClusterSSH.pm',
     requires          => {
+        'perl'              => '5.8.4',
         'version'           => '0.77',
         'Tk'                => '800.022',
         'X11::Protocol'     => '0.56',
