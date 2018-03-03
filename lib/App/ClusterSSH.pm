@@ -309,7 +309,7 @@ sub load_keyboard_map() {
 
                      # YES! current keycode have priority over old one (phew!)
                         $keyboardmap{ $keycodetosym{ $keyboard[$i][$modifier]
-                                } }
+                        } }
                             = $keyboard_stringlike_modifiers{$modifier}
                             . ( $i + $min );
                     }
@@ -1912,12 +1912,12 @@ sub create_menubar() {
         -menuitems => [
             [   "command",
                 "Show History",
-                -command => sub { $self->show_history; },
+                -command     => sub { $self->show_history; },
                 -accelerator => $self->config->{key_history},
             ],
             [   "command",
                 "Exit",
-                -command => sub { $self->exit_prog },
+                -command     => sub { $self->exit_prog },
                 -accelerator => $self->config->{key_quit},
             ]
         ],
@@ -1927,7 +1927,7 @@ sub create_menubar() {
     my $host_menu_items = [
         [   "command",
             "Retile Windows",
-            -command => sub { $self->retile_hosts },
+            -command     => sub { $self->retile_hosts },
             -accelerator => $self->config->{key_retilehosts},
         ],
 
@@ -1950,7 +1950,7 @@ sub create_menubar() {
         ],
         [   "command",
             "Add Host(s) or Cluster(s)",
-            -command => sub { $self->add_host_by_name, },
+            -command     => sub { $self->add_host_by_name, },
             -accelerator => $self->config->{key_addhost},
         ],
         [   "command",
