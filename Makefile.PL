@@ -14,7 +14,7 @@ WriteMakefile
                    'File::Which' => 0,
                    'Getopt::Long' => 0,
                    'Locale::Maketext' => 0,
-                   'Perl::Tidy' => 20171214,
+                   'Perl::Tidy' => 20180220,
                    'Readonly' => 0,
                    'Test::Differences' => 0,
                    'Test::DistManifest' => 0,
