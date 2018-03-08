@@ -4,10 +4,9 @@ use strict;
 use warnings;
 
 use FindBin qw($Bin $Script);
+use File::Basename;
 
-chdir $Bin || die "Unable to chdir into $Bin: $!";
-
-my $bindir="$Bin/../bin";
+my $bindir="bin";
 
 if(! -d $bindir) {
     mkdir $bindir || die "Could not mkdir $bindir: $!";
@@ -16,8 +15,8 @@ if(! -d $bindir) {
 print "Using perl binary: $^X",$/;
 print "Using perl version $^V",$/;
 
-for my $source (glob("*")) {
-    my $dest="$bindir/$source";
+for my $dest (@ARGV) {
+    my $source=$Bin.'/'.basename($dest);
 
     next if($source =~ m/$Script/);
     next if($source =~ m/\.x$/);
@@ -33,10 +32,10 @@ for my $source (glob("*")) {
     print $dfh $_ while(<$sfh>);
     close($sfh);
 
-    if($source ne "clusterssh_bash_completion.dist") {
+    if($source !~ m/clusterssh_bash_completion.dist/) {
         print $dfh "\n\n__END__\n\n";
 
-        my $pod= qx{ $^X ./$source --generate-pod };
+        my $pod= qx{ $^X $source --generate-pod };
         die "Failed to generate pod" if($?);
         print $dfh $pod;
     }
