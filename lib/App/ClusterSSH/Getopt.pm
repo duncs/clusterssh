@@ -1043,10 +1043,9 @@ This performs two tests to confirm cssh is able to work properly with the settin
         q{SSH doesn't understand [_1] - remove the option from the [_2] file},
         'C<-o ConnectTimeout=10>',
         'F<$HOME/.clusterssh/config>'
-        );
+    );
     output '=item *';
-    output 
-        $self->loc(
+    output $self->loc(
         q{OpenSSH-3.8 using untrusted ssh tunnels - use [_1] instead of [_2] or use [_3] in [_4] (if you change the default ssh options from [_5] to [_6])},
         'C<-Y>',
         'C<-X>',
@@ -1054,7 +1053,7 @@ This performs two tests to confirm cssh is able to work properly with the settin
         'F<$HOME/.ssh/ssh_config>',
         'C<-x>',
         'C<-X>'
-        );
+    );
     output '=back';
 
     output '=head1 ', $self->loc('SUPPORT AND REPORTING BUGS');
@@ -1065,7 +1064,7 @@ This performs two tests to confirm cssh is able to work properly with the settin
     );
 
     output $self->loc(
-        q{If you require support, please run the following commands and create an issue via: [_1]}, 
+        q{If you require support, please run the following commands and create an issue via: [_1]},
         'L<https://github.com/duncs/clusterssh/issues>',
     );
     output 'C<< perl -V >>';
