@@ -1,5 +1,6 @@
 4.13.2 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Fix for running builds in parallel
+- Improvements to SUPPORT and REPORTING BUGS sections in documentation
 
 4.13.1 2018-03-05 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Minor update to fix failing tests due to 3rd party perltidy changes
