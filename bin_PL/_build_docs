@@ -16,16 +16,15 @@ if(! -d $bindir) {
 print "Using perl binary: $^X",$/;
 print "Using perl version $^V",$/;
 
-for my $source (glob("*")) {
-    my $dest="$bindir/$source";
+my $dest = shift;
+my $source = $dest;
+$source =~ s{bin/}{};
+$dest = "../$dest";
 
-    next if($source =~ m/$Script/);
-    next if($source =~ m/\.x$/);
-
-    print "Generating: $source",$/;
+print "Generating: $dest from $source",$/;
 
     if(-f $dest) {
-        chmod(0777, $dest) || die "Could not chmod $dest for removing: $!";
+        chmod(0755, $dest) || die "Could not chmod $dest for removing: $!";
     }
 
     open(my $sfh, '<', $source) || die "Could not open $source for reading: $!";
@@ -44,4 +43,3 @@ for my $source (glob("*")) {
     close($dfh);
 
     chmod(0555, $dest) || die "Could not chmod $dest: $!";
-}
