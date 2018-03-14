@@ -86,7 +86,7 @@ EOF
         sub ACTION_clean {
             my ($self, @args) = @_;
 
-            for my $file (keys $self->script_files ) {
+            for my $file (keys %{ $self->script_files } ) {
                 if( -e $file) {
                     print "Removing '$file'",$/;
                     unlink $file;
