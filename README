@@ -2,7 +2,7 @@ NAME
     cssh - Cluster administration tool
 
 VERSION
-    This documentation is for version: 4.13.1
+    This documentation is for version: 4.13.2
 
 SYNOPSIS
     cssh [-a '<command>'] [-K <seconds>] [-q] [-c '<filename>'] [-x <cols>]
@@ -640,57 +640,57 @@ KNOWN BUGS
         tell the difference between the two events, there is no fix (apart
         from rewriting everything directly in X).
 
-REPORTING BUGS
-    *   If you have issues running cssh, first try:
+TROUBLESHOOTING
+    If you have issues running cssh, first try:
 
-        "cssh -e [user@]<hostname>[:port]"
+    "cssh -e [user@]<hostname>[:port]"
 
-        This performs two tests to confirm cssh is able to work properly
-        with the settings provided within the $HOME/.clusterssh/config file
-        (or internal defaults).
+    This performs two tests to confirm cssh is able to work properly with
+    the settings provided within the $HOME/.clusterssh/config file (or
+    internal defaults).
 
-        1   Test the terminal window works with the options provided
+    1   Test the terminal window works with the options provided
 
-        2   Test ssh works to a host with the configured arguments
+    2   Test ssh works to a host with the configured arguments
 
-        Configuration options to watch for in ssh are
+    Configuration options to watch for in ssh are:
 
-        SSH doesn't understand "-o ConnectTimeout=10" - remove the option
+    *   SSH doesn't understand "-o ConnectTimeout=10" - remove the option
         from the $HOME/.clusterssh/config file
-        OpenSSH-3.8 using untrusted ssh tunnels - use "-Y" instead of "-X"
+
+    *   OpenSSH-3.8 using untrusted ssh tunnels - use "-Y" instead of "-X"
         or use "ForwardX11Trusted yes" in $HOME/.ssh/ssh_config (if you
         change the default ssh options from "-x" to "-X")
 
-    *   If you require support, please run the following commands and post
-        it on the web site in the support/problems forum:
-
-        "perl -V"
-
-        "perl -MTk -e 'print $Tk::VERSION,$/'"
-
-        "perl -MX11::Protocol -e 'print $X11::Protocol::VERSION,$/'"
-
-        "cat /etc/csshrc $HOME/.clusterssh/config"
-
-    *   Using the debug option (--debug) will turn on debugging output.
-        Repeat the option to increase the amount of debug. However, if
-        possible please only use this option with one host at a time, e.g.
-        "cssh --debug <host>" due to the amount of output produced (in both
-        main and child windows).
-
-SEE ALSO
-    <http://clusterssh.sourceforge.net/>, "ssh", Tk::overview,
-    X11::Protocol, "perl"
-
-CREDITS
+SUPPORT AND REPORTING BUGS
     A web site for comments, requests, bug reports and bug fixes/patches is
     available at: <https://github.com/duncs/clusterssh>
+
+    If you require support, please run the following commands and create an
+    issue via: <https://github.com/duncs/clusterssh/issues>
+
+    "perl -V"
+
+    "perl -MTk -e 'print $Tk::VERSION,$/'"
+
+    "perl -MX11::Protocol -e 'print $X11::Protocol::VERSION,$/'"
+
+    "cat /etc/csshrc $HOME/.clusterssh/config"
+
+    Using the debug option (--debug) will turn on debugging output. Repeat
+    the option to increase the amount of debug. However, if possible please
+    only use this option with one host at a time, e.g. "cssh --debug <host>"
+    due to the amount of output produced (in both main and child windows).
+
+SEE ALSO
+    <https://github.com/duncs/clusterssh/wiki/>, "ssh", Tk::overview,
+    X11::Protocol, "perl"
 
 AUTHOR
     Duncan Ferguson, "<duncan_j_ferguson at yahoo.co.uk>"
 
 LICENSE AND COPYRIGHT
-    Copyright 1999-2016 Duncan Ferguson.
+    Copyright 1999-2018 Duncan Ferguson.
 
     This program is free software; you can redistribute it and/or modify it
     under the terms of either: the GNU General Public License as published
