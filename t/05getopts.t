@@ -425,4 +425,15 @@ TODO: {
     is( $trap->die,     undef,    'Expecting no die message' );
 }
 
+@ARGV = ( '--rows', 5, '--cols', 10 );
+$getopts = App::ClusterSSH::Getopt->new( parent => $mock_object, );
+trap {
+    $getopts->getopts;
+};
+
+$trap->did_return(" ... returned");
+$trap->quiet(" ... quietly");
+is( $mock_object->{cols}, 10, 'cols set correctly' );
+is( $mock_object->{rows}, 5,  'rows set correctly' );
+
 done_testing;
