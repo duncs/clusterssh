@@ -82,6 +82,19 @@ EOF
 
             $self->SUPER::ACTION_dist;
         }
+
+        sub ACTION_clean {
+            my ($self, @args) = @_;
+
+            for my $file (keys %{ $self->script_files } ) {
+                if( -e $file) {
+                    print "Removing '$file'",$/;
+                    unlink $file;
+                }
+            }
+
+            $self->SUPER::ACTION_clean;
+        }
     },
 );
 
@@ -89,7 +102,8 @@ my $build = $class->new(
     meta_merge => {
         resources => {
             Repository => [
-                'http://clusterssh.git.sourceforge.net/',
+
+                #'http://clusterssh.git.sourceforge.net/',
                 $project_info{repository},
             ],
             bugtracker => $project_info{tracker},
@@ -126,23 +140,29 @@ my $build = $class->new(
         'CPAN::Changes'       => 0.27,
         'File::Slurp'         => 0,
         'Test::PerlTidy'      => 0,
-        'Perl::Tidy'          => 20171214,
+        'Perl::Tidy'          => 20180220,
     },
     recommends         => { 'Sort::Naturally' => 0, },
     configure_requires => { 'Module::Build'   => 0, },
     add_to_cleanup     => ['App-ClusterSSH-*'],
     create_makefile_pl => 'traditional',
     script_files       => [
-        'bin/cssh', 'bin/csftp',
-        'bin/ccon', 'bin/crsh',
-        'bin/ctel', 'bin/clusterssh_bash_completion.dist'
+        'bin/cssh',
+        'bin/csftp',
+        'bin/ccon',
+        'bin/crsh',
+        'bin/ctel',
+        'bin/clusterssh_bash_completion.dist'
     ],
     get_options => { changes => { type => '=s' }, },
     PL_files    => {
         'bin_PL/_build_docs' => [
-            'bin/cssh', 'bin/csftp',
-            'bin/ccon', 'bin/crsh',
-            'bin/ctel', 'bin/clusterssh_bash_completion.dist'
+            'bin/cssh',
+            'bin/csftp',
+            'bin/ccon',
+            'bin/crsh',
+            'bin/ctel',
+            'bin/clusterssh_bash_completion.dist'
         ],
     },
 );

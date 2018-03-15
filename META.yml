@@ -7,7 +7,7 @@ build_requires:
   File::Slurp: '0'
   File::Temp: '0'
   File::Which: '0'
-  Perl::Tidy: '20171214'
+  Perl::Tidy: '20180220'
   Readonly: '0'
   Test::Differences: '0'
   Test::DistManifest: '0'
@@ -27,7 +27,7 @@ name: App-ClusterSSH
 provides:
   App::ClusterSSH:
     file: lib/App/ClusterSSH.pm
-    version: '4.13'
+    version: 4.14_01
   App::ClusterSSH::Base:
     file: lib/App/ClusterSSH/Base.pm
     version: '0.02'
@@ -52,6 +52,12 @@ provides:
     file: lib/App/ClusterSSH/L10N/en.pm
   App::ClusterSSH::Range:
     file: lib/App/ClusterSSH/Range.pm
+  App::ClusterSSH::Window:
+    file: lib/App/ClusterSSH/Window.pm
+    version: '0.01'
+  App::ClusterSSH::Window::Tk:
+    file: lib/App/ClusterSSH/Window/Tk.pm
+    version: '0.01'
 recommends:
   Sort::Naturally: '0'
 requires:
@@ -64,14 +70,14 @@ requires:
   Try::Tiny: '0'
   X11::Protocol: '0.56'
   X11::Protocol::WM: '0'
+  perl: v5.8.4
   version: '0.77'
 resources:
   Coverage: https://coveralls.io/github/duncs/clusterssh
   Repository:
-    - http://clusterssh.git.sourceforge.net/
     - http://github.com/duncs/clusterssh
   bugtracker: https://github.com/duncs/clusterssh/issues
   homepage: http://github.com/duncs/clusterssh/wiki
   license: http://dev.perl.org/licenses/
-version: '4.13'
+version: 4.14_01
 x_serialization_backend: 'CPAN::Meta::YAML version 0.016'

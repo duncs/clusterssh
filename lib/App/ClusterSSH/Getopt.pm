@@ -1014,9 +1014,8 @@ B<NOTE:> Any "generic" change to the method (e.g., specifying the ssh port to us
     );
     output '=back';
 
-    output '=head1 ', $self->loc('REPORTING BUGS');
-    output '=over';
-    output '=item *';
+    output '=head1 ', $self->loc('TROUBLESHOOTING');
+
     output $self->loc(
         q{If you have issues running [_1], first try:
 
@@ -1037,16 +1036,16 @@ This performs two tests to confirm cssh is able to work properly with the settin
         $self->parent->config->{comms} );
     output '=back';
 
-    output $self->loc(q{Configuration options to watch for in ssh are});
+    output $self->loc(q{Configuration options to watch for in ssh are:});
     output '=over';
-    output '=item ',
-        $self->loc(
+    output '=item *';
+    output $self->loc(
         q{SSH doesn't understand [_1] - remove the option from the [_2] file},
         'C<-o ConnectTimeout=10>',
         'F<$HOME/.clusterssh/config>'
-        );
-    output '=item ',
-        $self->loc(
+    );
+    output '=item *';
+    output $self->loc(
         q{OpenSSH-3.8 using untrusted ssh tunnels - use [_1] instead of [_2] or use [_3] in [_4] (if you change the default ssh options from [_5] to [_6])},
         'C<-Y>',
         'C<-X>',
@@ -1054,12 +1053,19 @@ This performs two tests to confirm cssh is able to work properly with the settin
         'F<$HOME/.ssh/ssh_config>',
         'C<-x>',
         'C<-X>'
-        );
+    );
     output '=back';
 
-    output '=item *';
+    output '=head1 ', $self->loc('SUPPORT AND REPORTING BUGS');
+
     output $self->loc(
-        q{If you require support, please run the following commands and post it on the web site in the support/problems forum:}
+        q{A web site for comments, requests, bug reports and bug fixes/patches is available at: [_1]},
+        'L<https://github.com/duncs/clusterssh>'
+    );
+
+    output $self->loc(
+        q{If you require support, please run the following commands and create an issue via: [_1]},
+        'L<https://github.com/duncs/clusterssh/issues>',
     );
     output 'C<< perl -V >>';
     output q{C<< perl -MTk -e 'print $Tk::VERSION,$/' >>};
@@ -1067,26 +1073,18 @@ This performs two tests to confirm cssh is able to work properly with the settin
         q{C<< perl -MX11::Protocol -e 'print $X11::Protocol::VERSION,$/' >>};
     output 'C<< cat /etc/csshrc $HOME/.clusterssh/config >>';
 
-    output '=item *';
     output $self->loc(
         q{Using the debug option (--debug) will turn on debugging output.  Repeat the option to increase the amount of debug.  However, if possible please only use this option with one host at a time, e.g. [_1] due to the amount of output produced (in both main and child windows).},
         'C<< cssh --debug <host> >>'
     );
-    output '=back';
 
     output '=head1 ', $self->loc('SEE ALSO');
     output $self->loc(
-        q{L<http://clusterssh.sourceforge.net/>,
+        q{L<https://github.com/duncs/clusterssh/wiki/>,
 C<ssh>,
 L<Tk::overview>,
 L<X11::Protocol>,
 C<perl>}
-    );
-
-    output '=head1 ', $self->loc('CREDITS');
-    output $self->loc(
-        'A web site for comments, requests, bug reports and bug fixes/patches is available at: [_1]',
-        'L<https://github.com/duncs/clusterssh>'
     );
 
     output '=head1 ', $self->loc('AUTHOR');
