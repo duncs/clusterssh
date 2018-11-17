@@ -24,7 +24,7 @@ for my $dest (@ARGV) {
     print "Generating: $source",$/;
 
     if(-f $dest) {
-        chmod(0777, $dest) || die "Could not chmod $dest for removing: $!";
+        chmod(0755, $dest) || die "Could not chmod $dest for removing: $!";
     }
 
     open(my $sfh, '<', $source) || die "Could not open $source for reading: $!";
