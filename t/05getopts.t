@@ -287,7 +287,7 @@ is( $trap->stderr,  '',       'Expecting no STDERR' );
 is( $trap->die,     undef,    'Expecting no die message' );
 
 my $pod;
-@ARGV = ('--generate-pod');
+@ARGV    = ('--generate-pod');
 $getopts = App::ClusterSSH::Getopt->new( parent => $mock_object );
 $getopts->add_option(
     spec    => 'long_opt|l=s',
@@ -309,7 +309,7 @@ $pod = $trap->stdout;
 is( $trap->stderr, '',    'Expecting no STDERR' );
 is( $trap->die,    undef, 'Expecting no die message' );
 
-@ARGV = ('--help');
+@ARGV    = ('--help');
 $getopts = App::ClusterSSH::Getopt->new( parent => $mock_object );
 trap {
     $getopts->getopts;
@@ -320,7 +320,7 @@ ok( defined( $trap->stdout ), 'Expecting no STDOUT' );
 is( $trap->stderr, '',    'Expecting no STDERR' );
 is( $trap->die,    undef, 'Expecting no die message' );
 
-@ARGV = ('-?');
+@ARGV    = ('-?');
 $getopts = App::ClusterSSH::Getopt->new( parent => $mock_object );
 trap {
     $getopts->getopts;
@@ -331,7 +331,7 @@ ok( defined( $trap->stdout ), 'Expecting no STDOUT' );
 is( $trap->stderr, '',    'Expecting no STDERR' );
 is( $trap->die,    undef, 'Expecting no die message' );
 
-@ARGV = ('-v');
+@ARGV    = ('-v');
 $getopts = App::ClusterSSH::Getopt->new( parent => $mock_object );
 trap {
     $getopts->getopts;
@@ -342,7 +342,7 @@ like( $trap->stdout, qr/^Version: /, 'Version string correct' );
 is( $trap->stderr, '',    'Expecting no STDERR' );
 is( $trap->die,    undef, 'Expecting no die message' );
 
-@ARGV = ('-@');
+@ARGV    = ('-@');
 $getopts = App::ClusterSSH::Getopt->new( parent => $mock_object );
 trap {
     $getopts->getopts;

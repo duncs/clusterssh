@@ -1797,7 +1797,7 @@ sub populate_send_menu {
         eval { require XML::Simple; };
         die 'Cannot load XML::Simple - has it been installed?  ', $@ if ($@);
 
-        my $xml = XML::Simple->new( ForceArray => 1, );
+        my $xml      = XML::Simple->new( ForceArray => 1, );
         my $menu_xml = $xml->XMLin( $self->config->{send_menu_xml_file} );
 
         $self->debug( 3, 'xml send menu: ', $/, $xml->XMLout($menu_xml) );

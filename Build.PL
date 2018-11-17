@@ -140,7 +140,7 @@ my $build = $class->new(
         'CPAN::Changes'       => 0.27,
         'File::Slurp'         => 0,
         'Test::PerlTidy'      => 0,
-        'Perl::Tidy'          => 20180220,
+        'Perl::Tidy'          => 20181117,
     },
     recommends         => { 'Sort::Naturally' => 0, },
     configure_requires => { 'Module::Build'   => 0, },

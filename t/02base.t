@@ -21,10 +21,10 @@ diag('testing output') if ( $ENV{TEST_VERBOSE} );
 trap {
     $base->stdout_output('testing');
 };
-is( $trap->leaveby,           'return', 'returned ok' );
-is( $trap->die,               undef,    'returned ok' );
-is( $trap->stderr,            '',       'Expecting no STDERR' );
-is( $trap->stdout =~ tr/\n//, 1,        'got correct number of print lines' );
+is( $trap->leaveby, 'return', 'returned ok' );
+is( $trap->die,     undef,    'returned ok' );
+is( $trap->stderr,  '',       'Expecting no STDERR' );
+is( $trap->stdout =~ tr/\n//, 1, 'got correct number of print lines' );
 like( $trap->stdout, qr/\Atesting\n\Z/xsm,
     'checking for expected print output' );
 
@@ -68,10 +68,10 @@ trap {
     $base = App::ClusterSSH::Base->new( debug => 6, );
 };
 isa_ok( $base, 'App::ClusterSSH::Base' );
-is( $trap->leaveby,           'return', 'returned ok' );
-is( $trap->die,               undef,    'returned ok' );
-is( $trap->stderr,            '',       'Expecting no STDERR' );
-is( $trap->stdout =~ tr/\n//, 1,        'got new() debug output lines' );
+is( $trap->leaveby, 'return', 'returned ok' );
+is( $trap->die,     undef,    'returned ok' );
+is( $trap->stderr,  '',       'Expecting no STDERR' );
+is( $trap->stdout =~ tr/\n//, 1, 'got new() debug output lines' );
 like(
     $trap->stdout,
     qr/^Setting\slanguage\sto\s"en"/xsm,
@@ -83,10 +83,10 @@ trap {
     $base = App::ClusterSSH::Base->new( debug => 6, lang => 'en' );
 };
 isa_ok( $base, 'App::ClusterSSH::Base' );
-is( $trap->leaveby,           'return', 'returned ok' );
-is( $trap->die,               undef,    'returned ok' );
-is( $trap->stderr,            '',       'Expecting no STDERR' );
-is( $trap->stdout =~ tr/\n//, 1,        'got new() debug output lines' );
+is( $trap->leaveby, 'return', 'returned ok' );
+is( $trap->die,     undef,    'returned ok' );
+is( $trap->stderr,  '',       'Expecting no STDERR' );
+is( $trap->stdout =~ tr/\n//, 1, 'got new() debug output lines' );
 like(
     $trap->stdout,
     qr/^Setting\slanguage\sto\s"en"/xsm,
@@ -98,10 +98,10 @@ trap {
     $base = App::ClusterSSH::Base->new( debug => 6, lang => 'rubbish' );
 };
 isa_ok( $base, 'App::ClusterSSH::Base' );
-is( $trap->leaveby,           'return', 'returned ok' );
-is( $trap->die,               undef,    'returned ok' );
-is( $trap->stderr,            '',       'Expecting no STDERR' );
-is( $trap->stdout =~ tr/\n//, 1,        'got new() debug output lines' );
+is( $trap->leaveby, 'return', 'returned ok' );
+is( $trap->die,     undef,    'returned ok' );
+is( $trap->stderr,  '',       'Expecting no STDERR' );
+is( $trap->stdout =~ tr/\n//, 1, 'got new() debug output lines' );
 like(
     $trap->stdout,
     qr/^Setting\slanguage\sto\s"rubbish"/xsm,
@@ -114,10 +114,10 @@ trap {
     $base = App::ClusterSSH::Base->new( debug => 7, );
 };
 isa_ok( $base, 'App::ClusterSSH::Base' );
-is( $trap->leaveby,           'return', 'returned ok' );
-is( $trap->die,               undef,    'returned ok' );
-is( $trap->stderr,            '',       'Expecting no STDERR' );
-is( $trap->stdout =~ tr/\n//, 3,        'got new() debug output lines' );
+is( $trap->leaveby, 'return', 'returned ok' );
+is( $trap->die,     undef,    'returned ok' );
+is( $trap->stderr,  '',       'Expecting no STDERR' );
+is( $trap->stdout =~ tr/\n//, 3, 'got new() debug output lines' );
 like(
     $trap->stdout,
     qr/^Setting\slanguage\sto\s"en".Arguments\sto\sApp::ClusterSSH::Base->new.*debug\s=>\s7,$/xsm,
@@ -316,7 +316,7 @@ $trap->quiet("No errors getting 'sort'");
 # NOTE: trap doesnt like passing code refs, so recreate here
 $sort = $base->sort;
 is( ref($sort), 'CODE', "got results from sort" );
-my @sorted = $sort->( 4, 8, 1, 5, 3 );
+my @sorted   = $sort->( 4, 8, 1, 5, 3 );
 my @expected = ( 1, 3, 4, 5, 8 );
 is_deeply( \@sorted, \@expected, "simple sort results okay" );
 
@@ -344,7 +344,7 @@ is( $trap->die,     undef,    'returned ok' );
 #
 $sort = $base->sort;
 is( ref($sort), 'CODE', "got results from sort" );
-@sorted = $sort->( 4, 8, 1, 5, 3 );
+@sorted   = $sort->( 4, 8, 1, 5, 3 );
 @expected = ( 1, 3, 4, 5, 8 );
 is_deeply( \@sorted, \@expected, "simple sort results okay" );
 
