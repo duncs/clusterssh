@@ -1,5 +1,6 @@
-4.14_01 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net>
+4.13.2_01 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Move all Tk code into its own module as-is
+- Fix for 'bad pad value "3m"' error when using Tk 804.034
 
 4.13.2 2018-03-14 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Fix for running builds in parallel

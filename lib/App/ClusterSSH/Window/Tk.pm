@@ -1219,6 +1219,7 @@ sub setup_repeat() {
 sub create_windows() {
     my ($self) = @_;
     $self->debug( 2, "create_windows: started" );
+
     $windows{main_window}
         = MainWindow->new( -title => "ClusterSSH", -class => 'cssh', );
     $windows{main_window}->withdraw;    # leave withdrawn until needed
@@ -1307,19 +1308,27 @@ sub create_windows() {
         }
     );
 
-    $windows{help} = $windows{main_window}->Dialog(
+    $windows{help} = $windows{main_window}->DialogBox(
         -popover    => $windows{main_window},
         -overanchor => "c",
         -popanchor  => "c",
         -class      => 'cssh',
-        -font       => [
-            -family => "interface system",
-            -size   => 10,
-        ],
-        -text =>
-            "Cluster Administrator Console using SSH\n\nVersion: $VERSION.\n\n"
-            . "Bug/Suggestions to http://clusterssh.sf.net/",
+        -title      => 'About Cssh',
     );
+
+    my @helptext = (
+        "Title:   Cluster Administrator Console using SSH",
+        "Version: " . $App::ClusterSSH::VERSION,
+        "Project: https://github.com/duncs/clusterssh",
+        "Issues:  https://github.com/duncs/clusterssh/issues",
+    );
+
+    $windows{helptext} = $windows{help}->Text(
+        -height => scalar(@helptext),
+        -width  => 62,
+    )->pack( -fill => 'both' );
+    $windows{helptext}->insert( 'end', join( $/, @helptext ) );
+    $windows{helptext}->configure( -state => 'disabled' );
 
     $windows{manpage} = $windows{main_window}->DialogBox(
         -popanchor  => "c",
