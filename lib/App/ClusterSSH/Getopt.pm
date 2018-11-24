@@ -1,15 +1,22 @@
-package App::ClusterSSH::Getopt;
-
 use strict;
 use warnings;
 
-use version;
-our $VERSION = version->new('0.01');
+package App::ClusterSSH::Getopt;
+
+# ABSTRACT: App::ClusterSSH::Getopt - module to process command line args
+
+=head1 SYNOPSIS
+
+=head1 DESCRIPTION
+
+Object representing application configuration
+
+=cut
 
 use Carp;
 use Try::Tiny;
 use Pod::Usage;
-use Getopt::Long qw(:config no_ignore_case bundling no_auto_abbrev);
+use Getopt::Long 2.5 qw(:config no_ignore_case bundling no_auto_abbrev);
 use FindBin qw($Script);
 
 use base qw/ App::ClusterSSH::Base /;
@@ -1106,20 +1113,6 @@ See http://dev.perl.org/licenses/ for more information.
 
 1;
 
-__DATA__
-
-=pod
-
-=head1 NAME
-
-App::ClusterSSH::Getopt - module to process command line args
-
-=head1 SYNOPSIS
-
-=head1 DESCRIPTION
-
-Object representing application configuration
-
 =head1 METHODS
 
 =over 4
@@ -1163,21 +1156,3 @@ Simple helper func to print out pod lines with double returns
 Functions to output help and usage instructions
 
 =back
-
-=head1 AUTHOR
-
-Duncan Ferguson, C<< <duncan_j_ferguson at yahoo.co.uk> >>
-
-=head1 LICENSE AND COPYRIGHT
-
-Copyright 1999-2018 Duncan Ferguson.
-
-This program is free software; you can redistribute it and/or modify it
-under the terms of either: the GNU General Public License as published
-by the Free Software Foundation; or the Artistic License.
-
-See http://dev.perl.org/licenses/ for more information.
-
-=cut
-
-1;

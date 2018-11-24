@@ -1,9 +1,31 @@
-package App::ClusterSSH;
-
-use 5.008.004;
 use warnings;
 use strict;
+package App::ClusterSSH;
+
+# ABSTRACT: Cluster administration tool
+# ABSTRACT: Cluster administration tool
+
 use version; our $VERSION = version->new('4.13.2_01');
+
+=head1 SYNOPSIS
+
+There is nothing in this module for public consumption.  See documentation
+for F<cssh>, F<crsh>, F<ctel>, F<ccon>, or F<cscp> instead.
+
+=head1 DESCRIPTION
+
+This is the core for App::ClusterSSH.  You should probably look at L<cssh> 
+instead.
+
+=head1 SUBROUTINES/METHODS
+
+These methods are listed here to tidy up Pod::Coverage test reports but
+will most likely be moved into other modules.  There are some notes within 
+the code until this time.
+
+=over 2
+
+=cut
 
 use Carp qw/cluck :DEFAULT/;
 
@@ -285,7 +307,7 @@ sub run {
 
     $self->window->initialise;
 
-    $self->debug( 2, "VERSION: $VERSION" );
+    $self->debug( 2, "VERSION: ", $__PACKAGE__::VERSION );
 
     # only use ssh_args from options if config file ssh_args not set AND
     # options is not the default value otherwise the default options
@@ -463,31 +485,6 @@ sub run {
 
 1;
 
-__END__
-
-=pod
-
-=head1 NAME
-
-App::ClusterSSH - A container for functions of the ClusterSSH programs
-
-=head1 SYNOPSIS
-
-There is nothing in this module for public consumption.  See documentation
-for F<cssh>, F<crsh>, F<ctel>, F<ccon>, or F<cscp> instead.
-
-=head1 DESCRIPTION
-
-This is the core for App::ClusterSSH.  You should probably look at L<cssh> 
-instead.
-
-=head1 SUBROUTINES/METHODS
-
-These methods are listed here to tidy up Pod::Coverage test reports but
-will most likely be moved into other modules.  There are some notes within 
-the code until this time.
-
-=over 2
 
 =item REAPER
 
@@ -638,21 +635,4 @@ L<http://search.cpan.org/dist/App-ClusterSSH/>
 
 Please see the THANKS file from the original distribution.
 
-=head1 AUTHOR
-
-Duncan Ferguson, C<< <duncan_j_ferguson at yahoo.co.uk> >>
-
-=head1 COPYRIGHT & LICENSE
-
-Copyright 1999-2018 Duncan Ferguson, all rights reserved.
-
-This program is free software; you can redistribute it and/or modify it
-under the terms of either: the GNU General Public License as published
-by the Free Software Foundation; or the Artistic License.
-
-See http://dev.perl.org/licenses/ for more information.
-
 =cut
-
-1;
-

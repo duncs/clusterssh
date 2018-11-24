@@ -1,13 +1,34 @@
-package App::ClusterSSH::Base;
-
 use warnings;
 use strict;
+
+package App::ClusterSSH::Base;
+
+# ABSTRACT: App::ClusterSSH::Base - Base object provding utility functions
+
+=head1 SYNOPSIS
+
+    use base qw/ App::ClusterSSH::Base /;
+
+    # in object new method
+    sub new {
+        ( $class, $arg_ref ) = @_;
+        my $self = $class->SUPER::new($arg_ref);
+        return $self;
+    }
+
+=head1 DESCRIPTION
+
+Base object to provide some utility functions on objects - should not be 
+used directly
+
+=cut
+
 use Carp;
 use App::ClusterSSH::L10N;
 
 use Module::Load;
 
-use Exception::Class (
+use Exception::Class 1.31 (
     'App::ClusterSSH::Exception',
     'App::ClusterSSH::Exception::Config' => {
         fields => 'unknown_config',
@@ -17,10 +38,6 @@ use Exception::Class (
     'App::ClusterSSH::Exception::Helper',
     'App::ClusterSSH::Exception::Getopt',
 );
-
-# Don't use SVN revision as it can cause problems
-use version;
-our $VERSION = version->new('0.02');
 
 my $debug_level = $ENV{CLUSTERSSH_DEBUG} || 0;
 our $language = 'en';
@@ -312,27 +329,6 @@ sub sort {
 
 1;
 
-=pod
-
-=head1 NAME
-
-App::ClusterSSH::Base - Base object provding utility functions
-
-=head1 SYNOPSIS
-
-    use base qw/ App::ClusterSSH::Base /;
-
-    # in object new method
-    sub new {
-        ( $class, $arg_ref ) = @_;
-        my $self = $class->SUPER::new($arg_ref);
-        return $self;
-    }
-
-=head1 DESCRIPTION
-
-Base object to provide some utility functions on objects - should not be 
-used directly
 
 =head1 METHODS
 
@@ -411,21 +407,3 @@ Load in the specified file and return a hash, parsing the file depending on
 wther it is a config file (key = value) or cluster file (key value)
 
 =back
-
-=head1 AUTHOR
-
-Duncan Ferguson, C<< <duncan_j_ferguson at yahoo.co.uk> >>
-
-=head1 LICENSE AND COPYRIGHT
-
-Copyright 1999-2018 Duncan Ferguson.
-
-This program is free software; you can redistribute it and/or modify it
-under the terms of either: the GNU General Public License as published
-by the Free Software Foundation; or the Artistic License.
-
-See http://dev.perl.org/licenses/ for more information.
-
-=cut
-
-1;

@@ -1,9 +1,10 @@
-package App::ClusterSSH::Window::Tk;
 use strict;
 use warnings;
 
-use version;
-our $VERSION = version->new('0.01');
+package App::ClusterSSH::Window::Tk;
+
+# ABSTRACT: Object for creating windows using Tk
+
 use English qw( -no_match_vars );
 
 use base qw/ App::ClusterSSH::Base /;
@@ -18,9 +19,9 @@ use Tk::Xlib;
 use Tk::ROText;
 require Tk::Dialog;
 require Tk::LabEntry;
-use X11::Protocol;
+use X11::Protocol 0.56;
 use X11::Protocol::Constants qw/ Shift Mod5 ShiftMask /;
-use X11::Protocol::WM;
+use X11::Protocol::WM 29;
 use X11::Keysyms '%keysymtocode', 'MISCELLANY', 'XKB_KEYS', '3270', 'LATIN1',
     'LATIN2', 'LATIN3', 'LATIN4', 'KATAKANA', 'ARABIC', 'CYRILLIC', 'GREEK',
     'TECHNICAL', 'SPECIAL', 'PUBLISHING', 'APL', 'HEBREW', 'THAI', 'KOREAN';
@@ -609,7 +610,8 @@ sub substitute_macros {
     }
     {
         my $macro_version = $self->config->{macro_version};
-        $text =~ s/$macro_version/$VERSION/xsmg;
+        my $version = $self->parent->VERSION;
+        $text =~ s/$macro_version/$version/xsmg;
     }
 
     return $text;
@@ -1919,21 +1921,3 @@ Base object for using Tk - must be pulled into App::ClusterSSH::Window for use
 =item update_display_text
 
 =back
-
-=head1 AUTHOR
-
-Duncan Ferguson, C<< <duncan_j_ferguson at yahoo.co.uk> >>
-
-=head1 LICENSE AND COPYRIGHT
-
-Copyright 1999-2018 Duncan Ferguson.
-
-This program is free software; you can redistribute it and/or modify it
-under the terms of either: the GNU General Public License as published
-by the Free Software Foundation; or the Artistic License.
-
-See http://dev.perl.org/licenses/ for more information.
-
-=cut
-
-1;

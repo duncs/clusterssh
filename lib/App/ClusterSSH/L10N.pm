@@ -1,22 +1,9 @@
-package App::ClusterSSH::L10N;
-
 use strict;
 use warnings;
 
-use Locale::Maketext 1.01;
-use base qw(Locale::Maketext);
+package App::ClusterSSH::L10N;
 
-# This projects primary language is English
-
-our %Lexicon = ( '_AUTO' => 1, );
-
-1;
-
-=pod
-
-=head1 NAME
-
-ClusterSSH::L10N - Base translations module
+# ABSTRACT: ClusterSSH::L10N - Base translations module
 
 =head1 SYNOPSIS
 
@@ -35,20 +22,13 @@ NOTE: the default language of this module is English.
 
 See Locale::Maketext - there are currently no extra methods in this module.
 
-=head1 AUTHOR
-
-Duncan Ferguson, C<< <duncan_j_ferguson at yahoo.co.uk> >>
-
-=head1 LICENSE AND COPYRIGHT
-
-Copyright 1999-2018 Duncan Ferguson.
-
-This program is free software; you can redistribute it and/or modify it
-under the terms of either: the GNU General Public License as published
-by the Free Software Foundation; or the Artistic License.
-
-See http://dev.perl.org/licenses/ for more information.
-
 =cut
+
+use Locale::Maketext 1.01;
+use base qw(Locale::Maketext);
+
+# This projects primary language is English
+
+our %Lexicon = ( '_AUTO' => 1, );
 
 1;

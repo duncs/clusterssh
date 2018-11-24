@@ -1,13 +1,20 @@
-package App::ClusterSSH::Cluster;
-
 use strict;
 use warnings;
 
-use version;
-our $VERSION = version->new('0.01');
+package App::ClusterSSH::Cluster;
+
+# ABSTRACT: App::ClusterSSH::Cluster - Object representing cluster configuration
+
+=head1 SYNOPSIS
+
+=head1 DESCRIPTION
+
+Object representing application configuration
+
+=cut
 
 use Carp;
-use Try::Tiny;
+use Try::Tiny 0.28;
 use English qw( -no_match_vars );
 
 use base qw/ App::ClusterSSH::Base /;
@@ -287,18 +294,6 @@ sub dump_tags {
 
 1;
 
-=pod
-
-=head1 NAME
-
-App::ClusterSSH::Cluster - Object representing cluster configuration
-
-=head1 SYNOPSIS
-
-=head1 DESCRIPTION
-
-Object representing application configuration
-
 =head1 METHODS
 
 =over 4
@@ -365,21 +360,3 @@ Returns a hash of all tag data.
 Use shell expansion against each item in @items, where $type is either 'node', or 'tag' and $name is the node or tag name.  These attributes are presented to the user in the event of an issue with the expanion to track down the source.
 
 =back
-
-=head1 AUTHOR
-
-Duncan Ferguson, C<< <duncan_j_ferguson at yahoo.co.uk> >>
-
-=head1 LICENSE AND COPYRIGHT
-
-Copyright 1999-2018 Duncan Ferguson.
-
-This program is free software; you can redistribute it and/or modify it
-under the terms of either: the GNU General Public License as published
-by the Free Software Foundation; or the Artistic License.
-
-See http://dev.perl.org/licenses/ for more information.
-
-=cut
-
-1;

@@ -1,10 +1,25 @@
-package App::ClusterSSH::Host;
-
 use strict;
 use warnings;
 
-use version;
-our $VERSION = version->new('0.03');
+package App::ClusterSSH::Host;
+
+# ABSTRACT: ClusterSSH::Host - Object representing a host.
+
+=head1 SYNOPSIS
+
+    use ClusterSSH::Host;
+
+    my $host = ClusterSSH::Host->new({
+        hostname => 'hostname',
+    });
+    my $host = ClusterSSH::Host->parse_host_string('username@hostname:1234');
+
+=head1 DESCRIPTION
+
+Object representing a host.  Include details to contact the host such as
+hostname/ipaddress, username and port.
+
+=cut
 
 use Carp;
 use Net::hostent;
@@ -328,26 +343,6 @@ use overload (
 
 1;
 
-=pod
-
-=head1 NAME
-
-ClusterSSH::Host - Object representing a host.
-
-=head1 SYNOPSIS
-
-    use ClusterSSH::Host;
-
-    my $host = ClusterSSH::Host->new({
-        hostname => 'hostname',
-    });
-    my $host = ClusterSSH::Host->parse_host_string('username@hostname:1234');
-
-=head1 DESCRIPTION
-
-Object representing a host.  Include details to contact the host such as
-hostname/ipaddress, username and port.
-
 =head1 METHODS
 
 =over 4
@@ -431,21 +426,3 @@ the IPv6 address or a port definition?) and assumes it is part of address.
 Use brackets to avoid seeing warning.
 
 =back
-
-=head1 AUTHOR
-
-Duncan Ferguson, C<< <duncan_j_ferguson at yahoo.co.uk> >>
-
-=head1 LICENSE AND COPYRIGHT
-
-Copyright 1999-2018 Duncan Ferguson.
-
-This program is free software; you can redistribute it and/or modify it
-under the terms of either: the GNU General Public License as published
-by the Free Software Foundation; or the Artistic License.
-
-See http://dev.perl.org/licenses/ for more information.
-
-=cut
-
-1;
