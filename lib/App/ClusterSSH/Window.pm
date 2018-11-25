@@ -27,6 +27,10 @@ use base qw/ App::ClusterSSH::Base /;
 sub import {
     my ($class) = @_;
 
+    # If we are building or in test here, just exit
+    # as travis build servers will not have Tk installed
+    return if $ENV{AUTHOR_TESTING} || $ENV{RELEASE_TESTING};
+
     # Find what windows module we should be using and just overlay it into
     # this object
     my $package_name = __PACKAGE__ . '::Tk';
