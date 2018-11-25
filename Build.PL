@@ -1,4 +1,6 @@
-use Module::Build;
+use lib 'inc';
+
+require Module::Build;
 
 my %module_build_args = (
     module_name => 'App::ClusterSSH',
