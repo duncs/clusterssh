@@ -16,7 +16,7 @@ Object representing application configuration
 use Carp;
 use Try::Tiny;
 use Pod::Usage;
-use Getopt::Long 2.5 qw(:config no_ignore_case bundling no_auto_abbrev);
+use Getopt::Long 2.48 qw(:config no_ignore_case bundling no_auto_abbrev);
 use FindBin qw($Script);
 
 use base qw/ App::ClusterSSH::Base /;

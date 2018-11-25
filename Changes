@@ -1,4 +1,9 @@
+Revision history for {{$dist->name}}
+
 4.13.2_01 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net>
+- Fix Getopt--Long minimum version
+
+4.13.2_01 2018-11-24 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Move all Tk code into its own module as-is
 - Fix for 'bad pad value "3m"' error when using Tk 804.034
 - Update to Perl::Tidy 20181117
