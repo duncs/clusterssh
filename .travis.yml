@@ -21,6 +21,7 @@ matrix:
   allow_failures:
     - perl: blead
     - perl: blead-thr
+    - perl: dev
 sudo: false
 env:
   global:
@@ -28,4 +29,4 @@ env:
     - AUTHOR_TESTING=1
 before_install:
   - eval $(curl https://travis-perl.github.io/init) --auto
-  - cpanm -n -f Pod::Coverage::TrustPod Test::Perl::Critic
+  - cpanm -n -f Pod::Coverage::TrustPod Test::Perl::Critic Test::Pod::Coverage Test::Pod
