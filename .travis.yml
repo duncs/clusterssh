@@ -28,4 +28,4 @@ env:
     - AUTHOR_TESTING=1
 before_install:
   - eval $(curl https://travis-perl.github.io/init) --auto
-  - cpanm Pod::Coverage::TrustPod Test::Perl::Critic
+  - cpanm -n -f Pod::Coverage::TrustPod Test::Perl::Critic
