@@ -341,8 +341,6 @@ trap {
 # $trap->quiet("No errors getting 'sort'");
 is( $trap->leaveby, 'return', 'returned ok' );
 is( $trap->die,     undef,    'returned ok' );
-#
-$sort = $base->sort;
 is( ref($sort), 'CODE', "got results from sort" );
 @sorted   = $sort->( 4, 8, 1, 5, 3 );
 @expected = ( 1, 3, 4, 5, 8 );
