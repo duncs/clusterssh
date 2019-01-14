@@ -1,7 +1,8 @@
 Revision history for {{$dist->name}}
 
-4.13.2_02 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net>
-- Fix Getopt--Long minimum version
+4.13.2_02 2019-01-14 Duncan Ferguson <duncan_ferguson@user.sf.net>
+- Fix Getopt-Long minimum version
+- Fix excess test output when Sort::Naturally isn't installed
 
 4.13.2_01 2018-11-24 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Move all Tk code into its own module as-is
