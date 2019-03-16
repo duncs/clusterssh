@@ -596,7 +596,6 @@ sub substitute_macros {
     }
     {
         my $macro_hostname = $self->config->{macro_hostname};
-        #my $hostname       = $servers{$svr}{givenname};
         my $hostname       = hostfqdn();
         $text =~ s!$macro_hostname!$hostname!xsmg;
     }
@@ -612,7 +611,7 @@ sub substitute_macros {
     }
     {
         my $macro_version = $self->config->{macro_version};
-        my $version = $self->parent->VERSION;
+        my $version       = $self->parent->VERSION;
         $text =~ s/$macro_version/$version/xsmg;
     }
 
@@ -1612,37 +1611,38 @@ sub create_menubar() {
             ],
             [   "checkbutton",
                 "Auto Quit",
-                -variable    => \$self->config->{auto_quit},
-                -offvalue    => 'no',
-                -onvalue     => 'yes',
+                -variable => \$self->config->{auto_quit},
+                -offvalue => 'no',
+                -onvalue  => 'yes',
             ],
-# While this autoclose menu works as expected, the functionality 
-# within terminals does not.  "auto_close" is set when the terminal
-# is opened and is not updated when the variable is changed.
-# 
-#            [   "cascade" => "Auto Close",
-#                -menuitems => [
-#                    [   "radiobutton",
-#                        "Auto Close",
-#                        -variable    => \$self->config->{auto_close},
-#                        -label    => 'Off',
-#                        -value    => '0',
-#                    ],
-#                    [   "radiobutton",
-#                        "Auto Close",
-#                        -variable    => \$self->config->{auto_close},
-#                        -label    => '5 Seconds',
-#                        -value    => '5',
-#                    ],
-#                    [   "radiobutton",
-#                        "Auto Close",
-#                        -variable    => \$self->config->{auto_close},
-#                        -label    => '10 Seconds',
-#                        -value    => '10',
-#                    ],
-#                ],
-#                -tearoff => 0,
-#            ],
+
+           # While this autoclose menu works as expected, the functionality
+           # within terminals does not.  "auto_close" is set when the terminal
+           # is opened and is not updated when the variable is changed.
+           #
+           #    [   "cascade" => "Auto Close",
+           #        -menuitems => [
+           #            [   "radiobutton",
+           #                "Auto Close",
+           #                -variable    => \$self->config->{auto_close},
+           #                -label    => 'Off',
+           #                -value    => '0',
+           #            ],
+           #            [   "radiobutton",
+           #                "Auto Close",
+           #                -variable    => \$self->config->{auto_close},
+           #                -label    => '5 Seconds',
+           #                -value    => '5',
+           #            ],
+           #            [   "radiobutton",
+           #                "Auto Close",
+           #                -variable    => \$self->config->{auto_close},
+           #                -label    => '10 Seconds',
+           #                -value    => '10',
+           #            ],
+           #        ],
+           #    -tearoff => 0,
+           #    ],
             [   "command",
                 "Exit",
                 -command     => sub { $self->parent->exit_prog },
