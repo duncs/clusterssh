@@ -152,7 +152,7 @@ sub add_common_options {
     $self->add_option(
         spec => 'autoquit|q',
         help => $self->loc(
-            'Toggle automatically quiting after the last client window has closed (overriding the config file).'
+            'Toggle automatically quitting after the last client window has closed (overriding the config file).'
         ),
     );
     $self->add_option(
@@ -694,7 +694,7 @@ Commands:
 C<< open <tag|hostname> >> - open new sessions to provided tag or hostname
 
 C<< retile >> - force window retiling
-    
+
 e.g.: C<< echo 'open localhost' >> /path/to/external_command_pipe >>}
     );
 
@@ -1127,17 +1127,17 @@ Add extra options into the allowed set for parsing from the command line
 
 =item $obj=ClusterSSH::Getopts->add_common_options ({ })
 
-Add common options used by most calling scripts into the allowed set for 
+Add common options used by most calling scripts into the allowed set for
 parsing from the command line
 
 =item $obj=ClusterSSH::Getopts->add_common_session_options ({ })
 
-Add common session options used by most calling scripts into the allowed 
+Add common session options used by most calling scripts into the allowed
 set for parsing from the command line
 
 =item $obj=ClusterSSH::Getopts->add_common_ssh_options ({ })
 
-Add common ssh options used by most calling scripts into the allowed 
+Add common ssh options used by most calling scripts into the allowed
 set for parsing from the command line
 
 =item $obj->getopts

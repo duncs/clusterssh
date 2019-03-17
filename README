@@ -83,7 +83,7 @@ OPTIONS
         Number of seconds to wait before closing finished terminal windows.
 
     --autoquit, -q
-        Toggle automatically quiting after the last client window has closed
+        Toggle automatically quitting after the last client window has closed
         (overriding the config file).
 
     --cluster-file '<filename>', -c '<filename>'
