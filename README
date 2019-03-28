@@ -83,8 +83,8 @@ OPTIONS
         Number of seconds to wait before closing finished terminal windows.
 
     --autoquit, -q
-        Toggle automatically quitting after the last client window has closed
-        (overriding the config file).
+        Toggle automatically quitting after the last client window has
+        closed (overriding the config file).
 
     --cluster-file '<filename>', -c '<filename>'
         Use supplied file as additional cluster file (see also "FILES").
@@ -222,6 +222,13 @@ KEY SHORTCUTS
 
     Alt-u
         Paste in the username for the connection
+
+    Alt-1
+    Alt-2
+    Alt-3
+    Alt-4
+        Run the matching user defined macro on the server and send the
+        output to the client
 
 EXAMPLES
     Open up a session to 3 servers
@@ -418,13 +425,51 @@ FILES
             Default key sequence to send username to client. See "KEY
             SHORTCUTS" for more information.
 
+        key_user_1 = Alt-1
+        key_user_2 = Alt-2
+        key_user_3 = Alt-3
+        key_user_4 = Alt-4
+            Default key sequence to send user defined macros to client. If
+            the matching macro_user_1 macro is undefined, the sequence is
+            passed straight to the terminal. See "KEY SHORTCUTS" for more
+            information.
+
         macro_servername = %s
         macro_hostname = %h
         macro_username = %u
         macro_newline = %n
         macro_version = %v
+        macro_user_1 = %1
+        macro_user_2 = %2
+        macro_user_3 = %3
+        macro_user_4 = %4
             Change the replacement macro used when either using a 'Send'
             menu item, or when pasting text into the main console.
+
+        macro_user_1_command =
+        macro_user_2_command =
+        macro_user_3_command =
+        macro_user_4_command =
+            User defined macros - the macro is run through the shell on the
+            server and the output is sent to the client. For example,
+
+            "macro_user_1_command=echo echo macro_user_1"
+
+                        would send the text C<echo macro_user_1> into the terminal session.
+
+            "macro_user_1_command=env | grep CSSH"
+
+                        would send the CSSH environment variables to the client.
+
+            The following environment variables are set in the shell of the
+            macro process
+
+            "CSSH_SERVERNAME"
+            "CSSH_HOSTNAME"
+            "CSSH_USERNAME"
+            "CSSH_CONNECTION_STRING"
+            "CSSH_CONNECTION_PORT"
+            "CSSH_VERSION"
 
         macros_enabled = yes
             Enable or disable macro replacement. Note: this affects all the

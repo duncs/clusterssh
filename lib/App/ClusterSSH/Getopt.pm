@@ -559,6 +559,12 @@ would replace the <Alt-n> with the client's name in each window.}
     output $self->loc(q{Retile all the client windows.});
     output '=item ', $self->parent->config->{key_username};
     output $self->loc(q{Paste in the username for the connection});
+    output '=item ', $self->parent->config->{key_user_1} || 'Alt-1';
+    output '=item ', $self->parent->config->{key_user_2} || 'Alt-2';
+    output '=item ', $self->parent->config->{key_user_3} || 'Alt-3';
+    output '=item ', $self->parent->config->{key_user_4} || 'Alt-4';
+    output $self->loc(q{Run the matching user defined macro on the server and send the output to the client});
+
     output '=back';
 
     output '=head1 ' . $self->loc('EXAMPLES');
@@ -768,14 +774,60 @@ If the external command is given a C<-L> option it should output a list of tags 
         'L<KEY SHORTCUTS>'
     );
 
+    output '=item key_user_1 = Alt-1';
+    output '=item key_user_2 = Alt-2';
+    output '=item key_user_3 = Alt-3';
+    output '=item key_user_4 = Alt-4';
+    output $self->loc(
+        q{Default key sequence to send user defined macros to client.  If the matching [_2] macro is undefined, the sequence is passed straight to the terminal.  See [_1] for more information.},
+        'L<KEY SHORTCUTS>', 'L<macro_user_1>'
+    );
+
     output '=item macro_servername = %s';
     output '=item macro_hostname = %h';
     output '=item macro_username = %u';
     output '=item macro_newline = %n';
     output '=item macro_version = %v';
+    output '=item macro_user_1 = %1';
+    output '=item macro_user_2 = %2';
+    output '=item macro_user_3 = %3';
+    output '=item macro_user_4 = %4';
     output $self->loc(
         q{Change the replacement macro used when either using a 'Send' menu item, or when pasting text into the main console.}
     );
+
+    output '=item macro_user_1_command =';
+    output '=item macro_user_2_command =';
+    output '=item macro_user_3_command =';
+    output '=item macro_user_4_command =';
+
+    output $self->loc(
+        q{User defined macros - the macro is run through the shell on the server and the output is sent to the client.  For example,},
+    );
+
+    output "C<macro_user_1_command=echo echo macro_user_1>";
+    output $self->loc(
+        q{
+            would send the text [_1] into the terminal session.
+        },
+        'C<echo macro_user_1>'
+    );
+    output "C<macro_user_1_command=env | grep CSSH>";
+    output $self->loc(
+        q{
+            would send the CSSH environment variables to the client.
+        },
+    );
+
+    output $self->loc("The following environment variables are set in the shell of the macro process");
+    output '=over';
+    output '=item C<CSSH_SERVERNAME>';
+    output '=item C<CSSH_HOSTNAME>';
+    output '=item C<CSSH_USERNAME>';
+    output '=item C<CSSH_CONNECTION_STRING>';
+    output '=item C<CSSH_CONNECTION_PORT>';
+    output '=item C<CSSH_VERSION>';
+    output '=back';
 
     output '=item macros_enabled = yes';
     output $self->loc(

@@ -49,6 +49,10 @@ my %default_config = (
     key_macros_enable       => "Alt-p",
     key_paste               => "Control-v",
     key_username            => "Alt-u",
+    key_user_1              => "Alt-1",
+    key_user_2              => "Alt-2",
+    key_user_3              => "Alt-3",
+    key_user_4              => "Alt-4",
     mouse_paste             => "Button-2",
     auto_quit               => "yes",
     auto_close              => 5,
@@ -103,6 +107,15 @@ my %default_config = (
     macro_username   => '%u',
     macro_newline    => '%n',
     macro_version    => '%v',
+    macro_user_1     => '%1',
+    macro_user_2     => '%2',
+    macro_user_3     => '%3',
+    macro_user_4     => '%4',
+
+    macro_user_1_command     => '',
+    macro_user_2_command     => '',
+    macro_user_3_command     => '',
+    macro_user_4_command     => '',
 
     max_addhost_menu_cluster_items => 6,
     menu_send_autotearoff          => 0,
@@ -279,6 +292,15 @@ sub parse_config_file {
         if ( $read_config{terminal_font} );
 
     $self->validate_args(%read_config);
+
+    # Look at the user macros and if not set remove the hotkey for them
+    for my $i (qw/ 1 2 3 4 /) {
+        if ( ! $self->{"macro_user_${i}_command"} ) {
+            delete $self->{"key_user_${i}"};
+        }
+    }
+
+    return $self;
 }
 
 sub load_configs {

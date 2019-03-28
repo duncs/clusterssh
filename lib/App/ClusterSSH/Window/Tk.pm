@@ -20,6 +20,8 @@ use Tk::Xlib;
 use Tk::ROText;
 require Tk::Dialog;
 require Tk::LabEntry;
+use Symbol qw/ gensym /;
+use IPC::Open3;
 use X11::Protocol 0.56;
 use X11::Protocol::Constants qw/ Shift Mod5 ShiftMask /;
 use X11::Protocol::WM 29;
@@ -593,17 +595,20 @@ sub substitute_macros {
         my $macro_servername = $self->config->{macro_servername};
         ( my $servername = $svr ) =~ s/\s+//;
         $text =~ s!$macro_servername!$servername!xsmg;
+        $ENV{CSSH_SERVERNAME} = $servername;
     }
     {
         my $macro_hostname = $self->config->{macro_hostname};
         my $hostname       = hostfqdn();
         $text =~ s!$macro_hostname!$hostname!xsmg;
+        $ENV{CSSH_HOSTNAME} = $hostname;
     }
     {
         my $macro_username = $self->config->{macro_username};
         my $username       = $servers{$svr}{username};
         $username ||= getpwuid($UID);
         $text =~ s!$macro_username!$username!xsmg;
+        $ENV{CSSH_USERNAME} = $username;
     }
     {
         my $macro_newline = $self->config->{macro_newline};
@@ -613,6 +618,54 @@ sub substitute_macros {
         my $macro_version = $self->config->{macro_version};
         my $version       = $self->parent->VERSION;
         $text =~ s/$macro_version/$version/xsmg;
+        $ENV{CSSH_VERSION} = $version;
+    }
+
+    $ENV{CSSH_CONNECTION_STRING} = $servers{$svr}{connect_string};
+    $ENV{CSSH_CONNECTION_PORT}   = $servers{$svr}{port};
+
+    # Set up environment variables in the macro environment
+    for my $i (qw/ 1 2 3 4 / ) {
+        my $macro_user_command = 'macro_user_'.$i.'_command';
+        my $macro_user = $self->config->{'macro_user_'.$i};
+
+        next unless $text =~ $macro_user;
+        if( ! $self->config->{ $macro_user_command } ) {
+            $text =~ s/$macro_user//xsmg;
+            next;
+        }
+
+        my $cmd = $self->config->{ $macro_user_command };
+
+        local $SIG{CHLD} = undef;
+
+        my $stderr_fh = gensym;
+        my $stdout_fh = gensym;
+        my $child_pid = eval { open3(undef, $stdout_fh, $stderr_fh, $cmd) };
+
+        if (my $err=$@) {
+            # error message is hardcoded into open3 - tidy it up a little for our users
+            $err=~ s/ at .*//;
+            $err=~ s/open3: //;
+            $err =~ s/( failed)/' $1/;
+            $err =~ s/(exec of) /$1 '/;
+            warn "Macro failure for '$macro_user_command': $err";
+            next;
+        }
+        waitpid($child_pid, 0);
+        my $cmd_rc = $? >> 8;
+
+        my @stdout = <$stdout_fh>;
+        my @stderr = <$stderr_fh>;
+
+        if ( $cmd_rc > 0 || @stderr ){
+            warn "Macro failure for '$macro_user_command'",$/;
+            warn "Exited with error output:: @stderr" if @stderr;
+            warn "Exited with non-zero return code: $cmd_rc", $/ if $cmd_rc;
+        } else {
+            #$self->send_text_to_all_servers( $stdout );
+            return join('', @stdout);
+        }
     }
 
     return $text;
@@ -1545,6 +1598,18 @@ sub key_event {
                     $self->send_text_to_all_servers(
                         $self->config->{macro_username} )
                         if ( $hotkey eq "key_username" );
+                    $self->send_text_to_all_servers(
+                        $self->config->{macro_user_1} )
+                        if ( $hotkey eq "key_user_1" );
+                    $self->send_text_to_all_servers(
+                        $self->config->{macro_user_2} )
+                        if ( $hotkey eq "key_user_2" );
+                    $self->send_text_to_all_servers(
+                        $self->config->{macro_user_3} )
+                        if ( $hotkey eq "key_user_3" );
+                    $self->send_text_to_all_servers(
+                        $self->config->{macro_user_4} )
+                        if ( $hotkey eq "key_user_4" );
                     $self->add_host_by_name()
                         if ( $hotkey eq "key_addhost" );
                     $self->retile_hosts("force")

@@ -4,6 +4,7 @@ Revision history for {{$dist->name}}
 - Include README within the repository, not just created tar.gz files
 - Add 'autoquit' setting to 'File' menu (Github issue #114)
 - Correct macro_hostname to be the FQDN of the server where cssh is being run (Github issue #116)
+- Add in user defined macros
 
 4.13.2_02 2019-01-14 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Fix Getopt-Long minimum version

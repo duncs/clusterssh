@@ -52,6 +52,10 @@ Readonly::Hash my %default_config => {
     key_macros_enable       => "Alt-p",
     key_paste               => "Control-v",
     key_username            => "Alt-u",
+    key_user_1              => "Alt-1",
+    key_user_2              => "Alt-2",
+    key_user_3              => "Alt-3",
+    key_user_4              => "Alt-4",
     mouse_paste             => "Button-2",
     auto_quit               => "yes",
     auto_close              => 5,
@@ -109,6 +113,15 @@ Readonly::Hash my %default_config => {
     macro_username   => '%u',
     macro_newline    => '%n',
     macro_version    => '%v',
+    macro_user_1     => '%1',
+    macro_user_2     => '%2',
+    macro_user_3     => '%3',
+    macro_user_4     => '%4',
+
+    macro_user_1_command => '',
+    macro_user_2_command => '',
+    macro_user_3_command => '',
+    macro_user_4_command => '',
 
     max_addhost_menu_cluster_items => 6,
     menu_send_autotearoff          => 0,
@@ -188,6 +201,9 @@ $expected{screen_reserve_left}   = 100;
 $expected{screen_reserve_right}  = 100;
 $expected{screen_reserve_top}    = 100;
 $expected{screen_reserve_bottom} = 160;
+
+# Note: the parse_config here removes the key_user_x entries
+delete( $expected{"key_user_$_"} ) for (qw/ 1 2 3 4 /);
 trap {
     $config = $config->parse_config_file( $file, );
 };
@@ -328,6 +344,9 @@ open( my $csshrc, '>', $ENV{HOME} . '/.csshrc' );
 print $csshrc 'auto_quit = no', $/;
 close($csshrc);
 $expected{auto_quit} = 'no';
+
+# Note: the load_configs here removes the key_user_x entries
+delete( $expected{"key_user_$_"} ) for (qw/ 1 2 3 4 /);
 $config = App::ClusterSSH::Config->new();
 trap {
     $config->load_configs();
@@ -565,11 +584,23 @@ key_macros_enable=Alt-p
 key_paste=Control-v
 key_quit=Alt-q
 key_retilehosts=Alt-r
+key_user_1=Alt-1
+key_user_2=Alt-2
+key_user_3=Alt-3
+key_user_4=Alt-4
 key_username=Alt-u
 lang=en
 macro_hostname=%h
 macro_newline=%n
 macro_servername=%s
+macro_user_1=%1
+macro_user_1_command=
+macro_user_2=%2
+macro_user_2_command=
+macro_user_3=%3
+macro_user_3_command=
+macro_user_4=%4
+macro_user_4_command=
 macro_username=%u
 macro_version=%v
 macros_enabled=yes
