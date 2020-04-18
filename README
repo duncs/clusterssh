@@ -2,7 +2,7 @@ NAME
     cssh - Cluster administration tool
 
 VERSION
-    This documentation is for version: 4.14
+    This documentation is for version: 4.15
 
 SYNOPSIS
     cssh [-a '<command>'] [-K <seconds>] [-q] [-c '<filename>'] [-x <cols>]
@@ -11,6 +11,14 @@ SYNOPSIS
     [-H] [-o '<STRING>'] [-p <port>] [-Q] [-y <rows>] [-s] [-r '<filename>']
     [-t '<STRING>'] [-g] [-T '<title>'] [-u] [-?] [-A] [-l '<username>']
     [-v]
+
+RELATED
+    Also see the individual man pages for each of these utilities
+
+    ccon - Use 'console' as the communication method
+    crsh - Use 'rsh' as the communication method
+    csftp - Use 'sftp' as the communication method
+    ctel - Use 'telnet' as the communication method
 
 DESCRIPTION
     The command opens an administration console and an xterm to all

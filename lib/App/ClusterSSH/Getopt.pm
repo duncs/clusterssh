@@ -446,6 +446,28 @@ sub _generate_pod {
     }
     print $/, $/;
 
+    output '=head1 ', $self->loc('RELATED');
+    output $self->loc(
+      q{Also see the individual man pages for each of these utilities} );
+
+    my %utils = (
+      ctel => 'telnet',
+      cssh => 'ssh',
+      crsh => 'rsh',
+      csftp => 'sftp',
+      ccon => 'console',
+    );
+
+    output '=over';
+
+    for my $util (sort grep { !/$Script/ } keys %utils) {
+      output "=item $util - ".$self->loc(
+        q{Use '[_1]' as the communication method}, $utils{$util}
+      );
+    }
+
+    output '=back';
+
     output '=head1 ', $self->loc('DESCRIPTION');
     output $self->loc(
         q{The command opens an administration console and an xterm to all specified hosts.  Any text typed into the administration console is replicated to all windows.  All windows may also be typed into directly.
