@@ -52,6 +52,8 @@ sub script {
         }
     }
 
+    my $command_pre    = $config->{command_pre}  || q{};
+    my $command_post   = $config->{command_post} || q{};
     my $comms          = $config->{ $config->{comms} };
     my $comms_args     = $config->{ $config->{comms} . '_args' };
     my $config_command = $config->{command};
@@ -69,7 +71,7 @@ sub script {
            my \$user=shift;
            my \$port=shift;
            my \$mstr=shift;
-           my \$command="$comms $comms_args ";
+           my \$command="$command_pre $comms $comms_args";
            open(PIPE, ">", \$pipe) or die("Failed to open pipe: \$!\\n");
            print PIPE "\$\$:\$ENV{WINDOWID}" 
                or die("Failed to write to pipe: $!\\n");
@@ -105,6 +107,7 @@ sub script {
            if("$config_command") {
             \$command .= " \\\"$config_command\\\"";
            }
+           \$command .= "$command_post";
            \$command .= " ; $postcommand";
            # provide some info for debugging purposes
            warn("Running: \$command\\n");

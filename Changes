@@ -2,6 +2,7 @@ Revision history for {{$dist->name}}
 
 4.15 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Include all utilies within each man page
+- Add in 'command_pre' and 'command_post' configuration options
 
 4.14 2019-08-21 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Include README within the repository, not just created tar.gz files

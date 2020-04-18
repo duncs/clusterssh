@@ -102,6 +102,8 @@ Readonly::Hash my %default_config => {
     history_height => 10,
 
     command             => q{},
+    command_pre         => q{},
+    command_post        => q{},
     title               => q{15CONFIG.T},
     comms               => q{ssh},
     hide_menu           => 0,
@@ -564,6 +566,8 @@ auto_close=5
 auto_quit=yes
 auto_wm_decoration_offsets=no
 cols=-1
+command_post=
+command_pre=
 console=console
 console_args=
 console_position=

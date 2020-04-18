@@ -700,6 +700,17 @@ would replace the <Alt-n> with the client's name in each window.}
         'Enable or disable alternative algorithm for calculating terminal positioning.',
     );
 
+    output '=item command_pre =';
+    output '=item command_post =';
+    output $self->loc(
+        q{Add extra commands around the communication method.  For example:
+
+command_pre= . $HOME/virtualenvs/default/bin/active ;
+command_post= | ct
+
+would allow for using Python virtual envronments and then piping all shell output through C<chromaterm> for syntax highlighting.  Note: you must use appropriate command separators/terminators to keep the meaning of the command pipline (such as C<;> and C<|> between commands).
+
+These are not put through macro parsing.});
     output '=item comms = ' . $self->parent->config->{comms};
     output $self->loc(
         'Sets the default communication method (initially taken from the name of the program, but can be overridden here).'
