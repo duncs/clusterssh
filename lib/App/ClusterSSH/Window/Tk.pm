@@ -314,6 +314,8 @@ sub set_half_inactive() {
     my ($self) = @_;
     $self->debug( 2, "Setting approx half of all hosts to inactive" );
 
+    return if !%servers;
+
     my (@keys) = keys(%servers);
     $#keys /= 2;
     foreach my $svr (@keys) {
@@ -346,7 +348,7 @@ sub add_host_by_name() {
     if ( $menus{host_entry} ) {
         $self->debug( 2, "host=", $menus{host_entry} );
         my @names
-            = $self->resolve_names( split( /\s+/, $menus{host_entry} ) );
+            = $self->parent->resolve_names( split( /\s+/, $menus{host_entry} ) );
         $self->debug( 0, 'Opening to: ', join( ' ', @names ) ) if (@names);
         $self->open_client_windows(@names);
     }
