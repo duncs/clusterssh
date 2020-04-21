@@ -4,6 +4,7 @@ Revision history for {{$dist->name}}
 - Include all utilies within each man page
 - Add in 'command_pre' and 'command_post' configuration options
 - Fix 'Add Host' menu error finding 'resolved_names'
+- Ensure lib path is added to range tests to find the libraries
 
 4.14 2019-08-21 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Include README within the repository, not just created tar.gz files
