@@ -84,21 +84,23 @@ isa_ok( $cluster1, 'App::ClusterSSH::Cluster' );
 
 # no point running this test as root since root cannot be blocked
 # from accessing the file
-if ( $EUID != 0 ) {
-    my $no_read = $Bin . '/30cluster.cannot_read';
-    chmod 0000, $no_read;
-    trap {
-        $cluster1->read_cluster_file($no_read);
-    };
-    chmod 0644, $no_read;
-    isa_ok( $trap->die, 'App::ClusterSSH::Exception::LoadFile' );
-    is( $trap->die,
-        "Unable to read file $no_read: Permission denied",
-        'Error on reading an existing file ok'
-    );
-}
-else {
-    pass('Cannot test for lack of read access when run as root');
+TODO: {
+    if ( $EUID != 0 ) {
+        my $no_read = $Bin . '/30cluster.cannot_read';
+        chmod 0000, $no_read;
+        trap {
+            $cluster1->read_cluster_file($no_read);
+        };
+        chmod 0644, $no_read;
+        isa_ok( $trap->die, 'App::ClusterSSH::Exception::LoadFile' );
+        is( $trap->die,
+            "Unable to read file $no_read: Permission denied",
+            'Error on reading an existing file ok'
+        );
+    }
+    else {
+        pass('Cannot test for lack of read access when run as root');
+    }
 }
 
 $expected{tag1} = ['host1'];
