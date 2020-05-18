@@ -1,6 +1,6 @@
 Revision history for {{$dist->name}}
 
-4.15 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net>
+4.15 2020-05-18 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Include all utilies within each man page
 - Add in 'command_pre' and 'command_post' configuration options
 - Fix 'Add Host' menu error finding 'resolved_names'
