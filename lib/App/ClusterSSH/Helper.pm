@@ -71,9 +71,9 @@ sub script {
            my \$user=shift;
            my \$port=shift;
            my \$mstr=shift;
-           my \$command="$command_pre $comms $comms_args";
+           my \$command="$command_pre $comms $comms_args ";
            open(PIPE, ">", \$pipe) or die("Failed to open pipe: \$!\\n");
-           print PIPE "\$\$:\$ENV{WINDOWID}" 
+           print PIPE "\$\$:\$ENV{WINDOWID}"
                or die("Failed to write to pipe: $!\\n");
            close(PIPE) or die("Failed to close pipe: $!\\n");
            if(\$svr =~ m/==\$/)
