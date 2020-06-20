@@ -356,7 +356,7 @@ sub add_host_by_name() {
     if ( defined $menus{listbox} && $menus{listbox}->curselection() ) {
         my @hosts = $menus{listbox}->get( $menus{listbox}->curselection() );
         $self->debug( 2, "host=", join( ' ', @hosts ) );
-        $self->open_client_windows( $self->resolve_names(@hosts) );
+        $self->open_client_windows( $self->parent->resolve_names(@hosts) );
     }
 
     $self->build_hosts_menu();
@@ -1204,7 +1204,7 @@ sub setup_repeat() {
 
                         for ($cmd) {
                             if (m/^open$/) {
-                                my @new_hosts = $self->resolve_names(@tags);
+                                my @new_hosts = $self->parent->resolve_names(@tags);
                                 $self->open_client_windows(@new_hosts);
                                 $self->build_hosts_menu();
                                 last;

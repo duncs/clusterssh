@@ -5,7 +5,7 @@ package App::ClusterSSH;
 # ABSTRACT: Cluster administration tool
 # ABSTRACT: Cluster administration tool
 
-use version; our $VERSION = version->new('4.15');
+use version; our $VERSION = version->new('4.16');
 
 =head1 SYNOPSIS
 
