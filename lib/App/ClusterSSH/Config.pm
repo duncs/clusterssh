@@ -335,6 +335,18 @@ sub load_configs {
         $self->parse_config_file($file) if ( -e $file );
     }
 
+    # Override confuration via environment variable using cssh_ prefix
+    #  eg: terminal_size => cssh_terminal_size
+    foreach my $config_key ( sort( keys(%default_config) ) ) {
+        my $env_config_key = "cssh_".$config_key;
+        if ( exists $ENV{uc($env_config_key)} ) {
+            $env_config_key = uc($env_config_key);
+        }
+        if ( exists $ENV{$env_config_key} ) {
+            $self->{$config_key} = $ENV{$env_config_key};
+        }
+    }
+
     return $self;
 }
 
