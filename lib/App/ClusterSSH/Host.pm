@@ -381,7 +381,7 @@ Set specific details about the host after its been created.
 =item get_realname
 
 If the server name provided is not an IP address (either IPv4 or IPv6) 
-attempt to resolve it and retun the discovered names.
+attempt to resolve it and return the discovered names.
 
 =item get_givenname
 

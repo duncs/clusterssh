@@ -593,7 +593,7 @@ slash_slash_equal($a, 0) is equivalent to $a //= 0
 
 =item window
 
-Method to access assosiated window module
+Method to access associated window module
 
 =item write_default_user_config
                                            
