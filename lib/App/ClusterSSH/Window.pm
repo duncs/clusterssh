@@ -29,7 +29,10 @@ sub import {
 
     # If we are building or in test here, just exit
     # as travis build servers will not have Tk installed
-    return if $ENV{AUTHOR_TESTING} || $ENV{RELEASE_TESTING};
+    if ($ENV{AUTHOR_TESTING} || $ENV{RELEASE_TESTING}) {
+        print STDERR "skipping initialisation; AUTHOR_TESTING or RELEASE_TESTING are set\n";
+        return;
+    }
 
     # Find what windows module we should be using and just overlay it into
     # this object
