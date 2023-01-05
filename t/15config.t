@@ -535,7 +535,7 @@ SKIP: {
     chmod( 0755, $ENV{HOME} . '/.csshrc.DISABLED', $ENV{HOME} );
 }
 
-note('check failure to write default config is caught');
+note('check failure to write default config is caught when loading config');
 $ENV{HOME} = tempdir( CLEANUP => 1 );
 mkdir( $ENV{HOME} . '/.clusterssh' );
 mkdir( $ENV{HOME} . '/.clusterssh/config' );
