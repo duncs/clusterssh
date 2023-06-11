@@ -314,7 +314,7 @@ sub load_configs {
         $ENV{HOME} . '/.clusterssh/config',
         )
     {
-        $self->parse_config_file($config) if ( -e $config );
+        $self->parse_config_file($config) if ( -e $config && ! -d _ );
     }
 
     # write out default config file if necesasry
@@ -329,10 +329,10 @@ sub load_configs {
     # relative to config directory
     for my $config (@configs) {
         next unless ($config);    # can be null when passed from Getopt::Long
-        $self->parse_config_file($config) if ( -e $config );
+        $self->parse_config_file($config) if ( -e $config && ! -d _ );
 
         my $file = $ENV{HOME} . '/.clusterssh/config_' . $config;
-        $self->parse_config_file($file) if ( -e $file );
+        $self->parse_config_file($file) if ( -e $file && ! -d _ );
     }
 
     return $self;
