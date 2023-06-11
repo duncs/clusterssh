@@ -1276,10 +1276,16 @@ sub setup_repeat() {
 
 sub create_windows() {
     my ($self) = @_;
+    my ($screen_height) = $xdisplay->{height_in_pixels};
+    my ($screen_width) = $xdisplay->{width_in_pixels};
     $self->debug( 2, "create_windows: started" );
 
     $windows{main_window}
         = MainWindow->new( -title => "ClusterSSH", -class => 'cssh', );
+    if ($screen_height * $screen_width >= 8294400) # display 4k or bigger
+    {
+        $windows{main_window}->optionAdd('*font', 'Nimbus 14'); # better for 4k displays
+    }
     $windows{main_window}->withdraw;    # leave withdrawn until needed
 
     if ( defined( $self->config->{console_position} )
