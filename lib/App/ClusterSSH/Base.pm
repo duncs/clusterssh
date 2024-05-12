@@ -306,9 +306,7 @@ sub sort {
 
     my $sort = sub { sort @_ };
 
-    return $sort
-        unless ref( $self->config() ) eq "HASH"
-        && $self->config()->{'use_natural_sort'};
+    return $sort unless $self->config()->{'use_natural_sort'};
 
     # if the user has asked for natural sorting we need to include an extra
     # module
