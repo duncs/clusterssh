@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matric:
+      matrix:
         perl-version:
           - latest
           - 5.40
@@ -27,9 +27,11 @@ jobs:
           - 5.20
           - 5.18
           - 5.16
-    containiner:
-      image: perldocker/perl-tester:${{ matric.perl-version }}
-    name: Perl ${{ matric.perl-version }}
+    container:
+      image: perldocker/perl-tester:${{ matrix.perl-version }}
+
+    name: Perl ${{ matrix.perl-version }}
+
     steps:
       - uses: actions/checkout@v2
       - name: Regular tests
