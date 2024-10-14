@@ -3,20 +3,27 @@ perl:
   - blead
   - dev
 #  No clean build due to removal of '.' from lib path
-#  - 5.26
+  - 5.40
+  - 5.38
+  - 5.36
+  - 5.34
+  - 5.32
+  - 5.30
+  - 5.28
+  - 5.26
   - 5.24
   - 5.22
   - 5.20
   - 5.18
   - 5.16
-  - 5.14
-  - 5.12
-  - 5.10
 #  stopping builds; is anyone really still using this version?
+#  - 5.14
+#  - 5.12
+#  - 5.10
 #  - 5.8
 matrix:
   include:
-    - perl: 5.24
+    - perl: 5.40
       env: COVERAGE=1
   allow_failures:
     - perl: blead
