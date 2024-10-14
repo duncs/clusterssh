@@ -118,6 +118,7 @@ my %default_config = (
     macro_user_2_command     => '',
     macro_user_3_command     => '',
     macro_user_4_command     => '',
+    hostname_override        => '',
 
     max_addhost_menu_cluster_items => 6,
     menu_send_autotearoff          => 0,

@@ -1,5 +1,8 @@
 Revision history for {{$dist->name}}
 
+4.17_01 ????-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net>
+- Swap the hostname lookup macro from DNS to using the system hostname (Github issue #158)
+
 4.16 2020-06-20 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Further fix for 'resolve_names' error when adding hosts via the UI
 - Fix missing space separator for ssh_args (thanks to Petr Vorel)

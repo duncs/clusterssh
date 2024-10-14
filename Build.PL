@@ -4,6 +4,7 @@ require Module::Build;
 
 my %module_build_args = (
     module_name => 'App::ClusterSSH',
+    dist_abstract => "Cluster administration tool",
 ##{ $plugin->get_prereqs(1) ##}
 ##{ $plugin->get_default('share_dir') ##}
     script_files => [

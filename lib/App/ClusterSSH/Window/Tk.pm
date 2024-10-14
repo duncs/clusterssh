@@ -10,7 +10,7 @@ use English qw( -no_match_vars );
 use base qw/ App::ClusterSSH::Base /;
 use vars qw/ %keysymtocode %keycodetosym /;
 
-use Net::Domain qw(hostfqdn);
+use Sys::Hostname qw/ hostname /;
 use File::Temp qw/:POSIX/;
 use Fcntl;
 use POSIX ":sys_wait_h";
@@ -601,7 +601,7 @@ sub substitute_macros {
     }
     {
         my $macro_hostname = $self->config->{macro_hostname};
-        my $hostname       = hostfqdn();
+        my $hostname       = $self->config->{hostname_override} || hostname();
         $text =~ s!$macro_hostname!$hostname!xsmg;
         $ENV{CSSH_HOSTNAME} = $hostname;
     }

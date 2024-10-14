@@ -101,6 +101,8 @@ Readonly::Hash my %default_config => {
     history_width  => 40,
     history_height => 10,
 
+    hostname_override => '',
+
     command             => q{},
     command_pre         => q{},
     command_post        => q{},
@@ -580,6 +582,7 @@ fillscreen=no
 hide_menu=0
 history_height=10
 history_width=40
+hostname_override=
 key_addhost=Control-Shift-plus
 key_clientname=Alt-n
 key_history=Alt-h
