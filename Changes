@@ -1,6 +1,6 @@
 Revision history for {{$dist->name}}
 
-4.17_01 ????-??-?? Duncan Ferguson <duncan_ferguson@user.sf.net>
+4.17_01 0000-00-00 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Swap the hostname lookup macro from DNS to using the system hostname (Github issue #158)
 - Swap from using Travis-CI to Github Actions
 
