@@ -13,6 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         perl-version:
+          - '5.41'
           - '5.40'
           - '5.38'
           - '5.36'
@@ -37,11 +38,19 @@ jobs:
 
     steps:
       - uses: actions/checkout@main
+      - name: Amend PATH
+        run: |
+          echo "${{ env.GITHUB_WORKSPACE }}/t/bin" >> $GITHUB_PATH
+      - name: Current env
+        run: env
+      - name: Perl info
+        run: perl -V
       - name: Regular tests
         if: ${{ !matrix.coverage }}
         run: |
           cpanm -n -f Pod::Coverage::TrustPod Test::Perl::Critic Test::Pod::Coverage Test::Pod Test::Trap
           perl Build.PL
+          perl Build manifest
           perl Build test
         env:
           RELEASE_TESTING: 1
@@ -51,6 +60,7 @@ jobs:
         run: |
           cpanm -n -f Pod::Coverage::TrustPod Test::Perl::Critic Test::Pod::Coverage Test::Pod Test::Trap
           perl Build.PL
+          perl Build manifest
           perl Build test
         env:
           COVERAGE: 1
