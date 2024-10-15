@@ -304,13 +304,13 @@ sub parent {
 sub sort {
     my $self = shift;
 
-    my $sort = sub { sort @_ };
-
-    return $sort unless $self->config()->{'use_natural_sort'};
-
     # if the user has asked for natural sorting we need to include an extra
     # module
-    if ( $self->config()->{'use_natural_sort'} ) {
+    my $config = $self->config();
+
+    # Make sure the configuration object has been set correctly before
+    # referencing anything
+    if ( ref $config eq "HASH" && $config->{'use_natural_sort'} ) {
         eval { Module::Load::load('Sort::Naturally'); };
         if ($@) {
             warn(
@@ -318,15 +318,16 @@ sub sort {
             );
         }
         else {
-            $sort = sub { Sort::Naturally::nsort(@_) };
+            my $sort = sub { Sort::Naturally::nsort(@_) };
+            return $sort;
         }
     }
 
+    my $sort = sub { sort @_ };
     return $sort;
 }
 
 1;
-
 
 =head1 METHODS
 
