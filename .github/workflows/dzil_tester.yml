@@ -40,19 +40,20 @@ jobs:
     steps:
       - uses: actions/checkout@main
       - name: Amend PATH
-        run: |
-          echo "${GITHUB_WORKSPACE}/t/bin" >> $GITHUB_PATH
+        run: echo "${GITHUB_WORKSPACE}/t/bin" >> $GITHUB_PATH
       - name: Current env
         run: env
       - name: Perl info
         run: perl -V
-      - name: CPAN modules
+      - name: CPAN test modules
         run: cpanm -n Pod::Coverage::TrustPod Test::Perl::Critic Test::Pod::Coverage Test::Pod Test::Trap
+      - name: CPAN build modules
+        run: cpanm -n Tk X11::Protocol X11::Protocol::Other
       - name: Initial Build
         run: perl Build.PL
       - name: Build the MANIFEST
         run: perl Build manifest
-      - name: Regular tests
+      - name: Test suite
         if: ${{ !matrix.coverage }}
         run: perl Build test
         env:
