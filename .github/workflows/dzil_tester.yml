@@ -40,7 +40,7 @@ jobs:
       - name: Regular tests
         if: ${{ !matrix.coverage }}
         run: |
-          cpanm -n -f Pod::Coverage::TrustPod Test::Perl::Critic Test::Pod::Coverage Test::Pod
+          cpanm -n -f Pod::Coverage::TrustPod Test::Perl::Critic Test::Pod::Coverage Test::Pod Test::Trap
           perl Build.PL
           perl Build test
         env:
@@ -49,7 +49,7 @@ jobs:
       - name: Coverage tests
         if: ${{ matrix.coverage }}
         run: |
-          cpanm -n -f Pod::Coverage::TrustPod Test::Perl::Critic Test::Pod::Coverage Test::Pod
+          cpanm -n -f Pod::Coverage::TrustPod Test::Perl::Critic Test::Pod::Coverage Test::Pod Test::Trap
           perl Build.PL
           perl Build test
         env:
