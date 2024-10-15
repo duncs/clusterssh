@@ -13,7 +13,8 @@ jobs:
       fail-fast: false
       matrix:
         perl-version:
-          - '5.41'
+          - 'devel'
+          - 'latest'
           - '5.40'
           - '5.38'
           - '5.36'
@@ -45,23 +46,21 @@ jobs:
         run: env
       - name: Perl info
         run: perl -V
+      - name: CPAN modules
+        run: cpanm -n Pod::Coverage::TrustPod Test::Perl::Critic Test::Pod::Coverage Test::Pod Test::Trap
+      - name: Initial Build
+        run: perl Build.PL
+      - name: Build the MANIFEST
+        run: perl Build manifest
       - name: Regular tests
         if: ${{ !matrix.coverage }}
-        run: |
-          cpanm -n -f Pod::Coverage::TrustPod Test::Perl::Critic Test::Pod::Coverage Test::Pod Test::Trap
-          perl Build.PL
-          perl Build manifest
-          perl Build test
+        run: perl Build test
         env:
           RELEASE_TESTING: 1
           AUTHOR_TESTING: 1
       - name: Coverage tests
         if: ${{ matrix.coverage }}
-        run: |
-          cpanm -n -f Pod::Coverage::TrustPod Test::Perl::Critic Test::Pod::Coverage Test::Pod Test::Trap
-          perl Build.PL
-          perl Build manifest
-          perl Build test
+        run: perl Build test
         env:
           COVERAGE: 1
           RELEASE_TESTING: 1
