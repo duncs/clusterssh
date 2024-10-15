@@ -40,7 +40,7 @@ jobs:
       - uses: actions/checkout@main
       - name: Amend PATH
         run: |
-          echo "${{ env.GITHUB_WORKSPACE }}/t/bin" >> $GITHUB_PATH
+          echo "${GITHUB_WORKSPACE}/t/bin" >> $GITHUB_PATH
       - name: Current env
         run: env
       - name: Perl info
