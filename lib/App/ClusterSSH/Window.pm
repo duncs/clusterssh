@@ -28,7 +28,7 @@ sub import {
     my ($class) = @_;
 
     # If we are building or in test here, just exit
-    # as travis build servers will not have Tk installed
+    # as the build servers will not have Tk installed
     if ($ENV{AUTHOR_TESTING} || $ENV{RELEASE_TESTING}) {
         print STDERR "skipping initialisation; AUTHOR_TESTING or RELEASE_TESTING are set\n";
         return;

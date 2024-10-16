@@ -13,33 +13,56 @@ jobs:
       fail-fast: false
       matrix:
         perl-version:
-          - latest
-          - 5.40
-          - 5.38
-          - 5.36
-          - 5.34
-          - 5.32
-          - 5.30
-          - 5.28
-          - 5.26
-          - 5.24
-          - 5.22
-          - 5.20
-          - 5.18
-          - 5.16
+          - 'devel'
+          - 'latest'
+          - '5.40'
+          - '5.38'
+          - '5.36'
+          - '5.34'
+          - '5.32'
+          - '5.30'
+          - '5.28'
+          - '5.26'
+          - '5.24'
+          - '5.22'
+          - '5.20'
+          - '5.18'
+          - '5.16'
+        include:
+          - perl-version: '5.38'
+            os: ubuntu-latest
+            coverage: true
     container:
       image: perldocker/perl-tester:${{ matrix.perl-version }}
 
     name: Perl ${{ matrix.perl-version }}
 
     steps:
-      - uses: actions/checkout@v2
-      - name: Regular tests
-        run: |
-          cpanm -n -f Pod::Coverage::TrustPod Test::Perl::Critic Test::Pod::Coverage Test::Pod
-          perl Build.PL
-          perl Build test
+      - uses: actions/checkout@main
+      - name: Amend PATH
+        run: echo "${GITHUB_WORKSPACE}/t/bin" >> $GITHUB_PATH
+      - name: Current env
+        run: env
+      - name: Perl info
+        run: perl -V
+      - name: CPAN test modules
+        run: cpanm -n Pod::Coverage::TrustPod Test::Perl::Critic Test::Pod::Coverage Test::Pod Test::Trap
+      - name: CPAN build modules
+        run: cpanm -n Tk X11::Protocol X11::Protocol::Other
+      - name: Initial Build
+        run: perl Build.PL
+      - name: Build the MANIFEST
+        run: perl Build manifest
+      - name: Test suite
+        if: ${{ !matrix.coverage }}
+        run: perl Build test
         env:
-          - COVERAGE=1
-          - RELEASE_TESTING=1
-          - AUTHOR_TESTING=1
+          RELEASE_TESTING: 1
+          AUTHOR_TESTING: 1
+      - name: Coverage tests
+        if: ${{ matrix.coverage }}
+        run: perl Build test
+        env:
+          COVERAGE: 1
+          RELEASE_TESTING: 1
+          AUTHOR_TESTING: 1
