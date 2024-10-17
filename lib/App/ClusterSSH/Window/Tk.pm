@@ -11,7 +11,7 @@ use base qw/ App::ClusterSSH::Base /;
 use vars qw/ %keysymtocode %keycodetosym /;
 
 use Sys::Hostname qw/ hostname /;
-use File::Temp qw/:POSIX/;
+use File::Temp    qw/:POSIX/;
 use Fcntl;
 use POSIX ":sys_wait_h";
 use POSIX qw/:sys_wait_h strftime mkfifo/;
@@ -27,14 +27,14 @@ use X11::Protocol::Constants qw/ Shift Mod5 ShiftMask /;
 use X11::Protocol::WM 29;
 use X11::Keysyms '%keysymtocode', 'MISCELLANY', 'XKB_KEYS', '3270', 'LATIN1',
     'LATIN2', 'LATIN3', 'LATIN4', 'KATAKANA', 'ARABIC', 'CYRILLIC', 'GREEK',
-    'TECHNICAL', 'SPECIAL', 'PUBLISHING', 'APL', 'HEBREW', 'THAI', 'KOREAN';
+    'TECHNICAL', 'SPECIAL', 'PUBLISHING', 'APL', 'HEBREW', 'THAI',  'KOREAN';
 
 # Module to contain all Tk specific functionality
 
-my %windows;    # hash for all window definitions
-my %menus;      # hash for all menu definitions
-my @servers;    # array of servers provided on cmdline
-my %servers;    # hash of server cx info
+my %windows;                   # hash for all window definitions
+my %menus;                     # hash for all menu definitions
+my @servers;                   # array of servers provided on cmdline
+my %servers;                   # hash of server cx info
 my $xdisplay;
 my %keyboardmap;
 my $sysconfigdir = "/etc";
@@ -185,8 +185,8 @@ sub open_client_windows(@) {
         $servers{$server}{realname}       = $realname;
         $servers{$server}{username}       = $self->config->{user};
         $servers{$server}{username}       = $username if ($username);
-        $servers{$server}{username}       = $username || '';
-        $servers{$server}{port}           = $port || '';
+        $servers{$server}{username}       = $username             || '';
+        $servers{$server}{port}           = $port                 || '';
         $servers{$server}{master}         = $self->config->{mstr} || '';
         $servers{$server}{master}         = $master if ($master);
 
@@ -348,7 +348,8 @@ sub add_host_by_name() {
     if ( $menus{host_entry} ) {
         $self->debug( 2, "host=", $menus{host_entry} );
         my @names
-            = $self->parent->resolve_names( split( /\s+/, $menus{host_entry} ) );
+            = $self->parent->resolve_names(
+            split( /\s+/, $menus{host_entry} ) );
         $self->debug( 0, 'Opening to: ', join( ' ', @names ) ) if (@names);
         $self->open_client_windows(@names);
     }
@@ -435,8 +436,9 @@ sub load_keyboard_map() {
 
                 # keyboard layout contains the keycode at $modifier level
                 if (defined(
-                        $keyboardmap{ $keycodetosym{ $keyboard[$i][$modifier]
-                        } }
+                        $keyboardmap{
+                            $keycodetosym{ $keyboard[$i][$modifier] }
+                        }
                     )
                     )
                 {
@@ -627,46 +629,48 @@ sub substitute_macros {
     $ENV{CSSH_CONNECTION_PORT}   = $servers{$svr}{port};
 
     # Set up environment variables in the macro environment
-    for my $i (qw/ 1 2 3 4 / ) {
-        my $macro_user_command = 'macro_user_'.$i.'_command';
-        my $macro_user = $self->config->{'macro_user_'.$i};
+    for my $i (qw/ 1 2 3 4 /) {
+        my $macro_user_command = 'macro_user_' . $i . '_command';
+        my $macro_user         = $self->config->{ 'macro_user_' . $i };
 
         next unless $text =~ $macro_user;
-        if( ! $self->config->{ $macro_user_command } ) {
+        if ( !$self->config->{$macro_user_command} ) {
             $text =~ s/$macro_user//xsmg;
             next;
         }
 
-        my $cmd = $self->config->{ $macro_user_command };
+        my $cmd = $self->config->{$macro_user_command};
 
         local $SIG{CHLD} = undef;
 
         my $stderr_fh = gensym;
         my $stdout_fh = gensym;
-        my $child_pid = eval { open3(undef, $stdout_fh, $stderr_fh, $cmd) };
+        my $child_pid = eval { open3( undef, $stdout_fh, $stderr_fh, $cmd ) };
 
-        if (my $err=$@) {
-            # error message is hardcoded into open3 - tidy it up a little for our users
-            $err=~ s/ at .*//;
-            $err=~ s/open3: //;
+        if ( my $err = $@ ) {
+
+   # error message is hardcoded into open3 - tidy it up a little for our users
+            $err =~ s/ at .*//;
+            $err =~ s/open3: //;
             $err =~ s/( failed)/' $1/;
             $err =~ s/(exec of) /$1 '/;
             warn "Macro failure for '$macro_user_command': $err";
             next;
         }
-        waitpid($child_pid, 0);
+        waitpid( $child_pid, 0 );
         my $cmd_rc = $? >> 8;
 
         my @stdout = <$stdout_fh>;
         my @stderr = <$stderr_fh>;
 
-        if ( $cmd_rc > 0 || @stderr ){
-            warn "Macro failure for '$macro_user_command'",$/;
+        if ( $cmd_rc > 0 || @stderr ) {
+            warn "Macro failure for '$macro_user_command'", $/;
             warn "Exited with error output:: @stderr" if @stderr;
             warn "Exited with non-zero return code: $cmd_rc", $/ if $cmd_rc;
-        } else {
+        }
+        else {
             #$self->send_text_to_all_servers( $stdout );
-            return join('', @stdout);
+            return join( '', @stdout );
         }
     }
 
@@ -1204,7 +1208,8 @@ sub setup_repeat() {
 
                         for ($cmd) {
                             if (m/^open$/) {
-                                my @new_hosts = $self->parent->resolve_names(@tags);
+                                my @new_hosts
+                                    = $self->parent->resolve_names(@tags);
                                 $self->open_client_windows(@new_hosts);
                                 $self->build_hosts_menu();
                                 last;
@@ -1275,16 +1280,17 @@ sub setup_repeat() {
 ### Window and menu definitions ###
 
 sub create_windows() {
-    my ($self) = @_;
+    my ($self)          = @_;
     my ($screen_height) = $xdisplay->{height_in_pixels};
-    my ($screen_width) = $xdisplay->{width_in_pixels};
+    my ($screen_width)  = $xdisplay->{width_in_pixels};
     $self->debug( 2, "create_windows: started" );
 
     $windows{main_window}
         = MainWindow->new( -title => "ClusterSSH", -class => 'cssh', );
-    if ($screen_height * $screen_width >= 8294400) # display 4k or bigger
+    if ( $screen_height * $screen_width >= 8294400 )    # display 4k or bigger
     {
-        $windows{main_window}->optionAdd('*font', 'Nimbus 14'); # better for 4k displays
+        $windows{main_window}->optionAdd( '*font', 'Nimbus 14' )
+            ;    # better for 4k displays
     }
     $windows{main_window}->withdraw;    # leave withdrawn until needed
 
@@ -1564,7 +1570,7 @@ sub key_event {
     my $keycode   = $Tk::event->k;
     my $keysymdec = $Tk::event->N;
     my $keysym    = $Tk::event->K;
-    my $state = $Tk::event->s || 0;
+    my $state     = $Tk::event->s || 0;
 
     $menus{entrytext} = "";
 

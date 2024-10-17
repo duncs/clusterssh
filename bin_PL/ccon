@@ -15,7 +15,9 @@ my $app = App::ClusterSSH->new();
 
 $app->add_option(
     spec => 'master|M=s',
-    help => $app->loc("The console client program polls master as the primary server, rather than the default set at compile time (typically ``console'')."),
+    help => $app->loc(
+        "The console client program polls master as the primary server, rather than the default set at compile time (typically ``console'')."
+    ),
 );
 
 $app->run();

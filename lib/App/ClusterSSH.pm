@@ -1,5 +1,6 @@
 use warnings;
 use strict;
+
 package App::ClusterSSH;
 
 # ABSTRACT: Cluster administration tool
@@ -40,7 +41,7 @@ use App::ClusterSSH::Window;
 use FindBin qw($Script);
 
 use POSIX ":sys_wait_h";
-use POSIX qw/:sys_wait_h strftime mkfifo/;
+use POSIX      qw/:sys_wait_h strftime mkfifo/;
 use File::Temp qw/:POSIX/;
 use Fcntl;
 use File::Basename;
@@ -484,7 +485,6 @@ sub run {
 }
 
 1;
-
 
 =item REAPER
 

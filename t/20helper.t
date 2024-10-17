@@ -12,7 +12,7 @@ use lib "$Bin/../lib";
 use Test::More;
 use Test::Trap;
 use File::Which qw(which);
-use File::Temp qw(tempdir);
+use File::Temp  qw(tempdir);
 
 use Readonly;
 
@@ -81,7 +81,7 @@ trap {
 is( $trap->leaveby, 'die', 'returned ok' );
 is( $trap->stdout,  q{},   'Expecting no STDOUT' );
 is( $trap->stderr,  q{},   'Expecting no STDERR' );
-is( $trap->die, q{Config 'method_args' not provided}, 'missing arg' );
+is( $trap->die,     q{Config 'method_args' not provided}, 'missing arg' );
 
 $mock_config->{method_args} = 'rubbish';
 $mock_config->{command}     = 'echo';

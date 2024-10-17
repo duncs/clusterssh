@@ -21,7 +21,6 @@ use base 'App::ClusterSSH::L10N';
 
 1;
 
-
 =head1 METHODS
 
 No method are exported.  See L<Locale::Maketext>.

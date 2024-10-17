@@ -95,7 +95,7 @@ sub add_option {
         }
         $desc  .= " $arg" if ($arg);
         $short .= " $arg" if ( $short && $arg );
-        $long  .= " $arg" if ( $long && $arg );
+        $long  .= " $arg" if ( $long  && $arg );
     }
     $args{option_desc}  = $desc;
     $args{option_short} = $short;
@@ -426,7 +426,7 @@ sub output {
 sub _generate_pod {
     my ($self) = @_;
 
-    output $/ , "=pod";
+    output $/,           "=pod";
     output '=head1 ',    $self->loc('NAME');
     output "$Script - ", $self->loc("Cluster administration tool");
     output '=head1 ',    $self->loc('VERSION');
@@ -448,22 +448,22 @@ sub _generate_pod {
 
     output '=head1 ', $self->loc('RELATED');
     output $self->loc(
-      q{Also see the individual man pages for each of these utilities} );
+        q{Also see the individual man pages for each of these utilities});
 
     my %utils = (
-      ctel => 'telnet',
-      cssh => 'ssh',
-      crsh => 'rsh',
-      csftp => 'sftp',
-      ccon => 'console',
+        ctel  => 'telnet',
+        cssh  => 'ssh',
+        crsh  => 'rsh',
+        csftp => 'sftp',
+        ccon  => 'console',
     );
 
     output '=over';
 
-    for my $util (sort grep { !/$Script/ } keys %utils) {
-      output "=item $util - ".$self->loc(
-        q{Use '[_1]' as the communication method}, $utils{$util}
-      );
+    for my $util ( sort grep { !/$Script/ } keys %utils ) {
+        output "=item $util - "
+            . $self->loc( q{Use '[_1]' as the communication method},
+            $utils{$util} );
     }
 
     output '=back';
@@ -585,7 +585,9 @@ would replace the <Alt-n> with the client's name in each window.}
     output '=item ', $self->parent->config->{key_user_2} || 'Alt-2';
     output '=item ', $self->parent->config->{key_user_3} || 'Alt-3';
     output '=item ', $self->parent->config->{key_user_4} || 'Alt-4';
-    output $self->loc(q{Run the matching user defined macro on the server and send the output to the client});
+    output $self->loc(
+        q{Run the matching user defined macro on the server and send the output to the client}
+    );
 
     output '=back';
 
@@ -710,7 +712,8 @@ command_post= | ct
 
 would allow for using Python virtual envronments and then piping all shell output through C<chromaterm> for syntax highlighting.  Note: you must use appropriate command separators/terminators to keep the meaning of the command pipline (such as C<;> and C<|> between commands).
 
-These are not put through macro parsing.});
+These are not put through macro parsing.}
+    );
     output '=item comms = ' . $self->parent->config->{comms};
     output $self->loc(
         'Sets the default communication method (initially taken from the name of the program, but can be overridden here).'
@@ -813,7 +816,8 @@ If the external command is given a C<-L> option it should output a list of tags 
     output '=item key_user_4 = Alt-4';
     output $self->loc(
         q{Default key sequence to send user defined macros to client.  If the matching [_2] macro is undefined, the sequence is passed straight to the terminal.  See [_1] for more information.},
-        'L<KEY SHORTCUTS>', 'L<macro_user_1>'
+        'L<KEY SHORTCUTS>',
+        'L<macro_user_1>'
     );
 
     output '=item macro_servername = %s';
@@ -852,7 +856,9 @@ If the external command is given a C<-L> option it should output a list of tags 
         },
     );
 
-    output $self->loc("The following environment variables are set in the shell of the macro process");
+    output $self->loc(
+        "The following environment variables are set in the shell of the macro process"
+    );
     output '=over';
     output '=item C<CSSH_SERVERNAME>';
     output '=item C<CSSH_HOSTNAME>';

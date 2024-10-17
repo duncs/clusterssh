@@ -30,7 +30,7 @@ if ( $opt->{x} ) {
 
 # '-L' means list out available tags
 if ( $opt->{L} ) {
-    print join(' ', sort keys %tag_lookup), $/;
+    print join( ' ', sort keys %tag_lookup ), $/;
     exit 0;
 }
 

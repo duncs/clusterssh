@@ -754,7 +754,7 @@ is( $trap->leaveby, 'return', 'returned ok' );
 is( $trap->die,     undef,    'returned ok' );
 is( $trap->stdout,  '',       'No unexpected STDOUT' );
 isa_ok( $host, "App::ClusterSSH::Host" );
-is( $host, 'ssh_test', 'stringify works' );
+is( $host,                     'ssh_test', 'stringify works' );
 is( $host->check_ssh_hostname, 0, 'check_ssh_hostname ok for ssh_test', );
 
 trap {
@@ -767,9 +767,9 @@ is( $trap->leaveby, 'return', 'returned ok' );
 is( $trap->die,     undef,    'returned ok' );
 is( $trap->stdout,  '',       'No unexpected STDOUT' );
 isa_ok( $host, "App::ClusterSSH::Host" );
-is( $host, 'ssh_test', 'stringify works' );
+is( $host,                     'ssh_test', 'stringify works' );
 is( $host->check_ssh_hostname, 0, 'check_ssh_hostname ok for ssh_test', );
-is( $host->get_type, q{}, 'hostname type is correct for ssh_test', );
+is( $host->get_type, q{},         'hostname type is correct for ssh_test', );
 
 for my $ssh_file (qw/ 10host_ssh_config 10host_ssh_include/) {
     my @hosts = (

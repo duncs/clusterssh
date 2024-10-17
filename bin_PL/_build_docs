@@ -6,41 +6,42 @@ use warnings;
 use FindBin qw($Bin $Script);
 use File::Basename;
 
-my $bindir="bin";
+my $bindir = "bin";
 
-if(! -d $bindir) {
+if ( !-d $bindir ) {
     mkdir $bindir || die "Could not mkdir $bindir: $!";
 }
 
-print "Using perl binary: $^X",$/;
-print "Using perl version $^V",$/;
+print "Using perl binary: $^X", $/;
+print "Using perl version $^V", $/;
 
 for my $dest (@ARGV) {
-    my $source=$Bin.'/'.basename($dest);
+    my $source = $Bin . '/' . basename($dest);
 
-    next if($source =~ m/$Script/);
-    next if($source =~ m/\.x$/);
+    next if ( $source =~ m/$Script/ );
+    next if ( $source =~ m/\.x$/ );
 
-    print "Generating: $source",$/;
+    print "Generating: $source", $/;
 
-    if(-f $dest) {
-        chmod(0755, $dest) || die "Could not chmod $dest for removing: $!";
+    if ( -f $dest ) {
+        chmod( 0755, $dest ) || die "Could not chmod $dest for removing: $!";
     }
 
-    open(my $sfh, '<', $source) || die "Could not open $source for reading: $!";
-    open(my $dfh, '>', $dest  ) || die "Could not open $dest for writing: $!";
-    print $dfh $_ while(<$sfh>);
+    open( my $sfh, '<', $source )
+        || die "Could not open $source for reading: $!";
+    open( my $dfh, '>', $dest ) || die "Could not open $dest for writing: $!";
+    print $dfh $_ while (<$sfh>);
     close($sfh);
 
-    if($source !~ m/clusterssh_bash_completion.dist/) {
+    if ( $source !~ m/clusterssh_bash_completion.dist/ ) {
         print $dfh "\n\n__END__\n\n";
 
-        my $pod= qx{ $^X $source --generate-pod };
-        die "Failed to generate pod" if($?);
+        my $pod = qx{ $^X $source --generate-pod };
+        die "Failed to generate pod" if ($?);
         print $dfh $pod;
     }
 
     close($dfh);
 
-    chmod(0555, $dest) || die "Could not chmod $dest: $!";
+    chmod( 0555, $dest ) || die "Could not chmod $dest: $!";
 }

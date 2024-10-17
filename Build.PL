@@ -3,7 +3,7 @@ use lib 'inc';
 require Module::Build;
 
 my %module_build_args = (
-    module_name => 'App::ClusterSSH',
+    module_name   => 'App::ClusterSSH',
     dist_abstract => "Cluster administration tool",
 ##{ $plugin->get_prereqs(1) ##}
 ##{ $plugin->get_default('share_dir') ##}
@@ -12,7 +12,7 @@ my %module_build_args = (
         'bin/ccon', 'bin/crsh',
         'bin/ctel', 'bin/clusterssh_bash_completion.dist'
     ],
-    PL_files    => {
+    PL_files => {
         'bin_PL/_build_docs' => [
             'bin/cssh', 'bin/csftp',
             'bin/ccon', 'bin/crsh',

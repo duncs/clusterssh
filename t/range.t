@@ -13,19 +13,19 @@ require_ok('App::ClusterSSH::Range')
     || BAIL_OUT('Failed to use App::ClusterSSH::Range');
 
 my %tests = (
-    'a'                 => 'a',
-    'c{a,b}'            => 'ca cb',
-    'd{a,b,c}'          => 'da db dc',
-    'e{0}'              => 'e0',
-    'f{0..3}'           => 'f0 f1 f2 f3',
-    'g{0..2,4}'         => 'g0 g1 g2 g4',
-    'h{0..2,4..6}'      => 'h0 h1 h2 h4 h5 h6',
-    'i{0..1,a}'         => 'i0 i1 ia',
-    'j{0..2,a,b,c}'     => 'j0 j1 j2 ja jb jc',
-    'k{4..6,a..c}'      => 'k4 k5 k6 ka kb kc',
-    'l{0..2,7..9,e..g}' => 'l0 l1 l2 l7 l8 l9 le lf lg',
-    'm{0,1}'            => 'm0 m1',
-    'n0..2}'            => 'n0..2}',
+    'a'                   => 'a',
+    'c{a,b}'              => 'ca cb',
+    'd{a,b,c}'            => 'da db dc',
+    'e{0}'                => 'e0',
+    'f{0..3}'             => 'f0 f1 f2 f3',
+    'g{0..2,4}'           => 'g0 g1 g2 g4',
+    'h{0..2,4..6}'        => 'h0 h1 h2 h4 h5 h6',
+    'i{0..1,a}'           => 'i0 i1 ia',
+    'j{0..2,a,b,c}'       => 'j0 j1 j2 ja jb jc',
+    'k{4..6,a..c}'        => 'k4 k5 k6 ka kb kc',
+    'l{0..2,7..9,e..g}'   => 'l0 l1 l2 l7 l8 l9 le lf lg',
+    'm{0,1}'              => 'm0 m1',
+    'n0..2}'              => 'n0..2}',
     'host{a,b}-test{1,2}' =>
         'hosta-test1 hosta-test2 hostb-test1 hostb-test2',
 

@@ -114,11 +114,11 @@ my %default_config = (
     macro_user_3     => '%3',
     macro_user_4     => '%4',
 
-    macro_user_1_command     => '',
-    macro_user_2_command     => '',
-    macro_user_3_command     => '',
-    macro_user_4_command     => '',
-    hostname_override        => '',
+    macro_user_1_command => '',
+    macro_user_2_command => '',
+    macro_user_3_command => '',
+    macro_user_4_command => '',
+    hostname_override    => '',
 
     max_addhost_menu_cluster_items => 6,
     menu_send_autotearoff          => 0,
@@ -298,7 +298,7 @@ sub parse_config_file {
 
     # Look at the user macros and if not set remove the hotkey for them
     for my $i (qw/ 1 2 3 4 /) {
-        if ( ! $self->{"macro_user_${i}_command"} ) {
+        if ( !$self->{"macro_user_${i}_command"} ) {
             delete $self->{"key_user_${i}"};
         }
     }
@@ -315,7 +315,7 @@ sub load_configs {
         $ENV{HOME} . '/.clusterssh/config',
         )
     {
-        $self->parse_config_file($config) if ( -e $config && ! -d _ );
+        $self->parse_config_file($config) if ( -e $config && !-d _ );
     }
 
     # write out default config file if necesasry
@@ -330,17 +330,17 @@ sub load_configs {
     # relative to config directory
     for my $config (@configs) {
         next unless ($config);    # can be null when passed from Getopt::Long
-        $self->parse_config_file($config) if ( -e $config && ! -d _ );
+        $self->parse_config_file($config) if ( -e $config && !-d _ );
 
         my $file = $ENV{HOME} . '/.clusterssh/config_' . $config;
-        $self->parse_config_file($file) if ( -e $file && ! -d _ );
+        $self->parse_config_file($file) if ( -e $file && !-d _ );
     }
 
     # Override confuration via environment variable using cssh_ prefix
     #  eg: terminal_size => cssh_terminal_size
     foreach my $config_key ( sort( keys(%default_config) ) ) {
-        my $env_config_key = "cssh_".$config_key;
-        if ( exists $ENV{uc($env_config_key)} ) {
+        my $env_config_key = "cssh_" . $config_key;
+        if ( exists $ENV{ uc($env_config_key) } ) {
             $env_config_key = uc($env_config_key);
         }
         if ( exists $ENV{$env_config_key} ) {

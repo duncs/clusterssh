@@ -188,7 +188,7 @@ is( $trap->stderr,     '',       'Expecting no STDERR' );
 is( $trap->die,        undef,    'Expecting no die message' );
 is( $getopts->option1, 8,        'default value overridden' );
 
-@ARGV = ( '--option1', '--option2', 'string', '--option3', '10' );
+@ARGV    = ( '--option1', '--option2', 'string', '--option3', '10' );
 $getopts = App::ClusterSSH::Getopt->new( parent => $mock_object );
 trap {
     $getopts->add_option( spec => 'hidden', hidden => 1, no_acessor => 1, );
@@ -295,7 +295,7 @@ $getopts->add_option(
     default => 'default string'
 );
 $getopts->add_option( spec => 'another_long_opt|n=i', );
-$getopts->add_option( spec => 'a=s', help => 'short option only', );
+$getopts->add_option( spec => 'a=s',  help => 'short option only', );
 $getopts->add_option( spec => 'long', help => 'long option only', );
 trap {
     $getopts->getopts;
@@ -380,8 +380,8 @@ is( $mock_object->{show_history},      0, 'show_history set right' );
 is( $mock_object->{use_all_a_records}, 1, 'use_all_a_records set right' );
 
 @ARGV = (
-    '--unique-servers', '--title', 'title', '-p', '22', '--autoquit',
-    '--tile', '--show-history', '-A',
+    '--unique-servers', '--title',        'title', '-p', '22', '--autoquit',
+    '--tile',           '--show-history', '-A',
 );
 $getopts = App::ClusterSSH::Getopt->new( parent => $mock_object, );
 trap {
@@ -425,7 +425,7 @@ TODO: {
     is( $trap->die,     undef,    'Expecting no die message' );
 }
 
-@ARGV = ( '--rows', 5, '--cols', 10 );
+@ARGV    = ( '--rows', 5, '--cols', 10 );
 $getopts = App::ClusterSSH::Getopt->new( parent => $mock_object, );
 trap {
     $getopts->getopts;

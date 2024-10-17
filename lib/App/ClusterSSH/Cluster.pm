@@ -87,7 +87,7 @@ sub _run_external_clusters {
 
     $self->debug( 3, 'Running tags through external command' );
     $self->debug( 4, 'External command: ', $external_command );
-    $self->debug( 3, 'Args ', join( ',', @args ) );
+    $self->debug( 3, 'Args ',              join( ',', @args ) );
 
     my $command = "$external_command @args";
 
