@@ -1,5 +1,8 @@
 Revision history for {{$dist->name}}
 
+4.18 2024-10-19 Duncan Ferguson <duncan_ferguson@user.sf.net>
+- Re-release due to poor release upload to CPAN
+
 4.17 2024-10-16 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Swap the hostname lookup macro from DNS to using the system hostname (Github issue #158)
 - Swap from using Travis-CI to Github Actions
