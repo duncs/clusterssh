@@ -13,8 +13,9 @@ jobs:
       fail-fast: false
       matrix:
         perl-version:
-          - 'devel'
+#          - 'devel'
           - 'latest'
+          - '5.42'
           - '5.40'
           - '5.38'
           - '5.36'
@@ -29,7 +30,7 @@ jobs:
           - '5.18'
           - '5.16'
         include:
-          - perl-version: '5.38'
+          - perl-version: '5.40'
             os: ubuntu-latest
             coverage: true
     container:
