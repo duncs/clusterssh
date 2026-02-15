@@ -18,10 +18,10 @@ _cssh ()
 
 	# all options understood by cssh
 	options='-c --cluster-file -C --config-file --debug -e --evaluate \
-	         -g --tile -G --no-tile -h --help -H --man -l --username \
-	         -o --options -p --port -q --autoquit -Q --no-autoquit \
-	         -s --show-history -t --term-args -T --title \
-	         -u --output-config -v --version'
+	         -g --tile -G --no-tile -h --help -H --man -K --autoclose \
+	         -l --username --no-autoclose -o --options -p --port \
+	         -q --autoquit -Q --no-autoquit -s --show-history -t --term-args \
+	         -T --title -u --output-config -v --version'
 
 	# find the extra cluster file line in the .clusterssh/config or, alternatively, /etc/csshrc
 	extra_cluster_file_line="`grep '^[[:space:]]*extra_cluster_file' $HOME/.clusterssh/config 2> /dev/null`"

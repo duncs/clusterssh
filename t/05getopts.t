@@ -398,6 +398,17 @@ is( $mock_object->{window_tiling},     0, 'window_tiling set right' );
 is( $mock_object->{show_history},      1, 'show_history set right' );
 is( $mock_object->{use_all_a_records}, 0, 'use_all_a_records set right' );
 
+# test --no-autoclose sets auto_close to 0
+$mock_object->{auto_close} = 5;
+@ARGV = ( '--unique-servers', '--title', 'title', '-p', '22', '--no-autoclose' );
+$getopts = App::ClusterSSH::Getopt->new( parent => $mock_object, );
+trap {
+    $getopts->getopts;
+};
+is( $trap->leaveby,             'return', 'getopts with --no-autoclose' );
+is( $trap->die,                 undef,    'no error with --no-autoclose' );
+is( $mock_object->{auto_close}, 0,       '--no-autoclose sets auto_close to 0' );
+
 TODO: {
     local $TODO = "explitely test for duplicate options";
     $getopts = App::ClusterSSH::Getopt->new(

@@ -150,6 +150,12 @@ sub add_common_options {
         ),
     );
     $self->add_option(
+        spec => 'no-autoclose',
+        help => $self->loc(
+            'Do not close terminal windows automatically (same as auto_close = 0).'
+        ),
+    );
+    $self->add_option(
         spec => 'autoquit|q',
         help => $self->loc(
             'Toggle automatically quitting after the last client window has closed (overriding the config file).'
@@ -392,6 +398,8 @@ sub getopts {
 
     $self->parent->config->{auto_close} = $self->autoclose
         if ( $self->autoclose );
+
+    $self->parent->config->{auto_close} = 0 if ( $self->no_autoclose );
 
     if ( $self->autoquit ) {
         $self->parent->config->{auto_quit}

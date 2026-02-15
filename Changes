@@ -1,5 +1,9 @@
 Revision history for {{$dist->name}}
 
+4.18_01 2026-06-15 Duncan Ferguson <duncan_ferguson@user.sf.net>
+- Add in `DEV` doc as a reminder on how to build a development environment
+- Add in `--no-autoclose` option (#166)
+
 4.18 2024-10-19 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Re-release due to poor release upload to CPAN
 

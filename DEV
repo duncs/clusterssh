@@ -1,0 +1,46 @@
+# Developing ClusterSSH
+
+These notes assume you have a full development environment installed (gcc, make, etc) and the OpenSSL development libraries.
+
+On recent Debian/Ubuntu/Mint (dpkg based systems), the following should work:
+
+	sudo apt install -y build-essential libssl-dev libz-dev libx11-dev xterm
+
+# Development Setup
+
+Install perlbrew
+
+	echo "source ~/perl5/perlbrew/etc/bashrc" >> ~/.bashrc
+
+List available perl versions and install one
+
+	perl install perl-5.36.3
+
+When it is installed, activate it
+
+	perlbrew switch perl-5.36.3
+
+Install cpanm
+
+	perlbrew install-cpanm
+
+Install required modules
+
+	cpanm install Dist::Zilla Test::Trap Tk X11::Protocol X11::Protocol::WM Readonly
+
+# Building ClusterSSH
+
+From the ClusterSSH project directory, install the required dependancies
+
+	dzil authordeps --missing | cpanm
+
+Build and test the project
+
+	dzil build test
+
+# Building on a different version of Perl
+
+List out the currently installed perl packages and use them to install in the new version
+
+	perlbrew install perl-5.40.2
+	perlbrew clone-modules perl-5.36.3 perl-5.40.2
