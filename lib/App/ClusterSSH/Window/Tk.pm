@@ -1356,10 +1356,15 @@ sub create_windows() {
             $menus{entrytext} = "";
             my $paste_text = '';
 
-            # SelectionGet is fatal if no selection is given
+            # SelectionGet is fatal if no selection is given; try PRIMARY then CLIPBOARD (Wayland/WSLg use CLIPBOARD)
             Tk::catch {
                 $paste_text = $windows{main_window}->SelectionGet;
             };
+            if ( !length($paste_text) ) {
+                Tk::catch {
+                    $paste_text = $windows{main_window}->SelectionGet( -selection => 'CLIPBOARD' );
+                };
+            }
 
             if ( !length($paste_text) ) {
                 warn("Got empty paste event\n");
