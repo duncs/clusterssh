@@ -1,5 +1,11 @@
 Revision history for {{$dist->name}}
 
+4.18_03 2026-06-15 Duncan Ferguson <duncan_ferguson@user.sf.net>
+- Add configurable main window font: `main_window_font` config key and `--main-window-font` / `-M` CLI option (Github issue #156)
+
+4.18_02 2026-06-15 Duncan Ferguson <duncan_ferguson@user.sf.net>
+- Paste event uses PRIMARY first then falls back to CLIPBOARD (#167)
+
 4.18_01 2026-06-15 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Add in `DEV` doc as a reminder on how to build a development environment
 - Add in `--no-autoclose` option (#166)

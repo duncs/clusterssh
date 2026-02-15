@@ -40,6 +40,7 @@ Readonly::Hash my %default_config => {
     terminal_bg_style          => 'dark',
     terminal_allow_send_events => "-xrm '*.VT100.allowSendEvents:true'",
     terminal_font              => "6x13",
+    main_window_font           => "",
     terminal_size              => "80x24",
 
     use_hotkeys             => "yes",
@@ -611,6 +612,7 @@ macro_user_4_command=
 macro_username=%u
 macro_version=%v
 macros_enabled=yes
+main_window_font=
 max_addhost_menu_cluster_items=6
 max_host_menu_items=30
 menu_host_autotearoff=0

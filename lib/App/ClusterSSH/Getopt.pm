@@ -197,6 +197,13 @@ sub add_common_options {
         ),
     );
     $self->add_option(
+        spec     => 'main-window-font|M=s',
+        arg_desc => 'font',
+        help     => $self->loc(
+            'Specify the font to use in the main console window. Use Tk font notation such as "sans 14 bold".'
+        ),
+    );
+    $self->add_option(
         spec => 'list|L:s',
         help => $self->loc(
             'List available cluster tags. Tag is optional.  If a tag is provided then hosts for that tag are listed.  NOTE: format of output changes when using "--quiet" or "-Q" option.'
@@ -391,6 +398,8 @@ sub getopts {
         if ( $self->can('username') && $self->username );
 
     $self->parent->config->{terminal_font} = $self->font if ( $self->font );
+    $self->parent->config->{main_window_font} = $self->main_window_font
+        if ( $self->main_window_font );
     $self->parent->config->{terminal_args} = $self->term_args
         if ( $self->term_args );
 
@@ -956,6 +965,11 @@ B<NOTE:> Any "generic" change to the method (e.g., specifying the ssh port to us
     output '=item terminal_font = 6x13';
     output $self->loc(
         q{Font to use in the terminal windows.  Use standard X font notation.}
+    );
+
+    output '=item main_window_font = ""';
+    output $self->loc(
+        q{Font to use in the main console window.  Use Tk font notation (e.g. "sans 14 bold").  When empty, the default is used (on 4K+ displays, Nimbus 14).}
     );
 
     output '=item terminal_reserve_top = 5';

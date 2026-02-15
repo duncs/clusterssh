@@ -447,4 +447,32 @@ $trap->quiet(" ... quietly");
 is( $mock_object->{cols}, 10, 'cols set correctly' );
 is( $mock_object->{rows}, 5,  'rows set correctly' );
 
+# test --main-window-font sets main_window_font in config
+@ARGV = (
+    '--unique-servers', '--title', 'title', '-p', '22',
+    '--main-window-font', 'sans 14 bold',
+);
+$mock_object->{main_window_font} = '';
+$getopts = App::ClusterSSH::Getopt->new( parent => $mock_object, );
+trap {
+    $getopts->getopts;
+};
+is( $trap->leaveby, 'return', 'getopts with --main-window-font' );
+is( $mock_object->{main_window_font}, 'sans 14 bold',
+    '--main-window-font sets main_window_font in config' );
+
+# test -M short form for main-window-font
+@ARGV = (
+    '--unique-servers', '--title', 'title', '-p', '22',
+    '-M', 'Nimbus 14',
+);
+$mock_object->{main_window_font} = '';
+$getopts = App::ClusterSSH::Getopt->new( parent => $mock_object, );
+trap {
+    $getopts->getopts;
+};
+is( $trap->leaveby, 'return', 'getopts with -M main-window-font' );
+is( $mock_object->{main_window_font}, 'Nimbus 14',
+    '-M sets main_window_font in config' );
+
 done_testing;

@@ -37,6 +37,7 @@ my %default_config = (
     terminal_bg_style          => 'dark',
     terminal_allow_send_events => "-xrm '*.VT100.allowSendEvents:true'",
     terminal_font              => "6x13",
+    main_window_font           => "",
     terminal_size              => "80x24",
 
     use_hotkeys             => "yes",
@@ -293,6 +294,8 @@ sub parse_config_file {
     # tidy up entries, just in case
     $read_config{terminal_font} =~ s/['"]//g
         if ( $read_config{terminal_font} );
+    $read_config{main_window_font} =~ s/['"]//g
+        if ( $read_config{main_window_font} );
 
     $self->validate_args(%read_config);
 

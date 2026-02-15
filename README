@@ -2,15 +2,15 @@ NAME
     cssh - Cluster administration tool
 
 VERSION
-    This documentation is for version: 4.18_01
+    This documentation is for version: 4.18_03
 
 SYNOPSIS
     cssh [-a '<command>'] [-K <seconds>] [-q] [-c '<filename>'] [-x <cols>]
     [-C '<filename>'] [--debug [[...] || <INTEGER>]] [-d] [-e
     '<[user@]<host>[:port]>'] [--fillscreen] [-f '<font>'] [-h] [-L '[tag]']
-    [-H] [--no-autoclose] [-o '<STRING>'] [-p <port>] [-Q] [-y <rows>] [-s]
-    [-r '<filename>'] [-t '<STRING>'] [-g] [-T '<title>'] [-u] [-?] [-A] [-l
-    '<username>'] [-v]
+    [-M '<font>'] [-H] [--no-autoclose] [-o '<STRING>'] [-p <port>] [-Q] [-y
+    <rows>] [-s] [-r '<filename>'] [-t '<STRING>'] [-g] [-T '<title>'] [-u]
+    [-?] [-A] [-l '<username>'] [-v]
 
 RELATED
     Also see the individual man pages for each of these utilities
@@ -131,6 +131,10 @@ OPTIONS
         List available cluster tags. Tag is optional. If a tag is provided
         then hosts for that tag are listed. NOTE: format of output changes
         when using "--quiet" or "-Q" option.
+
+    --main-window-font '<font>', -M '<font>'
+        Specify the font to use in the main console window. Use Tk font
+        notation such as "sans 14 bold".
 
     --man, -H
         Show full help text (the man page) and exit
@@ -567,6 +571,11 @@ FILES
         terminal_font = 6x13
             Font to use in the terminal windows. Use standard X font
             notation.
+
+        main_window_font = ""
+            Font to use in the main console window. Use Tk font notation
+            (e.g. "sans 14 bold"). When empty, the default is used (on 4K+
+            displays, Nimbus 14).
 
         terminal_reserve_top = 5
         terminal_reserve_bottom = 0

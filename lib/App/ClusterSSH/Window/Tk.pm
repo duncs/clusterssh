@@ -1287,8 +1287,11 @@ sub create_windows() {
 
     $windows{main_window}
         = MainWindow->new( -title => "ClusterSSH", -class => 'cssh', );
-    if ( $screen_height * $screen_width >= 8294400 )    # display 4k or bigger
-    {
+    if ( $self->config->{main_window_font} ) {
+        $windows{main_window}->optionAdd( '*font',
+            $self->config->{main_window_font} );
+    }
+    elsif ( $screen_height * $screen_width >= 8294400 ) {  # display 4k or bigger
         $windows{main_window}->optionAdd( '*font', 'Nimbus 14' )
             ;    # better for 4k displays
     }
