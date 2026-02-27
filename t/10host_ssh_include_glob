@@ -1,0 +1,2 @@
+include 10host_ssh_d
+host server_ssh_glob

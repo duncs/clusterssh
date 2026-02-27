@@ -1,5 +1,9 @@
 Revision history for {{$dist->name}}
 
+4.18_05 2026-02-27 Duncan Ferguson <duncan_ferguson@user.sf.net>
+- Fix uninitialized $filename when parsing SSH config with Include directives (Github issue #154)
+- Resolve relative Include paths from the including config file directory; handle glob patterns and empty matches safely
+
 4.18_04 2026-02-27 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Add in Debian desktop files (Github issue #168)
 

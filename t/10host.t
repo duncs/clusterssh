@@ -771,7 +771,7 @@ is( $host,                     'ssh_test', 'stringify works' );
 is( $host->check_ssh_hostname, 0, 'check_ssh_hostname ok for ssh_test', );
 is( $host->get_type, q{},         'hostname type is correct for ssh_test', );
 
-for my $ssh_file (qw/ 10host_ssh_config 10host_ssh_include/) {
+for my $ssh_file (qw/ 10host_ssh_config 10host_ssh_include 10host_ssh_include_glob/) {
     my @hosts = (
         'server1',  'server2',
         'server3',  'server4',

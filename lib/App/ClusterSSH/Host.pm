@@ -23,6 +23,7 @@ hostname/ipaddress, username and port.
 
 use Carp;
 use Net::hostent;
+use File::Basename qw(dirname);
 
 use base qw/ App::ClusterSSH::Base /;
 
@@ -63,30 +64,53 @@ sub new {
 }
 
 sub read_ssh_file($$) {
-    my ($self)     = shift;
-    my ($filename) = glob(shift);
-    $self->debug( 3, 'Reading SSH file: ', $filename );
+    my ($self)    = shift;
+    my ($pattern) = @_;
 
-    $ssh_configs_read{$filename} = 1;
+    my @files = glob $pattern;
 
-    if ( open( my $ssh_config_fh, '<', $filename ) ) {
-        while ( my $line = <$ssh_config_fh> ) {
-            chomp $line;
-
-            if ( $line =~ /^\s*include\s+(.+)/i ) {
-                $self->read_ssh_file($1);
-                next;
-            }
-
-            next unless ( $line =~ m/^\s*host\s+(.*)/i );
-
-            # account for multiple declarations of hosts
-            $ssh_hostname_for{$_} = 1 foreach ( split( /\s+/, $1 ) );
-        }
-        close($ssh_config_fh);
+    if ( !@files ) {
+        $self->debug( 3, 'SSH include pattern matched no files: ', $pattern );
+        return;
     }
-    else {
-        $self->debug( 3, 'Unable to read ', $filename, ': ', $!, $/ );
+
+    foreach my $filename (@files) {
+        next if ( !defined $filename || $filename eq q{} );
+        next if ( $ssh_configs_read{$filename} );
+
+        $self->debug( 3, 'Reading SSH file: ', $filename );
+
+        $ssh_configs_read{$filename} = 1;
+
+        if ( open( my $ssh_config_fh, '<', $filename ) ) {
+            my $basedir = dirname($filename);
+
+            while ( my $line = <$ssh_config_fh> ) {
+                chomp $line;
+
+                if ( $line =~ /^\s*include\s+(.+)/i ) {
+                    my $include = $1;
+                    $include =~ s/^\s+//;
+                    $include =~ s/\s+$//;
+
+                    if ( $include !~ m{^[/~]} ) {
+                        $include = $basedir . '/' . $include;
+                    }
+
+                    $self->read_ssh_file($include);
+                    next;
+                }
+
+                next unless ( $line =~ m/^\s*host\s+(.*)/i );
+
+                # account for multiple declarations of hosts
+                $ssh_hostname_for{$_} = 1 foreach ( split( /\s+/, $1 ) );
+            }
+            close($ssh_config_fh);
+        }
+        else {
+            $self->debug( 3, 'Unable to read ', $filename, ': ', $!, $/ );
+        }
     }
 }
 

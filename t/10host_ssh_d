@@ -1,0 +1,3 @@
+# This directory-style file is referenced by a glob include but is not itself
+# an ssh config file. It exists only to ensure the glob does not match files
+# when the pattern points to a non-existent subdirectory (10host_ssh_d/*).
