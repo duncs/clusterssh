@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=ClusterSSH
+Comment=Control multiple ssh, rsh or telnet sessions from a single input window
+Exec=cssh %U
+TryExec=cssh
+Icon=clusterssh
+Terminal=false
+Categories=System;RemoteAccess;Network;
+Keywords=ssh;cluster;

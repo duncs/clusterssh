@@ -7,6 +7,12 @@ my %module_build_args = (
     dist_abstract => "Cluster administration tool",
 ##{ $plugin->get_prereqs(1) ##}
 ##{ $plugin->get_default('share_dir') ##}
+    data_files    => {
+        'share/applications'                 => 'data/clusterssh.desktop',
+        'share/metainfo'                     => 'data/clusterssh.metainfo.xml',
+        'share/icons/hicolor/scalable/apps'  =>
+            'data/icons/hicolor/scalable/apps/clusterssh.svg',
+    },
     script_files => [
         'bin/cssh', 'bin/csftp',
         'bin/ccon', 'bin/crsh',

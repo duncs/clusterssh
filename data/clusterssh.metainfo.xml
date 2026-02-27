@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>clusterssh.desktop</id>
+
+  <name>ClusterSSH</name>
+  <summary>Control multiple ssh, rsh or telnet sessions from a single input window</summary>
+
+  <description>
+    <p>ClusterSSH (cssh, crsh, ctel) allows you to control multiple ssh, rsh or telnet sessions from a single input window. You can also configure clusters of machines for easy invocation and interact with individual terminal windows during a session.</p>
+  </description>
+
+  <launchable type="desktop-id">clusterssh.desktop</launchable>
+
+  <categories>
+    <category>System</category>
+    <category>RemoteAccess</category>
+    <category>Network</category>
+  </categories>
+
+  <keywords>
+    <keyword>ssh</keyword>
+    <keyword>cluster</keyword>
+  </keywords>
+
+  <icon type="stock">clusterssh</icon>
+</component>
+
