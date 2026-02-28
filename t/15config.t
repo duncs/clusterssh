@@ -135,6 +135,7 @@ Readonly::Hash my %default_config => {
     unique_servers    => 0,
     use_all_a_records => 0,
     use_natural_sort  => 0,
+    preserve_host_order => 0,
 
     send_menu_xml_file => $ENV{HOME} . '/.clusterssh/send_menu',
 
@@ -618,6 +619,7 @@ max_host_menu_items=30
 menu_host_autotearoff=0
 menu_send_autotearoff=0
 mouse_paste=Button-2
+preserve_host_order=0
 rows=-1
 rsh=rsh
 rsh_args=

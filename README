@@ -2,15 +2,15 @@ NAME
     cssh - Cluster administration tool
 
 VERSION
-    This documentation is for version: 4.18_05
+    This documentation is for version: 4.18_06
 
 SYNOPSIS
     cssh [-a '<command>'] [-K <seconds>] [-q] [-c '<filename>'] [-x <cols>]
     [-C '<filename>'] [--debug [[...] || <INTEGER>]] [-d] [-e
     '<[user@]<host>[:port]>'] [--fillscreen] [-f '<font>'] [-h] [-L '[tag]']
-    [-M '<font>'] [-H] [--no-autoclose] [-o '<STRING>'] [-p <port>] [-Q] [-y
-    <rows>] [-s] [-r '<filename>'] [-t '<STRING>'] [-g] [-T '<title>'] [-u]
-    [-?] [-A] [-l '<username>'] [-v]
+    [-M '<font>'] [-H] [--no-autoclose] [-o '<STRING>'] [-p <port>] [-P]
+    [-Q] [-y <rows>] [-s] [-r '<filename>'] [-t '<STRING>'] [-g] [-T
+    '<title>'] [-u] [-?] [-A] [-l '<username>'] [-v]
 
 RELATED
     Also see the individual man pages for each of these utilities
@@ -153,6 +153,10 @@ OPTIONS
 
     --port <port>, -p <port>
         Specify an alternate port for connections.
+
+    --preserve-host-order, -P
+        Display and tile hosts in the order given on the command line
+        instead of alphabetically.
 
     --quiet, -Q
         Do not output extra text when using some options
@@ -636,6 +640,11 @@ FILES
             host11, host2. Setting to this 1 will change the sort order,
             i.e.: host1, host2, host11. NOTE: You must have the perl module
             Sort::Naturally installed.
+
+        preserve_host_order = 0
+            When set to 1, display and tile hosts in the order given on the
+            command line instead of sorting them alphabetically. See also
+            "-P/--preserve-host-order".
 
         user = $LOGNAME
             Sets the default user for running commands on clients.

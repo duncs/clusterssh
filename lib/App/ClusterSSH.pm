@@ -6,7 +6,7 @@ package App::ClusterSSH;
 # ABSTRACT: Cluster administration tool
 # ABSTRACT: Cluster administration tool
 
-use version; our $VERSION = version->new('4.18_05');
+use version; our $VERSION = version->new('4.18_06');
 
 =head1 SYNOPSIS
 
@@ -294,9 +294,8 @@ sub resolve_names(@) {
 
 sub remove_repeated_servers {
     my $self = shift;
-    my %all  = ();
-    @all{@_} = 1;
-    return ( keys %all );
+    my %seen;
+    return grep { !$seen{$_}++ } @_;
 }
 
 sub run {

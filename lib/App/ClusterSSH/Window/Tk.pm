@@ -80,6 +80,15 @@ sub pick_color {
     return $ans;
 }
 
+# Return list of host keys in display order (command-line order if
+# preserve_host_order, else sorted)
+sub _hosts_in_display_order {
+    my ($self) = @_;
+    return grep { exists $servers{$_} } @servers
+        if ( $self->config->{preserve_host_order} );
+    return $self->sort->( keys(%servers) );
+}
+
 # close a specific host session
 sub terminate_host($) {
     my ( $self, $svr ) = @_;
@@ -180,6 +189,7 @@ sub open_client_windows(@) {
         }
         $server .= q{ } . $count;
 
+        push( @servers, $server );
         $servers{$server}{connect_string} = $_;
         $servers{$server}{givenname}      = $given_server_name;
         $servers{$server}{realname}       = $realname;
@@ -1022,7 +1032,7 @@ sub retile_hosts {
     my ( $current_x, $current_y, $current_row, $current_col ) = 0;
     if ( $self->config->{window_tiling_direction} =~ /right/i ) {
         $self->debug( 2, "Tiling top left going bot right" );
-        @hosts     = $self->sort->( keys(%servers) );
+        @hosts     = $self->_hosts_in_display_order();
         $current_x = $self->config->{screen_reserve_left}
             + $self->config->{terminal_reserve_left};
         $current_y = $self->config->{screen_reserve_top}
@@ -1032,7 +1042,7 @@ sub retile_hosts {
     }
     else {
         $self->debug( 2, "Tiling bot right going top left" );
-        @hosts = reverse( $self->sort->( keys(%servers) ) );
+        @hosts = reverse( $self->_hosts_in_display_order() );
         $current_x
             = $self->config->{screen_reserve_right}
             - $self->config->{internal_screen_width}
@@ -1155,7 +1165,7 @@ sub build_hosts_menu() {
     $self->debug( 3, "Parsing list" );
 
     my $menu_item_counter = $host_menu_static_items;
-    foreach my $svr ( $self->sort->( keys(%servers) ) ) {
+    foreach my $svr ( $self->_hosts_in_display_order() ) {
         $self->debug( 3, "Checking $svr and restoring active value" );
         my $colbreak = 0;
         if ( $menu_item_counter > $self->config->{max_host_menu_items} ) {

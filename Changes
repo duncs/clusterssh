@@ -1,5 +1,9 @@
 Revision history for {{$dist->name}}
 
+4.18_06 2026-02-28 Duncan Ferguson <duncan_ferguson@user.sf.net>
+- Add preserve_host_order config and -P/--preserve-host-order to display hosts in command-line order (Github issue #152)
+- Fix remove_repeated_servers to preserve host order when -u/unique_servers is used
+
 4.18_05 2026-02-27 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Fix uninitialized $filename when parsing SSH config with Include directives (Github issue #154)
 - Resolve relative Include paths from the including config file directory; handle glob patterns and empty matches safely

@@ -58,6 +58,7 @@ my %default_config = (
     auto_quit               => "yes",
     auto_close              => 5,
     use_natural_sort        => 0,
+    preserve_host_order     => 0,
     window_tiling           => "yes",
     window_tiling_direction => "right",
     console_position        => "",

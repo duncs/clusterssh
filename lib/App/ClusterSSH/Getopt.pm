@@ -250,6 +250,12 @@ sub add_common_options {
         ),
     );
     $self->add_option(
+        spec => 'preserve-host-order|P',
+        help => $self->loc(
+            'Display and tile hosts in the order given on the command line instead of alphabetically.'
+        ),
+    );
+    $self->add_option(
         spec => 'use-all-a-records|A',
         help => $self->loc(
             'If a hostname resolves to multiple IP addresses, toggle whether or not to connect to all of them, or just the first one (see also config file entry).'
@@ -385,6 +391,11 @@ sub getopts {
     if ( $self->unique_servers ) {
         $self->parent->config->{unique_servers}
             = !$self->parent->config->{unique_servers} || 0;
+    }
+
+    if ( $self->preserve_host_order ) {
+        $self->parent->config->{preserve_host_order}
+            = !$self->parent->config->{preserve_host_order} || 0;
     }
 
     $self->parent->config->{title} = $self->title if ( $self->title );
@@ -1029,6 +1040,12 @@ B<NOTE:> Any "generic" change to the method (e.g., specifying the ssh port to us
     output $self->loc(
         q{Windows will normally sort in alphabetical order, i.e.: host1, host11, host2.  Setting to this [_1] will change the sort order, i.e.: host1, host2, host11. NOTE: You must have the perl module [_2] installed.},
         'C<1>', 'L<Sort::Naturally>'
+    );
+
+    output '=item preserve_host_order = 0';
+    output $self->loc(
+        q{When set to [_1], display and tile hosts in the order given on the command line instead of sorting them alphabetically.  See also [_2].},
+        'C<1>', 'C<-P/--preserve-host-order>'
     );
 
     output '=item user = $LOGNAME';
