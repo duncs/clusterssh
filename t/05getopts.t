@@ -41,7 +41,8 @@ sub config {
 }
 
 sub load_configs {
-    my ($self) = @_;
+    my ( $self, @configs ) = @_;
+    $self->{load_configs_called_with} = \@configs;
     return $self;
 }
 
@@ -474,5 +475,17 @@ trap {
 is( $trap->leaveby, 'return', 'getopts with -M main-window-font' );
 is( $mock_object->{main_window_font}, 'Nimbus 14',
     '-M sets main_window_font in config' );
+
+@ARGV = ( '-C', 'ssh', '-C', 'right' );
+$getopts = App::ClusterSSH::Getopt->new( parent => $mock_object, );
+trap {
+    $getopts->getopts;
+};
+is( $trap->leaveby, 'return', 'getopts with repeated -C config-file' );
+is_deeply(
+    $mock_object->{load_configs_called_with},
+    [ 'ssh', 'right' ],
+    'repeated -C passes ordered config files to load_configs'
+);
 
 done_testing;

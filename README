@@ -2,11 +2,11 @@ NAME
     cssh - Cluster administration tool
 
 VERSION
-    This documentation is for version: 4.18_06
+    This documentation is for version: 4.18_07
 
 SYNOPSIS
     cssh [-a '<command>'] [-K <seconds>] [-q] [-c '<filename>'] [-x <cols>]
-    [-C '<filename>'] [--debug [[...] || <INTEGER>]] [-d] [-e
+    [-C s@] [--debug [[...] || <INTEGER>]] [-d] [-e
     '<[user@]<host>[:port]>'] [--fillscreen] [-f '<font>'] [-h] [-L '[tag]']
     [-M '<font>'] [-H] [--no-autoclose] [-o '<STRING>'] [-p <port>] [-P]
     [-Q] [-y <rows>] [-s] [-r '<filename>'] [-t '<STRING>'] [-g] [-T
@@ -100,9 +100,10 @@ OPTIONS
     --cols <cols>, -x <cols>
         Number of columns
 
-    --config-file '<filename>', -C '<filename>'
+    --config-file s@, -C s@
         Use supplied file as additional configuration file (see also
-        "FILES").
+        "FILES"). This option may be repeated and files are loaded in the
+        order given.
 
     --debug [[...] || <INTEGER>]
         Enable debugging. Either a level can be provided or the option can
@@ -269,6 +270,10 @@ EXAMPLES
 
     Override the configured/default port to use 2022 instead
         $ cssh -p 2022 server1 server2
+
+    Load multiple extra configuration files; later files override earlier
+    ones
+        $ cssh -C ssh -C right server1 server2
 
 FILES
     /etc/clusters, $HOME/.clusterssh/clusters

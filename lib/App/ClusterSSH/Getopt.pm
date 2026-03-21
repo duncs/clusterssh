@@ -169,10 +169,10 @@ sub add_common_options {
         ),
     );
     $self->add_option(
-        spec     => 'config-file|C=s',
+        spec     => 'config-file|C=s@',
         arg_desc => 'filename',
         help     => $self->loc(
-            'Use supplied file as additional configuration file (see also L</"FILES">).'
+            'Use supplied file as additional configuration file (see also L</"FILES">). This option may be repeated and files are loaded in the order given.'
         ),
     );
     $self->add_option(
@@ -381,7 +381,7 @@ sub getopts {
 
     $self->set_debug_level( $options->{debug} );
 
-    $self->parent->config->load_configs( $self->config_file );
+    $self->parent->config->load_configs( @{ $self->config_file // [] } );
 
     if ( $self->use_all_a_records ) {
         $self->parent->config->{use_all_a_records}
@@ -641,6 +641,10 @@ would replace the <Alt-n> with the client's name in each window.}
         $self->loc(
         q{Override the configured/default port to use 2022 instead});
     output q{S<$ } . $Script . q{ -p 2022 server1 server2>};
+    output '=item ',
+        $self->loc(
+        q{Load multiple extra configuration files; later files override earlier ones});
+    output q{S<$ } . $Script . q{ -C ssh -C right server1 server2>};
     output '=back';
 
     output '=head1 ' . $self->loc('FILES');
