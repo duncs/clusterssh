@@ -135,6 +135,7 @@ Readonly::Hash my %default_config => {
     unique_servers    => 0,
     use_all_a_records => 0,
     use_natural_sort  => 0,
+    host_sort_command => '',
     preserve_host_order => 0,
 
     send_menu_xml_file => $ENV{HOME} . '/.clusterssh/send_menu',
@@ -584,6 +585,7 @@ fillscreen=no
 hide_menu=0
 history_height=10
 history_width=40
+host_sort_command=
 hostname_override=
 key_addhost=Control-Shift-plus
 key_clientname=Alt-n

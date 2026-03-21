@@ -2,7 +2,7 @@ NAME
     cssh - Cluster administration tool
 
 VERSION
-    This documentation is for version: 4.18_08
+    This documentation is for version: 4.18_09
 
 SYNOPSIS
     cssh [-a '<command>'] [-K <seconds>] [-q] [-c '<filename>'] [-x <cols>]
@@ -645,6 +645,14 @@ FILES
             host11, host2. Setting to this 1 will change the sort order,
             i.e.: host1, host2, host11. NOTE: You must have the perl module
             Sort::Naturally installed.
+
+        host_sort_command = <null>
+            Define an external command that reads hosts from STDIN and
+            writes the desired host order to STDOUT (whitespace-separated).
+            This command is used for host sorting and takes precedence over
+            "use_natural_sort". If the command cannot be started, exits
+            non-zero, or outputs no hosts, cssh falls back to default
+            lexical sorting.
 
         preserve_host_order = 0
             When set to 1, display and tile hosts in the order given on the

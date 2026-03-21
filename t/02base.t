@@ -6,6 +6,7 @@ use lib "$Bin/../lib";
 
 use Test::More;
 use Test::Trap;
+use File::Temp qw(tempfile);
 
 BEGIN { use_ok('App::ClusterSSH::Base') }
 
@@ -345,5 +346,75 @@ is( ref($sort),     'CODE',   "got results from sort" );
 @sorted   = $sort->( 4, 8, 1, 5, 3 );
 @expected = ( 1, 3, 4, 5, 8 );
 is_deeply( \@sorted, \@expected, "simple sort results okay" );
+
+my ( $sort_fh, $sort_script ) = tempfile();
+print {$sort_fh} <<'EOF';
+#!/usr/bin/env perl
+use strict;
+use warnings;
+my @hosts = grep { length } split /\s+/, do { local $/; <STDIN> };
+my %rank = (
+    host10 => 0,
+    host1  => 1,
+    host2  => 2,
+);
+print join q{ }, sort {
+    ( $rank{$a} // 99 ) <=> ( $rank{$b} // 99 ) || $a cmp $b
+} @hosts;
+EOF
+close($sort_fh);
+chmod 0755, $sort_script;
+
+$base = undef;
+trap {
+    $base = App::ClusterSSH::Base->new(
+        debug  => 3,
+        parent => { config => { host_sort_command => $sort_script }, options => 'set' }
+    );
+};
+isa_ok( $base, 'App::ClusterSSH::Base' );
+is( $trap->leaveby, 'return', 'returned ok' );
+is( $trap->die,     undef,    'returned ok' );
+is( $trap->stderr,  '',       'Expecting no STDERR' );
+is( $trap->stdout,  '',       'Expecting no STDOUT' );
+
+$sort = $base->sort;
+is( ref($sort), 'CODE', "got external host sort callback" );
+@sorted   = $sort->(qw/ host1 host2 host10 /);
+@expected = qw/ host10 host1 host2 /;
+is_deeply( \@sorted, \@expected, 'host_sort_command output used as host order' );
+
+my ( $broken_fh, $broken_script ) = tempfile();
+print {$broken_fh} <<'EOF';
+#!/usr/bin/env perl
+use strict;
+use warnings;
+exit 42;
+EOF
+close($broken_fh);
+chmod 0755, $broken_script;
+
+trap {
+    $base = App::ClusterSSH::Base->new(
+        debug  => 3,
+        parent => { config => { host_sort_command => $broken_script }, options => 'set' }
+    );
+};
+isa_ok( $base, 'App::ClusterSSH::Base' );
+is( $trap->leaveby, 'return', 'returned ok' );
+is( $trap->die,     undef,    'returned ok' );
+is( $trap->stderr,  '',       'Expecting no STDERR' );
+is( $trap->stdout,  '',       'Expecting no STDOUT' );
+
+my $warn = q{};
+{
+    local $SIG{__WARN__} = sub { $warn .= join q{}, @_ };
+    $sort = $base->sort;
+    @sorted = $sort->(qw/ host2 host10 host1 /);
+}
+@expected = qw/ host1 host10 host2 /;
+is_deeply( \@sorted, \@expected, 'fallback lexical sort used on command failure' );
+like( $warn, qr/host_sort_command exited non-zero/,
+    'warning emitted when host_sort_command fails' );
 
 done_testing();

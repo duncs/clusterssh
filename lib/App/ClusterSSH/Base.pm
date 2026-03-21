@@ -27,6 +27,7 @@ use Carp;
 use App::ClusterSSH::L10N;
 
 use Module::Load;
+use IPC::Open2 qw(open2);
 
 use Exception::Class 1.31 (
     'App::ClusterSSH::Exception',
@@ -304,9 +305,57 @@ sub parent {
 sub sort {
     my $self = shift;
 
+    my $config = $self->config();
+
+    # allow host sorting to be delegated to an external command
+    if ( ref $config eq "HASH" && $config->{host_sort_command} ) {
+        my $sort_command = $config->{host_sort_command};
+        my $sort         = sub {
+            my @hosts = @_;
+            my ( $reader, $writer );
+            my $pid;
+
+            eval {
+                $pid = open2( $reader, $writer, $sort_command );
+                1;
+            } or do {
+                warn(
+                    "host_sort_command failed to start [$sort_command]: $@\n"
+                );
+                return sort @hosts;
+            };
+
+            print {$writer} join( "\n", @hosts ), "\n";
+            close($writer);
+
+            my $output = q{};
+            $output .= $_ while (<$reader>);
+            close($reader);
+
+            waitpid( $pid, 0 );
+            my $exit_code = $? >> 8;
+            if ($exit_code) {
+                warn(
+                    "host_sort_command exited non-zero [$sort_command]: $exit_code\n"
+                );
+                return sort @hosts;
+            }
+
+            my @sorted_hosts = grep { length($_) } split /\s+/, $output;
+            if ( !@sorted_hosts ) {
+                warn(
+                    "host_sort_command returned no hosts [$sort_command]; using default sort\n"
+                );
+                return sort @hosts;
+            }
+
+            return @sorted_hosts;
+        };
+        return $sort;
+    }
+
     # if the user has asked for natural sorting we need to include an extra
     # module
-    my $config = $self->config();
 
     # Make sure the configuration object has been set correctly before
     # referencing anything

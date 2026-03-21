@@ -1046,6 +1046,12 @@ B<NOTE:> Any "generic" change to the method (e.g., specifying the ssh port to us
         'C<1>', 'L<Sort::Naturally>'
     );
 
+    output '=item host_sort_command = <null>';
+    output $self->loc(
+        q{Define an external command that reads hosts from STDIN and writes the desired host order to STDOUT (whitespace-separated). This command is used for host sorting and takes precedence over [_1]. If the command cannot be started, exits non-zero, or outputs no hosts, cssh falls back to default lexical sorting.},
+        'C<use_natural_sort>'
+    );
+
     output '=item preserve_host_order = 0';
     output $self->loc(
         q{When set to [_1], display and tile hosts in the order given on the command line instead of sorting them alphabetically.  See also [_2].},

@@ -2,6 +2,7 @@ Revision history for {{$dist->name}}
 
 {{$NEXT}}
 - Remove explicit `TestRelease`/`ConfirmRelease`/`UploadToCPAN` blocks in `dist.ini` to avoid duplicate release/upload attempts from bundle defaults
+- Add `host_sort_command` config option to allow external custom host ordering for window sorting (Github issue #143)
 
 4.18_08 2026-03-21 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Make `t/10host.t` resilient to wildcard DNS/search domains by using absolute synthetic hostnames under `.invalid` (Github issue #148)
