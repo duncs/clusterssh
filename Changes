@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+4.18_09   2026-03-21 14:41:57+00:00 Europe/London (TRIAL RELEASE)
 - Remove explicit `TestRelease`/`ConfirmRelease`/`UploadToCPAN` blocks in `dist.ini` to avoid duplicate release/upload attempts from bundle defaults
 - Add `host_sort_command` config option to allow external custom host ordering for window sorting (Github issue #143)
 
