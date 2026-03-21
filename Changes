@@ -1,11 +1,13 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+- Remove explicit `TestRelease`/`ConfirmRelease`/`UploadToCPAN` blocks in `dist.ini` to avoid duplicate release/upload attempts from bundle defaults
+
+4.18_08 2026-03-21 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Make `t/10host.t` resilient to wildcard DNS/search domains by using absolute synthetic hostnames under `.invalid` (Github issue #148)
 - Clean up `dist.ini` to use a filtered `@Basic` bundle while keeping `Run::BeforeBuild` to generate and commit `README` for MetaCPAN use
 - Add author test `xt/author/dependency-scenarios.t` to cover installed/missing module behavior for `Sort::Naturally` and `XML::Simple`
 - Fix duplicate `-M` option conflict in `ccon` by moving `--master` short option from `-M` to `-m`
-- Remove explicit `TestRelease`/`ConfirmRelease`/`UploadToCPAN` blocks in `dist.ini` to avoid duplicate release/upload attempts from bundle defaults
 
 4.18_07 2026-03-21 Duncan Ferguson <duncan_ferguson@user.sf.net>
 - Allow repeated use of --configfile/-C to allow for using multiple files (Github issue #165)
