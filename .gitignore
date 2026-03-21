@@ -2,8 +2,8 @@
 *.bak
 /bin
 /blib/
-/_build/
 /.build/
+/_build/
 /Build
 Build.PL.orig
 Build.PL.x
@@ -15,3 +15,4 @@ Build.PL.x
 /pm_to_blib
 *.swp
 *.tar.gz
+.tmp

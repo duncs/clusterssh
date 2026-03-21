@@ -27,68 +27,68 @@ like(
 #=============
 # NOTE:
 #=============
-# 'Eevo5ang' is a randomly generated hostname used in these tests
+# 'Eevo5ang.' is a randomly generated hostname used in these tests
 # as one user actually had a host called 'hostname' on their network
-# 'Ooquiida.com' is also a randomly generated domain name
+# 'ooquiida.invalid.' is a reserved invalid domain used in these tests
 
 diag('Checking IPv4 type addresses') if ( $ENV{TEST_VERBOSE} );
-$host = App::ClusterSSH::Host->new( hostname => 'Eevo5ang' );
-is( $host,               'Eevo5ang', 'stringify works' );
-is( $host->get_hostname, 'Eevo5ang', 'hostname set' );
+$host = App::ClusterSSH::Host->new( hostname => 'Eevo5ang.' );
+is( $host,               'Eevo5ang.', 'stringify works' );
+is( $host->get_hostname, 'Eevo5ang.', 'hostname set' );
 is( $host->get_port,     q{},        'checking set works' );
 is( $host->get_username, q{},        'username is unset' );
-is( $host->get_realname, 'Eevo5ang', 'realname set' );
+is( $host->get_realname, 'Eevo5ang.', 'realname set' );
 is( $host->get_geometry, q{},        'geometry set' );
 is( $host->get_master,   q{},        'master set' );
 is( $host->get_type,     q{},        'type set' );
 
 $host->set_port(2323);
 
-is( $host,               'Eevo5ang', 'stringify works' );
-is( $host->get_hostname, 'Eevo5ang', 'checking set works' );
+is( $host,               'Eevo5ang.', 'stringify works' );
+is( $host->get_hostname, 'Eevo5ang.', 'checking set works' );
 is( $host->get_port,     2323,       'checking set works' );
 is( $host->get_username, q{},        'username is unset' );
-is( $host->get_realname, 'Eevo5ang', 'realname set' );
+is( $host->get_realname, 'Eevo5ang.', 'realname set' );
 is( $host->get_geometry, q{},        'geometry set' );
 is( $host->get_master,   q{},        'master set' );
 is( $host->get_type,     q{},        'type set' );
 
 $host->set_username('username');
 
-is( $host->get_hostname, 'Eevo5ang', 'checking set works' );
+is( $host->get_hostname, 'Eevo5ang.', 'checking set works' );
 is( $host->get_port,     2323,       'checking set works' );
 is( $host->get_username, 'username', 'username is unset' );
-is( $host->get_realname, 'Eevo5ang', 'realname set' );
+is( $host->get_realname, 'Eevo5ang.', 'realname set' );
 is( $host->get_geometry, q{},        'geometry set' );
 is( $host->get_master,   q{},        'master set' );
 is( $host->get_type,     q{},        'type set' );
 
 $host->set_geometry('100x50+100+100');
 
-is( $host->get_hostname, 'Eevo5ang',       'checking set works' );
+is( $host->get_hostname, 'Eevo5ang.',       'checking set works' );
 is( $host->get_port,     2323,             'checking set works' );
 is( $host->get_username, 'username',       'username is unset' );
-is( $host->get_realname, 'Eevo5ang',       'realname set' );
+is( $host->get_realname, 'Eevo5ang.',       'realname set' );
 is( $host->get_geometry, '100x50+100+100', 'geometry set' );
 is( $host->get_master,   q{},              'master set' );
 is( $host->get_type,     q{},              'type set' );
 
 $host->set_master('some_host');
 
-is( $host->get_hostname, 'Eevo5ang',       'checking set works' );
+is( $host->get_hostname, 'Eevo5ang.',       'checking set works' );
 is( $host->get_port,     2323,             'checking set works' );
 is( $host->get_username, 'username',       'username is unset' );
-is( $host->get_realname, 'Eevo5ang',       'realname set' );
+is( $host->get_realname, 'Eevo5ang.',       'realname set' );
 is( $host->get_geometry, '100x50+100+100', 'geometry set' );
 is( $host->get_master,   'some_host',      'master set' );
 is( $host->get_type,     q{},              'type set' );
 
 $host->set_type('something');
 
-is( $host->get_hostname, 'Eevo5ang',       'checking set works' );
+is( $host->get_hostname, 'Eevo5ang.',       'checking set works' );
 is( $host->get_port,     2323,             'checking set works' );
 is( $host->get_username, 'username',       'username is unset' );
-is( $host->get_realname, 'Eevo5ang',       'realname set' );
+is( $host->get_realname, 'Eevo5ang.',       'realname set' );
 is( $host->get_geometry, '100x50+100+100', 'geometry set' );
 is( $host->get_master,   'some_host',      'master set' );
 is( $host->get_type,     'something',      'type set' );
@@ -97,182 +97,182 @@ $host = undef;
 is( $host, undef, 'starting afresh' );
 
 $host = App::ClusterSSH::Host->new(
-    hostname => 'Eevo5ang',
+    hostname => 'Eevo5ang.',
     port     => 2323,
 );
 isa_ok( $host, "App::ClusterSSH::Host" );
 
-is( $host,               'Eevo5ang', 'stringify works' );
-is( $host->get_hostname, 'Eevo5ang', 'hostname set' );
+is( $host,               'Eevo5ang.', 'stringify works' );
+is( $host->get_hostname, 'Eevo5ang.', 'hostname set' );
 is( $host->get_port,     2323,       'checking set works' );
 is( $host->get_username, q{},        'username is unset' );
-is( $host->get_realname, 'Eevo5ang', 'realname set' );
+is( $host->get_realname, 'Eevo5ang.', 'realname set' );
 is( $host->get_geometry, q{},        'geometry set' );
 
 $host->set_username('username');
 
-is( $host->get_hostname, 'Eevo5ang', 'checking set works' );
+is( $host->get_hostname, 'Eevo5ang.', 'checking set works' );
 is( $host->get_port,     2323,       'checking set works' );
 is( $host->get_username, 'username', 'username is unset' );
-is( $host->get_realname, 'Eevo5ang', 'realname set' );
+is( $host->get_realname, 'Eevo5ang.', 'realname set' );
 is( $host->get_geometry, q{},        'geometry set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
 
 $host = App::ClusterSSH::Host->new(
-    hostname => 'Eevo5ang',
+    hostname => 'Eevo5ang.',
     username => 'username',
 );
 isa_ok( $host, "App::ClusterSSH::Host" );
 
-is( $host,               'Eevo5ang', 'stringify works' );
-is( $host->get_hostname, 'Eevo5ang', 'hostname set' );
+is( $host,               'Eevo5ang.', 'stringify works' );
+is( $host->get_hostname, 'Eevo5ang.', 'hostname set' );
 is( $host->get_port,     q{},        'checking set works' );
 is( $host->get_username, 'username', 'username is set' );
-is( $host->get_realname, 'Eevo5ang', 'realname set' );
+is( $host->get_realname, 'Eevo5ang.', 'realname set' );
 is( $host->get_geometry, q{},        'geometry set' );
 
 $host->set_port(2323);
 
-is( $host->get_hostname, 'Eevo5ang', 'checking set works' );
+is( $host->get_hostname, 'Eevo5ang.', 'checking set works' );
 is( $host->get_port,     2323,       'checking set works' );
 is( $host->get_username, 'username', 'username is set' );
-is( $host->get_realname, 'Eevo5ang', 'realname set' );
+is( $host->get_realname, 'Eevo5ang.', 'realname set' );
 is( $host->get_geometry, q{},        'geometry set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
 
 $host = App::ClusterSSH::Host->new(
-    hostname => 'Eevo5ang',
+    hostname => 'Eevo5ang.',
     username => 'username',
     port     => 2323,
 
 );
 isa_ok( $host, "App::ClusterSSH::Host" );
 
-is( $host,               'Eevo5ang', 'stringify works' );
-is( $host->get_hostname, 'Eevo5ang', 'checking set works' );
+is( $host,               'Eevo5ang.', 'stringify works' );
+is( $host->get_hostname, 'Eevo5ang.', 'checking set works' );
 is( $host->get_port,     2323,       'checking set works' );
 is( $host->get_username, 'username', 'username is set' );
-is( $host->get_realname, 'Eevo5ang', 'realname set' );
+is( $host->get_realname, 'Eevo5ang.', 'realname set' );
 is( $host->get_geometry, q{},        'geometry set' );
 
 $host = undef;
 is( $host, undef, 'starting afresh' );
 
 $host = App::ClusterSSH::Host->new(
-    hostname => 'Eevo5ang',
+    hostname => 'Eevo5ang.',
     username => 'username',
     port     => 2323,
     geometry => '100x50+100+100',
 );
 isa_ok( $host, "App::ClusterSSH::Host" );
 
-is( $host,               'Eevo5ang',       'stringify works' );
-is( $host->get_hostname, 'Eevo5ang',       'checking set works' );
+is( $host,               'Eevo5ang.',       'stringify works' );
+is( $host->get_hostname, 'Eevo5ang.',       'checking set works' );
 is( $host->get_port,     2323,             'checking set works' );
 is( $host->get_username, 'username',       'username is set' );
-is( $host->get_realname, 'Eevo5ang',       'realname set' );
+is( $host->get_realname, 'Eevo5ang.',       'realname set' );
 is( $host->get_geometry, '100x50+100+100', 'geometry set' );
 
 diag('Parsing tests') if ( $ENV{TEST_VERBOSE} );
 
 my %parse_tests = (
-    'Eevo5ang' => {
-        hostname => 'Eevo5ang',
+    'Eevo5ang.' => {
+        hostname => 'Eevo5ang.',
         port     => q{},
         username => q{},
-        realname => 'Eevo5ang',
+        realname => 'Eevo5ang.',
         geometry => q{},
         type     => 'ipv4',
     },
-    'Eevo5ang.Ooquiida.com' => {
-        hostname => 'Eevo5ang.Ooquiida.com',
+    'Eevo5ang.ooquiida.invalid.' => {
+        hostname => 'Eevo5ang.ooquiida.invalid.',
         port     => q{},
         username => q{},
-        realname => 'Eevo5ang.Ooquiida.com',
+        realname => 'Eevo5ang.ooquiida.invalid.',
         geometry => q{},
         type     => 'ipv4',
     },
-    'Eevo5ang:2323' => {
-        hostname => 'Eevo5ang',
+    'Eevo5ang.:2323' => {
+        hostname => 'Eevo5ang.',
         port     => 2323,
         username => q{},
-        realname => 'Eevo5ang',
+        realname => 'Eevo5ang.',
         geometry => q{},
         type     => 'ipv4',
     },
-    'Eevo5ang:3232=1x1+1+1' => {
-        hostname => 'Eevo5ang',
+    'Eevo5ang.:3232=1x1+1+1' => {
+        hostname => 'Eevo5ang.',
         port     => 3232,
         username => q{},
-        realname => 'Eevo5ang',
+        realname => 'Eevo5ang.',
         geometry => '1x1+1+1',
         type     => 'ipv4',
     },
-    'Eevo5ang.Ooquiida.com:3232' => {
-        hostname => 'Eevo5ang.Ooquiida.com',
+    'Eevo5ang.ooquiida.invalid.:3232' => {
+        hostname => 'Eevo5ang.ooquiida.invalid.',
         port     => 3232,
         username => q{},
-        realname => 'Eevo5ang.Ooquiida.com',
+        realname => 'Eevo5ang.ooquiida.invalid.',
         geometry => q{},
         type     => 'ipv4',
     },
-    'Eevo5ang.Ooquiida.com:3232=1x1+1+1' => {
-        hostname => 'Eevo5ang.Ooquiida.com',
+    'Eevo5ang.ooquiida.invalid.:3232=1x1+1+1' => {
+        hostname => 'Eevo5ang.ooquiida.invalid.',
         port     => 3232,
         username => q{},
-        realname => 'Eevo5ang.Ooquiida.com',
+        realname => 'Eevo5ang.ooquiida.invalid.',
         geometry => '1x1+1+1',
         type     => 'ipv4',
     },
-    'user@Eevo5ang' => {
-        hostname => 'Eevo5ang',
+    'user@Eevo5ang.' => {
+        hostname => 'Eevo5ang.',
         port     => q{},
         username => 'user',
-        realname => 'Eevo5ang',
+        realname => 'Eevo5ang.',
         geometry => q{},
         type     => 'ipv4',
     },
-    'user@Eevo5ang.Ooquiida.com' => {
-        hostname => 'Eevo5ang.Ooquiida.com',
+    'user@Eevo5ang.ooquiida.invalid.' => {
+        hostname => 'Eevo5ang.ooquiida.invalid.',
         port     => q{},
         username => 'user',
-        realname => 'Eevo5ang.Ooquiida.com',
+        realname => 'Eevo5ang.ooquiida.invalid.',
         geometry => q{},
         type     => 'ipv4',
     },
-    'user@Eevo5ang:2323' => {
-        hostname => 'Eevo5ang',
+    'user@Eevo5ang.:2323' => {
+        hostname => 'Eevo5ang.',
         port     => 2323,
         username => 'user',
-        realname => 'Eevo5ang',
+        realname => 'Eevo5ang.',
         geometry => q{},
         type     => 'ipv4',
     },
-    'user@Eevo5ang:3232=1x1+1+1' => {
-        hostname => 'Eevo5ang',
+    'user@Eevo5ang.:3232=1x1+1+1' => {
+        hostname => 'Eevo5ang.',
         port     => 3232,
         username => 'user',
-        realname => 'Eevo5ang',
+        realname => 'Eevo5ang.',
         geometry => '1x1+1+1',
         type     => 'ipv4',
     },
-    'user@Eevo5ang.Ooquiida.com:3232' => {
-        hostname => 'Eevo5ang.Ooquiida.com',
+    'user@Eevo5ang.ooquiida.invalid.:3232' => {
+        hostname => 'Eevo5ang.ooquiida.invalid.',
         port     => 3232,
         username => 'user',
-        realname => 'Eevo5ang.Ooquiida.com',
+        realname => 'Eevo5ang.ooquiida.invalid.',
         geometry => q{},
         type     => 'ipv4',
     },
-    'user@Eevo5ang.Ooquiida.com:3232=1x1+1+1' => {
-        hostname => 'Eevo5ang.Ooquiida.com',
+    'user@Eevo5ang.ooquiida.invalid.:3232=1x1+1+1' => {
+        hostname => 'Eevo5ang.ooquiida.invalid.',
         port     => 3232,
         username => 'user',
-        realname => 'Eevo5ang.Ooquiida.com',
+        realname => 'Eevo5ang.ooquiida.invalid.',
         geometry => '1x1+1+1',
         type     => 'ipv4',
     },
