@@ -41,7 +41,7 @@ my $sysconfigdir = "/etc";
 my %ssh_hostnames;
 my $host_menu_static_items;    # number of items in the host menu that should
                                # not be touched by build_host_menu
-my (@dead_hosts);              # list of hosts whose sessions are now closed
+my %dead_hosts;                # map of closed session keys to connect strings
 
 $keysymtocode{unknown_sym} = 0xFFFFFF;    # put in a default "unknown" entry
 $keysymtocode{EuroSign}
@@ -84,9 +84,9 @@ sub pick_color {
 # preserve_host_order, else sorted)
 sub _hosts_in_display_order {
     my ($self) = @_;
-    return grep { exists $servers{$_} } @servers
+    return grep { exists $servers{$_} || exists $dead_hosts{$_} } @servers
         if ( $self->config->{preserve_host_order} );
-    return $self->sort->( keys(%servers) );
+    return $self->sort->( keys(%servers), keys(%dead_hosts) );
 }
 
 # close a specific host session
@@ -100,6 +100,8 @@ sub terminate_host($) {
 
     $self->debug( 2, "Killing process $servers{$svr}{pid}" );
     kill( 9, $servers{$svr}{pid} ) if kill( 0, $servers{$svr}{pid} );
+    $dead_hosts{$svr} = $servers{$svr}{connect_string}
+        if defined $servers{$svr}{connect_string};
     delete( $servers{$svr} );
     return $self;
 }
@@ -388,12 +390,12 @@ sub re_add_closed_sessions() {
     my ($self) = @_;
     $self->debug( 2, "add closed sessions" );
 
-    return if ( scalar(@dead_hosts) == 0 );
+    return if ( scalar( keys(%dead_hosts) ) == 0 );
 
-    my @new_hosts = @dead_hosts;
+    my @new_hosts = values(%dead_hosts);
 
     # clear out the list in case open fails
-    @dead_hosts = qw//;
+    %dead_hosts = ();
 
     # try to open
     $self->open_client_windows(@new_hosts);
@@ -408,6 +410,34 @@ sub re_add_closed_sessions() {
     else {
         return $self->show_console();
     }
+}
+
+sub reopen_closed_session($) {
+    my ( $self, $svr ) = @_;
+    $self->debug( 2, "reopen closed session for $svr" );
+    return if !exists $dead_hosts{$svr};
+
+    my $connect_string = delete $dead_hosts{$svr};
+    return if !$connect_string;
+
+    $self->open_client_windows($connect_string);
+    $self->build_hosts_menu();
+
+    # retile, or bring console to front
+    if ( $self->config->{window_tiling} eq "yes" ) {
+        return $self->retile_hosts();
+    }
+    else {
+        return $self->show_console();
+    }
+}
+
+sub cleanup_closed_sessions() {
+    my ($self) = @_;
+    $self->debug( 2, "clean up closed sessions" );
+    %dead_hosts = ();
+    $self->build_hosts_menu();
+    return $self;
 }
 
 sub load_keyboard_map() {
@@ -1172,11 +1202,23 @@ sub build_hosts_menu() {
             $colbreak          = 1;
             $menu_item_counter = 1;
         }
-        $menus{hosts}->checkbutton(
-            -label       => $svr,
-            -variable    => \$servers{$svr}{active},
-            -columnbreak => $colbreak,
-        );
+        if ( exists $servers{$svr} ) {
+            $menus{hosts}->checkbutton(
+                -label       => $svr,
+                -variable    => \$servers{$svr}{active},
+                -columnbreak => $colbreak,
+            );
+        }
+        elsif ( exists $dead_hosts{$svr} ) {
+            $menus{hosts}->checkbutton(
+                -label            => $svr,
+                -indicatoron      => 0,
+                -foreground       => 'gray50',
+                -activeforeground => 'gray50',
+                -columnbreak      => $colbreak,
+                -command          => sub { $self->reopen_closed_session($svr) },
+            );
+        }
         $menu_item_counter++;
     }
     $self->debug( 3, "Changing window title" );
@@ -1240,7 +1282,8 @@ sub setup_repeat() {
                 if ( defined( $servers{$svr}{pid} ) ) {
                     if ( !kill( 0, $servers{$svr}{pid} ) ) {
                         $build_menu = 1;
-                        push( @dead_hosts, $servers{$svr}{connect_string} );
+                        $dead_hosts{$svr} = $servers{$svr}{connect_string}
+                            if defined $servers{$svr}{connect_string};
                         delete( $servers{$svr} );
                         $self->debug( 0, "$svr session closed" );
                     }
@@ -1782,6 +1825,10 @@ sub create_menubar() {
             "Re-add closed session(s)",
             -command => sub { $self->re_add_closed_sessions() },
         ],
+        [   "command",
+            "Clean up closed sessions",
+            -command => sub { $self->cleanup_closed_sessions() },
+        ],
         ''      # this is needed as build_host_menu always drops the
                 # last item
     ];
@@ -2022,7 +2069,11 @@ Base object for using Tk - must be pulled into App::ClusterSSH::Window for use
 
 =item re_add_closed_sessions
 
+=item reopen_closed_session
+
 =item retile_hosts
+
+=item cleanup_closed_sessions
 
 =item send_resizemove
 
